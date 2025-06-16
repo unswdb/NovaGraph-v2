@@ -1,4 +1,4 @@
-import CounterElement from "../../features/counter";
+import CounterElement from "@features/counter";
 
 export default function Counter() {
   return <CounterElement />;
