@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  novagraph-dev:
+    build:
+      context: .
+      target: development
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/src
+      - /src/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
+
+  novagraph-prod:
+    build:
+      context: .
+      target: production
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    command: npm run start

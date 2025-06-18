@@ -16,43 +16,31 @@ A modern, production-ready template for building full-stack React applications u
 
 ## Getting Started
 
-### Installation
-
-Install the dependencies:
-
-```bash
-npm install
-```
-
 ### Development
 
-Start the development server with HMR:
+Start the development server with Docker:
 
 ```bash
-npm run dev
+docker build -t novagraph-dev --target development .
+
+# Copy graph.js to local workspaces
+docker run --rm -v $(pwd):/host novagraph-dev cp /src/src/graph.js /host/src/
+
+# Run with volume mounting
+docker run -it --rm -v $(pwd):/src -w /src -p 5173:5173 -v /src/node_modules -e NODE_ENV=development novagraph-dev
 ```
 
 Your application will be available at `http://localhost:5173`.
 
-## Building for Production
+## Production
 
-Create a production build:
-
-```bash
-npm run build
-```
-
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
+Build and run using Docker:
 
 ```bash
-docker build -t my-app .
+docker build -t novagraph-prod --target=production .
 
 # Run the container
-docker run -p 3000:3000 my-app
+docker run -it -p 3000:3000 novagraph-prod
 ```
 
 The containerized application can be deployed to any platform that supports Docker, including:
@@ -63,24 +51,6 @@ The containerized application can be deployed to any platform that supports Dock
 - Digital Ocean App Platform
 - Fly.io
 - Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
 
 ---
 

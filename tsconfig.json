@@ -13,12 +13,12 @@
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "rootDirs": [".", "./.react-router/types"],
-    "baseUrl": "src",
+    "baseUrl": ".",
     "paths": {
-      "~/*": ["src/app/*"],
-      "@components/*": ["components/*"],
-      "@features/*": ["features/*"],
-      "@lib/*": ["lib/*"]
+      "~/*": ["src/*"],
+      "@components/*": ["src/components/*"],
+      "@features/*": ["src/features/*"],
+      "@lib/*": ["src/lib/*"]
     },
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,

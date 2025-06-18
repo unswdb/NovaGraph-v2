@@ -1,5 +1,3 @@
-import { Button } from "@components/ui/button";
-
 const Home = () => {
   return (
     <main className="flex items-center justify-center h-screen w-screen">
