@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm text-sm transition-all disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-page focus-visible:ring-page/50 focus-visible:ring-[3px] aria-invalid:ring-critical/20 aria-invalid:border-critical",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm transition-all disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-6 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-page focus-visible:ring-page/50 focus-visible:ring-[3px] aria-invalid:ring-critical/20 aria-invalid:border-critical",
   {
     variants: {
       variant: {
@@ -16,6 +16,8 @@ const buttonVariants = cva(
           "bg-critical text-white hover:bg-critical-hover focus-visible:ring-critical/20 disabled:bg-critical-disabled disabled:text-critical-fore-disabled",
         outline:
           "border border-border bg-background hover:bg-neutral-low hover:text-foreground disabled:bg-neutral-low-disabled disabled:text-neutral-fore-disabled",
+        ghost:
+          "hover:bg-neutral-low hover:text-foreground disabled:text-neutral-fore-disabled",
         link: "text-primary underline-offset-4 hover:underline disabled:opacity-50",
       },
       size: {
