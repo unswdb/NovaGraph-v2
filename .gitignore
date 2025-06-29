@@ -7,3 +7,5 @@
 
 # Graph.js
 /src/graph.js
+/src/graph.wasm
+/src/graph.d.ts

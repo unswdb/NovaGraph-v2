@@ -1,9 +1,8 @@
 import { action, makeObservable, observable } from "mobx";
-// @ts-expect-error: graph.js has no types yet — replace with proper .d.ts later
-import createModule from "~/graph";
+import createModule, { type MainModule as GraphModule } from "~/graph";
 
 type InitializedVisualizerStore = VisualizerStore & {
-  k: NonNullable<VisualizerStore["wasmModule"]>;
+  wasmModule: NonNullable<VisualizerStore["wasmModule"]>;
 };
 
 export default class VisualizerStore {
@@ -11,13 +10,17 @@ export default class VisualizerStore {
   constructor() {
     makeObservable(this, {
       wasmModule: observable,
+      nodes: observable,
+      edges: observable,
       initialize: action,
       cleanup: action,
     });
   }
 
   // OBSERVABLES
-  wasmModule: unknown = null;
+  wasmModule: GraphModule | null = null;
+  nodes = [];
+  edges = [];
 
   // ACTIONS
   async initialize() {
@@ -26,10 +29,13 @@ export default class VisualizerStore {
     this.wasmModule = wasmModule;
 
     // Initialize graph
-    // const graph = wasmModule.initGraph();
+    const graph = this.wasmModule.initGraph();
+    this.nodes = graph.nodes;
+    this.edges = graph.edges;
   }
 
   cleanup() {
+    this.wasmModule?.cleanupGraph();
     this.wasmModule = null;
   }
 

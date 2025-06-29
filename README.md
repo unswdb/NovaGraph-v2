@@ -23,8 +23,8 @@ Start the development server with Docker:
 ```bash
 docker build -t novagraph-dev --target development .
 
-# Copy graph.js to local workspaces
-docker run --rm -v $(pwd):/host novagraph-dev cp /src/src/graph.js /host/src/
+# Copy graph.js, graph.wasm and graph.d.ts. to local workspaces
+docker run --rm -v $(pwd):/host novagraph-dev cp ./src/graph.js ./src/graph.wasm ./src/graph.d.ts /host/src/
 
 # Run with volume mounting
 docker run -it --rm -v $(pwd):/src -w /src -p 5173:5173 -v /src/node_modules -e NODE_ENV=development novagraph-dev

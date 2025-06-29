@@ -52,6 +52,9 @@ RUN cd wasm/igraph && \
     emcmake cmake .. && \
     emmake make
 
+# Install typescript to generate .d.ts file
+RUN npm install -g typescript
+
 # Build graph.js
 RUN em++ wasm/*.cpp wasm/algorithms/*.cpp wasm/generators/*.cpp -o graph.js \
     -s WASM=1 \
@@ -68,7 +71,8 @@ RUN em++ wasm/*.cpp wasm/algorithms/*.cpp wasm/generators/*.cpp -o graph.js \
     -lembind --no-entry \
     -O3 \
     ./wasm/igraph/build/src/libigraph.a \
-    ./wasm/pugixml/build/libpugixml.a
+    ./wasm/pugixml/build/libpugixml.a \
+    --emit-tsd graph.d.ts
 
 # -------- Base Dependencies --------
 FROM node:22-slim AS base-deps
@@ -87,6 +91,8 @@ RUN npm ci --omit=dev
 FROM development-deps AS build
 COPY . .
 COPY --from=wasm-build /src/graph.js ./src/graph.js
+COPY --from=wasm-build /src/graph.wasm ./src/graph.wasm
+COPY --from=wasm-build /src/graph.d.ts ./src/graph.d.ts
 RUN npm run build
 
 # -------- Development --------
@@ -94,6 +100,8 @@ FROM development-deps AS development
 ENV NODE_ENV=development
 COPY . .
 COPY --from=wasm-build /src/graph.js ./src/graph.js
+COPY --from=wasm-build /src/graph.wasm ./src/graph.wasm
+COPY --from=wasm-build /src/graph.d.ts ./src/graph.d.ts
 EXPOSE 5173
 CMD ["npm", "run", "dev"]
 
