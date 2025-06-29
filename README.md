@@ -21,6 +21,7 @@ A modern, production-ready template for building full-stack React applications u
 Start the development server with Docker:
 
 ```bash
+# Build the image
 docker build -t novagraph-dev --target development .
 
 # Copy graph.js, graph.wasm and graph.d.ts. to local workspaces
@@ -31,6 +32,8 @@ docker run -it --rm -v $(pwd):/src -w /src -p 5173:5173 -v /src/node_modules -e 
 ```
 
 Your application will be available at `http://localhost:5173`.
+
+Note: You need to build the image again if you install any new dependencies.
 
 ## Production
 
