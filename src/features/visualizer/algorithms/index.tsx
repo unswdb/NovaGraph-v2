@@ -21,13 +21,13 @@ import {
   useSidebar,
 } from "~/components/ui/sidebar";
 import { useIsMobile } from "~/hooks/use-mobile";
-import ALL_ALGORITHMS from "../algorithms";
+import ALL_ALGORITHMS from "./implementations";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
-import AlgorithmInput from "./algorithm-input";
+import AlgorithmInputModal from "./input";
 import { cn } from "~/lib/utils";
 import type { GraphEdge, GraphNode } from "../types";
 
@@ -93,7 +93,7 @@ function AlgorithmSidebarContent({
                     {/* Algorithms in the Algorithm Category */}
                     {algorithm.algorithms.map((algo) => (
                       <SidebarMenuItem key={algo.title}>
-                        <AlgorithmInput
+                        <AlgorithmInputModal
                           algorithm={algo}
                           nodes={nodes}
                           edges={edges}

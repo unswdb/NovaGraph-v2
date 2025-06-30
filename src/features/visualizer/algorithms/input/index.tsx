@@ -3,7 +3,7 @@ import type {
   BaseGraphAlgorithm,
   GraphAlgorithmInput,
   SelectInput,
-} from "../algorithms";
+} from "../implementations";
 import { Separator } from "~/components/ui/separator";
 import {
   Dialog,
@@ -24,7 +24,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "~/components/form/select";
-import type { GraphEdge, GraphNode } from "../types";
+import type { GraphEdge, GraphNode } from "../../types";
 import { Input } from "~/components/form/input";
 import { SelectValue } from "@radix-ui/react-select";
 import { useState } from "react";
@@ -43,6 +43,8 @@ export default function AlgorithmInputModal({
 }) {
   const [open, setOpen] = useState(false);
 
+  // TODO: Run WASM function to get response if we
+  // don't need user inputs and clicked
   const menuButton = (
     <SidebarMenuButton
       className={cn("p-0 hover:[&>span]:bg-neutral-low", className)}

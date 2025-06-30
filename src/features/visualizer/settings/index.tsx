@@ -10,7 +10,21 @@ import {
   useSidebar,
 } from "~/components/ui/sidebar";
 import { useIsMobile } from "~/hooks/use-mobile";
-import { GRAVITY, NODE_SCALAR_SIZE } from "./config-sidebar.constants";
+
+const GRAVITY = {
+  ZERO_GRAVITY: 0,
+  LOW_GRAVITY: 1,
+  HIGH_GRAVITY: 2,
+};
+
+const NODE_SCALAR_SIZE = {
+  INVISIBLE: 0,
+  EXTRA_SMALL: 1,
+  SMALL: 2,
+  MEDIUM: 3,
+  LARGE: 4,
+  EXTRA_LARGE: 5,
+};
 
 const RADIO_GROUPS = [
   {
@@ -65,7 +79,7 @@ const RADIO_GROUPS = [
   },
 ];
 
-export default function ConfigSidebar() {
+export default function SettingsSidebar() {
   return (
     <SidebarProvider
       name="config-sidebar"
@@ -73,14 +87,14 @@ export default function ConfigSidebar() {
       defaultOpen={false}
     >
       <Sidebar side="right">
-        <ConfigSidebarContent />
+        <SettingsSidebarContent />
       </Sidebar>
-      <ConfigSidebarControls />
+      <SettingsSidebarControls />
     </SidebarProvider>
   );
 }
 
-function ConfigSidebarContent() {
+function SettingsSidebarContent() {
   const { state } = useSidebar();
 
   return (
@@ -110,7 +124,7 @@ function ConfigSidebarContent() {
   );
 }
 
-function ConfigSidebarControls() {
+function SettingsSidebarControls() {
   const { state } = useSidebar();
   const isMobile = useIsMobile();
 
