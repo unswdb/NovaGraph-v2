@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-type SelectInput = {
+export type SelectInput = {
   label: string;
   type: "select";
   source: "nodes" | "edges" | "static"; // Where select options come from
@@ -8,14 +8,14 @@ type SelectInput = {
   options?: string[]; // For static options
 };
 
-type NumberInput = {
+export type NumberInput = {
   label: string;
   type: "number";
   min?: number;
   max?: number;
 };
 
-type GraphAlgorithmInput = SelectInput | NumberInput;
+export type GraphAlgorithmInput = SelectInput | NumberInput;
 
 export interface BaseGraphAlgorithm {
   title: string;

@@ -17,7 +17,7 @@ const Visualizer = observer(() => {
     <div className="flex flex-col w-screen h-screen overflow-hidden">
       <Header />
       <div className="flex flex-1">
-        <AlgorithmSidebar />
+        <AlgorithmSidebar nodes={store.nodes} edges={store.edges} />
         <main className="flex-1"></main>
         <ConfigSidebar />
       </div>

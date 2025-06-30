@@ -1,5 +1,6 @@
 import { action, makeObservable, observable } from "mobx";
-import createModule, { type MainModule as GraphModule } from "~/graph";
+import createModule from "~/graph";
+import type { GraphEdge, GraphModule, GraphNode } from "./types";
 
 type InitializedVisualizerStore = VisualizerStore & {
   wasmModule: NonNullable<VisualizerStore["wasmModule"]>;
@@ -19,8 +20,8 @@ export default class VisualizerStore {
 
   // OBSERVABLES
   wasmModule: GraphModule | null = null;
-  nodes = [];
-  edges = [];
+  nodes: GraphNode[] = [];
+  edges: GraphEdge[] = [];
 
   // ACTIONS
   async initialize() {

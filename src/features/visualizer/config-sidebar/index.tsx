@@ -67,7 +67,11 @@ const RADIO_GROUPS = [
 
 export default function ConfigSidebar() {
   return (
-    <SidebarProvider name="config-sidebar" className="relative isolate z-10">
+    <SidebarProvider
+      name="config-sidebar"
+      className="relative isolate z-10"
+      defaultOpen={false}
+    >
       <Sidebar side="right">
         <ConfigSidebarContent />
       </Sidebar>

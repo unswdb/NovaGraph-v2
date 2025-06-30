@@ -29,21 +29,33 @@ import {
 } from "~/components/ui/collapsible";
 import AlgorithmInput from "./algorithm-input";
 import { cn } from "~/lib/utils";
+import type { GraphEdge, GraphNode } from "../types";
 
-export default function AlgorithmSidebar() {
+export default function AlgorithmSidebar({
+  nodes,
+  edges,
+}: {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}) {
   return (
     <SidebarProvider name="algorithm-sidebar" className="relative isolate z-10">
       <Sidebar side="left">
-        <AlgorithmSidebarContent />
+        <AlgorithmSidebarContent nodes={nodes} edges={edges} />
       </Sidebar>
       <AlgorithmSidebarControls />
     </SidebarProvider>
   );
 }
 
-function AlgorithmSidebarContent() {
+function AlgorithmSidebarContent({
+  nodes,
+  edges,
+}: {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}) {
   const { state } = useSidebar();
-  const isMobile = useIsMobile();
   const [searchText, setSearchText] = useState("");
 
   return (
@@ -82,8 +94,10 @@ function AlgorithmSidebarContent() {
                     {algorithm.algorithms.map((algo) => (
                       <SidebarMenuItem key={algo.title}>
                         <AlgorithmInput
-                          inert={state === "collapsed"}
                           algorithm={algo}
+                          nodes={nodes}
+                          edges={edges}
+                          inert={state === "collapsed"}
                         />
                       </SidebarMenuItem>
                     ))}
