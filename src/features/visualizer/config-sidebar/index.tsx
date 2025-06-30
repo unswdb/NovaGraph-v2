@@ -69,30 +69,40 @@ export default function ConfigSidebar() {
   return (
     <SidebarProvider name="config-sidebar" className="relative isolate z-10">
       <Sidebar side="right">
-        <SidebarContent className="p-6 space-y-4">
-          <h1 className="medium-title">Graph Options</h1>
-          {RADIO_GROUPS.map(({ title, description, defaultValue, values }) => (
-            <div key={title} className="space-y-3">
-              <h2 className="small-title">{title}</h2>
-              <p className="small-body text-typography-secondary">
-                {description}
-              </p>
-              <RadioGroup defaultValue={String(defaultValue)}>
-                {values.map(({ label, value }) => (
-                  <div className="flex items-center gap-2">
-                    <RadioGroupItem value={String(value)} id={label} />
-                    <Label className="font-normal" htmlFor={label}>
-                      {label}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
-          ))}
-        </SidebarContent>
+        <ConfigSidebarContent />
       </Sidebar>
       <ConfigSidebarControls />
     </SidebarProvider>
+  );
+}
+
+function ConfigSidebarContent() {
+  const { state } = useSidebar();
+
+  return (
+    <SidebarContent className="p-6 space-y-4">
+      <h1 className="medium-title">Graph Options</h1>
+      {/* Radio Groups */}
+      {RADIO_GROUPS.map(({ title, description, defaultValue, values }) => (
+        <div key={title} className="space-y-3">
+          <h2 className="small-title">{title}</h2>
+          <p className="small-body text-typography-secondary">{description}</p>
+          <RadioGroup
+            defaultValue={String(defaultValue)}
+            inert={state === "collapsed"}
+          >
+            {values.map(({ label, value }) => (
+              <div key={label} className="flex items-center gap-2">
+                <RadioGroupItem value={String(value)} id={label} />
+                <Label className="font-normal" htmlFor={label}>
+                  {label}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
+      ))}
+    </SidebarContent>
   );
 }
 
@@ -102,13 +112,13 @@ function ConfigSidebarControls() {
 
   return (
     <div
-      className={`p-2 space-y-2 h-max absolute top-1/2 -translate-y-1/2 ${
+      className={`p-2 flex flex-col items-center gap-2 h-max absolute top-1/2 -translate-y-1/2 ${
         state === "collapsed" || isMobile
           ? "right-0"
           : "right-[calc(var(--sidebar-width))]"
       } transition-all duration-200 ease-linear border border-r-transparent border-border rounded-tl-md rounded-bl-md`}
     >
-      <SidebarTrigger asChild>
+      <SidebarTrigger size="icon">
         {state === "collapsed" || isMobile ? (
           <ChevronsLeft className="w-6 h-6" />
         ) : (

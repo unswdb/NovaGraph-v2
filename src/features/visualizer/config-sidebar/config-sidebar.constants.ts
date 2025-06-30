@@ -5,10 +5,10 @@ export const GRAVITY = {
 };
 
 export const NODE_SCALAR_SIZE = {
-    INVISIBLE: 0,
-    EXTRA_SMALL: 1,
-    SMALL: 2,
-    MEDIUM: 3,
-    LARGE: 4,
-    EXTRA_LARGE: 5
-}
+  INVISIBLE: 0,
+  EXTRA_SMALL: 1,
+  SMALL: 2,
+  MEDIUM: 3,
+  LARGE: 4,
+  EXTRA_LARGE: 5,
+};
