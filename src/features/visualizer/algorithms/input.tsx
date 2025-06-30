@@ -3,7 +3,7 @@ import type {
   BaseGraphAlgorithm,
   GraphAlgorithmInput,
   SelectInput,
-} from "../implementations";
+} from "./implementations";
 import { Separator } from "~/components/ui/separator";
 import {
   Dialog,
@@ -24,7 +24,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "~/components/form/select";
-import type { GraphEdge, GraphNode } from "../../types";
+import type { GraphEdge, GraphNode } from "../types";
 import { Input } from "~/components/form/input";
 import { SelectValue } from "@radix-ui/react-select";
 import { useState } from "react";
