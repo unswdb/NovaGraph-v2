@@ -7,7 +7,7 @@ export default function Header() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <header className="flex items-center justify-between h-16 px-6 bg-gradient-to-r from-neutral-low/20 to-neutral/20 border-b border-b-border">
+    <header className="flex items-center justify-between shrink-0 h-16 px-6 bg-gradient-to-r from-neutral-low/20 to-neutral/20 border-b border-b-border">
       {/* Logo + App Name */}
       <div className="flex items-center gap-2">
         <Logo alt="NovaGraph" className="w-6 h-6 text-primary" />

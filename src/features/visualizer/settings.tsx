@@ -13,17 +13,17 @@ import { useIsMobile } from "~/hooks/use-mobile";
 
 const GRAVITY = {
   ZERO_GRAVITY: 0,
-  LOW_GRAVITY: 1,
-  HIGH_GRAVITY: 2,
+  LOW_GRAVITY: 0.1,
+  HIGH_GRAVITY: 0.5,
 };
 
 const NODE_SCALAR_SIZE = {
   INVISIBLE: 0,
-  EXTRA_SMALL: 1,
-  SMALL: 2,
-  MEDIUM: 3,
-  LARGE: 4,
-  EXTRA_LARGE: 5,
+  EXTRA_SMALL: 0.25,
+  SMALL: 0.5,
+  MEDIUM: 1,
+  LARGE: 1.5,
+  EXTRA_LARGE: 2,
 };
 
 const RADIO_GROUPS = [
@@ -130,7 +130,7 @@ function SettingsSidebarControls() {
 
   return (
     <div
-      className={`p-2 flex flex-col items-center gap-2 h-max absolute top-1/2 -translate-y-1/2 ${
+      className={`bg-page p-2 flex flex-col items-center gap-2 h-max absolute top-1/2 -translate-y-1/2 ${
         state === "collapsed" || isMobile
           ? "right-0"
           : "right-[calc(var(--sidebar-width))]"

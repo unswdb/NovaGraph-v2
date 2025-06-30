@@ -150,7 +150,7 @@ function AlgorithmSelectInput({
           label: `${e.source} → ${e.target}`,
         }))
       : nodes.map((n) => ({
-          value: `${n.id}`,
+          value: n.id,
           label: n.name ?? `Node ${n.id}`,
         }));
 

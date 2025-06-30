@@ -1,0 +1,7 @@
+export const MODE = {
+  COLOR_IMPORTANT: 1,
+  COLOR_SHADE_DEFAULT: 2,
+  COLOR_SHADE_ERROR: 3,
+  SIZE_SCALAR: 4,
+  RAINBOW: 5,
+};

@@ -1,4 +1,4 @@
-import { action, makeObservable, observable } from "mobx";
+import { action, makeObservable, observable, runInAction } from "mobx";
 import createModule from "~/graph";
 import type { GraphEdge, GraphModule, GraphNode } from "./types";
 
@@ -27,12 +27,21 @@ export default class VisualizerStore {
   async initialize() {
     // Retrieve the WASM module
     const wasmModule = await createModule();
-    this.wasmModule = wasmModule;
 
-    // Initialize graph
-    const graph = this.wasmModule.initGraph();
-    this.nodes = graph.nodes;
-    this.edges = graph.edges;
+    runInAction(() => {
+      // Initialize graph
+      this.wasmModule = wasmModule;
+      const graph = this.wasmModule.initGraph();
+      // Infered type from src/wasm/generators.cpp
+      this.nodes = graph.nodes.map((n: { id: number; name: string }) => ({
+        id: String(n.id),
+        name: n.name,
+      }));
+      this.edges = graph.edges.map((e: { source: number; target: number }) => ({
+        source: String(e.source),
+        target: String(e.target),
+      }));
+    });
   }
 
   cleanup() {
