@@ -17,11 +17,13 @@ export default class VisualizerStore {
       edges: observable,
       gravity: observable,
       nodeSizeScale: observable,
+      activeAlgorithm: observable,
       activeResponse: observable,
       initialize: action,
       cleanup: action,
       setGravity: action,
       setNodeSizeScale: action,
+      setActiveAlgorithm: action,
       setActiveResponse: action,
     });
   }
@@ -32,6 +34,7 @@ export default class VisualizerStore {
   edges: GraphEdge[] = [];
   gravity: Gravity = GRAVITY.ZERO_GRAVITY;
   nodeSizeScale: NodeSizeScale = NODE_SIZE_SCALE.MEDIUM;
+  activeAlgorithm: BaseGraphAlgorithm | null = null;
   activeResponse: BaseGraphAlgorithmResult | null = null;
 
   // ACTIONS
@@ -66,6 +69,10 @@ export default class VisualizerStore {
 
   setNodeSizeScale = (nodeSizeScale: NodeSizeScale) => {
     this.nodeSizeScale = nodeSizeScale;
+  }
+
+  setActiveAlgorithm = (activeAlgorithm: BaseGraphAlgorithm) => {
+    this.activeAlgorithm = activeAlgorithm;
   }
 
   setActiveResponse = (activeResponse: BaseGraphAlgorithmResult) => {

@@ -6,6 +6,7 @@ import AlgorithmSidebar from "./algorithms";
 import SettingsSidebar from "./settings";
 import GraphRenderer from "./renderer";
 import { MODE } from "./visualizer.constant";
+import { CodeOutputDrawer } from "./drawer";
 
 const Visualizer = observer(() => {
   const [store] = useState(() => new VisualizerStore());
@@ -23,9 +24,10 @@ const Visualizer = observer(() => {
           module={store.wasmModule}
           nodes={store.nodes}
           edges={store.edges}
+          setActiveAlgorithm={store.setActiveAlgorithm}
           setActiveResponse={store.setActiveResponse}
         />
-        <main className="h-[calc(100vh-64px)]">
+        <main className="flex flex-col h-[calc(100vh-64px)]">
           <GraphRenderer
             nodes={store.nodes}
             edges={store.edges}
@@ -43,6 +45,11 @@ const Visualizer = observer(() => {
             }
             gravity={store.gravity}
             nodeSizeScale={store.nodeSizeScale}
+            className="relative flex-1 overflow-hidden"
+          />
+          <CodeOutputDrawer
+            activeAlgorithm={store.activeAlgorithm}
+            activeResponse={store.activeResponse}
           />
         </main>
         <SettingsSidebar

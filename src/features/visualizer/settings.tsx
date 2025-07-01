@@ -61,19 +61,23 @@ function SettingsSidebarContent({
   const { state } = useSidebar();
 
   return (
-    <SidebarContent className="p-6 space-y-4">
+    <SidebarContent className="p-6 space-y-4 bg-gradient-to-br from-neutral-low/20 to-neutral/20">
       <h1 className="medium-title">Graph Options</h1>
       {/* Gravity */}
-      <div className="space-y-3">
-        <h2 className="small-title">Gravity Strength</h2>
-        <p className="small-body text-typography-secondary">
-          Modifies the gravitation strength of the center of the graph
-        </p>
+      <div className="space-y-4">
+        <div className="space-y-2">
+          {/* Title + Description */}
+          <h2 className="small-title">Gravity Strength</h2>
+          <p className="small-body text-typography-secondary">
+            Modifies the gravitation strength of the center of the graph
+          </p>
+        </div>
         <RadioGroup
           defaultValue={String(gravity)}
           onValueChange={(value) => setGravity(Number(value) as Gravity)}
           inert={state === "collapsed"}
         >
+          {/* Gravity options */}
           {Object.entries(GRAVITY).map(([key, val]) => (
             <div key={key} className="flex items-center gap-2">
               <RadioGroupItem value={String(val)} id={key} />
@@ -85,11 +89,14 @@ function SettingsSidebarContent({
         </RadioGroup>
       </div>
       {/* Node Size Scale */}
-      <div className="space-y-3">
-        <h2 className="small-title">Node Scalar Size</h2>
-        <p className="small-body text-typography-secondary">
-          Modify the sizes for all nodes
-        </p>
+      <div className="space-y-4">
+        <div className="space-y-2">
+          {/* Title + Description */}
+          <h2 className="small-title">Node Scalar Size</h2>
+          <p className="small-body text-typography-secondary">
+            Modify the sizes for all nodes
+          </p>
+        </div>
         <RadioGroup
           defaultValue={String(nodeSizeScale)}
           onValueChange={(value) =>
@@ -97,6 +104,7 @@ function SettingsSidebarContent({
           }
           inert={state === "collapsed"}
         >
+          {/* Node size scale options */}
           {Object.entries(NODE_SIZE_SCALE).map(([key, val]) => (
             <div key={key} className="flex items-center gap-2">
               <RadioGroupItem value={String(val)} id={key} />

@@ -45,6 +45,7 @@ export default function GraphRenderer({
   mode,
   gravity,
   nodeSizeScale,
+  className,
 }: {
   nodes: GraphNode[];
   edges: GraphEdge[];
@@ -54,6 +55,7 @@ export default function GraphRenderer({
   mode: number; // From algorithm's response
   gravity: number; // From settings sidebar
   nodeSizeScale: number; // From settings sidebar
+  className?: string;
 }) {
   // Refs
   const cosmographRef = useRef<CosmographRef<GraphNode, GraphEdge> | null>(
@@ -148,7 +150,7 @@ export default function GraphRenderer({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className={cn("flex flex-col h-full", className)}>
       <CosmographProvider nodes={nodes} links={edges}>
         <div className="p-2">
           <GraphRendererSearch

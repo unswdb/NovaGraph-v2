@@ -22,6 +22,7 @@ import {
 } from "~/components/ui/sidebar";
 import { useIsMobile } from "~/hooks/use-mobile";
 import ALL_ALGORITHMS, {
+  type BaseGraphAlgorithm,
   type BaseGraphAlgorithmResult,
 } from "./implementations";
 import {
@@ -37,11 +38,13 @@ export default function AlgorithmSidebar({
   module,
   nodes,
   edges,
+  setActiveAlgorithm,
   setActiveResponse,
 }: {
   module: GraphModule | null;
   nodes: GraphNode[];
   edges: GraphEdge[];
+  setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
 }) {
   return (
@@ -51,6 +54,7 @@ export default function AlgorithmSidebar({
           module={module}
           nodes={nodes}
           edges={edges}
+          setActiveAlgorithm={setActiveAlgorithm}
           setActiveResponse={setActiveResponse}
         />
       </Sidebar>
@@ -63,18 +67,20 @@ function AlgorithmSidebarContent({
   module,
   nodes,
   edges,
+  setActiveAlgorithm,
   setActiveResponse,
 }: {
   module: GraphModule | null;
   nodes: GraphNode[];
   edges: GraphEdge[];
+  setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
 }) {
   const { state } = useSidebar();
   const [searchText, setSearchText] = useState("");
 
   return (
-    <SidebarContent className="p-6 space-y-4">
+    <SidebarContent className="p-6 space-y-4 bg-gradient-to-br from-neutral-low/20 to-neutral/20">
       <SearchBar
         searchText={searchText}
         setSearchText={setSearchText}
@@ -113,6 +119,7 @@ function AlgorithmSidebarContent({
                           algorithm={algo}
                           nodes={nodes}
                           edges={edges}
+                          setActiveAlgorithm={setActiveAlgorithm}
                           setActiveResponse={setActiveResponse}
                           inert={state === "collapsed"}
                         />

@@ -16,7 +16,7 @@ import {
   DialogTrigger,
 } from "~/components/ui/dialog";
 import { Label } from "~/components/form/label";
-import type React from "react";
+import React from "react";
 import { cn } from "~/lib/utils";
 import {
   Select,
@@ -36,6 +36,7 @@ export default function AlgorithmInputModal({
   algorithm,
   nodes,
   edges,
+  setActiveAlgorithm,
   setActiveResponse,
   className,
   ...props
@@ -44,6 +45,7 @@ export default function AlgorithmInputModal({
   algorithm: BaseGraphAlgorithm;
   nodes: GraphNode[];
   edges: GraphEdge[];
+  setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
 }) {
   // States
@@ -60,6 +62,19 @@ export default function AlgorithmInputModal({
     [inputValues]
   );
 
+  // TODO: Handle error and loading state
+  const handleSubmit = async () => {
+    try {
+      const args = algorithm.inputs.map((input) => inputValues[input.label]);
+      const algorithmResponse = algorithm.wasmFunction(module, args);
+      setActiveAlgorithm(algorithm);
+      setActiveResponse(algorithmResponse);
+      setOpen(false);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const menuButton = (
     <SidebarMenuButton
       className={cn("p-0 hover:[&>span]:bg-neutral-low", className)}
@@ -72,23 +87,11 @@ export default function AlgorithmInputModal({
     </SidebarMenuButton>
   );
 
-  // TODO: Run WASM function to get response
-  const handleSubmit = async () => {
-    try {
-      const args = algorithm.inputs.map((input) => inputValues[input.label]);
-      const algorithmResponse = algorithm.wasmFunction(module, args);
-      setActiveResponse(algorithmResponse);
-      setOpen(false);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   // Return just the button if we don't need inputs from users
-  // TODO: Run WASM function to get response if we
-  // don't need user inputs and clicked
   if (algorithm.inputs.length <= 0) {
-    return menuButton;
+    return React.cloneElement(menuButton, {
+      onClick: handleSubmit,
+    });
   }
 
   return (
