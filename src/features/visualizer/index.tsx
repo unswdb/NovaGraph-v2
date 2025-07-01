@@ -7,7 +7,7 @@ import SettingsSidebar from "./settings";
 import GraphRenderer from "./renderer";
 
 const Visualizer = observer(() => {
-  const [store] = useState(new VisualizerStore());
+  const [store] = useState(() => new VisualizerStore());
 
   useEffect(() => {
     store.initialize();
@@ -23,13 +23,18 @@ const Visualizer = observer(() => {
           <GraphRenderer
             nodes={store.nodes}
             edges={store.edges}
-            colors={{}} // TODO
-            gravity={0} // TODO
-            mode={0} // TODO
-            nodeSizeScale={0} // TODO
+            colors={{}} // TODO: From algorithm's response
+            gravity={store.gravity}
+            mode={0} // TODO: From algorithm's response
+            nodeSizeScale={store.nodeSizeScale}
           />
         </main>
-        <SettingsSidebar />
+        <SettingsSidebar
+          gravity={store.gravity}
+          setGravity={store.setGravity}
+          nodeSizeScale={store.nodeSizeScale}
+          setNodeSizeScale={store.setNodeSizeScale}
+        />
       </div>
     </div>
   );

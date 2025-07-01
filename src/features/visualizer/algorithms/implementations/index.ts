@@ -1,5 +1,5 @@
 import { Route } from "lucide-react";
-import * as GRAPH_TRAVERSAL from "./graph-traversal";
+import * as GRAPH_TRAVERSAL from "./traversal";
 import { type BaseGraphAlgorithm } from "./implementations.types";
 import type { ElementType } from "react";
 

@@ -10,76 +10,24 @@ import {
   useSidebar,
 } from "~/components/ui/sidebar";
 import { useIsMobile } from "~/hooks/use-mobile";
+import {
+  GRAVITY,
+  NODE_SIZE_SCALE,
+  type Gravity,
+  type NodeSizeScale,
+} from "./visualizer.constant";
 
-const GRAVITY = {
-  ZERO_GRAVITY: 0,
-  LOW_GRAVITY: 0.1,
-  HIGH_GRAVITY: 0.5,
-};
-
-const NODE_SCALAR_SIZE = {
-  INVISIBLE: 0,
-  EXTRA_SMALL: 0.25,
-  SMALL: 0.5,
-  MEDIUM: 1,
-  LARGE: 1.5,
-  EXTRA_LARGE: 2,
-};
-
-const RADIO_GROUPS = [
-  {
-    title: "Gravity Strength",
-    description: "Modifies the gravitation strength of the center of the graph",
-    defaultValue: GRAVITY.ZERO_GRAVITY,
-    values: [
-      {
-        label: "Zero Gravity (Default)",
-        value: GRAVITY.ZERO_GRAVITY,
-      },
-      {
-        label: "Low Gravity",
-        value: GRAVITY.LOW_GRAVITY,
-      },
-      {
-        label: "High Gravity",
-        value: GRAVITY.HIGH_GRAVITY,
-      },
-    ],
-  },
-  {
-    title: "Node Scalar Size",
-    description: "Modify the sizes for all nodes",
-    defaultValue: NODE_SCALAR_SIZE.MEDIUM,
-    values: [
-      {
-        label: "Invisible",
-        value: NODE_SCALAR_SIZE.INVISIBLE,
-      },
-      {
-        label: "Extra Small",
-        value: NODE_SCALAR_SIZE.EXTRA_SMALL,
-      },
-      {
-        label: "Small",
-        value: NODE_SCALAR_SIZE.SMALL,
-      },
-      {
-        label: "Medium (Default)",
-        value: NODE_SCALAR_SIZE.MEDIUM,
-      },
-      {
-        label: "Large",
-        value: NODE_SCALAR_SIZE.LARGE,
-      },
-      {
-        label: "Extra Large",
-        value: NODE_SCALAR_SIZE.EXTRA_LARGE,
-      },
-    ],
-  },
-];
-
-export default function SettingsSidebar() {
+export default function SettingsSidebar({
+  gravity,
+  setGravity,
+  nodeSizeScale,
+  setNodeSizeScale,
+}: {
+  gravity: Gravity;
+  setGravity: (g: Gravity) => void;
+  nodeSizeScale: NodeSizeScale;
+  setNodeSizeScale: (n: NodeSizeScale) => void;
+}) {
   return (
     <SidebarProvider
       name="config-sidebar"
@@ -87,39 +35,80 @@ export default function SettingsSidebar() {
       defaultOpen={false}
     >
       <Sidebar side="right">
-        <SettingsSidebarContent />
+        <SettingsSidebarContent
+          gravity={gravity}
+          setGravity={setGravity}
+          nodeSizeScale={nodeSizeScale}
+          setNodeSizeScale={setNodeSizeScale}
+        />
       </Sidebar>
       <SettingsSidebarControls />
     </SidebarProvider>
   );
 }
 
-function SettingsSidebarContent() {
+function SettingsSidebarContent({
+  gravity,
+  setGravity,
+  nodeSizeScale,
+  setNodeSizeScale,
+}: {
+  gravity: Gravity;
+  setGravity: (g: Gravity) => void;
+  nodeSizeScale: NodeSizeScale;
+  setNodeSizeScale: (n: NodeSizeScale) => void;
+}) {
   const { state } = useSidebar();
+
+  console.log(Object.entries(GRAVITY));
 
   return (
     <SidebarContent className="p-6 space-y-4">
       <h1 className="medium-title">Graph Options</h1>
-      {/* Radio Groups */}
-      {RADIO_GROUPS.map(({ title, description, defaultValue, values }) => (
-        <div key={title} className="space-y-3">
-          <h2 className="small-title">{title}</h2>
-          <p className="small-body text-typography-secondary">{description}</p>
-          <RadioGroup
-            defaultValue={String(defaultValue)}
-            inert={state === "collapsed"}
-          >
-            {values.map(({ label, value }) => (
-              <div key={label} className="flex items-center gap-2">
-                <RadioGroupItem value={String(value)} id={label} />
-                <Label className="font-normal" htmlFor={label}>
-                  {label}
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-        </div>
-      ))}
+      {/* Gravity */}
+      <div className="space-y-3">
+        <h2 className="small-title">Gravity Strength</h2>
+        <p className="small-body text-typography-secondary">
+          Modifies the gravitation strength of the center of the graph
+        </p>
+        <RadioGroup
+          defaultValue={String(gravity)}
+          onValueChange={(value) => setGravity(Number(value) as Gravity)}
+          inert={state === "collapsed"}
+        >
+          {Object.entries(GRAVITY).map(([key, val]) => (
+            <div key={key} className="flex items-center gap-2">
+              <RadioGroupItem value={String(val)} id={key} />
+              <Label htmlFor={key} className="capitalize font-normal">
+                {key.replace(/_/g, " ").toLowerCase()}
+              </Label>
+            </div>
+          ))}
+        </RadioGroup>
+      </div>
+      {/* Node Size Scale */}
+      <div className="space-y-3">
+        <h2 className="small-title">Node Scalar Size</h2>
+        <p className="small-body text-typography-secondary">
+          Modify the sizes for all nodes
+        </p>
+        <RadioGroup
+          defaultValue={String(nodeSizeScale)}
+          onValueChange={(value) =>
+            setNodeSizeScale(Number(value) as NodeSizeScale)
+          }
+          inert={state === "collapsed"}
+        >
+          {Object.entries(NODE_SIZE_SCALE).map(([key, val]) => (
+            <div key={key} className="flex items-center gap-2">
+              <RadioGroupItem value={String(val)} id={key} />
+              <Label htmlFor={key} className="capitalize font-normal">
+                {key.replace(/_/g, " ").toLowerCase()}
+              </Label>
+            </div>
+          ))}
+        </RadioGroup>
+      </div>
     </SidebarContent>
   );
 }
