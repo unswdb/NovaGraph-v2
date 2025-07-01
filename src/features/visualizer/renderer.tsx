@@ -273,7 +273,7 @@ function GraphRendererSearch({
         {/* List of nodes */}
         {isFocused && (
           <CommandList className="absolute w-full top-full left-0 z-50 max-h-64 rounded-md border border-border">
-            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandEmpty>No results found</CommandEmpty>
             <CommandGroup>
               {filteredNodes.map((node, index) => {
                 const value = currentAccessor.accessor(node);

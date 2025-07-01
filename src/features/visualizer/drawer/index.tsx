@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronUp, ChevronDown, Code, FileText } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
@@ -23,19 +23,14 @@ export function CodeOutputDrawer({
   const [tabValue, setTabValue] = useState("code");
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Memoised value
-  const enableOutput = useMemo(
-    () => !!activeAlgorithm && !!activeResponse,
-    [activeAlgorithm, activeResponse]
-  );
-
-  // Default to open when output is available
+  // Default to open when algorithm / response internal value
+  // is changed
   useEffect(() => {
-    if (enableOutput) {
+    if (!!activeAlgorithm && !!activeResponse) {
       setIsExpanded(true);
       setTabValue("output");
     }
-  }, [enableOutput]);
+  }, [activeAlgorithm, activeResponse]);
 
   return (
     <div
@@ -87,7 +82,9 @@ export function CodeOutputDrawer({
             {/* Content for Code */}
             <TabsContent value="code" className="flex flex-col">
               <div className="flex-1">Code Section</div>
-              <CodeOutputTabs enableOutput={enableOutput} />
+              <CodeOutputTabs
+                enableOutput={!!activeAlgorithm && !!activeResponse}
+              />
             </TabsContent>
             {/* Content for Output */}
             <TabsContent value="output" className="flex flex-col">
@@ -96,7 +93,9 @@ export function CodeOutputDrawer({
                   !!activeResponse &&
                   activeAlgorithm.output(activeResponse)}
               </div>
-              <CodeOutputTabs enableOutput={enableOutput} />
+              <CodeOutputTabs
+                enableOutput={!!activeAlgorithm && !!activeResponse}
+              />
             </TabsContent>
           </Tabs>
         )}

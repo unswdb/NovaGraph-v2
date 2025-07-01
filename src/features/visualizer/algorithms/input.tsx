@@ -38,6 +38,7 @@ export default function AlgorithmInputModal({
   edges,
   setActiveAlgorithm,
   setActiveResponse,
+  separator = false,
   className,
   ...props
 }: React.ComponentProps<"button"> & {
@@ -47,6 +48,7 @@ export default function AlgorithmInputModal({
   edges: GraphEdge[];
   setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
+  separator?: boolean;
 }) {
   // States
   const [open, setOpen] = useState(false);
@@ -59,7 +61,7 @@ export default function AlgorithmInputModal({
     () =>
       Object.entries(inputValues).length === algorithm.inputs.length &&
       Object.values(inputValues).every((v) => !!v),
-    [inputValues]
+    [inputValues, algorithm]
   );
 
   // TODO: Handle error and loading state
@@ -80,7 +82,7 @@ export default function AlgorithmInputModal({
       className={cn("p-0 hover:[&>span]:bg-neutral-low", className)}
       {...props}
     >
-      <Separator className="ml-4 mr-2" orientation="vertical" />
+      {separator && <Separator className="ml-4 mr-2" orientation="vertical" />}
       <span className="flex items-center px-3 rounded-md h-full w-full text-ellipsis">
         {algorithm.title}
       </span>
