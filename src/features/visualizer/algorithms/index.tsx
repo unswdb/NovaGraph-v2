@@ -21,7 +21,9 @@ import {
   useSidebar,
 } from "~/components/ui/sidebar";
 import { useIsMobile } from "~/hooks/use-mobile";
-import ALL_ALGORITHMS from "./implementations";
+import ALL_ALGORITHMS, {
+  type BaseGraphAlgorithmResult,
+} from "./implementations";
 import {
   Collapsible,
   CollapsibleContent,
@@ -29,19 +31,28 @@ import {
 } from "~/components/ui/collapsible";
 import AlgorithmInputModal from "./input";
 import { cn } from "~/lib/utils";
-import type { GraphEdge, GraphNode } from "../visualizer.types";
+import type { GraphEdge, GraphModule, GraphNode } from "../visualizer.types";
 
 export default function AlgorithmSidebar({
+  module,
   nodes,
   edges,
+  setActiveResponse,
 }: {
+  module: GraphModule | null;
   nodes: GraphNode[];
   edges: GraphEdge[];
+  setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
 }) {
   return (
     <SidebarProvider name="algorithm-sidebar" className="relative isolate z-10">
       <Sidebar side="left">
-        <AlgorithmSidebarContent nodes={nodes} edges={edges} />
+        <AlgorithmSidebarContent
+          module={module}
+          nodes={nodes}
+          edges={edges}
+          setActiveResponse={setActiveResponse}
+        />
       </Sidebar>
       <AlgorithmSidebarControls />
     </SidebarProvider>
@@ -49,11 +60,15 @@ export default function AlgorithmSidebar({
 }
 
 function AlgorithmSidebarContent({
+  module,
   nodes,
   edges,
+  setActiveResponse,
 }: {
+  module: GraphModule | null;
   nodes: GraphNode[];
   edges: GraphEdge[];
+  setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
 }) {
   const { state } = useSidebar();
   const [searchText, setSearchText] = useState("");
@@ -94,9 +109,11 @@ function AlgorithmSidebarContent({
                     {algorithm.algorithms.map((algo) => (
                       <SidebarMenuItem key={algo.title}>
                         <AlgorithmInputModal
+                          module={module}
                           algorithm={algo}
                           nodes={nodes}
                           edges={edges}
+                          setActiveResponse={setActiveResponse}
                           inert={state === "collapsed"}
                         />
                       </SidebarMenuItem>

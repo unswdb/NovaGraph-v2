@@ -60,8 +60,6 @@ function SettingsSidebarContent({
 }) {
   const { state } = useSidebar();
 
-  console.log(Object.entries(GRAVITY));
-
   return (
     <SidebarContent className="p-6 space-y-4">
       <h1 className="medium-title">Graph Options</h1>

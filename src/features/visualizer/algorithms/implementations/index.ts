@@ -12,16 +12,19 @@ const ALL_ALGORITHMS: {
   {
     label: "Graph Traversal",
     icon: Route,
-    algorithms: Object.values(GRAPH_TRAVERSAL),
+    algorithms: Object.values(GRAPH_TRAVERSAL) as BaseGraphAlgorithm[],
   },
 ];
 export default ALL_ALGORITHMS;
 
 // Export algorithm type
 export {
+  type BaseGraphAlgorithmResult,
   type BaseGraphAlgorithm,
   type GraphAlgorithm,
   type GraphAlgorithmInput,
   type SelectInput,
   type NumberInput,
+  type SizeMap,
+  type ColorMap,
 } from "./implementations.types";

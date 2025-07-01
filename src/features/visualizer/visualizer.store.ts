@@ -2,6 +2,7 @@ import { action, makeObservable, observable, runInAction } from "mobx";
 import createModule from "~/graph";
 import type { GraphEdge, GraphModule, GraphNode } from "./visualizer.types";
 import { GRAVITY, NODE_SIZE_SCALE, type Gravity, type NodeSizeScale } from "./visualizer.constant";
+import type { BaseGraphAlgorithm, BaseGraphAlgorithmResult } from "./algorithms/implementations";
 
 type InitializedVisualizerStore = VisualizerStore & {
   wasmModule: NonNullable<VisualizerStore["wasmModule"]>;
@@ -16,10 +17,12 @@ export default class VisualizerStore {
       edges: observable,
       gravity: observable,
       nodeSizeScale: observable,
+      activeResponse: observable,
       initialize: action,
       cleanup: action,
       setGravity: action,
       setNodeSizeScale: action,
+      setActiveResponse: action,
     });
   }
 
@@ -29,6 +32,7 @@ export default class VisualizerStore {
   edges: GraphEdge[] = [];
   gravity: Gravity = GRAVITY.ZERO_GRAVITY;
   nodeSizeScale: NodeSizeScale = NODE_SIZE_SCALE.MEDIUM;
+  activeResponse: BaseGraphAlgorithmResult | null = null;
 
   // ACTIONS
   initialize = async() => {
@@ -62,6 +66,10 @@ export default class VisualizerStore {
 
   setNodeSizeScale = (nodeSizeScale: NodeSizeScale) => {
     this.nodeSizeScale = nodeSizeScale;
+  }
+
+  setActiveResponse = (activeResponse: BaseGraphAlgorithmResult) => {
+    this.activeResponse = activeResponse;
   }
 
   // UTILITIES FUNCTION

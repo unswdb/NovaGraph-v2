@@ -5,6 +5,7 @@ import Header from "./header";
 import AlgorithmSidebar from "./algorithms";
 import SettingsSidebar from "./settings";
 import GraphRenderer from "./renderer";
+import { MODE } from "./visualizer.constant";
 
 const Visualizer = observer(() => {
   const [store] = useState(() => new VisualizerStore());
@@ -18,14 +19,29 @@ const Visualizer = observer(() => {
     <div className="flex flex-col w-screen h-screen overflow-hidden">
       <Header />
       <div className="flex flex-row flex-1">
-        <AlgorithmSidebar nodes={store.nodes} edges={store.edges} />
+        <AlgorithmSidebar
+          module={store.wasmModule}
+          nodes={store.nodes}
+          edges={store.edges}
+          setActiveResponse={store.setActiveResponse}
+        />
         <main className="h-[calc(100vh-64px)]">
           <GraphRenderer
             nodes={store.nodes}
             edges={store.edges}
-            colors={{}} // TODO: From algorithm's response
+            directed={false} // TODO: Ask about directed variable
+            sizes={
+              store.activeResponse && store.activeResponse.sizeMap
+                ? store.activeResponse.sizeMap
+                : {}
+            }
+            colors={store.activeResponse ? store.activeResponse.colorMap : {}}
+            mode={
+              store.activeResponse
+                ? store.activeResponse.mode
+                : MODE.COLOR_SHADE_DEFAULT
+            }
             gravity={store.gravity}
-            mode={0} // TODO: From algorithm's response
             nodeSizeScale={store.nodeSizeScale}
           />
         </main>

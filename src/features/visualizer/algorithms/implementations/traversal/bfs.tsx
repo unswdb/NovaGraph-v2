@@ -9,17 +9,18 @@ type BFSOutputData = {
   nodesFound: number;
   layers: { layer: string[]; index: number }[];
 };
-type BFSOutput = GraphAlgorithmResult<BFSOutputData>;
 
-export const bfs = createGraphAlgorithm<BFSOutput>({
+export const bfs = createGraphAlgorithm<BFSOutputData>({
   title: "Breadth-First Search",
   description: "Traverse the graph using BFS starting from a node",
   inputs: [{ label: "Start Node", type: "select", source: "nodes" }],
-  wasmFunction: "bfs",
-  output: (result: BFSOutput) => <BFS {...result} />,
+  wasmFunction: (module, [args]) => {
+    if (module) return module.bfs(args);
+  },
+  output: (props) => <BFS {...props} />,
 });
 
-function BFS(props: BFSOutput) {
+function BFS(props: GraphAlgorithmResult<BFSOutputData>) {
   const { source, nodesFound, layers } = props.data;
   return <p>yerr</p>;
 }

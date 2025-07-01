@@ -4,8 +4,7 @@ import {
   type CosmographRef,
 } from "@cosmograph/react";
 import { useCallback, useMemo, useRef, useState } from "react";
-import type { GraphEdge, GraphNode } from "../visualizer.types";
-import { MODE } from "./renderer.constant";
+import type { GraphEdge, GraphNode } from "./visualizer.types";
 import {
   Command,
   CommandEmpty,
@@ -22,10 +21,26 @@ import {
   SelectTrigger,
 } from "~/components/form/select";
 import { cn } from "~/lib/utils";
+import {
+  CRITICAL_COLOR,
+  DEFAULT_LINK_WIDTH,
+  DEFAULT_NODE_SIZE,
+  DISABLED_COLOR,
+  GRADIENT_COLOR,
+  HIGHLIGHTED_LINK_WIDTH,
+  INACTIVE_NODE_SIZE,
+  MODE,
+  NEUTRAL_COLOR,
+  NEUTRAL_LOW_COLOR,
+} from "./visualizer.constant";
+import type { ColorMap, SizeMap } from "./algorithms/implementations";
+import { useTheme } from "~/hooks/use-theme";
 
 export default function GraphRenderer({
   nodes,
   edges,
+  directed,
+  sizes,
   colors,
   mode,
   gravity,
@@ -33,7 +48,9 @@ export default function GraphRenderer({
 }: {
   nodes: GraphNode[];
   edges: GraphEdge[];
-  colors: Record<string, number>; // From algorithm's response
+  directed: boolean;
+  sizes: SizeMap;
+  colors: ColorMap; // From algorithm's response
   mode: number; // From algorithm's response
   gravity: number; // From settings sidebar
   nodeSizeScale: number; // From settings sidebar
@@ -45,6 +62,9 @@ export default function GraphRenderer({
 
   // States
   const [showDynamicLabels, setShowDynamicLabels] = useState(true);
+
+  // Hooks
+  const { theme } = useTheme();
 
   // Decide whether to include a "Name" accessor in Cosmograph search UI
   const allNodesHaveName = nodes.every((n) => n.name);
@@ -70,6 +90,63 @@ export default function GraphRenderer({
     [zoomOut]
   );
 
+  // Renderer appearance attributes related functions
+  const getSize = (index: number) => {
+    if (mode === MODE.COLOR_SHADE_DEFAULT && isNaN(colors[index])) {
+      return INACTIVE_NODE_SIZE;
+    }
+    return sizes[index] ? sizes[index] : DEFAULT_NODE_SIZE;
+  };
+
+  const getColor = (index: number) => {
+    switch (mode) {
+      case MODE.COLOR_IMPORTANT:
+        return colors[index] > 0
+          ? GRADIENT_COLOR(1).hex()
+          : colors[index] < 0
+          ? CRITICAL_COLOR
+          : NEUTRAL_COLOR;
+      case MODE.COLOR_SHADE_DEFAULT:
+        return isNaN(colors[index])
+          ? DISABLED_COLOR
+          : GRADIENT_COLOR(colors[index]).hex();
+      case MODE.COLOR_SHADE_ERROR:
+        return isNaN(colors[index])
+          ? CRITICAL_COLOR
+          : GRADIENT_COLOR(colors[index]).hex();
+      case MODE.SIZE_SCALAR:
+        return NEUTRAL_COLOR;
+      case MODE.RAINBOW:
+        return `hsl(${colors[index] * 137.508 + 50},100%,75%)`;
+      default:
+        return NEUTRAL_COLOR;
+    }
+  };
+
+  const getLinkColor = (link: GraphEdge) => {
+    if (colors[`${link.source}-${link.target}`] > 0) {
+      return NEUTRAL_LOW_COLOR;
+    } else if (!directed && colors[`${link.target}-${link.source}`] > 0) {
+      return NEUTRAL_LOW_COLOR;
+    } else if (colors[`${link.target}-${link.source}`] === 0) {
+      return GRADIENT_COLOR(1).hex();
+    } else if (!directed && colors[`${link.source}-${link.target}`] === 0) {
+      return GRADIENT_COLOR(1).hex();
+    } else {
+      return null;
+    }
+  };
+
+  const getLinkWidth = (link: GraphEdge) => {
+    if (colors[`${link.source}-${link.target}`] >= 0) {
+      return HIGHLIGHTED_LINK_WIDTH;
+    } else if (!directed && colors[`${link.target}-${link.source}`] >= 0) {
+      return HIGHLIGHTED_LINK_WIDTH;
+    } else {
+      return DEFAULT_LINK_WIDTH;
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       <CosmographProvider nodes={nodes} links={edges}>
@@ -88,14 +165,14 @@ export default function GraphRenderer({
           ref={cosmographRef}
           onClick={zoomToNode}
           initialZoomLevel={1}
-          // nodeSize={(_node, id) => getSize(id)}
-          // nodeColor={(_node, id) => getColor(colors[id])}
+          nodeSize={(_, id) => getSize(id)}
+          nodeColor={(_, id) => getColor(colors[id])}
           nodeGreyoutOpacity={0.1}
           nodeLabelAccessor={(node) => (node.name ? node.name : node.id)}
           nodeSizeScale={nodeSizeScale}
-          // linkColor={(link) => getLinkColor(link)}
-          // linkWidth={(link) => getLinkWidth(link)}
-          linkArrows={false} // TODO: Ask about directed variable
+          linkColor={(link) => getLinkColor(link)}
+          linkWidth={(link) => getLinkWidth(link)}
+          linkArrows={directed}
           linkGreyoutOpacity={0}
           simulationLinkDistance={20}
           simulationLinkSpring={0.02}
@@ -107,6 +184,8 @@ export default function GraphRenderer({
           hoveredNodeRingColor={"var(--color-positive)"}
           renderHoveredNodeRing={true}
           backgroundColor="transparent"
+          hoveredNodeLabelColor="white"
+          nodeLabelColor="white"
           className="bg-page flex-1"
         />
       </CosmographProvider>

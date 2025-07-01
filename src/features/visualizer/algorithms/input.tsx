@@ -1,6 +1,7 @@
 import { SidebarMenuButton } from "~/components/ui/sidebar";
 import type {
   BaseGraphAlgorithm,
+  BaseGraphAlgorithmResult,
   GraphAlgorithmInput,
   SelectInput,
 } from "./implementations";
@@ -24,27 +25,41 @@ import {
   SelectItem,
   SelectTrigger,
 } from "~/components/form/select";
-import type { GraphEdge, GraphNode } from "../visualizer.types";
+import type { GraphEdge, GraphModule, GraphNode } from "../visualizer.types";
 import { Input } from "~/components/form/input";
 import { SelectValue } from "@radix-ui/react-select";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "~/components/ui/button";
 
 export default function AlgorithmInputModal({
+  module,
   algorithm,
   nodes,
   edges,
+  setActiveResponse,
   className,
   ...props
 }: React.ComponentProps<"button"> & {
+  module: GraphModule | null;
   algorithm: BaseGraphAlgorithm;
   nodes: GraphNode[];
   edges: GraphEdge[];
+  setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
 }) {
+  // States
   const [open, setOpen] = useState(false);
+  const [inputValues, setInputValues] = useState<
+    Record<string, string | number>
+  >({}); // Track all input values
 
-  // TODO: Run WASM function to get response if we
-  // don't need user inputs and clicked
+  // Memoised values
+  const isReadyToSubmit = useMemo(
+    () =>
+      Object.entries(inputValues).length === algorithm.inputs.length &&
+      Object.values(inputValues).every((v) => !!v),
+    [inputValues]
+  );
+
   const menuButton = (
     <SidebarMenuButton
       className={cn("p-0 hover:[&>span]:bg-neutral-low", className)}
@@ -57,15 +72,24 @@ export default function AlgorithmInputModal({
     </SidebarMenuButton>
   );
 
+  // TODO: Run WASM function to get response
+  const handleSubmit = async () => {
+    try {
+      const args = algorithm.inputs.map((input) => inputValues[input.label]);
+      const algorithmResponse = algorithm.wasmFunction(module, args);
+      setActiveResponse(algorithmResponse);
+      setOpen(false);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // Return just the button if we don't need inputs from users
+  // TODO: Run WASM function to get response if we
+  // don't need user inputs and clicked
   if (algorithm.inputs.length <= 0) {
     return menuButton;
   }
-
-  // TODO: Run WASM function to get response
-  const handleSubmit = () => {
-    setOpen(false);
-  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -84,12 +108,20 @@ export default function AlgorithmInputModal({
               input={input}
               nodes={nodes}
               edges={edges}
+              value={inputValues[input.label]}
+              onChange={(value) =>
+                setInputValues((prev) => ({ ...prev, [input.label]: value }))
+              }
             />
           ))}
         </div>
         {/* Submit button */}
         <DialogFooter>
-          <Button type="submit" onClick={handleSubmit}>
+          <Button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={!isReadyToSubmit}
+          >
             Submit
           </Button>
         </DialogFooter>
@@ -102,24 +134,40 @@ function AlgorithmInput({
   input,
   nodes,
   edges,
+  value,
+  onChange,
 }: {
   input: GraphAlgorithmInput;
   nodes: GraphNode[];
   edges: GraphEdge[];
+  value: string | number | undefined;
+  onChange: (value: string | number) => void;
 }) {
   switch (input.type) {
     case "select":
       return (
         <div className="space-y-4">
           <Label>{input.label}</Label>
-          <AlgorithmSelectInput input={input} nodes={nodes} edges={edges} />
+          <AlgorithmSelectInput
+            input={input}
+            nodes={nodes}
+            edges={edges}
+            value={value ? String(value) : ""}
+            onChange={onChange}
+          />
         </div>
       );
     case "number":
       return (
         <div className="space-y-1">
           <Label>{input.label}</Label>
-          <Input type="number" min={input.min ?? 0} max={input.max} />
+          <Input
+            type="number"
+            min={input.min ?? 0}
+            max={input.max}
+            value={value ?? ""}
+            onChange={(e) => onChange(Number(e.target.value))}
+          />
         </div>
       );
   }
@@ -129,10 +177,14 @@ function AlgorithmSelectInput({
   input,
   nodes,
   edges,
+  value,
+  onChange,
 }: {
   input: SelectInput;
   nodes: GraphNode[];
   edges: GraphEdge[];
+  value: string;
+  onChange: (value: string) => void;
 }) {
   const source = input.source;
   const placeholder =
@@ -155,7 +207,7 @@ function AlgorithmSelectInput({
         }));
 
   return (
-    <Select>
+    <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="w-full">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
