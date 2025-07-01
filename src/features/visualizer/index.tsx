@@ -5,7 +5,6 @@ import Header from "./header";
 import AlgorithmSidebar from "./algorithms";
 import SettingsSidebar from "./settings";
 import GraphRenderer from "./renderer";
-import { SidebarInset } from "~/components/ui/sidebar";
 
 const Visualizer = observer(() => {
   const [store] = useState(new VisualizerStore());

@@ -1,12 +1,27 @@
 import {
   Cosmograph,
   CosmographProvider,
-  CosmographSearch,
   type CosmographRef,
 } from "@cosmograph/react";
-import { useCallback, useRef, useState } from "react";
-import type { GraphEdge, GraphNode } from "../types";
-import { MODE } from "./constant";
+import { useCallback, useMemo, useRef, useState } from "react";
+import type { GraphEdge, GraphNode } from "../visualizer.types";
+import { MODE } from "./renderer.constant";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "~/components/ui/command";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+  SelectTrigger,
+} from "~/components/form/select";
+import { cn } from "~/lib/utils";
 
 export default function GraphRenderer({
   nodes,
@@ -44,8 +59,8 @@ export default function GraphRenderer({
   }, []);
 
   const zoomToNode = useCallback(
-    (node: GraphNode | undefined, index: number | undefined) => {
-      if (node && index) {
+    (node: GraphNode | null | undefined) => {
+      if (node) {
         cosmographRef.current?.selectNode(node);
         cosmographRef.current?.zoomToNode(node);
       } else {
@@ -58,33 +73,15 @@ export default function GraphRenderer({
   return (
     <div className="flex flex-col h-full">
       <CosmographProvider nodes={nodes} links={edges}>
-        <div
-          style={
-            {
-              // Set custom properties manually on the DOM element wrapping CosmographSearch
-              "--cosmograph-search-input-background": "var(--color-page)",
-              "--cosmograph-search-list-background": "var(--color-page)",
-              "--cosmograph-search-text-color":
-                "var(--color-typography-primary)",
-              "--cosmograph-search-hover-color": "var(--color-neutral-low)",
-              "--cosmograph-search-accessor-background": "var(--color-neutral)",
-              "--cosmograph-search-mark-background": "var(--color-primary)",
-              "--cosmograph-search-interactive-background":
-                "var(--color-neutral-hover)",
-            } as React.CSSProperties
-          }
-          className="[.cosmograph-search-result>span]:text-[var(--color-typography-primary)]"
-        >
-          <CosmographSearch
-            onSelectResult={(n) => {
-              if (!n) return;
-              cosmographRef.current?.selectNode(n);
-            }}
+        <div className="p-2">
+          <GraphRendererSearch
+            nodes={nodes}
             accessors={[
               { label: "ID", accessor: (n) => n.id },
               ...nameAccessor,
             ]}
-            className="p-6"
+            onSelect={(n) => zoomToNode(n)}
+            className="p-4 rounded-md h-max"
           />
         </div>
         <Cosmograph
@@ -113,6 +110,115 @@ export default function GraphRenderer({
           className="bg-page flex-1"
         />
       </CosmographProvider>
+    </div>
+  );
+}
+
+type Accessor = { label: string; accessor: (n: GraphNode) => string };
+
+function GraphRendererSearch({
+  nodes,
+  accessors,
+  onSelect,
+  className,
+}: {
+  nodes: GraphNode[];
+  accessors: [Accessor, ...Accessor[]]; // At least one element
+  onSelect: (node: GraphNode | null) => void;
+  className?: string;
+}) {
+  // Refs
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // States
+  const [searchText, setSearchText] = useState("");
+  const [currentAccessorIdx, setCurrentAccessorIdx] = useState(0);
+  const [isFocused, setIsFocused] = useState(false);
+
+  // Memoized values
+  const currentAccessor = useMemo(
+    () => accessors[currentAccessorIdx],
+    [accessors, currentAccessorIdx]
+  );
+
+  const filteredNodes = useMemo(
+    () =>
+      nodes.filter((node) =>
+        currentAccessor
+          .accessor(node)
+          .toLowerCase()
+          .includes(searchText.toLowerCase())
+      ),
+    [nodes, currentAccessor, searchText]
+  );
+
+  // Functions
+  const handleOnSelect = (node: GraphNode) => {
+    onSelect(node);
+    setSearchText(currentAccessor.accessor(node));
+    inputRef.current?.blur(); // remove input focus
+  };
+
+  return (
+    <div className={cn("relative w-full", className)}>
+      <Command className="h-auto" shouldFilter={false}>
+        <div className="flex justify-between gap-2 items-center">
+          {/* Input */}
+          <CommandInput
+            ref={inputRef}
+            value={searchText}
+            onValueChange={setSearchText}
+            placeholder={`Find by ${currentAccessor.label}...`}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+          />
+          {/* Select accessors */}
+          <Select
+            value={String(currentAccessorIdx)}
+            onValueChange={(idx) => setCurrentAccessorIdx(Number(idx))}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {accessors.map((accessor, index) => (
+                <SelectItem key={index} value={String(index)}>
+                  {accessor.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {/* List of nodes */}
+        {isFocused && (
+          <CommandList className="absolute w-full top-full left-0 z-50 max-h-64 rounded-md border border-border">
+            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandGroup>
+              {filteredNodes.map((node, index) => {
+                const value = currentAccessor.accessor(node);
+                return (
+                  <CommandItem
+                    key={index}
+                    value={value}
+                    onSelect={() => handleOnSelect(node)}
+                  >
+                    <span>
+                      {currentAccessor.label}: {value}
+                    </span>
+                    <span className="text-typography-tertiary">
+                      {/* Other accessors' values */}
+                      {accessors
+                        .filter((_, i) => i !== currentAccessorIdx)
+                        .map((a) => `${a.label}: ${a.accessor(node)}`)
+                        .join(" . ")}
+                    </span>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
+        )}
+      </Command>
     </div>
   );
 }

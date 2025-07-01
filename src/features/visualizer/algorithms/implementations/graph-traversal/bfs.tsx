@@ -1,4 +1,7 @@
-import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
+import {
+  createGraphAlgorithm,
+  type GraphAlgorithmResult,
+} from "../implementations.types";
 
 // Infered from src/wasm/algorithms
 type BFSOutputData = {

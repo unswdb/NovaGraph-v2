@@ -1,6 +1,6 @@
 import { Route } from "lucide-react";
 import * as GRAPH_TRAVERSAL from "./graph-traversal";
-import { type BaseGraphAlgorithm } from "./types";
+import { type BaseGraphAlgorithm } from "./implementations.types";
 import type { ElementType } from "react";
 
 // Export all algorithms
@@ -24,4 +24,4 @@ export {
   type GraphAlgorithmInput,
   type SelectInput,
   type NumberInput,
-} from "./types";
+} from "./implementations.types";

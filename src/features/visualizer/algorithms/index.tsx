@@ -29,7 +29,7 @@ import {
 } from "~/components/ui/collapsible";
 import AlgorithmInputModal from "./input";
 import { cn } from "~/lib/utils";
-import type { GraphEdge, GraphNode } from "../types";
+import type { GraphEdge, GraphNode } from "../visualizer.types";
 
 export default function AlgorithmSidebar({
   nodes,

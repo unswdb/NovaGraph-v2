@@ -1,6 +1,6 @@
 import { action, makeObservable, observable, runInAction } from "mobx";
 import createModule from "~/graph";
-import type { GraphEdge, GraphModule, GraphNode } from "./types";
+import type { GraphEdge, GraphModule, GraphNode } from "./visualizer.types";
 
 type InitializedVisualizerStore = VisualizerStore & {
   wasmModule: NonNullable<VisualizerStore["wasmModule"]>;
