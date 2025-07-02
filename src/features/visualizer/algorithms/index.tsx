@@ -264,7 +264,7 @@ function AlgorithmSidebarControls() {
 
   return (
     <div
-      className={`bg-page p-2 flex flex-col items-center gap-2 h-max absolute top-1/2 -translate-y-1/2 ${
+      className={`bg-gradient-to-br from-neutral-low/20 to-neutral/20 p-2 flex flex-col items-center gap-2 h-max absolute top-1/2 -translate-y-1/2 ${
         state === "collapsed" || isMobile
           ? "left-0"
           : "left-[calc(var(--sidebar-width))]"
