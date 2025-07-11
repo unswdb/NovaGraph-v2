@@ -11,7 +11,6 @@ import type { Route } from "./+types/root";
 import "./globals.css";
 import { ThemeProvider } from "~/hooks/use-theme";
 import { TooltipProvider } from "~/components/ui/tooltip";
-import { SidebarProvider } from "~/components/ui/sidebar";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },

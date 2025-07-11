@@ -3,8 +3,8 @@ import LandingPage from "@features/landing";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
+    { title: "NovaGraph" },
+    { name: "description", content: "Visualize, Analyze, Discover" },
   ];
 }
 
