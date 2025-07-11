@@ -280,6 +280,7 @@ function SearchBar({
         value={searchText}
         onChange={(e) => setSearchText(e.target.value)}
         placeholder="Search for Algorithms..."
+        autoFocus
         {...props}
       />
     </div>

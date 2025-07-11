@@ -3,7 +3,8 @@ import {
   CosmographProvider,
   type CosmographRef,
 } from "@cosmograph/react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import chroma from "chroma-js";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { GraphEdge, GraphNode } from "./visualizer.types";
 import {
   Command,
@@ -21,20 +22,35 @@ import {
   SelectTrigger,
 } from "~/components/form/select";
 import { cn } from "~/lib/utils";
-import {
-  CRITICAL_COLOR,
-  DEFAULT_LINK_WIDTH,
-  DEFAULT_NODE_SIZE,
-  DISABLED_COLOR,
-  GRADIENT_COLOR,
-  HIGHLIGHTED_LINK_WIDTH,
-  INACTIVE_NODE_SIZE,
-  MODE,
-  NEUTRAL_COLOR,
-  NEUTRAL_LOW_COLOR,
-} from "./visualizer.constant";
 import type { ColorMap, SizeMap } from "./algorithms/implementations";
-import { useTheme } from "~/hooks/use-theme";
+import { Button } from "~/components/ui/button";
+import {
+  Pause,
+  Play,
+  RotateCcw,
+  Shrink,
+  Tag,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
+import { MODE } from "./visualizer.constant";
+
+const DEFAULT_NODE_SIZE = 7;
+const INACTIVE_NODE_SIZE = 7;
+const HIGHLIGHTED_LINK_WIDTH = 4;
+const DEFAULT_LINK_WIDTH = 2;
+const ZOOM_DURATION = 500;
+const SMALLEST_ZOOM_LEVEL = 0.1;
+const INITIAL_ZOOM_LEVEL = 1;
+const SIMULATION_LINK_DISTANCE = 20;
+const SIMULATION_SPRING = 0.02;
+const SIMULATION_DECAY = 100000;
+const SIMULATION_REPULSION = 2;
+const GRADIENT_COLOR = chroma.scale(["#FD4958", "#D17600"]); // --red-5 to --yellow-5
+const NEUTRAL_COLOR = "#757575"; // Gray color
+const CRITICAL_COLOR = "#FD4958"; // --color-red-5
+const NEUTRAL_LOW_COLOR = "#B0B0B0"; // Muted gray color
+const DISABLED_COLOR = "#888888"; // More muted gray color
 
 export default function GraphRenderer({
   nodes,
@@ -63,10 +79,17 @@ export default function GraphRenderer({
   );
 
   // States
+  const [isSimulationPaused, setIsSimulationPaused] = useState(false);
   const [showDynamicLabels, setShowDynamicLabels] = useState(true);
 
-  // Hooks
-  const { theme } = useTheme();
+  // Effects
+  useEffect(() => {
+    if (isSimulationPaused) {
+      cosmographRef.current?.pause();
+    } else {
+      cosmographRef.current?.start();
+    }
+  }, [isSimulationPaused]);
 
   // Decide whether to include a "Name" accessor in Cosmograph search UI
   const allNodesHaveName = nodes.every((n) => n.name);
@@ -75,22 +98,35 @@ export default function GraphRenderer({
     : [];
 
   // Zoom in/out functions
-  const zoomOut = useCallback(() => {
+  const fitToScreen = () => {
     cosmographRef.current?.unselectNodes();
-    cosmographRef.current?.fitView(500);
-  }, []);
+    cosmographRef.current?.fitView(ZOOM_DURATION);
+  };
 
-  const zoomToNode = useCallback(
-    (node: GraphNode | null | undefined) => {
-      if (node) {
-        cosmographRef.current?.selectNode(node);
-        cosmographRef.current?.zoomToNode(node);
-      } else {
-        zoomOut();
-      }
-    },
-    [zoomOut]
-  );
+  const zoomToNode = (node: GraphNode | null | undefined) => {
+    if (node) {
+      cosmographRef.current?.selectNode(node);
+      cosmographRef.current?.zoomToNode(node);
+    } else {
+      fitToScreen();
+    }
+  };
+
+  const zoomOut = () => {
+    const zoomLevel = cosmographRef.current?.getZoomLevel();
+    if (!zoomLevel) return;
+    if (zoomLevel <= 1) {
+      cosmographRef.current?.setZoomLevel(SMALLEST_ZOOM_LEVEL, ZOOM_DURATION);
+    } else {
+      cosmographRef.current?.setZoomLevel(zoomLevel - 1, ZOOM_DURATION);
+    }
+  };
+
+  const zoomIn = () => {
+    const zoomLevel = cosmographRef.current?.getZoomLevel();
+    if (!zoomLevel) return;
+    cosmographRef.current?.setZoomLevel(zoomLevel + 1, ZOOM_DURATION);
+  };
 
   // Renderer appearance attributes related functions
   const getSize = (index: number) => {
@@ -150,8 +186,9 @@ export default function GraphRenderer({
   };
 
   return (
-    <div className={cn("flex flex-col h-full", className)}>
+    <div className={cn("flex flex-col h-full relative", className)}>
       <CosmographProvider nodes={nodes} links={edges}>
+        {/* Node Search Bar */}
         <div className="p-2">
           <GraphRendererSearch
             nodes={nodes}
@@ -163,10 +200,11 @@ export default function GraphRenderer({
             className="p-4 rounded-md h-max"
           />
         </div>
+        {/* Main Graph Visualizer */}
         <Cosmograph
           ref={cosmographRef}
           onClick={zoomToNode}
-          initialZoomLevel={1}
+          initialZoomLevel={INITIAL_ZOOM_LEVEL}
           nodeSize={(_, id) => getSize(id)}
           nodeColor={(_, id) => getColor(colors[id])}
           nodeGreyoutOpacity={0.1}
@@ -176,10 +214,10 @@ export default function GraphRenderer({
           linkWidth={(link) => getLinkWidth(link)}
           linkArrows={directed}
           linkGreyoutOpacity={0}
-          simulationLinkDistance={20}
-          simulationLinkSpring={0.02}
-          simulationDecay={100000}
-          simulationRepulsion={2}
+          simulationLinkDistance={SIMULATION_LINK_DISTANCE}
+          simulationLinkSpring={SIMULATION_SPRING}
+          simulationDecay={SIMULATION_DECAY}
+          simulationRepulsion={SIMULATION_REPULSION}
           simulationGravity={gravity}
           disableSimulation={false}
           showDynamicLabels={showDynamicLabels}
@@ -190,6 +228,59 @@ export default function GraphRenderer({
           nodeLabelColor="white"
           className="bg-page flex-1"
         />
+        {/* Bottom Dark Gradient Background Behind Visualizer */}
+        <div className="w-full h-16 bg-gradient-to-b from-transparent to-page to-50% absolute bottom-0 left-0" />
+        {/* Visualizer Utilities Button */}
+        <div className="flex justify-between p-4 w-full absolute bottom-0 left-0">
+          {/* Left Side */}
+          <div className="">
+            {/* Play/Pause Simulation */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsSimulationPaused((prev) => !prev)}
+            >
+              {isSimulationPaused ? <Play /> : <Pause />}
+            </Button>
+            {/* Restart Simulation */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => cosmographRef.current?.create()}
+            >
+              <RotateCcw />
+            </Button>
+            {/* Fit All Nodes */}
+            <Button variant="ghost" size="icon" onClick={() => fitToScreen()}>
+              <Shrink />
+            </Button>
+          </div>
+          {/* Right Side */}
+          <div className="">
+            {/* Zoom Out */}
+            <Button variant="ghost" size="icon" onClick={() => zoomOut()}>
+              <ZoomOut />
+            </Button>
+            {/* Zoom In */}
+            <Button variant="ghost" size="icon" onClick={() => zoomIn()}>
+              <ZoomIn />
+            </Button>
+            {/* Dynamic Labels Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowDynamicLabels((prev) => !prev)}
+            >
+              <Tag
+                className={
+                  showDynamicLabels
+                    ? "stroke-page fill-typography-primary"
+                    : "stroke-typography-primary fill-page"
+                }
+              />
+            </Button>
+          </div>
+        </div>
       </CosmographProvider>
     </div>
   );
