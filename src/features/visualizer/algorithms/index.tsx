@@ -78,14 +78,18 @@ function AlgorithmSidebarContent({
 }) {
   const { state } = useSidebar();
   const [searchText, setSearchText] = useState("");
+  const [hoveredAlgorithm, setHoveredAlgorithm] =
+    useState<BaseGraphAlgorithm | null>(null);
 
   return (
     <SidebarContent className="p-6 space-y-4 bg-gradient-to-br from-neutral-low/20 to-neutral/20">
+      {/* Search Bar */}
       <SearchBar
         searchText={searchText}
         setSearchText={setSearchText}
         inert={state === "collapsed"}
       />
+      {/* Algorithm List */}
       {!!searchText ? (
         <FilteredAlgorithmList
           searchText={searchText}
@@ -94,6 +98,7 @@ function AlgorithmSidebarContent({
           edges={edges}
           setActiveAlgorithm={setActiveAlgorithm}
           setActiveResponse={setActiveResponse}
+          onAlgorithmHover={setHoveredAlgorithm}
           isCollapsed={state === "collapsed"}
         />
       ) : (
@@ -103,9 +108,24 @@ function AlgorithmSidebarContent({
           edges={edges}
           setActiveAlgorithm={setActiveAlgorithm}
           setActiveResponse={setActiveResponse}
+          onAlgorithmHover={setHoveredAlgorithm}
           isCollapsed={state === "collapsed"}
         />
       )}
+      {/* Hovered Algorithm Description */}
+      <div
+        className={cn(
+          "p-4 bg-tabdock flex flex-col gap-2 rounded-md transition-all duration-500 ease-out",
+          !!hoveredAlgorithm ? "opacity-100 h-fit" : "opacity-0 h-0"
+        )}
+      >
+        <p className="font-semibold small-title flex-1">
+          {hoveredAlgorithm?.title}
+        </p>
+        <p className="small-body text-typography-secondary">
+          {hoveredAlgorithm?.description}
+        </p>
+      </div>
     </SidebarContent>
   );
 }
@@ -116,6 +136,7 @@ function UnfilteredAlgorithmList({
   edges,
   setActiveAlgorithm,
   setActiveResponse,
+  onAlgorithmHover,
   isCollapsed,
 }: {
   module: GraphModule | null;
@@ -123,10 +144,11 @@ function UnfilteredAlgorithmList({
   edges: GraphEdge[];
   setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
+  onAlgorithmHover: (a: BaseGraphAlgorithm | null) => void;
   isCollapsed: boolean;
 }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 flex-1 overflow-y-auto">
       <h1 className="xsmall-title text-typography-secondary">
         Graph Algorithms
       </h1>
@@ -160,6 +182,8 @@ function UnfilteredAlgorithmList({
                         edges={edges}
                         setActiveAlgorithm={setActiveAlgorithm}
                         setActiveResponse={setActiveResponse}
+                        onMouseEnter={() => onAlgorithmHover(algo)}
+                        onMouseLeave={() => onAlgorithmHover(null)}
                         inert={isCollapsed}
                         separator
                       />
@@ -182,6 +206,7 @@ function FilteredAlgorithmList({
   edges,
   setActiveAlgorithm,
   setActiveResponse,
+  onAlgorithmHover,
   isCollapsed,
 }: {
   searchText: string;
@@ -190,6 +215,7 @@ function FilteredAlgorithmList({
   edges: GraphEdge[];
   setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
+  onAlgorithmHover: (a: BaseGraphAlgorithm | null) => void;
   isCollapsed: boolean;
 }) {
   const allAlgorithms: BaseGraphAlgorithm[] = ALL_ALGORITHMS.reduce(
@@ -206,7 +232,7 @@ function FilteredAlgorithmList({
   );
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 flex-1 overflow-y-auto">
       <h1 className="xsmall-title text-typography-secondary">
         Search Results ({filteredAlgorithms.length})
       </h1>
@@ -220,6 +246,8 @@ function FilteredAlgorithmList({
               edges={edges}
               setActiveAlgorithm={setActiveAlgorithm}
               setActiveResponse={setActiveResponse}
+              onMouseEnter={() => onAlgorithmHover(algo)}
+              onMouseLeave={() => onAlgorithmHover(null)}
               inert={isCollapsed}
             />
           </SidebarMenuItem>
