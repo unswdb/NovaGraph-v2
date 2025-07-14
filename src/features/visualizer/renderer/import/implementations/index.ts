@@ -5,4 +5,4 @@ import type { ImportOption } from "./types";
 const ALL_IMPORTS: ImportOption[] = [...Object.values(CSV)];
 export default ALL_IMPORTS;
 
-export { type ImportOption } from "./types";
+export { type ImportOption, type ImportInput } from "./types";

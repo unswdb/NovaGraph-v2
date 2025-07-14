@@ -17,11 +17,8 @@ import {
 } from "~/components/ui/popover";
 import { useIsMobile } from "~/hooks/use-mobile";
 import type { GraphDatabase } from "../../types";
-
-type DatabaseSelectItem = {
-  label: string;
-  value: string;
-};
+import { Dialog, DialogTrigger } from "~/components/ui/dialog";
+import ImportInputs from "./input";
 
 export default function DatabaseImport({
   database,
@@ -70,22 +67,24 @@ export default function DatabaseImport({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button variant="outline" className="w-[150px] justify-start">
-          {database ? <>{database.label}</> : <>Default</>}
+        <Button
+          variant="outline"
+          className="w-[150px] flex justify-between items-center"
+        >
+          {database ? database.label : "Default"}
+          <ChevronDown />
         </Button>
       </DrawerTrigger>
-      <DrawerContent>
-        <div className="mt-4 border-t">
-          <Suspense fallback={<DatabaseListFallback />}>
-            <DatabaseSelector
-              setOpen={setOpen}
-              database={database}
-              databases={databases}
-              setDatabase={setDatabase}
-              addDatabase={addDatabase}
-            />
-          </Suspense>
-        </div>
+      <DrawerContent className="p-4">
+        <Suspense fallback={<DatabaseListFallback />}>
+          <DatabaseSelector
+            setOpen={setOpen}
+            database={database}
+            databases={databases}
+            setDatabase={setDatabase}
+            addDatabase={addDatabase}
+          />
+        </Suspense>
       </DrawerContent>
     </Drawer>
   );
@@ -104,37 +103,47 @@ function DatabaseSelector({
   setDatabase: (g: GraphDatabase) => void;
   addDatabase: (g: GraphDatabase) => void;
 }) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   return (
-    <Command value={database?.label}>
-      <CommandInput placeholder="Filter database..." />
-      <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
-        <CommandGroup heading="Existing Databases">
-          {databases.map((database) => (
-            <CommandItem
-              key={database.label}
-              value={database.label}
-              onSelect={(value) => {
-                const selected = databases.find(
-                  (database) => database.label === value
-                );
-                if (!selected) return;
-                setDatabase(database);
-                setOpen(false);
-              }}
-            >
-              {database.label}
-            </CommandItem>
-          ))}
-        </CommandGroup>
-        <CommandGroup heading="Create Graph">
-          <CommandItem>
-            <Plus />
-            Create Graph
-          </CommandItem>
-        </CommandGroup>
-      </CommandList>
-    </Command>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Command value={database?.label}>
+        <CommandInput placeholder="Filter database..." />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="Existing Databases">
+            {/* List of databases */}
+            {databases.map((database) => (
+              <CommandItem
+                key={database.label}
+                value={database.label}
+                onSelect={(value) => {
+                  const selected = databases.find(
+                    (database) => database.label === value
+                  );
+                  if (!selected) return;
+                  setDatabase(database);
+                  setOpen(false);
+                }}
+              >
+                {database.label}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+          <CommandGroup heading="Create Graph">
+            {/* Create graph options */}
+            <DialogTrigger asChild>
+              <CommandItem onSelect={() => setDialogOpen(true)}>
+                <Plus />
+                Create Graph
+              </CommandItem>
+            </DialogTrigger>
+          </CommandGroup>
+        </CommandList>
+      </Command>
+      {/* Create Graph Dialog Content */}
+      <ImportInputs />
+    </Dialog>
   );
 }
 

@@ -1,8 +1,8 @@
-import { Table } from "lucide-react";
 import type { ImportOption } from "./types";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import { useState } from "react";
 import {
+  Table,
   TableBody,
   TableCaption,
   TableCell,
@@ -10,8 +10,10 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
+import { Table as TableIcon } from "lucide-react";
 import { Switch } from "~/components/form/switch";
 import { Label } from "~/components/form/label";
+import type { GraphDatabase } from "~/features/visualizer/types";
 
 const validateNodes = async (files: File[]) => {
   const file = files[0];
@@ -98,17 +100,43 @@ const validateEdges = async (files: File[]) => {
   }
 };
 
+const validateNames = async (value: string, databases?: GraphDatabase[]) => {
+  const doesNameExist = databases
+    ?.map((database) => database.label)
+    .includes(value);
+
+  if (doesNameExist) {
+    return {
+      success: false,
+      message: "A database with this name already exists",
+    };
+  }
+
+  return { success: true };
+};
+
 export const CSV: ImportOption = {
   label: "Import as CSV",
   value: "csv",
-  icon: Table,
+  icon: TableIcon,
   title: "Import CSV Files",
   description:
-    "Select nodes.csv and edges.csv files from your computer in the format shown in this example:",
+    "Upload your graph data by selecting two CSV files: one for nodes and one for edges. Each node must be listed in nodes.csv with a single column header 'node'. Each edge must be defined in edges.csv with headers 'source,target' or 'source,target,weight'.",
+  previewTitle: "CSV Format Preview",
+  previewDescription: "Expected format for nodes.csv and edges.csv files",
   preview: CSVPreview,
   note: "The 'weight' column in edges.csv is **optional**! Novagraph assumes the presence of 'weight' signifies a weighted graph. Edges in a directed graph have directions. Edges in an undirected graph are bi-directional.",
   inputs: [
     {
+      id: "database-name-csv",
+      label: "Name of the database",
+      type: "text",
+      required: true,
+      placeholder: "Enter a name for the database...",
+      validator: validateNames,
+    },
+    {
+      id: "nodes-csv",
       label: "nodes.csv",
       type: "file",
       required: true,
@@ -117,6 +145,7 @@ export const CSV: ImportOption = {
       validator: validateNodes,
     },
     {
+      id: "edges-csv",
       label: "edges.csv",
       type: "file",
       required: true,
@@ -125,6 +154,7 @@ export const CSV: ImportOption = {
       validator: validateEdges,
     },
     {
+      id: "directed-csv",
       label: "Directed Graph",
       type: "switch",
       defaultValue: false,
@@ -136,15 +166,23 @@ export const CSV: ImportOption = {
 };
 
 function CSVPreview() {
-  const [isTableView, setIsTableView] = useState(false);
+  const [isTableView, setIsTableView] = useState(true);
 
   return (
-    <>
-      <div className="flex justify-center w-full">
+    <div className="flex flex-col items-end gap-6">
+      <div className="flex items-center gap-2">
+        <Label htmlFor="toggle-table-view">Table View</Label>
+        <Switch
+          id="toggle-table-view"
+          checked={isTableView}
+          onCheckedChange={setIsTableView}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2 w-full">
         {isTableView ? (
           <>
             {/* Table view */}
-            <Table>
+            <Table className="max-h-56">
               <TableCaption>nodes.csv</TableCaption>
               <TableHeader>
                 <TableRow>
@@ -166,7 +204,7 @@ function CSVPreview() {
                 </TableRow>
               </TableBody>
             </Table>
-            <Table>
+            <Table className="max-h-56">
               <TableCaption>edges.csv</TableCaption>
               <TableHeader>
                 <TableRow>
@@ -202,16 +240,30 @@ function CSVPreview() {
         ) : (
           <>
             {/* Syntax highlighted code block */}
-            <div className="flex flex-col justify-center">
-              <SyntaxHighlighter language="csv">
+            <div className="flex flex-col items-center w-full">
+              <SyntaxHighlighter
+                language="csv"
+                customStyle={{
+                  width: "100%",
+                  padding: "1rem",
+                  background: "transparent",
+                }}
+              >
                 {["node", "John", "Michael", "Sarah", "Tina"].join("\n")}
               </SyntaxHighlighter>
-              <p className="text-typography-secondary mt-4 small-body">
+              <p className="text-typography-primary mt-4 small-body">
                 nodes.csv
               </p>
             </div>
-            <div className="flex flex-col justify-center">
-              <SyntaxHighlighter language="csv">
+            <div className="flex flex-col items-center w-full">
+              <SyntaxHighlighter
+                language="csv"
+                customStyle={{
+                  width: "100%",
+                  padding: "1rem",
+                  background: "transparent",
+                }}
+              >
                 {[
                   "source,target,weight",
                   "John,Michael,1",
@@ -220,21 +272,13 @@ function CSVPreview() {
                   "Sarah,Michael,2",
                 ].join("\n")}
               </SyntaxHighlighter>
-              <p className="text-typography-secondary mt-4 small-body">
-                nodes.csv
+              <p className="text-typography-primary mt-4 small-body">
+                edges.csv
               </p>
             </div>
           </>
         )}
       </div>
-      <div className="flex items-center gap-2">
-        <Switch
-          id="toggle-table-view"
-          checked={isTableView}
-          onCheckedChange={setIsTableView}
-        />
-        <Label htmlFor="toggle-table-view">Table View</Label>
-      </div>
-    </>
+    </div>
   );
 }

@@ -1,6 +1,8 @@
 import type { ElementType } from "react";
+import type { GraphDatabase } from "~/features/visualizer/types";
 
 type FileInput = {
+    id: string;
   label: string;
   type: "file";
   required?: boolean;
@@ -10,6 +12,7 @@ type FileInput = {
 };
 
 type SwitchInput = {
+    id: string;
   label: string;
   type: "switch";
   defaultValue?: boolean;
@@ -17,15 +20,17 @@ type SwitchInput = {
 };
 
 type StringInput = {
+    id: string;
   label: string;
-  type: string;
+  type: "text";
   required?: boolean;
   placeholder?: string;
   defaultValue?: string;
-  validator?: (value: string) => Promise<{ success: boolean, message?: string }>;
+  validator?: (value: string, databases?: GraphDatabase[]) => Promise<{ success: boolean, message?: string }>;
 };
 
 type NumberInput = {
+    id: string;
   label: string;
   type: "number";
   required?: boolean;
@@ -36,7 +41,7 @@ type NumberInput = {
   validator?: (value: number) => Promise<{ success: boolean, message?: string }>;
 };
 
-type ImportInput = FileInput | SwitchInput | StringInput | NumberInput;
+export type ImportInput = FileInput | SwitchInput | StringInput | NumberInput;
 
 type ImportHandler = (data: {
   values: Record<string, any>;
@@ -55,7 +60,9 @@ export interface ImportOption {
   // Display information for the input dialog
   title: string;
   description?: string;
-  preview?: ElementType;
+  previewTitle?: string;
+  previewDescription?: string;
+  preview: ElementType;
   note?: string;
   inputs: ImportInput[];
   validator?: ImportValidator;
