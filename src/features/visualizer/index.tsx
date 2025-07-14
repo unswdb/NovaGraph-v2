@@ -1,11 +1,11 @@
 import { observer } from "mobx-react-lite";
 import { useEffect, useState } from "react";
-import VisualizerStore from "./visualizer.store";
+import VisualizerStore from "./store";
 import Header from "./header";
 import AlgorithmSidebar from "./algorithms";
 import SettingsSidebar from "./settings";
 import GraphRenderer from "./renderer";
-import { MODE } from "./visualizer.constant";
+import { MODE } from "./constant";
 import { CodeOutputDrawer } from "./drawer";
 
 const Visualizer = observer(() => {
@@ -22,16 +22,20 @@ const Visualizer = observer(() => {
       <div className="flex flex-row flex-1">
         <AlgorithmSidebar
           module={store.wasmModule}
-          nodes={store.nodes}
-          edges={store.edges}
+          nodes={store.database?.graph.nodes ?? []}
+          edges={store.database?.graph.edges ?? []}
           setActiveAlgorithm={store.setActiveAlgorithm}
           setActiveResponse={store.setActiveResponse}
         />
         <main className="flex flex-col h-[calc(100vh-64px)]">
           <GraphRenderer
-            nodes={store.nodes}
-            edges={store.edges}
-            directed={false} // TODO: Ask about directed variable
+            nodes={store.database?.graph.nodes ?? []}
+            edges={store.database?.graph.edges ?? []}
+            directed={store.database?.graph.directed ?? false}
+            database={store.database}
+            databases={store.databases}
+            setDatabase={store.setDatabase}
+            addDatabase={store.addDatabase}
             sizes={
               store.activeResponse && store.activeResponse.sizeMap
                 ? store.activeResponse.sizeMap
@@ -44,7 +48,7 @@ const Visualizer = observer(() => {
                 : MODE.COLOR_SHADE_DEFAULT
             }
             gravity={store.gravity}
-            nodeSizeScale={store.nodeSizeScale}
+            nodeSizeScale={store.nodeSizeScale ?? []}
             className="relative flex-1 overflow-hidden"
           />
           <CodeOutputDrawer
@@ -55,7 +59,7 @@ const Visualizer = observer(() => {
         <SettingsSidebar
           gravity={store.gravity}
           setGravity={store.setGravity}
-          nodeSizeScale={store.nodeSizeScale}
+          nodeSizeScale={store.nodeSizeScale ?? []}
           setNodeSizeScale={store.setNodeSizeScale}
         />
       </div>

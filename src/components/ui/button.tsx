@@ -15,7 +15,7 @@ const buttonVariants = cva(
         critical:
           "bg-critical text-white hover:bg-critical-hover focus-visible:ring-critical/20 disabled:bg-critical-disabled disabled:text-critical-fore-disabled",
         outline:
-          "border border-border bg-page hover:bg-neutral-hover hover:text-foreground disabled:bg-neutral-disabled disabled:text-neutral-fore-disabled",
+          "border border-border bg-page hover:bg-neutral-low hover:text-foreground disabled:bg-neutral-disabled disabled:text-neutral-fore-disabled",
         ghost:
           "hover:bg-neutral-low hover:text-foreground disabled:text-neutral-fore-disabled",
         link: "text-primary underline-offset-4 hover:underline disabled:opacity-50",

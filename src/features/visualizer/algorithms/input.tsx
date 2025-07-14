@@ -25,7 +25,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "~/components/form/select";
-import type { GraphEdge, GraphModule, GraphNode } from "../visualizer.types";
+import type { GraphEdge, GraphModule, GraphNode } from "../types";
 import { Input } from "~/components/form/input";
 import { SelectValue } from "@radix-ui/react-select";
 import { useMemo, useState } from "react";

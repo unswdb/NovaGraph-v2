@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import type {
   BaseGraphAlgorithm,
   BaseGraphAlgorithmResult,
-} from "../algorithms/implementations/implementations.types";
+} from "./algorithms/implementations/types";
 
 const DRAWER_HEIGHT = "18rem";
 

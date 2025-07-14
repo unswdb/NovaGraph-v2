@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { GraphModule } from "../../visualizer.types";
+import type { GraphModule } from "../../types";
 
 export type SelectInput = {
   label: string;

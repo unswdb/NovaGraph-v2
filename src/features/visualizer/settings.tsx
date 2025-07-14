@@ -15,7 +15,7 @@ import {
   NODE_SIZE_SCALE,
   type Gravity,
   type NodeSizeScale,
-} from "./visualizer.constant";
+} from "./constant";
 
 export default function SettingsSidebar({
   gravity,

@@ -9,4 +9,9 @@ export type GraphEdge = {
   target: string;
 };
 
+export type GraphDatabase = {
+  label: string;
+  graph: { nodes: GraphNode[]; edges: GraphEdge[]; directed: boolean; };
+};
+
 export { type MainModule as GraphModule } from "~/graph";

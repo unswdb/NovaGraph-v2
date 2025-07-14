@@ -1,7 +1,4 @@
-import {
-  createGraphAlgorithm,
-  type GraphAlgorithmResult,
-} from "../implementations.types";
+import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 // Infered from src/wasm/algorithms
 type BFSOutputData = {
@@ -22,5 +19,5 @@ export const bfs = createGraphAlgorithm<BFSOutputData>({
 
 function BFS(props: GraphAlgorithmResult<BFSOutputData>) {
   const { source, nodesFound, layers } = props.data;
-  return <p>yerr</p>;
+  return <p>BFS output</p>;
 }

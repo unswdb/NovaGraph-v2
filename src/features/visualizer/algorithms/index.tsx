@@ -32,7 +32,7 @@ import {
 } from "~/components/ui/collapsible";
 import AlgorithmInputModal from "./input";
 import { cn } from "~/lib/utils";
-import type { GraphEdge, GraphModule, GraphNode } from "../visualizer.types";
+import type { GraphEdge, GraphModule, GraphNode } from "../types";
 
 export default function AlgorithmSidebar({
   module,
@@ -115,7 +115,7 @@ function AlgorithmSidebarContent({
       {/* Hovered Algorithm Description */}
       <div
         className={cn(
-          "p-4 bg-tabdock flex flex-col gap-2 rounded-md transition-all duration-500 ease-out",
+          "p-4 bg-tabdock flex flex-col gap-2 rounded-md transition-all duration-300 ease-out",
           !!hoveredAlgorithm ? "opacity-100 h-fit" : "opacity-0 h-0"
         )}
       >
