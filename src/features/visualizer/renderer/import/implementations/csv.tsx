@@ -14,10 +14,13 @@ import { Table as TableIcon } from "lucide-react";
 import { Switch } from "~/components/form/switch";
 import { Label } from "~/components/form/label";
 import { validateNames } from "./util";
+import {
+  createFileInput,
+  createSwitchInput,
+  createTextInput,
+} from "~/features/visualizer/inputs";
 
-const validateNodes = async (files: File[]) => {
-  const file = files[0];
-
+const validateNodes = async (file: File) => {
   try {
     const text = await file.text();
     const lines = text.trim().split("\n");
@@ -61,9 +64,7 @@ const validateNodes = async (files: File[]) => {
   }
 };
 
-const validateEdges = async (files: File[]) => {
-  const file = files[0];
-
+const validateEdges = async (file: File) => {
   try {
     const text = await file.text();
     const lines = text.trim().split("\n");
@@ -112,38 +113,32 @@ export const CSV: ImportOption = {
   preview: CSVPreview,
   note: "The 'weight' column in edges.csv is **optional**! Novagraph assumes the presence of 'weight' signifies a weighted graph. Edges in a directed graph have directions. Edges in an undirected graph are bi-directional.",
   inputs: [
-    {
+    createTextInput({
       id: "database-name-csv",
       label: "Name of the database",
-      type: "text",
       required: true,
       placeholder: "Enter a name for the database...",
       validator: validateNames,
-    },
-    {
+    }),
+    createFileInput({
       id: "nodes-csv",
       label: "nodes.csv",
-      type: "file",
       required: true,
       accept: ".csv",
-      multiple: false,
       validator: validateNodes,
-    },
-    {
+    }),
+    createFileInput({
       id: "edges-csv",
       label: "edges.csv",
-      type: "file",
       required: true,
       accept: ".csv",
-      multiple: false,
       validator: validateEdges,
-    },
-    {
+    }),
+    createSwitchInput({
       id: "directed-csv",
       label: "Directed Graph",
-      type: "switch",
       defaultValue: false,
-    },
+    }),
   ],
   handler: async ({ values }: { values: Record<string, any> }) => {
     return { success: true, message: "successful" };

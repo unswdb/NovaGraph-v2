@@ -12,7 +12,7 @@ export default function TextInputComponent({
       id={input.id}
       type="text"
       value={value ? String(value) : ""}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(e) => onChange({ value: e.target.value, success: true })}
       required={input.required}
       placeholder={input.placeholder}
       defaultValue={input.defaultValue}

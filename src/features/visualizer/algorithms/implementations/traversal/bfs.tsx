@@ -1,3 +1,4 @@
+import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 // Infered from src/wasm/algorithms
@@ -11,12 +12,11 @@ export const bfs = createGraphAlgorithm<BFSOutputData>({
   title: "Breadth-First Search",
   description: "Traverse the graph using BFS starting from a node",
   inputs: [
-    {
+    createAlgorithmSelectInput({
       id: "bfs-start-node",
       label: "Start Node",
-      type: "algorithm-select",
       source: "nodes",
-    },
+    }),
   ],
   wasmFunction: (module, [args]) => {
     if (module) return module.bfs(args);

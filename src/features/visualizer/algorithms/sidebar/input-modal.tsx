@@ -17,7 +17,10 @@ import {
   DialogTrigger,
 } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
-import InputComponent, { type InputValueType } from "../../inputs";
+import InputComponent, {
+  createEmptyInputResults,
+  type InputChangeResult,
+} from "../../inputs";
 
 export default function AlgorithmInputModal({
   module,
@@ -40,22 +43,20 @@ export default function AlgorithmInputModal({
 }) {
   // States
   const [open, setOpen] = useState(false);
-  const [inputValues, setInputValues] = useState<
-    Record<string, InputValueType>
-  >({});
+  const [inputResults, setInputResults] = useState<
+    Record<string, InputChangeResult>
+  >(createEmptyInputResults(algorithm.inputs));
 
   // Memoised values
   const isReadyToSubmit = useMemo(
-    () =>
-      Object.entries(inputValues).length === algorithm.inputs.length &&
-      Object.values(inputValues).every((v) => !!v),
-    [inputValues, algorithm]
+    () => Object.values(inputResults).every((v) => v.success),
+    [inputResults, algorithm]
   );
 
   // TODO: Handle error and loading state
   const handleSubmit = async () => {
     try {
-      const args = algorithm.inputs.map((input) => inputValues[input.label]);
+      const args = algorithm.inputs.map((input) => inputResults[input.label]);
       const algorithmResponse = algorithm.wasmFunction(module, args);
       setActiveAlgorithm(algorithm);
       setActiveResponse(algorithmResponse);
@@ -99,9 +100,9 @@ export default function AlgorithmInputModal({
             <InputComponent
               key={index}
               input={input}
-              value={inputValues[input.label]}
+              value={inputResults[input.label]?.value}
               onChange={(value) =>
-                setInputValues((prev) => ({
+                setInputResults((prev) => ({
                   ...prev,
                   [input.label]: value,
                 }))

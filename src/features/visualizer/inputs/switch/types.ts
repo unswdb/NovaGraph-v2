@@ -1,9 +1,7 @@
-export type SwitchInput = {
-  id: string;
-  label: string;
+import type { BaseInputType } from "../types";
+
+export type SwitchInput = BaseInputType<boolean> & {
   type: "switch";
+  required?: boolean;
   defaultValue?: boolean;
-  validator?: (
-    value: boolean[]
-  ) => Promise<{ success: boolean; message?: string }>;
 };

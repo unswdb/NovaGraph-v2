@@ -20,7 +20,9 @@ export default function NumberInputComponent({
         required={input.required}
         placeholder={input.placeholder}
         defaultValue={input.defaultValue?.toString() ?? ""}
-        onChange={(e) => onChange(Number(e.target.value))}
+        onChange={(e) =>
+          onChange({ value: Number(e.target.value), success: true })
+        }
       />
     </div>
   );

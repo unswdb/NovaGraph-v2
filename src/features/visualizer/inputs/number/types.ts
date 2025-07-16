@@ -1,6 +1,6 @@
-export type NumberInput = {
-  id: string;
-  label: string;
+import type { BaseInputType } from "../types";
+
+export type NumberInput = BaseInputType<number> & {
   type: "number";
   required?: boolean;
   placeholder?: string;

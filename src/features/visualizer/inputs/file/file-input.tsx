@@ -4,7 +4,6 @@ import type { FileInput } from "./types";
 
 export default function FileInputComponent({
   input,
-  value,
   onChange,
 }: InputComponentProps<FileInput>) {
   return (
@@ -14,18 +13,17 @@ export default function FileInputComponent({
       onChange={(e) => {
         const files = e.target.files;
         if (files && files.length > 0) {
-          if (input.multiple) {
-            onChange(files);
-          } else {
-            onChange(files[0]);
-          }
+          onChange({ value: files[0], success: true });
         } else {
-          onChange(undefined);
+          onChange({
+            value: undefined,
+            success: false,
+            message: "No file uploaded. Please try again.",
+          });
         }
       }}
       required={input.required}
       accept={input.accept}
-      multiple={input.multiple}
     />
   );
 }

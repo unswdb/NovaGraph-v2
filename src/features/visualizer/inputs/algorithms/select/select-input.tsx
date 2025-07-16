@@ -38,7 +38,10 @@ export default function AlgorithmSelectInputComponent({
         })) ?? [];
 
   return (
-    <Select value={value ? String(value) : undefined} onValueChange={onChange}>
+    <Select
+      value={value ? String(value) : undefined}
+      onValueChange={(value) => onChange({ value, success: true })}
+    >
       <SelectTrigger className="w-full">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>

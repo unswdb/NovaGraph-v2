@@ -1,11 +1,7 @@
-export type FileInput = {
-  id: string;
-  label: string;
+import type { BaseInputType } from "../types";
+
+export type FileInput = BaseInputType<File> &{
   type: "file";
   required?: boolean;
   accept?: string;
-  multiple?: boolean;
-  validator?: (
-    files: File[]
-  ) => Promise<{ success: boolean; message?: string }>;
 };

@@ -1,14 +1,8 @@
-import type { GraphDatabase } from "~/features/visualizer/types";
+import type { BaseInputType } from "../types";
 
-export type TextInput = {
-  id: string;
-  label: string;
+export type TextInput = BaseInputType<string> &{
   type: "text";
   required?: boolean;
   placeholder?: string;
   defaultValue?: string;
-  validator?: (
-    value: string,
-    databases?: GraphDatabase[]
-  ) => Promise<{ success: boolean; message?: string }>;
 };
