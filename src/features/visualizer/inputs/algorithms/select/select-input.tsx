@@ -6,16 +6,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/form/select";
-import type { SelectInput } from "./types";
-import type { AlgorithmInputComponentProps } from "../types";
+import type { AlgorithmSelectInput } from "./types";
+import { useStore } from "~/features/visualizer/hooks/use-store";
+import type { InputComponentProps } from "../../types";
 
-export default function SelectInputComponent({
+export default function AlgorithmSelectInputComponent({
   input,
-  nodes,
-  edges,
   value,
   onChange,
-}: AlgorithmInputComponentProps<SelectInput>) {
+}: InputComponentProps<AlgorithmSelectInput>) {
+  const store = useStore();
+
   const source = input.source;
   const placeholder =
     source === "static"
@@ -27,14 +28,14 @@ export default function SelectInputComponent({
     source === "static"
       ? (input.options ?? []).map((opt) => ({ value: opt, label: opt }))
       : source === "edges"
-      ? edges.map((e) => ({
+      ? store.database?.graph.edges.map((e) => ({
           value: `${e.source}-${e.target}`,
           label: `${e.source} → ${e.target}`,
-        }))
-      : nodes.map((n) => ({
+        })) ?? []
+      : store.database?.graph.nodes.map((n) => ({
           value: n.id,
           label: n.name ?? `Node ${n.id}`,
-        }));
+        })) ?? [];
 
   return (
     <Select value={value ? String(value) : undefined} onValueChange={onChange}>

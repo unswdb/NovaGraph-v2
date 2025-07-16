@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { GraphModule } from "../../types";
-import type { GraphAlgorithmInput } from "../inputs";
+import type { InputType } from "../../inputs";
 
 type NodeId = string;
 type EdgeId = string; // Format: "fromNodeId-toNodeId"
@@ -28,7 +28,7 @@ export interface GraphAlgorithmResult<TData = unknown> extends BaseGraphAlgorith
 export interface BaseGraphAlgorithm {
   title: string;
   description: string;
-  inputs: GraphAlgorithmInput[];
+  inputs: InputType[];
   wasmFunction: (module: GraphModule | null, args: any[]) => any;
   output: (props: BaseGraphAlgorithmResult) => ReactNode;
 }
@@ -36,7 +36,7 @@ export interface BaseGraphAlgorithm {
 export interface GraphAlgorithm<TData = unknown> {
   title: string;
   description: string;
-  inputs: GraphAlgorithmInput[];
+  inputs: InputType[];
   wasmFunction: (module: GraphModule | null, args: any[]) => any;
   output: (props: GraphAlgorithmResult<TData>) => ReactNode;
 }
@@ -45,7 +45,7 @@ export interface GraphAlgorithm<TData = unknown> {
 export function createGraphAlgorithm<TData>(config: {
   title: string;
   description: string;
-  inputs: GraphAlgorithmInput[];
+  inputs: InputType[];
   wasmFunction: (module: GraphModule | null, args: any[]) => any;
   output: (props: GraphAlgorithmResult<TData>) => ReactNode;
 }): GraphAlgorithm<TData> {

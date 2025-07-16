@@ -4,13 +4,16 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import ALL_IMPORTS, { type ImportInput } from "./implementations";
+import ALL_IMPORTS from "./implementations";
 import { Separator } from "~/components/ui/separator";
-import { Label } from "~/components/form/label";
-import { Input } from "~/components/form/input";
-import { Switch } from "~/components/form/switch";
+import InputComponent, { type InputValueType } from "../../inputs";
+import { useState } from "react";
 
-export default function ImportInputs() {
+export default function ImportInputsModal() {
+  const [inputValues, setInputValues] = useState<
+    Record<string, InputValueType>
+  >({});
+
   return (
     <DialogContent className="flex flex-col gap-2 max-h-[80vh] !max-w-[min(100%,calc(80vw))]">
       <DialogTitle>Import File</DialogTitle>
@@ -68,7 +71,17 @@ export default function ImportInputs() {
                     <div className="space-y-4">
                       {/* Inputs */}
                       {option.inputs.map((input, index) => (
-                        <ImportInput key={index} input={input} />
+                        <InputComponent
+                          key={index}
+                          input={input}
+                          value={inputValues[input.label]}
+                          onChange={(value) =>
+                            setInputValues((prev) => ({
+                              ...prev,
+                              [input.label]: value,
+                            }))
+                          }
+                        />
                       ))}
                     </div>
                     {/* Additional Note */}
@@ -103,57 +116,4 @@ export default function ImportInputs() {
       </Tabs>
     </DialogContent>
   );
-}
-
-function ImportInput({ input }: { input: ImportInput }) {
-  switch (input.type) {
-    case "file":
-      return (
-        <div className="space-y-4">
-          <Label htmlFor={input.id}>{input.label}</Label>
-          <Input
-            id={input.id}
-            type="file"
-            accept={input.accept}
-            required={input.required}
-            multiple={input.multiple}
-          />
-        </div>
-      );
-    case "switch":
-      return (
-        <div className="flex items-center gap-2">
-          <Label htmlFor={input.id}>{input.label}</Label>
-          <Switch id={input.id} defaultChecked={input.defaultValue} />
-        </div>
-      );
-    case "text":
-      return (
-        <div className="space-y-4">
-          <Label htmlFor={input.id}>{input.label}</Label>
-          <Input
-            id={input.id}
-            type="text"
-            required={input.required}
-            placeholder={input.placeholder}
-            defaultValue={input.defaultValue}
-          />
-        </div>
-      );
-    case "number":
-      return (
-        <div className="space-y-4">
-          <Label htmlFor={input.id}>{input.label}</Label>
-          <Input
-            id={input.id}
-            type="number"
-            required={input.required}
-            placeholder={input.placeholder}
-            defaultValue={input.defaultValue}
-            min={input.min}
-            max={input.max}
-          />
-        </div>
-      );
-  }
 }

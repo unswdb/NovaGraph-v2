@@ -13,7 +13,7 @@ import {
 import { Table as TableIcon } from "lucide-react";
 import { Switch } from "~/components/form/switch";
 import { Label } from "~/components/form/label";
-import type { GraphDatabase } from "~/features/visualizer/types";
+import { validateNames } from "./util";
 
 const validateNodes = async (files: File[]) => {
   const file = files[0];
@@ -98,21 +98,6 @@ const validateEdges = async (files: File[]) => {
       message: "Unable to read file content. Please try again. ",
     };
   }
-};
-
-const validateNames = async (value: string, databases?: GraphDatabase[]) => {
-  const doesNameExist = databases
-    ?.map((database) => database.label)
-    .includes(value);
-
-  if (doesNameExist) {
-    return {
-      success: false,
-      message: "A database with this name already exists",
-    };
-  }
-
-  return { success: true };
 };
 
 export const CSV: ImportOption = {

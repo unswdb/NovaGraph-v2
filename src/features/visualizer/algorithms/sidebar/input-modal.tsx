@@ -17,7 +17,7 @@ import {
   DialogTrigger,
 } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
-import AlgorithmInput from "./algorithm-input";
+import InputComponent, { type InputValueType } from "../../inputs";
 
 export default function AlgorithmInputModal({
   module,
@@ -41,8 +41,8 @@ export default function AlgorithmInputModal({
   // States
   const [open, setOpen] = useState(false);
   const [inputValues, setInputValues] = useState<
-    Record<string, string | number>
-  >({}); // Track all input values
+    Record<string, InputValueType>
+  >({});
 
   // Memoised values
   const isReadyToSubmit = useMemo(
@@ -96,11 +96,9 @@ export default function AlgorithmInputModal({
         {/* Inputs */}
         <div className="space-y-6 mt-2">
           {algorithm.inputs.map((input, index) => (
-            <AlgorithmInput
-              key={input.label}
+            <InputComponent
+              key={index}
               input={input}
-              nodes={nodes}
-              edges={edges}
               value={inputValues[input.label]}
               onChange={(value) =>
                 setInputValues((prev) => ({

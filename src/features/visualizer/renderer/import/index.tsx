@@ -24,7 +24,7 @@ import {
 import { useIsMobile } from "~/hooks/use-mobile";
 import type { GraphDatabase } from "../../types";
 import { Dialog, DialogTrigger } from "~/components/ui/dialog";
-import ImportInputs from "./input";
+import ImportInputsModal from "./inputs-modal";
 import { cn } from "~/lib/utils";
 
 export default function DatabaseImport({
@@ -169,7 +169,7 @@ function DatabaseSelector({
         </CommandList>
       </Command>
       {/* Create Graph Dialog Content */}
-      <ImportInputs />
+      <ImportInputsModal />
     </Dialog>
   );
 }
