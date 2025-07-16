@@ -49,18 +49,19 @@ export default function GraphRendererHeader({
     : [];
 
   return (
-    <div className="p-2 flex justify-between items-center h-fit w-full absolute inset-0">
+    <div className="flex justify-between items-center flex-wrap h-fit w-full absolute inset-0">
       {/* Import */}
-      <div className="ml-4 flex items-center gap-2">
-        <span>Database:</span>
+      <div className="m-4 flex-1 flex items-center gap-2">
+        <span className="whitespace-nowrap">Database:</span>
         <DatabaseImport
           database={database}
           setDatabase={setDatabase}
           databases={databases}
           addDatabase={addDatabase}
+          className="flex-1"
         />
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex-1 flex justify-end h-18">
         {/* Search */}
         <GraphRendererSearch
           nodes={nodes}
@@ -149,8 +150,8 @@ function GraphRendererSearch({
         className
       )}
     >
-      <Command className="h-auto" shouldFilter={false}>
-        <div className="flex justify-between gap-2 items-center">
+      <Command shouldFilter={false}>
+        <div className="flex justify-between items-center gap-1">
           {/* Input */}
           <CommandInput
             ref={inputRef}

@@ -1,5 +1,11 @@
 import { ChevronDown, Loader, Plus } from "lucide-react";
-import { Suspense, useState } from "react";
+import {
+  Suspense,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+} from "react";
 import { Button } from "~/components/ui/button";
 import {
   Command,
@@ -19,37 +25,55 @@ import { useIsMobile } from "~/hooks/use-mobile";
 import type { GraphDatabase } from "../../types";
 import { Dialog, DialogTrigger } from "~/components/ui/dialog";
 import ImportInputs from "./input";
+import { cn } from "~/lib/utils";
 
 export default function DatabaseImport({
   database,
   databases,
   setDatabase,
   addDatabase,
-}: {
+  className,
+}: ComponentProps<"button"> & {
   database: GraphDatabase | null;
   databases: GraphDatabase[];
   setDatabase: (g: GraphDatabase) => void;
   addDatabase: (g: GraphDatabase) => void;
 }) {
+  // Refs
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
   // States
   const [open, setOpen] = useState(false);
 
   // Hooks
   const isMobile = useIsMobile();
 
+  const triggerWidth = useMemo(
+    () => buttonRef.current?.offsetWidth,
+    [buttonRef.current?.offsetWidth, open]
+  );
+
   if (!isMobile) {
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
+            ref={buttonRef}
             variant="outline"
-            className="w-[200px] flex justify-between items-center"
+            className={cn(
+              "flex justify-between items-center text-ellipsis",
+              className
+            )}
           >
             {database ? database.label : "Default"}
             <ChevronDown />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[200px] p-0" align="start">
+        <PopoverContent
+          className="p-0"
+          align="start"
+          style={{ width: triggerWidth }}
+        >
           <Suspense fallback={<DatabaseListFallback />}>
             <DatabaseSelector
               setOpen={setOpen}
@@ -69,7 +93,10 @@ export default function DatabaseImport({
       <DrawerTrigger asChild>
         <Button
           variant="outline"
-          className="w-[150px] flex justify-between items-center"
+          className={cn(
+            "flex justify-between items-center text-ellipsis",
+            className
+          )}
         >
           {database ? database.label : "Default"}
           <ChevronDown />

@@ -11,7 +11,7 @@ const inputVariants = cva(
       variant: {
         default: [
           "border-border border",
-          "focus-visible:border-border focus-visible:ring-border focus-visible:ring-[3px]",
+          "focus-visible:border-border focus-visible:ring-outline focus-visible:ring-1",
           "aria-invalid:ring-critical/20 dark:aria-invalid:ring-critical/40 aria-invalid:border-critical",
         ],
         ghost: ["border-0", "focus-visible:ring-0"],

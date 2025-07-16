@@ -62,6 +62,7 @@
   --color-neutral-fore: var(--neutral-fore);
   --color-neutral-fore-low: var(--neutral-fore-low);
   --color-neutral-fore-disabled: var(--neutral-fore-disabled);
+  --color-outline: var(--outline);
   --color-border: var(--border);
   --color-border-hover: var(--border-hover);
   --color-border-active: var(--border-active);
@@ -292,6 +293,7 @@ body {
   --neutral-fore: var(--black);
   --neutral-fore-low: var(--black);
   --neutral-fore-disabled: var(--black-a35);
+  --outline: var(--black);
   --border: var(--black-a15);
   --border-hover: var(--black-a35);
   --border-active: var(--purple);
@@ -373,6 +375,7 @@ body {
   --neutral-fore-low: var(--white);
   --neutral-disabled: var(--white-a15);
   --neutral-fore-disabled: var(--white-a35);
+  --outline: var(--white);
   --border: var(--white-a15);
   --border-hover: var(--white-a35);
   --border-active: var(--purple);
