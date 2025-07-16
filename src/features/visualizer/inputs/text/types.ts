@@ -4,5 +4,4 @@ export type TextInput = BaseInputType<string> &{
   type: "text";
   required?: boolean;
   placeholder?: string;
-  defaultValue?: string;
 };

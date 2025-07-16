@@ -13,7 +13,6 @@ import {
 import { Table as TableIcon } from "lucide-react";
 import { Switch } from "~/components/form/switch";
 import { Label } from "~/components/form/label";
-import { validateNames } from "./util";
 import {
   createFileInput,
   createSwitchInput,
@@ -51,7 +50,7 @@ const validateNodes = async (file: File) => {
     if (!isValid) {
       return {
         success: false,
-        message: "Some lines don't have exactly one node",
+        message: "Every lines should have exactly one node",
       };
     }
 
@@ -88,7 +87,7 @@ const validateEdges = async (file: File) => {
     if (!isValid) {
       return {
         success: false,
-        message: "Some lines don't have values matched with the header",
+        message: "Number of values don't match with the header",
       };
     }
 
@@ -118,7 +117,6 @@ export const CSV: ImportOption = {
       label: "Name of the database",
       required: true,
       placeholder: "Enter a name for the database...",
-      validator: validateNames,
     }),
     createFileInput({
       id: "nodes-csv",

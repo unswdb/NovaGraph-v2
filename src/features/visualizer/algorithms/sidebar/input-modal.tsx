@@ -88,8 +88,8 @@ export default function AlgorithmInputModal({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{menuButton}</DialogTrigger>
+      {/* Title + Description */}
       <DialogContent>
-        {/* Title + Description */}
         <DialogHeader>
           <DialogTitle>{algorithm.title}</DialogTitle>
           <DialogDescription>{algorithm.description}</DialogDescription>
