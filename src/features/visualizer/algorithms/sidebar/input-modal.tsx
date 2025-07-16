@@ -1,10 +1,11 @@
-import { SidebarMenuButton } from "~/components/ui/sidebar";
+import { cloneElement, useMemo, useState } from "react";
+import type { GraphEdge, GraphModule, GraphNode } from "../../types";
 import type {
   BaseGraphAlgorithm,
   BaseGraphAlgorithmResult,
-  GraphAlgorithmInput,
-  SelectInput,
-} from "./implementations";
+} from "../implementations";
+import { SidebarMenuButton } from "~/components/ui/sidebar";
+import { cn } from "~/lib/utils";
 import { Separator } from "~/components/ui/separator";
 import {
   Dialog,
@@ -15,21 +16,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
-import { Label } from "~/components/form/label";
-import React from "react";
-import { cn } from "~/lib/utils";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-} from "~/components/form/select";
-import type { GraphEdge, GraphModule, GraphNode } from "../types";
-import { Input } from "~/components/form/input";
-import { SelectValue } from "@radix-ui/react-select";
-import { useMemo, useState } from "react";
 import { Button } from "~/components/ui/button";
+import AlgorithmInput from "./algorithm-input";
 
 export default function AlgorithmInputModal({
   module,
@@ -91,7 +79,7 @@ export default function AlgorithmInputModal({
 
   // Return just the button if we don't need inputs from users
   if (algorithm.inputs.length <= 0) {
-    return React.cloneElement(menuButton, {
+    return cloneElement(menuButton, {
       onClick: handleSubmit,
     });
   }
@@ -109,13 +97,16 @@ export default function AlgorithmInputModal({
         <div className="space-y-6 mt-2">
           {algorithm.inputs.map((input, index) => (
             <AlgorithmInput
-              key={index}
+              key={input.label}
               input={input}
               nodes={nodes}
               edges={edges}
               value={inputValues[input.label]}
               onChange={(value) =>
-                setInputValues((prev) => ({ ...prev, [input.label]: value }))
+                setInputValues((prev) => ({
+                  ...prev,
+                  [input.label]: value,
+                }))
               }
             />
           ))}
@@ -132,99 +123,5 @@ export default function AlgorithmInputModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function AlgorithmInput({
-  input,
-  nodes,
-  edges,
-  value,
-  onChange,
-}: {
-  input: GraphAlgorithmInput;
-  nodes: GraphNode[];
-  edges: GraphEdge[];
-  value: string | number | undefined;
-  onChange: (value: string | number) => void;
-}) {
-  switch (input.type) {
-    case "select":
-      return (
-        <div className="space-y-4">
-          <Label>{input.label}</Label>
-          <AlgorithmSelectInput
-            input={input}
-            nodes={nodes}
-            edges={edges}
-            value={value ? String(value) : ""}
-            onChange={onChange}
-          />
-        </div>
-      );
-    case "number":
-      return (
-        <div className="space-y-1">
-          <Label>{input.label}</Label>
-          <Input
-            type="number"
-            min={input.min ?? 0}
-            max={input.max}
-            value={value ?? ""}
-            onChange={(e) => onChange(Number(e.target.value))}
-          />
-        </div>
-      );
-  }
-}
-
-function AlgorithmSelectInput({
-  input,
-  nodes,
-  edges,
-  value,
-  onChange,
-}: {
-  input: SelectInput;
-  nodes: GraphNode[];
-  edges: GraphEdge[];
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  const source = input.source;
-  const placeholder =
-    source === "static"
-      ? "Select an option..."
-      : source === "edges"
-      ? "Select an edge..."
-      : "Select a node...";
-  const sources =
-    source === "static"
-      ? (input.options ?? []).map((opt) => ({ value: opt, label: opt }))
-      : source === "edges"
-      ? edges.map((e) => ({
-          value: `${e.source}-${e.target}`,
-          label: `${e.source} → ${e.target}`,
-        }))
-      : nodes.map((n) => ({
-          value: n.id,
-          label: n.name ?? `Node ${n.id}`,
-        }));
-
-  return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-full">
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          {sources.map((source) => (
-            <SelectItem key={source.value} value={source.value}>
-              {source.label}
-            </SelectItem>
-          ))}
-        </SelectGroup>
-      </SelectContent>
-    </Select>
   );
 }

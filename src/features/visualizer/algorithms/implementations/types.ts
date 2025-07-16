@@ -1,22 +1,6 @@
 import type { ReactNode } from "react";
 import type { GraphModule } from "../../types";
-
-export type SelectInput = {
-  label: string;
-  type: "select";
-  source: "nodes" | "edges" | "static"; // Where select options come from
-  multiple?: boolean; // For multi-select
-  options?: string[]; // For static options
-};
-
-export type NumberInput = {
-  label: string;
-  type: "number";
-  min?: number;
-  max?: number;
-};
-
-export type GraphAlgorithmInput = SelectInput | NumberInput;
+import type { GraphAlgorithmInput } from "../inputs";
 
 type NodeId = string;
 type EdgeId = string; // Format: "fromNodeId-toNodeId"

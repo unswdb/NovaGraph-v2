@@ -2,7 +2,7 @@ import { observer } from "mobx-react-lite";
 import { useEffect, useState } from "react";
 import VisualizerStore from "./store";
 import Header from "./header";
-import AlgorithmSidebar from "./algorithms";
+import AlgorithmSidebar from "./algorithms/sidebar";
 import SettingsSidebar from "./settings";
 import GraphRenderer from "./renderer";
 import { MODE } from "./constant";

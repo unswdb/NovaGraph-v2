@@ -22,9 +22,6 @@ export {
   type BaseGraphAlgorithmResult,
   type BaseGraphAlgorithm,
   type GraphAlgorithm,
-  type GraphAlgorithmInput,
-  type SelectInput,
-  type NumberInput,
   type SizeMap,
   type ColorMap,
 } from "./types";
