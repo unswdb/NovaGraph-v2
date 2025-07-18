@@ -43,9 +43,9 @@ export default function GraphRendererHeader({
   const { zoomToNode } = useZoomControls(cosmographRef);
 
   // Decide whether to include a "Name" accessor in Cosmograph search UI
-  const allNodesHaveName = nodes.every((n) => n.name);
+  const allNodesHaveName = nodes.every((n) => n.label);
   const nameAccessor = allNodesHaveName
-    ? [{ label: "name", accessor: (n: GraphNode) => String(n.name) }]
+    ? [{ label: "label", accessor: (n: GraphNode) => String(n.label) }]
     : [];
 
   return (

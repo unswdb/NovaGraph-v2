@@ -16,16 +16,16 @@ val initGraph(void)
     igraph_empty(&globalGraph, 10, IGRAPH_UNDIRECTED);
 
     // Use European cities as nodes
-    SETVAS(&globalGraph, "name", 0, "London");
-    SETVAS(&globalGraph, "name", 1, "Paris");
-    SETVAS(&globalGraph, "name", 2, "Berlin");
-    SETVAS(&globalGraph, "name", 3, "Rome");
-    SETVAS(&globalGraph, "name", 4, "Madrid");
-    SETVAS(&globalGraph, "name", 5, "Athens");
-    SETVAS(&globalGraph, "name", 6, "Amsterdam");
-    SETVAS(&globalGraph, "name", 7, "Brussels");
-    SETVAS(&globalGraph, "name", 8, "Lisbon");
-    SETVAS(&globalGraph, "name", 9, "Prague");
+    SETVAS(&globalGraph, "label", 0, "London");
+    SETVAS(&globalGraph, "label", 1, "Paris");
+    SETVAS(&globalGraph, "label", 2, "Berlin");
+    SETVAS(&globalGraph, "label", 3, "Rome");
+    SETVAS(&globalGraph, "label", 4, "Madrid");
+    SETVAS(&globalGraph, "label", 5, "Athens");
+    SETVAS(&globalGraph, "label", 6, "Amsterdam");
+    SETVAS(&globalGraph, "label", 7, "Brussels");
+    SETVAS(&globalGraph, "label", 8, "Lisbon");
+    SETVAS(&globalGraph, "label", 9, "Prague");
 
     // Create some edges to connect these cities in a network
     igraph_add_edge(&globalGraph, 0, 1);

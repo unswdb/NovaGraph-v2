@@ -1,7 +1,8 @@
 #include "../graph.h"
 #include <iostream>
 
-val vertices_are_adjacent(igraph_integer_t src, igraph_integer_t tar) {
+val vertices_are_adjacent(igraph_integer_t src, igraph_integer_t tar)
+{
     igraph_bool_t res;
     bool hasWeights = VECTOR(globalWeights) != NULL;
 
@@ -17,10 +18,12 @@ val vertices_are_adjacent(igraph_integer_t src, igraph_integer_t tar) {
     colorMap.set(src, 1);
     colorMap.set(tar, 1);
 
-    if (res) {
+    if (res)
+    {
         std::string linkId = std::to_string(src) + '-' + std::to_string(tar);
         colorMap.set(linkId, 1);
-        if (hasWeights) {
+        if (hasWeights)
+        {
             igraph_integer_t eid;
             igraph_get_eid(&globalGraph, &eid, src, tar, true, 0);
             double weight = VECTOR(globalWeights)[eid];
@@ -35,7 +38,8 @@ val vertices_are_adjacent(igraph_integer_t src, igraph_integer_t tar) {
     return result;
 }
 
-val jaccard_similarity(val js_vs_list) {
+val jaccard_similarity(val js_vs_list)
+{
     IGraphVectorInt vs_list;
     IGraphMatrix m;
     igraph_vs_t vs;
@@ -46,7 +50,8 @@ val jaccard_similarity(val js_vs_list) {
     data.set("algorithm", "Jaccard Similarity");
 
     val nodes = val::array();
-    for (size_t i = 0; i < js_vs_list["length"].as<size_t>(); i++) {
+    for (size_t i = 0; i < js_vs_list["length"].as<size_t>(); i++)
+    {
         igraph_integer_t nodeId = js_vs_list[i].as<igraph_integer_t>();
         nodes.set(i, igraph_get_name(nodeId));
         colorMap.set(nodeId, 1);
@@ -59,15 +64,18 @@ val jaccard_similarity(val js_vs_list) {
     val rows = val::array();
     double max_similarity = -1.0;
     val max_pair = val::object();
-    for (long int i = 0; i < m.nrows(); i++) {
+    for (long int i = 0; i < m.nrows(); i++)
+    {
         val row = val::array();
-        for (long int j = 0; j < m.ncols(); j++) {
+        for (long int j = 0; j < m.ncols(); j++)
+        {
             std::stringstream stream;
             stream << std::fixed << std::setprecision(2) << m.get(i, j);
             double similarity = atof(stream.str().c_str());
             row.set(j, similarity);
 
-            if (similarity > max_similarity && i != j) {
+            if (similarity > max_similarity && i != j)
+            {
                 max_similarity = similarity;
                 int nodeId1 = vs_list.at(i);
                 int nodeId2 = vs_list.at(j);
@@ -86,13 +94,15 @@ val jaccard_similarity(val js_vs_list) {
     data.set("nodes", nodes);
     result.set("data", data);
     igraph_vs_destroy(&vs);
-    return result;    
+    return result;
 }
 
-val topological_sort(void) {
+val topological_sort(void)
+{
     igraph_bool_t isDAG;
     igraph_is_dag(&globalGraph, &isDAG);
-    if (!isDAG) throw std::runtime_error("This graph is not a Directed Acyclic Graph (DAG) and cannot be topologically sorted.");
+    if (!isDAG)
+        throw std::runtime_error("This graph is not a Directed Acyclic Graph (DAG) and cannot be topologically sorted.");
 
     IGraphVectorInt order;
     igraph_topological_sorting(&globalGraph, order.vec(), IGRAPH_OUT);
@@ -107,7 +117,8 @@ val topological_sort(void) {
     // Node colors will get lighter colours (lower freq values) which will be scaled
     std::unordered_map<int, int> fm;
     int current_fm_value = order.size();
-    for (igraph_integer_t v = 0; v < order.size(); v++) {
+    for (igraph_integer_t v = 0; v < order.size(); v++)
+    {
         val n = val::object();
         igraph_integer_t nodeId = order.at(v);
         n.set("id", nodeId);
@@ -124,7 +135,8 @@ val topological_sort(void) {
     return result;
 }
 
-val diameter(void) {
+val diameter(void)
+{
     igraph_real_t diameter;
     igraph_integer_t src, tar;
     IGraphVectorInt vPath, ePath;
@@ -142,24 +154,27 @@ val diameter(void) {
     data.set("diameter", diameter);
 
     val path = val::array();
-    for (int i = 0; i < vPath.size(); ++i) {
+    for (int i = 0; i < vPath.size(); ++i)
+    {
         int node = vPath.at(i);
         std::string nodeId = std::to_string(node);
         colorMap.set(nodeId, 0.5);
 
-        if (i > 0) {
-            std::string linkId = std::to_string(vPath.at(i-1)) + '-' + nodeId;
+        if (i > 0)
+        {
+            std::string linkId = std::to_string(vPath.at(i - 1)) + '-' + nodeId;
             colorMap.set(linkId, 1);
 
             val link = val::object();
-            link.set("from", igraph_get_name(vPath.at(i-1)));
+            link.set("from", igraph_get_name(vPath.at(i - 1)));
             link.set("to", igraph_get_name(node));
 
-            int weight_index = ePath.at(i-1);
-            if (hasWeights) {
+            int weight_index = ePath.at(i - 1);
+            if (hasWeights)
+            {
                 link.set("weight", VECTOR(globalWeights)[weight_index]);
             };
-            path.set(i-1, link);
+            path.set(i - 1, link);
         }
     }
     colorMap.set(src, 1);
@@ -172,11 +187,13 @@ val diameter(void) {
     return result;
 }
 
-val eulerian_path(void) {
+val eulerian_path(void)
+{
     igraph_bool_t exists;
     igraph_is_eulerian(&globalGraph, &exists, NULL);
-    if (!exists) throw std::runtime_error("This graph does not have an Eulerian path.");
-    
+    if (!exists)
+        throw std::runtime_error("This graph does not have an Eulerian path.");
+
     IGraphVectorInt vPath;
     igraph_eulerian_path(&globalGraph, NULL, vPath.vec());
 
@@ -186,9 +203,10 @@ val eulerian_path(void) {
     data.set("algorithm", "Eulerian Path");
 
     val path = val::array();
-    for (int i = 0; i < vPath.size() - 1; ++i) {
+    for (int i = 0; i < vPath.size() - 1; ++i)
+    {
         int src = vPath.at(i);
-        int tar = vPath.at(i+1);
+        int tar = vPath.at(i + 1);
         std::string linkId = std::to_string(src) + '-' + std::to_string(tar);
         colorMap.set(linkId, 1);
 
@@ -198,9 +216,9 @@ val eulerian_path(void) {
         path.set(i, link);
     }
     colorMap.set(vPath.at(0), 1);
-    colorMap.set(vPath.at(vPath.size()-1), 1);
+    colorMap.set(vPath.at(vPath.size() - 1), 1);
     data.set("start", igraph_get_name(vPath.at(0)));
-    data.set("end", igraph_get_name(vPath.at(vPath.size()-1)));
+    data.set("end", igraph_get_name(vPath.at(vPath.size() - 1)));
 
     result.set("colorMap", colorMap);
     result.set("mode", MODE_COLOR_SHADE_DEFAULT);
@@ -209,17 +227,22 @@ val eulerian_path(void) {
     return result;
 }
 
-val eulerian_circuit(void) {
+val eulerian_circuit(void)
+{
     igraph_bool_t pathExists, circuitExists;
     igraph_is_eulerian(&globalGraph, &pathExists, &circuitExists);
-    if (!circuitExists) {
-        if (pathExists) {
+    if (!circuitExists)
+    {
+        if (pathExists)
+        {
             throw std::runtime_error("This graph is does not have an Eulerian circuit BUT it has an Eulerian path.");
-        } else {
+        }
+        else
+        {
             throw std::runtime_error("This graph does not have an Eulerian circuit.");
         }
     }
-    
+
     IGraphVectorInt vPath;
     igraph_eulerian_cycle(&globalGraph, NULL, vPath.vec());
 
@@ -229,9 +252,10 @@ val eulerian_circuit(void) {
     data.set("algorithm", "Eulerian Circuit");
 
     val path = val::array();
-    for (int i = 0; i < vPath.size() - 1; ++i) {
+    for (int i = 0; i < vPath.size() - 1; ++i)
+    {
         int src = vPath.at(i);
-        int tar = vPath.at(i+1);
+        int tar = vPath.at(i + 1);
         std::string linkId = std::to_string(src) + '-' + std::to_string(tar);
         colorMap.set(linkId, 1);
 
@@ -248,21 +272,27 @@ val eulerian_circuit(void) {
     return result;
 }
 
-val missing_edge_prediction_default_values(void) {
+val missing_edge_prediction_default_values(void)
+{
     int num_nodes = igraph_vcount(&globalGraph);
     int num_edges = igraph_ecount(&globalGraph);
     int num_samples, num_bins;
     val result = val::object();
 
-    if (num_nodes < 100) {
+    if (num_nodes < 100)
+    {
         num_samples = 500;
         num_bins = 10;
         result.set("graphSize", "small");
-    } else if (num_nodes <= 1000) {
+    }
+    else if (num_nodes <= 1000)
+    {
         num_samples = 1000 + (num_edges / 100); // slightly increase based on edge size
         num_bins = 25;
         result.set("graphSize", "medium");
-    } else {
+    }
+    else
+    {
         num_samples = 5000 + (num_edges / 50);
         num_bins = 50 + (num_edges / 200);
         result.set("graphSize", "large");
@@ -273,7 +303,8 @@ val missing_edge_prediction_default_values(void) {
     return result;
 }
 
-val missing_edge_prediction(int numSamples, int numBins) {
+val missing_edge_prediction(int numSamples, int numBins)
+{
     igraph_hrg_t hrg;
     IGraphVectorInt predicted_edges;
     IGraphVector probabilties;
@@ -293,19 +324,21 @@ val missing_edge_prediction(int numSamples, int numBins) {
     val edges = val::array();
     val edgesData = val::array();
     int edgeIndex = 0;
-    for (int i = 0; i < predicted_edges.size(); ++i) {
+    for (int i = 0; i < predicted_edges.size(); ++i)
+    {
         int src = predicted_edges.at(i);
         int tar = predicted_edges.at(i + 1);
         std::string linkId = std::to_string(src) + '-' + std::to_string(tar);
         igraph_real_t prob = probabilties.at(edgeIndex);
 
         // Only record edges with probability > 0.5
-        if (prob < 0.5) break;
+        if (prob < 0.5)
+            break;
 
         colorMap.set(src, 0.5);
         colorMap.set(tar, 0.5);
         colorMap.set(linkId, 0);
-        
+
         // add to graph render object (used by Cosmograph)
         val e = val::object();
         e.set("source", src);

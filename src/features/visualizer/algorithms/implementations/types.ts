@@ -11,18 +11,19 @@ export type ColorMap = {
 };
 
 export type SizeMap = {
-    [key: NodeId]: number;
-  };
+  [key: NodeId]: number;
+};
 
 export interface BaseGraphAlgorithmResult {
   colorMap: ColorMap;
   sizeMap?: SizeMap;
   mode: number;
-};
+}
 
-export interface GraphAlgorithmResult<TData = unknown> extends BaseGraphAlgorithmResult {
+export interface GraphAlgorithmResult<TData = unknown>
+  extends BaseGraphAlgorithmResult {
   data: TData;
-};
+}
 
 // Type-erased base algorithm for generic lists
 export interface BaseGraphAlgorithm {

@@ -1,9 +1,11 @@
 #include "generator.h"
 
-val graph_from_gml(const std::string& filename) {
+val graph_from_gml(const std::string &filename)
+{
     igraph_t graph;
     FILE *file = fopen(filename.c_str(), "r");
-    if (file == NULL) throw std::runtime_error("File not found: " + filename);
+    if (file == NULL)
+        throw std::runtime_error("File not found: " + filename);
 
     igraph_read_graph_gml(&graph, file);
     fclose(file);

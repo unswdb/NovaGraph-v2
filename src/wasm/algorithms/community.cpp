@@ -2,21 +2,26 @@
 #include <iostream>
 #include <string>
 
-void throw_error_if_directed(const std::string& algorithm) {
-    if (igraph_is_directed(&globalGraph)) {
+void throw_error_if_directed(const std::string &algorithm)
+{
+    if (igraph_is_directed(&globalGraph))
+    {
         std::string message = "The " + algorithm + " algorithm does not support directed graphs";
         throw std::runtime_error(message);
     }
 }
 
-void throw_error_if_undirected(const std::string& algorithm) {
-    if (!igraph_is_directed(&globalGraph)) {
+void throw_error_if_undirected(const std::string &algorithm)
+{
+    if (!igraph_is_directed(&globalGraph))
+    {
         std::string message = "The " + algorithm + " algorithm does not support undirected graphs";
         throw std::runtime_error(message);
     }
 }
 
-val louvain(igraph_real_t resolution) {
+val louvain(igraph_real_t resolution)
+{
     IGraphVectorInt membership;
     IGraphVector modularity;
     igraph_real_t modularity_metric;
@@ -31,19 +36,20 @@ val louvain(igraph_real_t resolution) {
     val data = val::object();
     data.set("algorithm", "Louvain Community Detection");
 
-
     stream << std::fixed << std::setprecision(2) << modularity_metric;
     data.set("modularity", std::stod(stream.str()));
-    
+
     std::map<int, std::vector<std::string>> communityMap;
-    for (igraph_integer_t v = 0; v < membership.size(); ++v) {
+    for (igraph_integer_t v = 0; v < membership.size(); ++v)
+    {
         igraph_integer_t community = membership.at(v);
         colorMap.set(v, community);
         communityMap[community].push_back(igraph_get_name(v));
     }
 
     val communities = val::array();
-    for (const auto& [community, vertices] : communityMap) {
+    for (const auto &[community, vertices] : communityMap)
+    {
         communities.set(community, val::array(vertices));
     }
 
@@ -54,7 +60,8 @@ val louvain(igraph_real_t resolution) {
     return result;
 }
 
-val leiden(igraph_real_t resolution) {
+val leiden(igraph_real_t resolution)
+{
     igraph_integer_t n_iterations = 100;
     IGraphVectorInt membership;
     igraph_real_t quality, modularity_metric;
@@ -69,7 +76,6 @@ val leiden(igraph_real_t resolution) {
     val data = val::object();
     data.set("algorithm", "Leiden Community Detection");
 
-
     stream << std::fixed << std::setprecision(2) << modularity_metric;
     data.set("modularity", std::stod(stream.str()));
 
@@ -77,14 +83,16 @@ val leiden(igraph_real_t resolution) {
     data.set("quality", std::stod(stream2.str()));
 
     std::map<int, std::vector<std::string>> communityMap;
-    for (igraph_integer_t v = 0; v < membership.size(); ++v) {
+    for (igraph_integer_t v = 0; v < membership.size(); ++v)
+    {
         igraph_integer_t community = membership.at(v);
         colorMap.set(v, community);
         communityMap[community].push_back(igraph_get_name(v));
     }
 
     val communities = val::array();
-    for (const auto& [community, vertices] : communityMap) {
+    for (const auto &[community, vertices] : communityMap)
+    {
         communities.set(community, val::array(vertices));
     }
 
@@ -95,7 +103,8 @@ val leiden(igraph_real_t resolution) {
     return result;
 }
 
-val fast_greedy(void) {
+val fast_greedy(void)
+{
     IGraphVectorInt membership;
     IGraphVector modularity;
     std::stringstream stream;
@@ -112,17 +121,19 @@ val fast_greedy(void) {
     data.set("modularity", std::stod(stream.str()));
 
     std::map<int, std::vector<std::string>> communityMap;
-    for (igraph_integer_t v = 0; v < membership.size(); ++v) {
+    for (igraph_integer_t v = 0; v < membership.size(); ++v)
+    {
         igraph_integer_t community = membership.at(v);
         colorMap.set(v, community);
         communityMap[community].push_back(igraph_get_name(v));
     }
 
     val communities = val::array();
-    for (const auto& [community, vertices] : communityMap) {
+    for (const auto &[community, vertices] : communityMap)
+    {
         communities.set(community, val::array(vertices));
     }
-    
+
     result.set("colorMap", colorMap);
     result.set("mode", MODE_RAINBOW);
     data.set("communities", communities);
@@ -130,7 +141,8 @@ val fast_greedy(void) {
     return result;
 }
 
-val label_propagation(void) {
+val label_propagation(void)
+{
     IGraphVectorInt membership;
 
     igraph_community_label_propagation(&globalGraph, membership.vec(), IGRAPH_OUT, igraph_weights(), NULL, NULL);
@@ -141,14 +153,16 @@ val label_propagation(void) {
     data.set("algorithm", "Label Propagation");
 
     std::map<int, std::vector<std::string>> communityMap;
-    for (igraph_integer_t v = 0; v < membership.size(); ++v) {
+    for (igraph_integer_t v = 0; v < membership.size(); ++v)
+    {
         igraph_integer_t community = membership.at(v);
         colorMap.set(v, community);
         communityMap[community].push_back(igraph_get_name(v));
     }
 
     val communities = val::array();
-    for (const auto& [community, vertices] : communityMap) {
+    for (const auto &[community, vertices] : communityMap)
+    {
         communities.set(community, val::array(vertices));
     }
 
@@ -159,7 +173,8 @@ val label_propagation(void) {
     return result;
 }
 
-val local_clustering_coefficient(void) {
+val local_clustering_coefficient(void)
+{
     IGraphVector res;
 
     igraph_transitivity_local_undirected(&globalGraph, res.vec(), igraph_vss_all(), IGRAPH_TRANSITIVITY_ZERO);
@@ -177,7 +192,8 @@ val local_clustering_coefficient(void) {
 
     val transitivities = val::array();
     std::unordered_map<int, double> dm;
-    for (igraph_integer_t v = 0; v < res.size(); ++v) {
+    for (igraph_integer_t v = 0; v < res.size(); ++v)
+    {
         val t = val::object();
         double transitivity = res.at(v);
 
@@ -199,19 +215,23 @@ val local_clustering_coefficient(void) {
     return result;
 }
 
-val k_core(int k) {
+val k_core(int k)
+{
     IGraphVectorInt coreness, vertices_to_keep;
     igraph_coreness(&globalGraph, coreness.vec(), IGRAPH_OUT);
 
-    for (igraph_integer_t v = 0; v < coreness.size(); ++v) {
-        if (coreness.at(v) >= k) {
+    for (igraph_integer_t v = 0; v < coreness.size(); ++v)
+    {
+        if (coreness.at(v) >= k)
+        {
             vertices_to_keep.push_back(v);
         }
     }
 
     // Create a map to store the original vertex IDs
     std::map<igraph_integer_t, igraph_integer_t> original_ids;
-    for (int i = 0; i < vertices_to_keep.size(); i++) {
+    for (int i = 0; i < vertices_to_keep.size(); i++)
+    {
         original_ids[i] = vertices_to_keep.at(i);
     }
 
@@ -226,13 +246,14 @@ val k_core(int k) {
     val data = val::object();
     data.set("algorithm", "K-Core Detection");
 
-    for (igraph_integer_t e = 0; e < igraph_ecount(&subgraph); ++e) {
+    for (igraph_integer_t e = 0; e < igraph_ecount(&subgraph); ++e)
+    {
         igraph_integer_t from, to;
         igraph_edge(&subgraph, e, &from, &to);
 
         int from_id = original_ids[from];
         int to_id = original_ids[to];
-        
+
         std::string linkId = std::to_string(from_id) + "-" + std::to_string(to_id);
         colorMap.set(linkId, 1);
         colorMap.set(from_id, 0.5);
@@ -240,7 +261,8 @@ val k_core(int k) {
     }
 
     val cores = val::array();
-    for (igraph_integer_t i = 0; i < vertices_to_keep.size(); ++i) {
+    for (igraph_integer_t i = 0; i < vertices_to_keep.size(); ++i)
+    {
         igraph_integer_t v = vertices_to_keep.at(i);
         val node = val::object();
         node.set("id", v);
@@ -257,10 +279,10 @@ val k_core(int k) {
     igraph_destroy(&subgraph);
     igraph_vs_destroy(&vs);
     return result;
-
 }
 
-val triangles(void) {
+val triangles(void)
+{
     IGraphVectorInt res;
 
     igraph_list_triangles(&globalGraph, res.vec());
@@ -272,7 +294,8 @@ val triangles(void) {
 
     val triangles = val::array();
     int id = 1;
-    for (igraph_integer_t v = 0; v < res.size(); v += 3) {
+    for (igraph_integer_t v = 0; v < res.size(); v += 3)
+    {
         val t = val::object();
         t.set("node1", igraph_get_name(res.at(v)));
         t.set("node2", igraph_get_name(res.at(v + 1)));
@@ -299,7 +322,8 @@ val triangles(void) {
     return result;
 }
 
-val connected_components(igraph_connectedness_t mode) {
+val connected_components(igraph_connectedness_t mode)
+{
     IGraphVectorInt membership;
 
     igraph_connected_components(&globalGraph, membership.vec(), NULL, NULL, mode);
@@ -307,21 +331,26 @@ val connected_components(igraph_connectedness_t mode) {
     val result = val::object();
     val colorMap = val::object();
     val data = val::object();
-    if (mode == IGRAPH_STRONG) {
+    if (mode == IGRAPH_STRONG)
+    {
         data.set("algorithm", "Strongly Connected Components");
-    } else {
+    }
+    else
+    {
         data.set("algorithm", "Weakly Connected Components");
     }
 
     std::map<int, std::vector<std::string>> componentMap;
-    for (igraph_integer_t v = 0; v < membership.size(); ++v) {
+    for (igraph_integer_t v = 0; v < membership.size(); ++v)
+    {
         igraph_integer_t component = membership.at(v);
         colorMap.set(v, component);
         componentMap[component].push_back(igraph_get_name(v));
     }
 
     val components = val::array();
-    for (const auto& [component, vertices] : componentMap) {
+    for (const auto &[component, vertices] : componentMap)
+    {
         components.set(component, val::array(vertices));
     }
 
@@ -332,11 +361,13 @@ val connected_components(igraph_connectedness_t mode) {
     return result;
 }
 
-val strongly_connected_components(void) {
+val strongly_connected_components(void)
+{
     return connected_components(IGRAPH_STRONG);
 }
 
-val weakly_connected_components(void) {
+val weakly_connected_components(void)
+{
     throw_error_if_undirected("Weakly Connected Components");
     return connected_components(IGRAPH_WEAK);
 }

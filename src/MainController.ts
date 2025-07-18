@@ -6,7 +6,7 @@ class MainController {
   private wasmGraphModule: any = null;
   private graphState: { nodes: any[], edges: any[] } | null = null;
 
-  private async getGraphModule() {
+    async getGraphModule() {
     if (!this.wasmGraphModule) {
       try {
         this.wasmGraphModule = await createModule();

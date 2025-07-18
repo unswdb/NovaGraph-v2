@@ -34,7 +34,7 @@ export default function AlgorithmSelectInputComponent({
         })) ?? []
       : store.database?.graph.nodes.map((n) => ({
           value: n.id,
-          label: n.name ?? `Node ${n.id}`,
+          label: n.label ?? `Node ${n.id}`,
         })) ?? [];
 
   return (

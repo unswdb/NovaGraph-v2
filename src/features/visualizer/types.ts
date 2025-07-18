@@ -1,7 +1,7 @@
 // TODO (Change where to infer): Infered from src/wasm/generators/generator.cpp
 export type GraphNode = {
   id: string;
-  name?: string;
+  label?: string;
   attributes?: Record<string, string>; // Additional attributes for the node
 };
 

@@ -1,5 +1,5 @@
 import { action, makeObservable, observable, runInAction } from "mobx";
-import type { GraphDatabase, GraphEdge, GraphNode } from "./types";
+import type { GraphDatabase, GraphEdge, GraphModule, GraphNode } from "./types";
 import {
   GRAVITY,
   NODE_SIZE_SCALE,
@@ -13,6 +13,7 @@ import type {
 import { controller } from "~/MainController";
 
 export type InitializedVisualizerStore = VisualizerStore & {
+    wasmModule: NonNullable<VisualizerStore["wasmModule"]>;
   database: NonNullable<VisualizerStore["database"]>;
 };
 
@@ -41,6 +42,7 @@ export default class VisualizerStore {
 
   // OBSERVABLES
   controller = controller;
+  wasmModule: GraphModule | null = null;
   database: GraphDatabase | null = null;
   databases: GraphDatabase[] = [];
   gravity: Gravity = GRAVITY.ZERO_GRAVITY;
@@ -50,21 +52,26 @@ export default class VisualizerStore {
 
   // ACTIONS
   initialize = async () => {
-    // Initialize Luzu controller
+    // Initialize Kuzu controller
     await this.controller.initKuzu("inmemory", "sync");
 
+    // Initialize WASM module
+    this.wasmModule = await this.controller.getGraphModule();
+
     // Define initial graph structure
-    const graph = await controller.initGraph();
+    const graph = await this.controller.initGraph();
     runInAction(() => {
+      // TODO: Change to controller helper function that retrieves all the database list
       this.databases = [
         {
           label: "Default",
           graph: {
-            nodes: graph.nodes.map((n: { id: number; name: string }) => ({
+            nodes: graph.nodes.map((n: GraphNode) => ({
               id: String(n.id),
-              name: n.name,
+              label: n.label,
+              attributes: n.attributes,
             })),
-            edges: graph.edges.map((e: { source: number; target: number }) => ({
+            edges: graph.edges.map((e: GraphEdge) => ({
               source: String(e.source),
               target: String(e.target),
             })),
@@ -118,7 +125,7 @@ export default class VisualizerStore {
 
   // UTILITIES FUNCTION
   protected checkInitialization(): asserts this is InitializedVisualizerStore {
-    if (!this.database) {
+    if (!this.wasmModule && !this.database) {
       throw new Error("WASM module is not initialized");
     }
   }

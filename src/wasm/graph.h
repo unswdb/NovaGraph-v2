@@ -11,15 +11,15 @@
 #include <unordered_map>
 #include <unordered_set>
 
-//#define N 11 // number of nodes
-extern igraph_t globalGraph;      // igraph structure
-extern igraph_vector_t globalWeights;   // edge weights
+// #define N 11 // number of nodes
+extern igraph_t globalGraph;          // igraph structure
+extern igraph_vector_t globalWeights; // edge weights
 
-#define MODE_COLOR_IMPORTANT        1   // Dark for important, light for less important
-#define MODE_COLOR_SHADE_DEFAULT    2   // Multiple purple shades
-#define MODE_COLOR_SHADE_ERROR      3   // Multiple purple shades with error for missing entries
-#define MODE_SIZE_SCALAR            4   // No color change but size is scaled
-#define MODE_RAINBOW                5   // Multiple colors in various groups
+#define MODE_COLOR_IMPORTANT 1     // Dark for important, light for less important
+#define MODE_COLOR_SHADE_DEFAULT 2 // Multiple purple shades
+#define MODE_COLOR_SHADE_ERROR 3   // Multiple purple shades with error for missing entries
+#define MODE_SIZE_SCALAR 4         // No color change but size is scaled
+#define MODE_RAINBOW 5             // Multiple colors in various groups
 
 using namespace emscripten;
 
