@@ -45,7 +45,7 @@ export default function GraphRendererHeader({
   // Decide whether to include a "Name" accessor in Cosmograph search UI
   const allNodesHaveName = nodes.every((n) => n.name);
   const nameAccessor = allNodesHaveName
-    ? [{ label: "Name", accessor: (n: GraphNode) => n.name as string }]
+    ? [{ label: "name", accessor: (n: GraphNode) => String(n.name) }]
     : [];
 
   return (
@@ -58,7 +58,7 @@ export default function GraphRendererHeader({
           setDatabase={setDatabase}
           databases={databases}
           addDatabase={addDatabase}
-          className="flex-1"
+          className="flex-1 max-w-[150px]"
         />
       </div>
       <div className="flex-1 flex justify-end h-18">

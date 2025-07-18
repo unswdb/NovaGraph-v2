@@ -26,7 +26,15 @@ ENV PATH="${EMSDK}:${EMSDK}/node/latest/bin:${EMSDK}/upstream/emscripten:${PATH}
 
 # Copy WASM source files
 WORKDIR /src
+COPY src/kuzu/ ./kuzu/
 COPY src/wasm/ ./wasm/
+
+# Install typescript to generate .d.ts file
+RUN npm install -g typescript
+
+# Generate .d.ts file for KuzuController.js
+RUN cd kuzu/controllers && \
+    tsc KuzuController.js --declaration --allowJs --emitDeclarationOnly
 
 # Clone WASM dependencies
 RUN cd wasm && \
@@ -51,9 +59,6 @@ RUN cd wasm/igraph && \
     mkdir build && cd build && \
     emcmake cmake .. && \
     emmake make
-
-# Install typescript to generate .d.ts file
-RUN npm install -g typescript
 
 # Build graph.js
 RUN em++ wasm/*.cpp wasm/algorithms/*.cpp wasm/generators/*.cpp -o graph.js \
@@ -93,6 +98,7 @@ COPY . .
 COPY --from=wasm-build /src/graph.js ./src/graph.js
 COPY --from=wasm-build /src/graph.wasm ./src/graph.wasm
 COPY --from=wasm-build /src/graph.d.ts ./src/graph.d.ts
+COPY --from=wasm-build /src/kuzu/controllers/KuzuController.d.ts ./src/kuzu/controllers/KuzuController.d.ts
 RUN npm run build
 
 # -------- Development --------
@@ -102,6 +108,7 @@ COPY . .
 COPY --from=wasm-build /src/graph.js ./src/graph.js
 COPY --from=wasm-build /src/graph.wasm ./src/graph.wasm
 COPY --from=wasm-build /src/graph.d.ts ./src/graph.d.ts
+COPY --from=wasm-build /src/kuzu/controllers/KuzuController.d.ts ./src/kuzu/controllers/KuzuController.d.ts
 EXPOSE 5173
 CMD ["npm", "run", "dev"]
 

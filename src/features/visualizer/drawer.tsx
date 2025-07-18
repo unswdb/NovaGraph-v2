@@ -7,6 +7,7 @@ import type {
   BaseGraphAlgorithm,
   BaseGraphAlgorithmResult,
 } from "./algorithms/implementations/types";
+import { useStore } from "./hooks/use-store";
 
 const DRAWER_HEIGHT = "18rem";
 
@@ -81,7 +82,7 @@ export function CodeOutputDrawer({
           >
             {/* Content for Code */}
             <TabsContent value="code" className="flex flex-col">
-              <div className="flex-1">Code Section</div>
+              <CodeTabContent />
               <CodeOutputTabs
                 enableOutput={!!activeAlgorithm && !!activeResponse}
               />
@@ -100,6 +101,33 @@ export function CodeOutputDrawer({
           </Tabs>
         )}
       </div>
+    </div>
+  );
+}
+
+// TODO: Prettify it please with line numbers
+function CodeTabContent() {
+  const store = useStore();
+  const [query, setQuery] = useState("");
+
+  const handleRunQuery = async () => {
+    // // TODO: Execute query from controller
+    // const result = await controller.executeQuery(query);
+    // // TODO: Handle query result (error and success state)
+    // store.setNodes(result.nodes);
+    // store.setEdges(result.edges);
+  };
+
+  return (
+    <div className="flex flex-col gap-2 h-full">
+      <textarea
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        className="w-full h-full border border-border resize-none"
+      />
+      <Button type="submit" onClick={handleRunQuery}>
+        Run Query
+      </Button>
     </div>
   );
 }

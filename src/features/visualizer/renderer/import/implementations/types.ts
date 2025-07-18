@@ -20,7 +20,7 @@ export interface ImportOption {
   description?: string;
   previewTitle?: string;
   previewDescription?: string;
-  preview: ElementType;
+  preview?: ElementType;
   note?: string;
   inputs: InputType[];
   validator?: ImportValidator;

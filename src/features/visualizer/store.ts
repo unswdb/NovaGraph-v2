@@ -1,6 +1,5 @@
 import { action, makeObservable, observable, runInAction } from "mobx";
-import createModule from "~/graph";
-import type { GraphDatabase, GraphModule } from "./types";
+import type { GraphDatabase, GraphEdge, GraphNode } from "./types";
 import {
   GRAVITY,
   NODE_SIZE_SCALE,
@@ -11,9 +10,9 @@ import type {
   BaseGraphAlgorithm,
   BaseGraphAlgorithmResult,
 } from "./algorithms/implementations";
+import { controller } from "~/MainController";
 
 export type InitializedVisualizerStore = VisualizerStore & {
-  wasmModule: NonNullable<VisualizerStore["wasmModule"]>;
   database: NonNullable<VisualizerStore["database"]>;
 };
 
@@ -21,7 +20,6 @@ export default class VisualizerStore {
   // CONSTRUCTORS
   constructor() {
     makeObservable(this, {
-      wasmModule: observable,
       database: observable,
       databases: observable,
       gravity: observable,
@@ -31,6 +29,8 @@ export default class VisualizerStore {
       initialize: action,
       cleanup: action,
       setDatabase: action,
+      setNodes: action,
+      setEdges: action,
       addDatabase: action,
       setGravity: action,
       setNodeSizeScale: action,
@@ -40,7 +40,7 @@ export default class VisualizerStore {
   }
 
   // OBSERVABLES
-  wasmModule: GraphModule | null = null;
+  controller = controller;
   database: GraphDatabase | null = null;
   databases: GraphDatabase[] = [];
   gravity: Gravity = GRAVITY.ZERO_GRAVITY;
@@ -50,11 +50,12 @@ export default class VisualizerStore {
 
   // ACTIONS
   initialize = async () => {
-    const wasmModule = await createModule();
+    // Initialize Luzu controller
+    await this.controller.initKuzu("inmemory", "sync");
+
+    // Define initial graph structure
+    const graph = await controller.initGraph();
     runInAction(() => {
-      this.wasmModule = wasmModule;
-      // TODO: Get all graph including default graph
-      const graph = this.wasmModule.initGraph();
       this.databases = [
         {
           label: "Default",
@@ -76,12 +77,23 @@ export default class VisualizerStore {
   };
 
   cleanup = () => {
-    this.wasmModule?.cleanupGraph();
-    this.wasmModule = null;
+    controller.cleanup();
   };
 
   setDatabase = (database: GraphDatabase) => {
     this.database = database;
+  };
+
+  setNodes = (nodes: GraphNode[]) => {
+    this.checkInitialization();
+    this.database.graph.nodes = nodes;
+    // TODO: save the new database state to kuzu
+  };
+
+  setEdges = (edges: GraphEdge[]) => {
+    this.checkInitialization();
+    this.database.graph.edges = edges;
+    // TODO: save the new database state to kuzu
   };
 
   addDatabase = (database: GraphDatabase) => {
@@ -106,7 +118,7 @@ export default class VisualizerStore {
 
   // UTILITIES FUNCTION
   protected checkInitialization(): asserts this is InitializedVisualizerStore {
-    if (!this.wasmModule || !this.database) {
+    if (!this.database) {
       throw new Error("WASM module is not initialized");
     }
   }

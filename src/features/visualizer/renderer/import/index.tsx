@@ -46,6 +46,7 @@ import InputComponent, {
   createEmptyInputResults,
   type InputChangeResult,
 } from "../../inputs";
+import { controller } from "~/MainController";
 
 export default function DatabaseImport({
   database,
@@ -266,7 +267,9 @@ function OptionTabContent({ option }: { option: ImportOption }) {
       <Tabs defaultValue="upload" className="space-y-2">
         <TabsList>
           <TabsTrigger value="upload">Upload</TabsTrigger>
-          <TabsTrigger value="preview">Preview</TabsTrigger>
+          {!!option.preview && (
+            <TabsTrigger value="preview">Preview</TabsTrigger>
+          )}
         </TabsList>
         <Separator />
         <TabsContent value="upload" className="space-y-6 p-1">
@@ -311,20 +314,22 @@ function OptionTabContent({ option }: { option: ImportOption }) {
             Import
           </Button>
         </TabsContent>
-        <TabsContent value="preview">
-          <div className="space-y-2">
-            {/* Title + Description */}
-            {option.previewTitle && (
-              <h1 className="medium-title">{option.previewTitle}</h1>
-            )}
-            {option.previewDescription && (
-              <p className="small-body text-typography-secondary">
-                {option.previewDescription}
-              </p>
-            )}
-          </div>
-          <option.preview />
-        </TabsContent>
+        {!!option.preview && (
+          <TabsContent value="preview">
+            <div className="space-y-2">
+              {/* Title + Description */}
+              {option.previewTitle && (
+                <h1 className="medium-title">{option.previewTitle}</h1>
+              )}
+              {option.previewDescription && (
+                <p className="small-body text-typography-secondary">
+                  {option.previewDescription}
+                </p>
+              )}
+            </div>
+            <option.preview />
+          </TabsContent>
+        )}
       </Tabs>
     </TabsContent>
   );

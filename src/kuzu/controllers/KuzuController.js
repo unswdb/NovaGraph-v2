@@ -122,4 +122,8 @@ class KuzuController {
 }
 
 // Create a singleton instance
-export default KuzuController;
+// export default const kuzuController = new KuzuController();
+// export default KuzuController;
+
+const kuzuController = new KuzuController();
+export default kuzuController;
