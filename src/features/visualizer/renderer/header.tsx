@@ -19,7 +19,7 @@ import {
 } from "~/components/ui/command";
 import type { CosmographRef } from "@cosmograph/react";
 import { useZoomControls } from "./hooks/use-zoom-controls";
-import { cn } from "~/lib/utils";
+import { capitalize, cn } from "~/lib/utils";
 import ImportDropdown from "../import/import-dropdown";
 
 type Accessor = { label: string; accessor: (n: GraphNode) => string };
@@ -42,11 +42,22 @@ export default function GraphRendererHeader({
   // Hooks
   const { zoomToNode } = useZoomControls(cosmographRef);
 
-  // Decide whether to include a "Name" accessor in Cosmograph search UI
-  const allNodesHaveName = nodes.every((n) => n.label);
-  const nameAccessor = allNodesHaveName
-    ? [{ label: "label", accessor: (n: GraphNode) => String(n.label) }]
-    : [];
+  const accessors: Accessor[] =
+    nodes.length > 0
+      ? [
+          { label: "ID", accessor: (n: GraphNode) => String(n.id) },
+          ...(nodes[0]?.label
+            ? [{ label: "Label", accessor: (n: GraphNode) => String(n.label) }]
+            : []),
+          ...(nodes[0]?.attributes
+            ? Object.keys(nodes[0].attributes).map((attribute) => ({
+                label: capitalize(attribute),
+                accessor: (n: GraphNode) =>
+                  String(n.attributes?.[attribute] ?? ""),
+              }))
+            : []),
+        ]
+      : [];
 
   return (
     <div className="flex justify-between items-center h-fit w-full absolute inset-0">
@@ -65,7 +76,7 @@ export default function GraphRendererHeader({
         {/* Search */}
         <GraphRendererSearch
           nodes={nodes}
-          accessors={[{ label: "ID", accessor: (n) => n.id }, ...nameAccessor]}
+          accessors={accessors}
           onSelect={(n) => zoomToNode(n)}
           className="p-4 rounded-md h-max"
         />
@@ -82,7 +93,7 @@ function GraphRendererSearch({
   className,
 }: {
   nodes: GraphNode[];
-  accessors: [Accessor, ...Accessor[]]; // At least one element
+  accessors: Accessor[]; // At least one element
   onSelect: (node: GraphNode | null) => void;
   className?: string;
 }) {
@@ -128,31 +139,27 @@ function GraphRendererSearch({
     inputRef.current?.blur(); // remove input focus
   };
 
-  // Return only just the search icon if expanded
-  if (!isExpanded) {
-    return (
-      <div className="m-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsExpanded((prev) => !prev)}
-        >
-          <Search />
-        </Button>
-      </div>
-    );
-  }
-
-  return (
+  return !isExpanded ? (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      autoFocus
+      onClick={() => setIsExpanded(true)}
+      className="m-4"
+    >
+      <Search />
+    </Button>
+  ) : (
     <div
       className={cn(
-        "relative w-full animate-in slide-in-from-right-0 duration-250 ease-out",
+        "flex gap-2 animate-in slide-in-from-right-0 duration-250 ease-out",
         className
       )}
     >
-      <Command shouldFilter={false}>
-        <div className="flex justify-between items-center gap-1">
-          {/* Input */}
+      {/* Input */}
+      <div className="relative">
+        <Command shouldFilter={false}>
           <CommandInput
             ref={inputRef}
             value={searchText}
@@ -161,61 +168,58 @@ function GraphRendererSearch({
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
           />
-          {/* Select Accessors */}
-          <Select
-            value={String(currentAccessorIdx)}
-            onValueChange={(idx) => setCurrentAccessorIdx(Number(idx))}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {accessors.map((accessor, index) => (
-                <SelectItem key={index} value={String(index)}>
-                  {accessor.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {/* Close button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsExpanded((prev) => !prev)}
-          >
-            <X className="text-typography-tertiary" />
-          </Button>
-        </div>
-        {/* List of nodes */}
-        {isFocused && (
-          <CommandList className="absolute w-full top-full left-0 z-50 max-h-48 rounded-md border border-border">
-            <CommandEmpty>No results found</CommandEmpty>
-            <CommandGroup>
-              {filteredNodes.map((node, index) => {
-                const value = currentAccessor.accessor(node);
-                return (
-                  <CommandItem
-                    key={index}
-                    value={value}
-                    onSelect={() => handleOnSelect(node)}
-                  >
-                    <span>
-                      {currentAccessor.label}: {value}
-                    </span>
-                    <span className="text-typography-tertiary">
-                      {/* Other accessors' values */}
-                      {accessors
-                        .filter((_, i) => i !== currentAccessorIdx)
-                        .map((a) => `${a.label}: ${a.accessor(node)}`)
-                        .join(" . ")}
-                    </span>
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
-          </CommandList>
-        )}
-      </Command>
+          {/* List of nodes */}
+          {isFocused && (
+            <CommandList className="absolute w-full mt-2 top-full left-0 z-50 max-h-48 rounded-md border border-border">
+              <CommandEmpty>No results found</CommandEmpty>
+              <CommandGroup>
+                {filteredNodes.map((node, index) => {
+                  const value = currentAccessor.accessor(node);
+                  return (
+                    <CommandItem
+                      key={index}
+                      value={value}
+                      onSelect={() => handleOnSelect(node)}
+                    >
+                      <span>{value}</span>
+                      <span className="text-typography-tertiary truncate">
+                        {/* Other accessors' values */}
+                        {accessors
+                          .filter((_, i) => i !== currentAccessorIdx)
+                          .map((a) => `${a.label}: ${a.accessor(node)}`)
+                          .join(" . ")}
+                      </span>
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            </CommandList>
+          )}
+        </Command>
+      </div>
+      {/* Select Accessors */}
+      <Select
+        value={String(currentAccessorIdx)}
+        onValueChange={(idx) => {
+          setCurrentAccessorIdx(Number(idx));
+          setSearchText(""); // reset search
+        }}
+      >
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {accessors.map((accessor, index) => (
+            <SelectItem key={index} value={String(index)}>
+              {accessor.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {/* Close button */}
+      <Button variant="ghost" size="icon" onClick={() => setIsExpanded(false)}>
+        <X />
+      </Button>
     </div>
   );
 }
