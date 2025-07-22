@@ -6,8 +6,8 @@ import AlgorithmSidebar from "./algorithms/sidebar";
 import SettingsSidebar from "./settings";
 import GraphRenderer from "./renderer";
 import { MODE } from "./constant";
-import { CodeOutputDrawer } from "./drawer";
 import { StoreProvider } from "./hooks/use-store";
+import { CodeOutputDrawer } from "./drawer";
 
 const Visualizer = observer(() => {
   const [store] = useState(() => new VisualizerStore());

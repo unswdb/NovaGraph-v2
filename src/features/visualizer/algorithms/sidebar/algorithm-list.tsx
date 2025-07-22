@@ -17,7 +17,7 @@ import {
   SidebarMenuItem,
 } from "~/components/ui/sidebar";
 import { ChevronDown } from "lucide-react";
-import AlgorithmInputModal from "./input-modal";
+import InputDialog from "./input-dialog";
 import { useMemo } from "react";
 
 export function UnfilteredAlgorithmList({
@@ -65,7 +65,7 @@ export function UnfilteredAlgorithmList({
                   {/* Algorithms in the Algorithm Category */}
                   {algorithm.algorithms.map((algo) => (
                     <SidebarMenuItem key={algo.title}>
-                      <AlgorithmInputModal
+                      <InputDialog
                         module={module}
                         algorithm={algo}
                         nodes={nodes}
@@ -129,7 +129,7 @@ export function FilteredAlgorithmList({
       <SidebarMenu>
         {filteredAlgorithms.map((algo) => (
           <SidebarMenuItem key={algo.title}>
-            <AlgorithmInputModal
+            <InputDialog
               module={module}
               algorithm={algo}
               nodes={nodes}

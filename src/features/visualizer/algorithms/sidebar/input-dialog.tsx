@@ -22,7 +22,7 @@ import InputComponent, {
   type InputChangeResult,
 } from "../../inputs";
 
-export default function AlgorithmInputModal({
+export default function InputDialog({
   module,
   algorithm,
   nodes,
@@ -72,7 +72,7 @@ export default function AlgorithmInputModal({
       {...props}
     >
       {separator && <Separator className="ml-4 mr-2" orientation="vertical" />}
-      <span className="flex items-center px-3 rounded-md h-full w-full text-ellipsis">
+      <span className="flex items-center px-3 rounded-md h-full w-full truncate">
         {algorithm.title}
       </span>
     </SidebarMenuButton>

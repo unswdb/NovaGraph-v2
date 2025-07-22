@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import { ChevronUp, ChevronDown, Code, FileText } from "lucide-react";
+import { ChevronUp, ChevronDown } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { Tabs, TabsContent } from "~/components/ui/tabs";
 import type {
   BaseGraphAlgorithm,
   BaseGraphAlgorithmResult,
-} from "./algorithms/implementations/types";
-import { useStore } from "./hooks/use-store";
+} from "../algorithms/implementations";
+import CodeTabContent from "./code";
+import OutputTabContent from "./output";
 
 const DRAWER_HEIGHT = "18rem";
 
@@ -82,19 +83,15 @@ export function CodeOutputDrawer({
           >
             {/* Content for Code */}
             <TabsContent value="code" className="flex flex-col">
-              <CodeTabContent />
-              <CodeOutputTabs
+              <CodeTabContent
                 enableOutput={!!activeAlgorithm && !!activeResponse}
               />
             </TabsContent>
             {/* Content for Output */}
             <TabsContent value="output" className="flex flex-col">
-              <div className="flex-1">
-                {!!activeAlgorithm &&
-                  !!activeResponse &&
-                  activeAlgorithm.output(activeResponse)}
-              </div>
-              <CodeOutputTabs
+              <OutputTabContent
+                activeAlgorithm={activeAlgorithm}
+                activeResponse={activeResponse}
                 enableOutput={!!activeAlgorithm && !!activeResponse}
               />
             </TabsContent>
@@ -102,48 +99,5 @@ export function CodeOutputDrawer({
         )}
       </div>
     </div>
-  );
-}
-
-// TODO: Prettify it please with line numbers
-function CodeTabContent() {
-  const store = useStore();
-  const [query, setQuery] = useState("");
-
-  const handleRunQuery = async () => {
-    // // TODO: Execute query from controller
-    // const result = await controller.executeQuery(query);
-    // // TODO: Handle query result (error and success state)
-    // store.setNodes(result.nodes);
-    // store.setEdges(result.edges);
-  };
-
-  return (
-    <div className="flex flex-col gap-2 h-full">
-      <textarea
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        className="w-full h-full border border-border resize-none"
-      />
-      <Button type="submit" onClick={handleRunQuery}>
-        Run Query
-      </Button>
-    </div>
-  );
-}
-
-function CodeOutputTabs({ enableOutput = false }: { enableOutput: boolean }) {
-  return (
-    <TabsList className="block space-x-2">
-      {/* Tabs */}
-      <TabsTrigger value="code">
-        <Code />
-        Code
-      </TabsTrigger>
-      <TabsTrigger value="output" disabled={!enableOutput}>
-        <FileText />
-        Output
-      </TabsTrigger>
-    </TabsList>
   );
 }

@@ -20,7 +20,7 @@ import {
 import type { CosmographRef } from "@cosmograph/react";
 import { useZoomControls } from "./hooks/use-zoom-controls";
 import { cn } from "~/lib/utils";
-import DatabaseImport from "./import";
+import ImportDropdown from "../import/import-dropdown";
 
 type Accessor = { label: string; accessor: (n: GraphNode) => string };
 
@@ -53,7 +53,7 @@ export default function GraphRendererHeader({
       {/* Import */}
       <div className="m-4 flex-1 flex items-center gap-2">
         <span className="whitespace-nowrap">Database:</span>
-        <DatabaseImport
+        <ImportDropdown
           database={database}
           setDatabase={setDatabase}
           databases={databases}
