@@ -1,10 +1,27 @@
-.react-router
-build
+# Node & Vite
 node_modules
-README.md
+build
+dist
+.vite
+.cache
 
-# Graph.js
-/src/graph.js
-/src/graph.wasm
-/src/graph.d.ts
-/src/kuzu/controllers/KuzuController.d.ts
+# Git
+.git
+.gitignore
+
+# OS files
+.DS_Store
+
+# Editor
+.vscode
+.idea
+
+# README and docs
+README.md
+*.md
+
+# WASM generated files (copied via multi-stage)
+src/graph.js
+src/graph.wasm
+src/graph.d.ts
+src/kuzu/controllers/KuzuController.d.ts

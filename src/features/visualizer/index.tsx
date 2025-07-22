@@ -1,13 +1,14 @@
 import { observer } from "mobx-react-lite";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import VisualizerStore from "./store";
 import Header from "./header";
 import AlgorithmSidebar from "./algorithms/sidebar";
 import SettingsSidebar from "./settings";
 import GraphRenderer from "./renderer";
 import { MODE } from "./constant";
-import { StoreProvider } from "./hooks/use-store";
 import { CodeOutputDrawer } from "./drawer";
+import { StoreProvider } from "./hooks/use-store";
+import { Loader } from "lucide-react";
 
 const Visualizer = observer(() => {
   const [store] = useState(() => new VisualizerStore());
@@ -17,11 +18,24 @@ const Visualizer = observer(() => {
     return () => store.cleanup();
   }, []);
 
+  const isInitialized = useMemo(
+    () => !!store.wasmModule && !!store.database,
+    [store, store.wasmModule, store.database]
+  );
+
+  if (!isInitialized) {
+    return (
+      <div className="flex justify-center items-center w-screen h-screen overflow-hidden">
+        <Loader className="animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <StoreProvider store={store}>
       <div className="flex flex-col w-screen h-screen overflow-hidden">
         <Header />
-        <main className="flex flex-row flex-1">
+        <div className="flex flex-row flex-1">
           <AlgorithmSidebar
             module={store.wasmModule}
             nodes={store.database?.graph.nodes ?? []}
@@ -29,7 +43,7 @@ const Visualizer = observer(() => {
             setActiveAlgorithm={store.setActiveAlgorithm}
             setActiveResponse={store.setActiveResponse}
           />
-          <div className="flex flex-col h-[calc(100vh-64px)]">
+          <main className="flex flex-col h-[calc(100vh-64px)]">
             <GraphRenderer
               nodes={store.database?.graph.nodes ?? []}
               edges={store.database?.graph.edges ?? []}
@@ -57,14 +71,14 @@ const Visualizer = observer(() => {
               activeAlgorithm={store.activeAlgorithm}
               activeResponse={store.activeResponse}
             />
-          </div>
+          </main>
           <SettingsSidebar
             gravity={store.gravity}
             setGravity={store.setGravity}
             nodeSizeScale={store.nodeSizeScale ?? []}
             setNodeSizeScale={store.setNodeSizeScale}
           />
-        </main>
+        </div>
       </div>
     </StoreProvider>
   );

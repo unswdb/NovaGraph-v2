@@ -13,7 +13,7 @@ import type {
 import { controller } from "~/MainController";
 
 export type InitializedVisualizerStore = VisualizerStore & {
-    wasmModule: NonNullable<VisualizerStore["wasmModule"]>;
+  wasmModule: NonNullable<VisualizerStore["wasmModule"]>;
   database: NonNullable<VisualizerStore["database"]>;
 };
 
