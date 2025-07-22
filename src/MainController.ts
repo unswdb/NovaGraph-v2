@@ -73,4 +73,6 @@ class MainController {
 
 }
 
-export const controller = new MainController();
+// Singleton instance
+const controller = new MainController();
+export { controller };
