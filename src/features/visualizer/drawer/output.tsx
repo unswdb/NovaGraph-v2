@@ -20,7 +20,7 @@ export default function OutputTabContent({
           !!activeResponse &&
           activeAlgorithm.output(activeResponse)}
       </div>
-      <div className="flex justify-between">
+      <div className="flex justify-between gap-2 flex-wrap">
         <CodeOutputTabs enableOutput={enableOutput} />
         {/* TODO: Export */}
       </div>

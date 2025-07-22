@@ -16,19 +16,10 @@ import {
   CommandList,
 } from "~/components/ui/command";
 import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "~/components/ui/drawer";
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
-import { useIsMobile } from "~/hooks/use-mobile";
 import type { GraphDatabase } from "../types";
 import { Dialog, DialogTrigger } from "~/components/ui/dialog";
 import { cn } from "~/lib/utils";
@@ -52,53 +43,16 @@ export default function ImportDropdown({
   // States
   const [open, setOpen] = useState(false);
 
-  // Hooks
-  const isMobile = useIsMobile();
-
   const triggerWidth = useMemo(
     () => buttonRef.current?.offsetWidth,
     [buttonRef.current?.offsetWidth, open]
   );
 
-  if (!isMobile) {
-    return (
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            ref={buttonRef}
-            variant="outline"
-            className={cn(
-              "flex justify-between items-center truncate",
-              className
-            )}
-          >
-            {database ? database.label : "Default"}
-            <ChevronDown />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          className="p-0"
-          align="start"
-          style={{ width: triggerWidth }}
-        >
-          <Suspense fallback={<ImportListFallback />}>
-            <ImportListSelector
-              setOpen={setOpen}
-              database={database}
-              databases={databases}
-              setDatabase={setDatabase}
-              addDatabase={addDatabase}
-            />
-          </Suspense>
-        </PopoverContent>
-      </Popover>
-    );
-  }
-
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
         <Button
+          ref={buttonRef}
           variant="outline"
           className={cn(
             "flex justify-between items-center truncate",
@@ -108,15 +62,12 @@ export default function ImportDropdown({
           {database ? database.label : "Default"}
           <ChevronDown />
         </Button>
-      </DrawerTrigger>
-      <DrawerContent className="p-4">
-        <DrawerHeader>
-          <DrawerTitle>Select or Import a Database</DrawerTitle>
-          <DrawerDescription>
-            Choose an existing database or import a new one to begin working
-            with your graph
-          </DrawerDescription>
-        </DrawerHeader>
+      </PopoverTrigger>
+      <PopoverContent
+        className="p-0"
+        align="start"
+        style={{ width: triggerWidth }}
+      >
         <Suspense fallback={<ImportListFallback />}>
           <ImportListSelector
             setOpen={setOpen}
@@ -126,8 +77,8 @@ export default function ImportDropdown({
             addDatabase={addDatabase}
           />
         </Suspense>
-      </DrawerContent>
-    </Drawer>
+      </PopoverContent>
+    </Popover>
   );
 }
 

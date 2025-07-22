@@ -49,7 +49,7 @@ export default function GraphRendererHeader({
     : [];
 
   return (
-    <div className="flex justify-between items-center flex-wrap h-fit w-full absolute inset-0">
+    <div className="flex justify-between items-center h-fit w-full absolute inset-0">
       {/* Import */}
       <div className="m-4 flex-1 flex items-center gap-2">
         <span className="whitespace-nowrap">Database:</span>
@@ -58,7 +58,7 @@ export default function GraphRendererHeader({
           setDatabase={setDatabase}
           databases={databases}
           addDatabase={addDatabase}
-          className="flex-1 max-w-[150px]"
+          className="flex-1 max-w-[200px]"
         />
       </div>
       <div className="flex-1 flex justify-end h-18">

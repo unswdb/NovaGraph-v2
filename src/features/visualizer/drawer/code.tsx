@@ -27,11 +27,11 @@ export default function CodeTabContent({
   return (
     <div className="flex flex-col gap-4 h-full">
       <CodeEditor code={code} setCode={setCode} />
-      <div className="flex-1 flex justify-between">
+      <div className="flex flex-wrap justify-between gap-2">
         <CodeOutputTabs enableOutput={enableOutput} />
         <div className="flex items-center gap-2">
           <CopyButton variant="ghost" value={code} />
-          <Button type="submit" onClick={handleRunQuery}>
+          <Button type="submit" onClick={handleRunQuery} className="flex-1">
             Run Query
           </Button>
         </div>
