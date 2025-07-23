@@ -8,7 +8,7 @@ import type {
   BaseGraphAlgorithmResult,
 } from "./algorithms/implementations/types";
 import { useStore } from "./hooks/use-store";
-
+import { controller } from "~/MainController";
 const DRAWER_HEIGHT = "18rem";
 
 export function CodeOutputDrawer({
@@ -110,12 +110,24 @@ function CodeTabContent() {
   const store = useStore();
   const [query, setQuery] = useState("");
 
+  useEffect(() => {
+    controller.initKuzu("inmemory", "sync");
+  }, []);
+  
   const handleRunQuery = async () => {
+    const queryResult = await controller.executeQuery(query);
+    console.log('executeQuery result:', queryResult);
+
+
+    // const snapShot = await controller.executeHelper("snapshotGraphState");
+    // console.log('snapshotHelper result:', snapShot);
+    // const helperResult = await controller.executeHelper("getStructuredGraphSnapshot");
+    // console.log('executeHelper result:', helperResult);
     // // TODO: Execute query from controller
     // const result = await controller.executeQuery(query);
     // // TODO: Handle query result (error and success state)
-    // store.setNodes(result.nodes);
-    // store.setEdges(result.edges);
+    store.setNodes(queryResult.nodes);
+    store.setEdges(queryResult.edges);
   };
 
   return (

@@ -408,26 +408,35 @@ export default class KuzuGraphHelper {
    * Snapshot the current state of the graph (nodes and relationships)
    * @returns {Object} Result with all nodes and relationships
    */
-  snapshotGraphState() {
-    const query = `
-      MATCH (n)-[r]->(m)
-      RETURN n, r, m
-    `;
-
-    return this.executeQuery(query);
+  async snapshotGraphState() {
+    const [nodes, edges, tables] = await Promise.all([
+      this.executeQuery(`MATCH (n) RETURN n`),
+      this.executeQuery(`MATCH ()-[r]->() RETURN r`),
+      this.executeQuery(`CALL show_tables() RETURN *`)
+    ]);
+  
+    return { nodes, edges, tables };
   }
+  
 
   /**
    * Snapshot the current graph and structure it into node and edge arrays
    * @returns {{ nodes: object[], edges: object[] }} Ready-to-render graph structure
    */
-  async getStructuredGraphSnapshot() {
+  getStructuredGraphSnapshot() {
+    if (!this.connection || !query.trim()) {
+      return {
+        success: false,
+        error: "Connection not initialized or empty query",
+      };
+    }
+
     const query = `
       MATCH (n)-[r]->(m)
       RETURN n, r, m
     `;
   
-    const result = await this.executeQuery(query);
+    const result = this.connection.query(query);
   
     if (!result || !result.objects) {
       console.warn("No graph data found in snapshot");
@@ -456,31 +465,34 @@ export default class KuzuGraphHelper {
       // Parse node 'n'
       if (n?._id?.offset != null) {
         const id = n._id.offset.toString();
+        const label = n._label;
+        const attributes = extractProps(n, ["id"]);
         nodeMap.set(id, {
           id,
-          label: n._label,
-          props: extractProps(n, ["id"])
+          label,
+          ...(Object.keys(attributes).length > 0 ? { attribute: attributes } : {})
         });
       }
   
       // Parse node 'm'
       if (m?._id?.offset != null) {
         const id = m._id.offset.toString();
+        const label = m._label;
+        const attributes = extractProps(m, ["id"]);
         nodeMap.set(id, {
           id,
-          label: m._label,
-          props: extractProps(m, ["id"])
+          label,
+          ...(Object.keys(attributes).length > 0 ? { attribute: attributes } : {})
         });
       }
   
       // Parse relationship 'r'
       if (r?._id?.offset != null && r._src && r._dst) {
+        const attributes = extractProps(r);
         edges.push({
-          id: r._id.offset.toString(),
-          label: r._label,
           source: r._src.offset.toString(),
           target: r._dst.offset.toString(),
-          props: extractProps(r)
+          ...(Object.keys(attributes).length > 0 ? { attribute: attributes } : {})
         });
       }
     }

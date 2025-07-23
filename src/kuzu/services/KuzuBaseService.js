@@ -1,3 +1,5 @@
+import { getStructuredGraphSnapshot, snapshotGraphState, parseNodesResult, parseEdgesResult } from "./KuzuQueryExecutor"
+
 export default class KuzuBaseService {
   constructor() {
     this.db = null;
@@ -38,6 +40,36 @@ export default class KuzuBaseService {
     this.initialized = initialized;
   }
 
+
+  _isSubGraphResult(result) {
+    console.log(result)
+    if (!Array.isArray(result.objects) || result.objects.length === 0) {
+      if (!Array.isArray(result.objects)) {
+        console.log("it is because: !Array.isArray(result.objects")
+      }
+
+      if (result.objects.length === 0) {
+        console.log("it is because: result.objects.length === 0")
+      }
+
+      return false;
+    }
+
+    // If array contains a single object with key "result"
+    if (
+      result.objects.length === 1 &&
+      // typeof result.objects[0] === "object" &&
+      // result.objects[0] !== null &&
+      Object.prototype.hasOwnProperty.call(result.objects[0], "result")
+    ) {
+      console.log("it is because: result.objects.length === 1 and Object.prototype.hasOwnProperty.call(result.objects[0], result)")
+      return false;
+    }
+
+    // Otherwise, return true
+    return true;
+  }
+
   /**
    * Execute a Cypher query and process the results
    * @param {string} query - The Cypher query to execute
@@ -53,95 +85,120 @@ export default class KuzuBaseService {
 
     try {
       console.log("Executing query:", query);
-
       let currentResult = this.connection.query(query);
-      const results = [];
-      let allSuccessful = true;
 
-      // Process all query results (handles multiple statements in a single query)
+      // Init variable
+      const successQueries = [];
+      const failedQueries = [];
+      let allSuccess = true;
+      let nodes = [];
+      let edges = [];
+
+
+      // Handle result
       while (currentResult) {
+        // Process each result individually
         const queryResult = this._processQueryResult(currentResult);
-        results.push(queryResult);
-
-        if (!queryResult.success) {
-          allSuccessful = false;
+        
+        if (queryResult.success) {
+          successQueries.push(queryResult);
+        } else {
+          allSuccess = false;
+          failedQueries.push(queryResult);
         }
 
         // Check if there are more query results
         if (currentResult.hasNextQueryResult()) {
           currentResult = currentResult.getNextQueryResult();
         } else {
+          // If it is the last one 
+          // figure out the partern of subgraph 
+          if (this._isSubGraphResult(queryResult)) {
+            // If it return subgraph -> set node and edges to that subgraph
+            console.log("It is subgraph chat")
+
+            // another logic to extract out the return val
+
+/** another field for subgraph bro
+ * "colorMap": {
+	"nodeID": 1, // for node
+	"nodeID-nodeID": 0.9, // for edge
+},
+ */
+
+
+            nodes = parseNodesResult(currentResult);
+            edges = parseEdgesResult(currentResult);
+          } else {
+            // If it return no -> call getStructured query to get return nodes and edges
+            console.log("It is not a subgraph chat")
+
+            // move logic to another file -> donezo
+            const graphState = snapshotGraphState(this.connection); 
+
+            nodes = graphState.nodes;
+            edges = graphState.edges;
+
+
+
+          }
+          
           break;
         }
       }
 
-      // If only one query was executed, return its result directly
-      if (results.length === 1) {
-        return results[0];
-      }
+      // Gracefully close the query result object
+      currentResult.close();
 
-      // Otherwise return batch results
       return {
-        success: allSuccessful,
-        batchResults: results,
-        message: allSuccessful
-          ? `Successfully executed ${results.length} queries`
-          : `Some queries failed. Check batchResults for details.`,
+        successQueries: successQueries,
+        failedQueries: failedQueries,
+        success: allSuccess,
+        message: allSuccess
+          ? `All queries succeeded`
+          : `Some queries failed. Check results for details.`,
+        nodes: nodes,
+        edges: edges,
+        // colorMap
       };
     } catch (err) {
-      console.error("Error executing query:", err);
       return {
         success: false,
-        error: err.message,
+        error: "Internal executeQuery error: " +  err.message,
       };
     }
   }
 
+
+
+
   /**
-   * Helper method to process a single query result
+   * Helper method to process a single query result (returns a single object)
    * @private
    * @param {Object} result - A Kuzu query result object
    * @returns {Object} - Standardized result object
    */
   _processQueryResult(result) {
     if (!result.isSuccess()) {
-      const errorMsg = result.getErrorMessage();
-      console.error("Query failed:", errorMsg);
       return {
         success: false,
-        error: errorMsg,
+        object: null,
+        message: result.getErrorMessage() || "Query failed - no specified message",
       };
     }
 
     try {
-      if (result.getNumTuples() > 0) {
-        const objects = result.getAllObjects();
-        const rows = result.getAllRows();
-        const summary = result.getQuerySummary();
-
-        return {
-          success: true,
-          objects: objects,
-          rows: rows,
-          summary: summary,
-          message: `Query operation successful! Found ${objects.length} results.`,
-        };
-      } else {
-        // Handle empty result case
-        return {
-          success: true,
-          objects: [],
-          rows: [],
-          summary: result.getQuerySummary(),
-          message: "Query operation successful! No results found.",
-        };
-      }
+      const objects = result.getAllObjects();
+      return {
+        success: result.isSuccess(),
+        objects: objects,
+        toString: result.toString() // remove in production mode
+      };
     } catch (e) {
-      // This should rarely happen since we check getNumTuples()
-      console.error("Error processing query result:", e);
       return {
         success: false,
-        error: e.message,
+        object: null,
+        error: "Error processing query result. Error: " + result.getErrorMessage(),
       };
     }
   }
