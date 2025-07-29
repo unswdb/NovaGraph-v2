@@ -13,6 +13,7 @@ import InputComponent, {
 } from "../inputs";
 import { Separator } from "~/components/ui/separator";
 import { Button } from "~/components/ui/button";
+import { toast } from "sonner";
 
 export default function ImportDialog() {
   return (
@@ -29,13 +30,13 @@ export default function ImportDialog() {
       >
         <div className="mt-4 flex flex-col gap-4 md:flex-row flex-1 min-h-0">
           {/* Left Sidebar - Import Options with flex wrap on small, column on large */}
-          <TabsList className="max-w-full h-fit">
-            <div className="flex gap-2 w-48 overflow-x-auto md:flex-col md:flex-nowrap md:overflow-y-auto">
+          <TabsList className="flex justify-start max-w-full h-full overflow-x-visible">
+            <div className="flex-shrink-0 flex gap-2 md:flex-col md:flex-nowrap">
               {ALL_IMPORTS.map((option) => (
                 <TabsTrigger
                   key={option.value}
                   value={option.value}
-                  className="px-4 py-2 truncate flex-shrink-0 data-[state=active]:bg-neutral"
+                  className="px-4 py-2 truncate data-[state=active]:bg-neutral"
                 >
                   <option.icon />
                   <p>{option.label}</p>
@@ -60,6 +61,7 @@ function ImportContent({ option }: { option: ImportOption }) {
   const [inputResults, setInputResults] = useState<
     Record<string, InputChangeResult>
   >(createEmptyInputResults(option.inputs));
+  const [error, setError] = useState("");
 
   // Memoised values
   const isReadyToSubmit = useMemo(
@@ -67,8 +69,19 @@ function ImportContent({ option }: { option: ImportOption }) {
     [inputResults]
   );
 
-  // TODO: Handle submit logic
-  const handleOnSubmit = () => {};
+  const handleOnSubmit = async () => {
+    toast("Creating graph...");
+
+    const { success, message } = await option.handler({ values: inputResults });
+    if (!success) {
+      return setError(
+        message ??
+          "There's something wrong with creating the graph. Please try again."
+      );
+    }
+
+    toast(message);
+  };
 
   return (
     <TabsContent
@@ -132,6 +145,7 @@ function ImportContent({ option }: { option: ImportOption }) {
           >
             Create Graph
           </Button>
+          {!!error && <p className="text-critical">{error}</p>}
         </TabsContent>
         {!!option.preview && (
           <TabsContent value="preview">
