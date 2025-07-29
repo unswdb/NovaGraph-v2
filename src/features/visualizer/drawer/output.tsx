@@ -3,6 +3,7 @@ import type {
   BaseGraphAlgorithm,
   BaseGraphAlgorithmResult,
 } from "../algorithms/implementations";
+import ExportDropdownButton from "../export/export-dropdown-button";
 
 export default function OutputTabContent({
   activeAlgorithm,
@@ -22,7 +23,9 @@ export default function OutputTabContent({
       </div>
       <div className="flex justify-between gap-2 flex-wrap">
         <CodeOutputTabs enableOutput={enableOutput} />
-        {/* TODO: Export */}
+        {!!activeResponse && (
+          <ExportDropdownButton activeResponse={activeResponse} />
+        )}
       </div>
     </div>
   );

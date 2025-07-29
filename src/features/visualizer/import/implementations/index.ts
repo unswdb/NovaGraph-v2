@@ -1,11 +1,11 @@
-import * as Auto from "./manual-generate-graph";
-import * as CSV from "./csv";
+import * as ImportAuto from "./auto";
+import * as ImportCSV from "./csv";
 import type { ImportOption } from "./types";
 
-// Export all algorithms
+// Export all import options
 const ALL_IMPORTS: ImportOption[] = [
-  ...Object.values(CSV),
-  ...Object.values(Auto),
+  ...Object.values(ImportCSV),
+  ...Object.values(ImportAuto),
 ];
 export default ALL_IMPORTS;
 

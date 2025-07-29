@@ -102,7 +102,7 @@ const validateEdges = async (file: File) => {
 
 type CSVInputType = {};
 
-export const CSV: ImportOption = {
+export const ImportCSV: ImportOption = {
   label: "Import as CSV",
   value: "csv",
   icon: TableIcon,

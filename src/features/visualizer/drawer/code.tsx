@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useStore } from "../hooks/use-store";
 import { Button } from "~/components/ui/button";
 import CodeOutputTabs from "./tabs";
@@ -16,6 +16,9 @@ export default function CodeTabContent({
   // Hooks
   const store = useStore();
 
+  // Memoised value
+  const isReadyToSubmit = useMemo(() => !!code, [code]);
+
   // TODO: Execute query from controller
   const handleRunQuery = async () => {
     // const result = await store.controller.executeQuery(query);
@@ -31,7 +34,12 @@ export default function CodeTabContent({
         <CodeOutputTabs enableOutput={enableOutput} />
         <div className="flex items-center gap-2">
           <CopyButton variant="ghost" value={code} />
-          <Button type="submit" onClick={handleRunQuery} className="flex-1">
+          <Button
+            type="submit"
+            onClick={handleRunQuery}
+            disabled={!isReadyToSubmit}
+            className="flex-1"
+          >
             Run Query
           </Button>
         </div>
