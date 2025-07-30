@@ -1,13 +1,14 @@
 import type { ElementType } from "react";
-import type { InputType } from "~/features/visualizer/inputs";
+import type { InputChangeResult, InputType } from "~/features/visualizer/inputs";
 
 type ImportHandler = (data: {
-  values: Record<string, any>;
+  values: Record<string, InputChangeResult>;
 }) => Promise<{ success: boolean; message?: string }>;
 
-type ImportValidator = (data: {
-    values: Record<string, any>;
-}) => { success: boolean; message?: string };
+type ImportValidator = (data: { values: Record<string, InputChangeResult> }) => {
+  success: boolean;
+  message?: string;
+};
 
 export interface ImportOption {
   // Display information for the menu
@@ -25,4 +26,4 @@ export interface ImportOption {
   inputs: InputType[];
   validator?: ImportValidator;
   handler: ImportHandler;
-};
+}

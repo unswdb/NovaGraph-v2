@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import VisualizerStore from "./store";
 import Header from "./header";
 import AlgorithmSidebar from "./algorithms/sidebar";
@@ -8,6 +8,7 @@ import GraphRenderer from "./renderer";
 import { MODE } from "./constant";
 import { CodeOutputDrawer } from "./drawer";
 import { StoreProvider } from "./hooks/use-store";
+import { Loader } from "lucide-react";
 
 const Visualizer = observer(() => {
   const [store] = useState(() => new VisualizerStore());
@@ -16,6 +17,19 @@ const Visualizer = observer(() => {
     store.initialize();
     return () => store.cleanup();
   }, []);
+
+  const isInitialized = useMemo(
+    () => !!store.wasmModule && !!store.database,
+    [store, store.wasmModule, store.database]
+  );
+
+  if (!isInitialized) {
+    return (
+      <div className="flex justify-center items-center w-screen h-screen overflow-hidden">
+        <Loader className="animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <StoreProvider store={store}>

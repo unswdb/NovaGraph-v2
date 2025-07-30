@@ -9,7 +9,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-fore hover:bg-primary-hover disabled:bg-primary-disabled disabled:text-primary-fore-disabled",
+          "bg-primary text-primary-fore font-semibold hover:bg-primary-hover disabled:bg-primary-disabled disabled:text-primary-fore-disabled",
         gradient:
           "bg-gradient-to-br from-primary to-primary-2 text-primary-fore  hover:from-primary-hover hover:to-primary-2-hover disabled:bg-none disabled:bg-primary-disabled disabled:text-primary-fore-disabled",
         critical:

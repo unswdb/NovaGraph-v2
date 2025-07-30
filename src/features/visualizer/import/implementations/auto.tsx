@@ -1,7 +1,7 @@
 import type { ImportOption } from "./types";
 import { Table as TableIcon } from "lucide-react";
 
-export const ManualGenerateGraph: ImportOption = {
+export const ImportAuto: ImportOption = {
   label: "Generate Graph",
   value: "manual-generate-graph",
   icon: TableIcon,

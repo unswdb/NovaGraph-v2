@@ -45,16 +45,16 @@ export default function NumberInputComponent({
     }
 
     const validator = await input.validator?.(newValue);
-    const isValid = validator?.success ?? false;
-    const message = validator?.message ?? "";
+    const isValid = validator ? validator.success : true;
+    const message = validator ? validator.message ?? "" : "";
 
     setShowError(!isValid);
     setErrorMessage(message);
 
     onChange({
       value: newValue,
-      success: validator?.success || false,
-      message: validator?.message || "",
+      success: isValid,
+      message: message,
     });
   };
 

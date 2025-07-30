@@ -100,7 +100,9 @@ const validateEdges = async (file: File) => {
   }
 };
 
-export const CSV: ImportOption = {
+type CSVInputType = {};
+
+export const ImportCSV: ImportOption = {
   label: "Import as CSV",
   value: "csv",
   icon: TableIcon,
@@ -138,8 +140,11 @@ export const CSV: ImportOption = {
       defaultValue: false,
     }),
   ],
-  handler: async ({ values }: { values: Record<string, any> }) => {
-    return { success: true, message: "successful" };
+  handler: async ({ values }: { values: Record<string, CSVInputType> }) => {
+    return {
+      success: true,
+      message: "Successfully imported graph from CSV files!",
+    };
   },
 };
 

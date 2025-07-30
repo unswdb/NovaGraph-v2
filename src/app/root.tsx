@@ -11,6 +11,7 @@ import type { Route } from "./+types/root";
 import "./globals.css";
 import { ThemeProvider } from "~/hooks/use-theme";
 import { TooltipProvider } from "~/components/ui/tooltip";
+import { Toaster } from "~/components/ui/sonner";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -38,6 +39,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <ThemeProvider>
           <TooltipProvider>{children}</TooltipProvider>
         </ThemeProvider>
+        <Toaster />
         <ScrollRestoration />
         <Scripts />
       </body>

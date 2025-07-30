@@ -14,16 +14,16 @@ export default function FileInputComponent({
     const files = e.target.files;
     if (files && files.length > 0) {
       const validator = await input.validator?.(files[0]);
-      const isValid = validator?.success ?? false;
-      const message = validator?.message ?? "";
+      const isValid = validator ? validator.success : true;
+      const message = validator ? validator.message ?? "" : "";
 
       setShowError(!isValid);
       setErrorMessage(message);
 
       onChange({
         value: files[0],
-        success: validator?.success || false,
-        message: validator?.message || "",
+        success: isValid,
+        message: message,
       });
     } else {
       const errorMessage =
