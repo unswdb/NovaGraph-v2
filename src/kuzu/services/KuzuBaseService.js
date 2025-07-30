@@ -93,7 +93,7 @@ export default class KuzuBaseService {
       let allSuccess = true;
       let nodes = [];
       let edges = [];
-
+      let colorMap = {}; // Add this line
 
       // Handle result
       while (currentResult) {
@@ -117,30 +117,26 @@ export default class KuzuBaseService {
             // If it return subgraph -> set node and edges to that subgraph
             console.log("It is subgraph chat")
 
-            // another logic to extract out the return val
-
-/** another field for subgraph bro
- * "colorMap": {
-	"nodeID": 1, // for node
-	"nodeID-nodeID": 0.9, // for edge
-},
- */
-
-
             nodes = parseNodesResult(currentResult);
             edges = parseEdgesResult(currentResult);
+            
+            // Generate colorMap for subgraph results
+            nodes.forEach(node => {
+              colorMap[node.id] = 0.8; // Warm color for subgraph nodes
+            });
+            edges.forEach(edge => {
+              colorMap[`${edge.source}-${edge.target}`] = 0.6; // Cool color for subgraph edges
+            });
           } else {
             // If it return no -> call getStructured query to get return nodes and edges
             console.log("It is not a subgraph chat")
 
-            // move logic to another file -> donezo
             const graphState = snapshotGraphState(this.connection); 
 
             nodes = graphState.nodes;
             edges = graphState.edges;
-
-
-
+            
+            // No colorMap for whole graph snapshots (neutral colors)
           }
           
           break;
@@ -149,7 +145,7 @@ export default class KuzuBaseService {
 
       // Gracefully close the query result object
       currentResult.close();
-
+      console.warn("colorMap:", JSON.stringify(colorMap, null, 2));
       return {
         successQueries: successQueries,
         failedQueries: failedQueries,
@@ -159,7 +155,7 @@ export default class KuzuBaseService {
           : `Some queries failed. Check results for details.`,
         nodes: nodes,
         edges: edges,
-        // colorMap
+        colorMap: colorMap // Add this line
       };
     } catch (err) {
       return {
