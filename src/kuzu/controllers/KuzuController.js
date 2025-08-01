@@ -119,6 +119,21 @@ class KuzuController {
     }
     return this.service.getHelperFunctions();
   }
+
+  /**
+   * Create a node or relationship schema in the database
+   * @param {string} type - "node" or "rel"
+   * @param {string} label - Label of the node or relationship
+   * @param {Object[]} properties - Array of property definitions, e.g. [{ name: "id", type: "INT", primary: true }]
+   * @param {Object} [relInfo] - For relationships only: { fromLabel: string, toLabel: string, direction: "->" | "<-" }
+   * @returns {Object} Result of the schema creation query
+   */
+  createSchema(type, label, properties, relInfo = null) {
+    if (!this.service) {
+      throw new Error("Kuzu service not initialized");
+    }
+    return this.service.createSchema(type, label, properties, relInfo);
+  }
 }
 
 // Create a singleton instance

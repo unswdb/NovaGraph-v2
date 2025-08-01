@@ -1,4 +1,5 @@
 import { getStructuredGraphSnapshot, snapshotGraphState, parseNodesResult, parseEdgesResult } from "./KuzuQueryExecutor"
+import { createSchemaQuery } from "../helpers/KuzuQueryBuilder"
 
 export default class KuzuBaseService {
   constructor() {
@@ -322,6 +323,31 @@ export default class KuzuBaseService {
       return {
         success: false,
         error: err.message,
+      };
+    }
+  }
+
+  /**
+   * Create a node or relationship schema in the database
+   * @param {string} type - "node" or "rel"
+   * @param {string} label - Label of the node or relationship
+   * @param {Object[]} properties - Array of property definitions, e.g. [{ name: "id", type: "INT", primary: true }]
+   * @param {Object} [relInfo] - For relationships only: { fromLabel: string, toLabel: string, direction: "->" | "<-" }
+   * @returns {Object} Result of the schema creation query
+   */
+  createSchema(type, label, properties, relInfo = null) {
+    try {
+      // Build the query using the function directly
+      const query = createSchemaQuery(type, label, properties, relInfo);
+      
+      // Execute the query using existing executeQuery method
+      const result = this.executeQuery(query);
+      
+      return result;
+    } catch (err) {
+      return {
+        success: false,
+        error: `Error creating schema: ${err.message}`,
       };
     }
   }
