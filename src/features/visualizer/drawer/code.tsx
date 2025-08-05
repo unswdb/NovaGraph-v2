@@ -19,15 +19,6 @@ export default function CodeTabContent({
   // Memoised value
   const isReadyToSubmit = useMemo(() => !!code, [code]);
 
-  // Initialize controller
-  // TODO: verify if this is the correct way/place to init kuzu
-  useEffect(() => {
-    const initController = async () => {
-      await store.controller.initKuzu("inmemory", "sync");
-    };
-    initController();
-  }, [store.controller]);
-
   const handleRunQuery = async () => {
     const result = await store.controller.executeQuery(code);
     // TODO: Handle query result (error and success state and colorMap)
