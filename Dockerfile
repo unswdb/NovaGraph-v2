@@ -45,7 +45,7 @@ RUN cd wasm && \
 # Build pugixml
 RUN cd wasm/pugixml && \
     mkdir build && cd build && \
-    emcmake cmake .. && \
+    emcmake cmake .. -DCMAKE_C_FLAGS="-Wno-error=uninitialized" && \
     emmake make
 
 # Patch WASM files
@@ -57,7 +57,7 @@ RUN cd wasm/igraph && \
 # Build igraph
 RUN cd wasm/igraph && \
     mkdir build && cd build && \
-    emcmake cmake .. && \
+    emcmake cmake .. -DCMAKE_C_FLAGS="-Wno-error=uninitialized" && \
     emmake make
 
 # Build graph.js
