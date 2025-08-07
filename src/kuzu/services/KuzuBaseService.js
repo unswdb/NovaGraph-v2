@@ -47,35 +47,6 @@ export default class KuzuBaseService {
     this.initialized = initialized;
   }
 
-
-  _isSubGraphResult(result) {
-    if (!Array.isArray(result.objects) || result.objects.length === 0) {
-      if (!Array.isArray(result.objects)) {
-        console.log("it is because: !Array.isArray(result.objects")
-      }
-
-      if (result.objects.length === 0) {
-        console.log("it is because: result.objects.length === 0")
-      }
-
-      return false;
-    }
-
-    // If array contains a single object with key "result"
-    if (
-      result.objects.length === 1 &&
-      // typeof result.objects[0] === "object" &&
-      // result.objects[0] !== null &&
-      Object.prototype.hasOwnProperty.call(result.objects[0], "result")
-    ) {
-      console.log("it is because: result.objects.length === 1 and Object.prototype.hasOwnProperty.call(result.objects[0], result)")
-      return false;
-    }
-
-    // Otherwise, return true
-    return true;
-  }
-
   /**
    * Execute a Cypher query and process the results
    * @param {string} query - The Cypher query to execute
