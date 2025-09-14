@@ -10,7 +10,8 @@ type BFSOutputData = {
 
 export const bfs = createGraphAlgorithm<BFSOutputData>({
   title: "Breadth-First Search",
-  description: "Traverse the graph using BFS starting from a node",
+  description:
+    "Traverses the graph from a source by exploring all neighbors before moving on to the next level. It continues until all nodes are visited.",
   inputs: [
     createAlgorithmSelectInput({
       id: "bfs-start-node",

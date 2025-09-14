@@ -56,7 +56,9 @@ export default function InputDialog({
   // TODO: Handle error and loading state
   const handleSubmit = async () => {
     try {
-      const args = algorithm.inputs.map((input) => inputResults[input.label]);
+      const args = algorithm.inputs.map(
+        (input) => inputResults[input.label].value
+      );
       const algorithmResponse = algorithm.wasmFunction(module, args);
       setActiveAlgorithm(algorithm);
       setActiveResponse(algorithmResponse);
