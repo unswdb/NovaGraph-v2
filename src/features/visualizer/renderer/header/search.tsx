@@ -22,7 +22,6 @@ import type { Accessor } from ".";
 import { useIsMobile } from "~/hooks/use-mobile";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetHeader,
@@ -106,7 +105,6 @@ export default function GraphRendererSearch({
 }
 
 function MobileSearch({
-  className,
   inputRef,
   searchText,
   setSearchText,
@@ -364,7 +362,7 @@ function DesktopSearch({
           />
           {/* List of nodes */}
           {isFocused && (
-            <CommandList className="absolute w-full mt-2 top-full left-0 z-50 max-h-48 rounded-md border border-border">
+            <CommandList className="absolute min-w-full max-w-60 mt-2 top-full left-0 z-50 max-h-40 rounded-md border border-border">
               <CommandEmpty>No results found</CommandEmpty>
               <CommandGroup>
                 {filteredNodes.map((node, index) => {

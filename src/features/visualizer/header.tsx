@@ -26,6 +26,7 @@ export default function Header() {
         <Button
           className="bg-neutral-low hover:bg-neutral-low/50"
           variant="outline"
+          disabled={true}
         >
           <HelpCircle className="w-6 h-6" />
           User Guide

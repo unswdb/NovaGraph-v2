@@ -39,7 +39,7 @@ export default function AlgorithmSelectInputComponent({
 
   return (
     <Select
-      value={value ? String(value) : undefined}
+      value={value ? String(value) : ""}
       onValueChange={(value) => onChange({ value, success: true })}
     >
       <SelectTrigger className="w-full">

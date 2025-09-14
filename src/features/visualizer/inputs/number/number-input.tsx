@@ -68,7 +68,6 @@ export default function NumberInputComponent({
         value={String(value) ?? ""}
         required={input.required}
         placeholder={input.placeholder}
-        defaultValue={input.defaultValue?.toString() ?? ""}
         onChange={handleNumberOnChange}
       />
       {showError && errorMessage && (

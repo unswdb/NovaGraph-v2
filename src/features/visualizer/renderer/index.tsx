@@ -79,7 +79,7 @@ export default function GraphRenderer({
           onClick={zoomToNode}
           initialZoomLevel={INITIAL_ZOOM_LEVEL}
           nodeSize={(_, id) => getNodeSize(id)}
-          nodeColor={(_, id) => getNodeColor(colors[id])}
+          nodeColor={(_, id) => getNodeColor(id)}
           nodeGreyoutOpacity={0.1}
           nodeLabelAccessor={(node) => (node.label ? node.label : node.id)}
           nodeSizeScale={nodeSizeScale}
@@ -94,7 +94,7 @@ export default function GraphRenderer({
           simulationGravity={gravity}
           disableSimulation={false}
           showDynamicLabels={showDynamicLabels}
-          hoveredNodeRingColor={"var(--color-positive)"}
+          hoveredNodeRingColor="#5f5ffa"
           renderHoveredNodeRing={true}
           backgroundColor="transparent"
           hoveredNodeLabelColor="white"

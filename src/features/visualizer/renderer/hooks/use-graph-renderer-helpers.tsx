@@ -8,11 +8,11 @@ const DEFAULT_NODE_SIZE = 7;
 const INACTIVE_NODE_SIZE = 7;
 const HIGHLIGHTED_LINK_WIDTH = 4;
 const DEFAULT_LINK_WIDTH = 2;
-const GRADIENT_COLOR = chroma.scale(["#FD4958", "#D17600"]); // --red-5 to --yellow-5
-const NEUTRAL_COLOR = "#757575"; // Gray color
-const CRITICAL_COLOR = "#FD4958"; // --color-red-5
-const NEUTRAL_LOW_COLOR = "#B0B0B0"; // Muted gray color
-const DISABLED_COLOR = "#888888"; // More muted gray color
+const GRADIENT_COLOR = chroma.scale(["#eadeff", "#5f5ffa"]);
+const NEUTRAL_COLOR = "#757575";
+const CRITICAL_COLOR = "##fd4958";
+const PRIMARY_LOW_COLOR = "#5f5ffacc";
+const DISABLED_COLOR = "#888888";
 
 export const useGraphRendererHelpers = ({
   mode,
@@ -39,25 +39,22 @@ export const useGraphRendererHelpers = ({
   const getNodeColor = useMemo(
     () =>
       (index: number): string => {
+        const value = colors[index];
         switch (mode) {
           case MODE.COLOR_IMPORTANT:
-            return colors[index] > 0
+            return value > 0
               ? GRADIENT_COLOR(1).hex()
-              : colors[index] < 0
+              : value < 0
               ? CRITICAL_COLOR
               : NEUTRAL_COLOR;
           case MODE.COLOR_SHADE_DEFAULT:
-            return isNaN(colors[index])
-              ? DISABLED_COLOR
-              : GRADIENT_COLOR(colors[index]).hex();
+            return isNaN(value) ? DISABLED_COLOR : GRADIENT_COLOR(value).hex();
           case MODE.COLOR_SHADE_ERROR:
-            return isNaN(colors[index])
-              ? CRITICAL_COLOR
-              : GRADIENT_COLOR(colors[index]).hex();
+            return isNaN(value) ? CRITICAL_COLOR : GRADIENT_COLOR(value).hex();
           case MODE.SIZE_SCALAR:
             return NEUTRAL_COLOR;
           case MODE.RAINBOW:
-            return `hsl(${colors[index] * 137.508 + 50},100%,75%)`;
+            return `hsl(${value * 137.508 + 50},100%,75%)`;
           default:
             return NEUTRAL_COLOR;
         }
@@ -72,10 +69,10 @@ export const useGraphRendererHelpers = ({
         const backwardKey = `${link.target}-${link.source}`;
 
         if (colors[forwardKey] > 0) {
-          return NEUTRAL_LOW_COLOR;
+          return PRIMARY_LOW_COLOR;
         }
         if (!directed && colors[backwardKey] > 0) {
-          return NEUTRAL_LOW_COLOR;
+          return PRIMARY_LOW_COLOR;
         }
         if (colors[backwardKey] === 0) {
           return GRADIENT_COLOR(1).hex();
