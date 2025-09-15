@@ -35,7 +35,7 @@ const Visualizer = observer(() => {
     <StoreProvider store={store}>
       <div className="flex flex-col w-screen h-screen overflow-hidden">
         <Header />
-        <div className="flex flex-row flex-1">
+        <div className="flex flex-row flex-1 [&>*]:h-[calc(100vh-64px)]">
           <AlgorithmSidebar
             module={store.wasmModule}
             nodes={store.database?.graph.nodes ?? []}
@@ -43,7 +43,7 @@ const Visualizer = observer(() => {
             setActiveAlgorithm={store.setActiveAlgorithm}
             setActiveResponse={store.setActiveResponse}
           />
-          <main className="flex flex-col h-[calc(100vh-64px)]">
+          <main className="flex flex-col">
             <GraphRenderer
               nodes={store.database?.graph.nodes ?? []}
               edges={store.database?.graph.edges ?? []}

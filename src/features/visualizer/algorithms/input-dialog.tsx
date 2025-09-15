@@ -1,9 +1,9 @@
 import { cloneElement, useMemo, useState } from "react";
-import type { GraphEdge, GraphModule, GraphNode } from "../../types";
+import type { GraphEdge, GraphModule, GraphNode } from "../types";
 import type {
   BaseGraphAlgorithm,
   BaseGraphAlgorithmResult,
-} from "../implementations";
+} from "./implementations";
 import { SidebarMenuButton } from "~/components/ui/sidebar";
 import { cn } from "~/lib/utils";
 import { Separator } from "~/components/ui/separator";
@@ -20,7 +20,8 @@ import { Button } from "~/components/ui/button";
 import InputComponent, {
   createEmptyInputResults,
   type InputChangeResult,
-} from "../../inputs";
+} from "../inputs";
+import { toast } from "sonner";
 
 export default function InputDialog({
   module,
@@ -64,7 +65,11 @@ export default function InputDialog({
       setActiveResponse(algorithmResponse);
       setOpen(false);
     } catch (err) {
-      console.error(err);
+      toast.error(
+        module && typeof err == "number"
+          ? module.what_to_stderr(err)
+          : "An unexpected error occurred. Please try again later."
+      );
     }
   };
 

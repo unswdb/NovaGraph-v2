@@ -25,17 +25,21 @@ export const yen = createGraphAlgorithm<YenOutputData>({
       id: "yen-start-node",
       label: "Start Node",
       source: "nodes",
+      required: true,
     }),
     createAlgorithmSelectInput({
       id: "yen-end-node",
       label: "End Node",
       source: "nodes",
+      required: true,
     }),
     createNumberInput({
       id: "yen-k-paths",
       label: "K Paths",
       defaultValue: 3,
       min: 1,
+      step: 1,
+      required: true,
     }),
   ],
   wasmFunction: (module, [arg1, arg2, arg3]) => {
@@ -46,5 +50,5 @@ export const yen = createGraphAlgorithm<YenOutputData>({
 
 function Yen(props: GraphAlgorithmResult<YenOutputData>) {
   const { source, target, k, weighted, paths } = props.data;
-  return <p>Yen output</p>;
+  return <p>Yen output: {JSON.stringify(props.data, null, 2)}</p>;
 }

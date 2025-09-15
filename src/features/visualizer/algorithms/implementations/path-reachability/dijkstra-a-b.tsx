@@ -18,11 +18,13 @@ export const dijkstraAToB = createGraphAlgorithm<DijkstraAToBOutputData>({
       id: "dijkstra-a-to-b-start-node",
       label: "Start Node",
       source: "nodes",
+      required: true,
     }),
     createAlgorithmSelectInput({
       id: "dijkstra-a-to-b-end-node",
       label: "End Node",
       source: "nodes",
+      required: true,
     }),
   ],
   wasmFunction: (module, [arg1, arg2]) => {
@@ -33,5 +35,5 @@ export const dijkstraAToB = createGraphAlgorithm<DijkstraAToBOutputData>({
 
 function DijkstraAToB(props: GraphAlgorithmResult<DijkstraAToBOutputData>) {
   const { source, target, weighted, path, totalWeight } = props.data;
-  return <p>Dijkstra (A to B) output</p>;
+  return <p>Dijkstra (A to B) output: {JSON.stringify(props.data, null, 2)}</p>;
 }

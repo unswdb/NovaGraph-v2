@@ -16,6 +16,7 @@ export const dijkstraAToAll = createGraphAlgorithm<DijkstraAToAllOutputData>({
       id: "dijkstra-a-to-all-start-node",
       label: "Start Node",
       source: "nodes",
+      required: true,
     }),
   ],
   wasmFunction: (module, [args]) => {
@@ -26,5 +27,7 @@ export const dijkstraAToAll = createGraphAlgorithm<DijkstraAToAllOutputData>({
 
 function DijkstraAToAll(props: GraphAlgorithmResult<DijkstraAToAllOutputData>) {
   const { source, weighted, paths } = props.data;
-  return <p>Dijkstra (A to All) output</p>;
+  return (
+    <p>Dijkstra (A to All) output: {JSON.stringify(props.data, null, 2)}</p>
+  );
 }

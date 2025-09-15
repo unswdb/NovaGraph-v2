@@ -22,6 +22,7 @@ export const bellmanFordAToAll =
         id: "bellman-ford-a-to-all-start-node",
         label: "Start Node",
         source: "nodes",
+        required: true,
       }),
     ],
     wasmFunction: (module, [args]) => {
@@ -34,5 +35,7 @@ function BellmanFordAToAll(
   props: GraphAlgorithmResult<BellmanFordAToAllOutputData>
 ) {
   const { source, weighted, paths } = props.data;
-  return <p>Bellman Ford (A to All) output</p>;
+  return (
+    <p>Bellman Ford (A to All) output: {JSON.stringify(props.data, null, 2)}</p>
+  );
 }

@@ -137,6 +137,7 @@ export const ImportCSV: ImportOption = {
     createSwitchInput({
       id: "directed-csv",
       label: "Directed Graph",
+      required: true,
       defaultValue: false,
     }),
   ],

@@ -28,5 +28,7 @@ function MinimalSpanningTree(
   props: GraphAlgorithmResult<MinimalSpanningTreeOutputData>
 ) {
   const { weighted, maxEdges, totalWeight, edges } = props.data;
-  return <p>Minimal Spanning Tree output</p>;
+  return (
+    <p>Minimal Spanning Tree output: {JSON.stringify(props.data, null, 2)}</p>
+  );
 }

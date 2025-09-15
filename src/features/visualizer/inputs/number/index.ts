@@ -6,11 +6,12 @@ export function createNumberInput(
 ): NumberInput {
   return {
     type: "number",
-    required: false,
     placeholder: "",
     defaultValue: 0,
     min: undefined,
     max: undefined,
+    step: undefined,
+    required: true,
     ...input,
   };
 }

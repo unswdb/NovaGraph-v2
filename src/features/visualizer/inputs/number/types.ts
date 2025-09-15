@@ -7,4 +7,5 @@ export type NumberInput = BaseInputType<number> & {
   defaultValue?: number;
   min?: number;
   max?: number;
+  step?: number;
 };

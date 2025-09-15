@@ -11,12 +11,13 @@ type DFSOutputData = {
 export const dfs = createGraphAlgorithm<DFSOutputData>({
   title: "Depth-First Search",
   description:
-    "Traverses the graph from a source by exploring as far as possible along each branch before backtracking. It continues until all nodes are visited.",
+    "Traverses the graph from a source by exploring as far as possible along one branch before backtracking. It continues until all nodes are visited.",
   inputs: [
     createAlgorithmSelectInput({
       id: "dfs-start-node",
       label: "Start Node",
       source: "nodes",
+      required: true,
     }),
   ],
   wasmFunction: (module, [args]) => {
@@ -27,5 +28,5 @@ export const dfs = createGraphAlgorithm<DFSOutputData>({
 
 function DFS(props: GraphAlgorithmResult<DFSOutputData>) {
   const { source, nodesFound, subtrees } = props.data;
-  return <p>DFS output</p>;
+  return <p>DFS output: {JSON.stringify(props.data, null, 2)}</p>;
 }

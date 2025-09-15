@@ -13,15 +13,26 @@ export default function FileInputComponent({
   const handleFileOnChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      const validator = await input.validator?.(files[0]);
-      const isValid = validator ? validator.success : true;
-      const message = validator ? validator.message ?? "" : "";
+      const newValue = files[0];
+      const required = input.required ?? false;
+
+      const validator = await input.validator?.(newValue);
+      const isValid = required
+        ? validator
+          ? validator.success
+          : !!newValue
+        : true;
+      const message = required
+        ? validator
+          ? validator.message ?? ""
+          : "This field is required."
+        : "";
 
       setShowError(!isValid);
       setErrorMessage(message);
 
       onChange({
-        value: files[0],
+        value: newValue,
         success: isValid,
         message: message,
       });

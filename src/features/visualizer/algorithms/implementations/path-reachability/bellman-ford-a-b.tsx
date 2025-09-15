@@ -23,11 +23,13 @@ export const bellmanFordAToB = createGraphAlgorithm<BellmanFordAToBOutputData>({
       id: "bellman-ford-a-to-b-start-node",
       label: "Start Node",
       source: "nodes",
+      required: true,
     }),
     createAlgorithmSelectInput({
       id: "bellman-ford-a-to-b-end-node",
       label: "End Node",
       source: "nodes",
+      required: true,
     }),
   ],
   wasmFunction: (module, [arg1, arg2]) => {
@@ -40,5 +42,7 @@ function BellmanFordAToB(
   props: GraphAlgorithmResult<BellmanFordAToBOutputData>
 ) {
   const { source, target, weighted, path, totalWeight } = props.data;
-  return <p>Bellman Ford (A to B) output</p>;
+  return (
+    <p>Bellman Ford (A to B) output: {JSON.stringify(props.data, null, 2)}</p>
+  );
 }

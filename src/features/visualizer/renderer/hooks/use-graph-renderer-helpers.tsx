@@ -10,7 +10,7 @@ const HIGHLIGHTED_LINK_WIDTH = 4;
 const DEFAULT_LINK_WIDTH = 2;
 const GRADIENT_COLOR = chroma.scale(["#eadeff", "#5f5ffa"]);
 const NEUTRAL_COLOR = "#757575";
-const CRITICAL_COLOR = "##fd4958";
+const CRITICAL_COLOR = "#fd4958";
 const PRIMARY_LOW_COLOR = "#5f5ffacc";
 const DISABLED_COLOR = "#888888";
 

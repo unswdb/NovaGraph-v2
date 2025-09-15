@@ -96,11 +96,9 @@ function AlgorithmSidebarContent({
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
 }) {
   const [searchText, setSearchText] = useState("");
-  const [hoveredAlgorithm, setHoveredAlgorithm] =
-    useState<BaseGraphAlgorithm | null>(null);
 
   return (
-    <SidebarContent className="p-6 space-y-4 bg-gradient-to-br from-neutral-low/20 to-neutral/20">
+    <SidebarContent className="h-screen p-6 flex flex-col gap-4 bg-gradient-to-br from-neutral-low/20 to-neutral/20">
       {/* Search Bar */}
       <SearchBar
         searchText={searchText}
@@ -117,7 +115,6 @@ function AlgorithmSidebarContent({
           edges={edges}
           setActiveAlgorithm={setActiveAlgorithm}
           setActiveResponse={setActiveResponse}
-          onAlgorithmHover={setHoveredAlgorithm}
           isCollapsed={!open}
         />
       ) : (
@@ -127,22 +124,9 @@ function AlgorithmSidebarContent({
           edges={edges}
           setActiveAlgorithm={setActiveAlgorithm}
           setActiveResponse={setActiveResponse}
-          onAlgorithmHover={setHoveredAlgorithm}
           isCollapsed={!open}
         />
       )}
-      {/* Hovered Algorithm Description */}
-      <div
-        className={cn(
-          "p-4 bg-neutral-low flex flex-col gap-2 rounded-md transition-all duration-300 ease-out",
-          !!hoveredAlgorithm ? "opacity-100 h-fit" : "opacity-0 h-0"
-        )}
-      >
-        <p className="font-semibold small-title flex-1">
-          {hoveredAlgorithm?.title}
-        </p>
-        <p className="small-body">{hoveredAlgorithm?.description}</p>
-      </div>
     </SidebarContent>
   );
 }

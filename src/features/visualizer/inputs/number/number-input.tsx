@@ -15,10 +15,12 @@ export default function NumberInputComponent({
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const newValue = Number(e.target.value);
+    const required = input.required ?? false;
+
     if (isNaN(newValue)) {
       setShowError(true);
       setErrorMessage("Please enter a valid number.");
-      onChange({ value: undefined, success: false, message: "Invalid number" });
+      onChange({ value: "", success: !required, message: "Invalid number" });
       return;
     }
 
@@ -26,8 +28,8 @@ export default function NumberInputComponent({
       setShowError(true);
       setErrorMessage(`Value must be at least ${input.min}.`);
       onChange({
-        value: undefined,
-        success: false,
+        value: "",
+        success: !required,
         message: `Value must be at least ${input.min}.`,
       });
       return;
@@ -37,16 +39,24 @@ export default function NumberInputComponent({
       setShowError(true);
       setErrorMessage(`Value must not exceed ${input.max}.`);
       onChange({
-        value: undefined,
-        success: false,
+        value: "",
+        success: !required,
         message: `Value must not exceed ${input.max}.`,
       });
       return;
     }
 
     const validator = await input.validator?.(newValue);
-    const isValid = validator ? validator.success : true;
-    const message = validator ? validator.message ?? "" : "";
+    const isValid = required
+      ? validator
+        ? validator.success
+        : !!newValue
+      : true;
+    const message = required
+      ? validator
+        ? validator.message ?? ""
+        : "This field is required."
+      : "";
 
     setShowError(!isValid);
     setErrorMessage(message);
@@ -65,8 +75,8 @@ export default function NumberInputComponent({
         type="number"
         min={input.min ?? 0}
         max={input.max}
+        step={input.step ?? 1}
         value={String(value) ?? ""}
-        required={input.required}
         placeholder={input.placeholder}
         onChange={handleNumberOnChange}
       />
