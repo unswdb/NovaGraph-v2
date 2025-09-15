@@ -1,7 +1,8 @@
-import { GitBranch, Route, Star } from "lucide-react";
+import { GitBranch, Route, Star, Users, Waypoints } from "lucide-react";
 import * as TRAVERSAL_CONNECTIVITY from "./traversal-connectivity";
 import * as PATH_REACHABILITY from "./path-reachability";
 import * as CENTRALITY_NODE_IMPORTANCE from "./centrality";
+import * as COMMUNITY_DETECTION from "./community-detection";
 import { type BaseGraphAlgorithm } from "./types";
 import type { ElementType } from "react";
 
@@ -25,6 +26,11 @@ const ALL_ALGORITHMS: {
     label: "Centrality",
     icon: Star,
     algorithms: Object.values(CENTRALITY_NODE_IMPORTANCE) as BaseGraphAlgorithm[],
+  },
+  {
+    label: "Community Detection",
+    icon: Users,
+    algorithms: Object.values(COMMUNITY_DETECTION) as BaseGraphAlgorithm[],
   },
 ];
 export default ALL_ALGORITHMS;
