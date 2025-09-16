@@ -34,20 +34,17 @@ export default function SettingsSidebar({
       className="relative isolate z-10"
       defaultOpen={false}
     >
-      <Sidebar side="right">
-        <SettingsSidebarContent
-          gravity={gravity}
-          setGravity={setGravity}
-          nodeSizeScale={nodeSizeScale}
-          setNodeSizeScale={setNodeSizeScale}
-        />
-      </Sidebar>
-      <SettingsSidebarControls />
+      <SettingsSidebarWrapper
+        gravity={gravity}
+        setGravity={setGravity}
+        nodeSizeScale={nodeSizeScale}
+        setNodeSizeScale={setNodeSizeScale}
+      />
     </SidebarProvider>
   );
 }
 
-function SettingsSidebarContent({
+function SettingsSidebarWrapper({
   gravity,
   setGravity,
   nodeSizeScale,
@@ -58,8 +55,38 @@ function SettingsSidebarContent({
   nodeSizeScale: NodeSizeScale;
   setNodeSizeScale: (n: NodeSizeScale) => void;
 }) {
-  const { state } = useSidebar();
+  const isMobile = useIsMobile();
+  const { open, openMobile } = useSidebar();
 
+  return (
+    <>
+      <Sidebar side="right">
+        <SettingsSidebarContent
+          open={isMobile ? openMobile : open}
+          gravity={gravity}
+          setGravity={setGravity}
+          nodeSizeScale={nodeSizeScale}
+          setNodeSizeScale={setNodeSizeScale}
+        />
+      </Sidebar>
+      <SettingsSidebarControls open={isMobile ? openMobile : open} />
+    </>
+  );
+}
+
+function SettingsSidebarContent({
+  open,
+  gravity,
+  setGravity,
+  nodeSizeScale,
+  setNodeSizeScale,
+}: {
+  open: boolean;
+  gravity: Gravity;
+  setGravity: (g: Gravity) => void;
+  nodeSizeScale: NodeSizeScale;
+  setNodeSizeScale: (n: NodeSizeScale) => void;
+}) {
   return (
     <SidebarContent className="p-6 space-y-4 bg-gradient-to-br from-neutral-low/20 to-neutral/20">
       <h1 className="medium-title">Graph Options</h1>
@@ -75,7 +102,8 @@ function SettingsSidebarContent({
         <RadioGroup
           defaultValue={String(gravity)}
           onValueChange={(value) => setGravity(Number(value) as Gravity)}
-          inert={state === "collapsed"}
+          disabled={!open}
+          inert={!open}
         >
           {/* Gravity options */}
           {Object.entries(GRAVITY).map(([key, val]) => (
@@ -102,7 +130,8 @@ function SettingsSidebarContent({
           onValueChange={(value) =>
             setNodeSizeScale(Number(value) as NodeSizeScale)
           }
-          inert={state === "collapsed"}
+          disabled={!open}
+          inert={!open}
         >
           {/* Node size scale options */}
           {Object.entries(NODE_SIZE_SCALE).map(([key, val]) => (
@@ -119,20 +148,17 @@ function SettingsSidebarContent({
   );
 }
 
-function SettingsSidebarControls() {
-  const { state } = useSidebar();
+function SettingsSidebarControls({ open }: { open: boolean }) {
   const isMobile = useIsMobile();
 
   return (
     <div
       className={`bg-page isolate overflow-hidden before:absolute before:bg-gradient-to-br before:from-neutral-low/20 before:to-neutral/20 before:inset-0 before:-z-10 p-2 flex flex-col items-center gap-2 h-max absolute top-1/2 -translate-y-1/2 ${
-        state === "collapsed" || isMobile
-          ? "right-0"
-          : "right-[calc(var(--sidebar-width))]"
+        !open || isMobile ? "right-0" : "right-[calc(var(--sidebar-width))]"
       } transition-all duration-200 ease-linear border border-r-transparent border-border rounded-tl-md rounded-bl-md`}
     >
       <SidebarTrigger size="icon">
-        {state === "collapsed" || isMobile ? (
+        {!open || isMobile ? (
           <ChevronsLeft className="w-6 h-6" />
         ) : (
           <ChevronsRight className="w-6 h-6" />

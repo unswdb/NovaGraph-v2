@@ -6,8 +6,8 @@ export function createTextInput(
 ): TextInput {
   return {
     type: "text",
-    required: false,
     placeholder: "",
+    required: true,
     ...input,
   };
 }

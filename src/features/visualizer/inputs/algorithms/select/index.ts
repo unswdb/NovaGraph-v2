@@ -9,6 +9,7 @@ export function createAlgorithmSelectInput(
     source: input.source || "static",
     multiple: false,
     options: [],
+    required: true,
     ...input,
   };
 }

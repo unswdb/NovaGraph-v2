@@ -1,5 +1,8 @@
-import { Route } from "lucide-react";
-import * as GRAPH_TRAVERSAL from "./traversal";
+import { GitBranch, Route, Star, Users, Waypoints } from "lucide-react";
+import * as TRAVERSAL_CONNECTIVITY from "./traversal-connectivity";
+import * as PATH_REACHABILITY from "./path-reachability";
+import * as CENTRALITY_NODE_IMPORTANCE from "./centrality";
+import * as COMMUNITY_DETECTION from "./community-detection";
 import { type BaseGraphAlgorithm } from "./types";
 import type { ElementType } from "react";
 
@@ -10,9 +13,24 @@ const ALL_ALGORITHMS: {
   algorithms: BaseGraphAlgorithm[];
 }[] = [
   {
-    label: "Graph Traversal",
+    label: "Traversal & Connectivity",
+    icon: GitBranch,
+    algorithms: Object.values(TRAVERSAL_CONNECTIVITY) as BaseGraphAlgorithm[],
+  },
+  {
+    label: "Path & Reachability",
     icon: Route,
-    algorithms: Object.values(GRAPH_TRAVERSAL) as BaseGraphAlgorithm[],
+    algorithms: Object.values(PATH_REACHABILITY) as BaseGraphAlgorithm[],
+  },
+  {
+    label: "Centrality",
+    icon: Star,
+    algorithms: Object.values(CENTRALITY_NODE_IMPORTANCE) as BaseGraphAlgorithm[],
+  },
+  {
+    label: "Community Detection",
+    icon: Users,
+    algorithms: Object.values(COMMUNITY_DETECTION) as BaseGraphAlgorithm[],
   },
 ];
 export default ALL_ALGORITHMS;

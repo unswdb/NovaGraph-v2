@@ -17,8 +17,14 @@ import {
   SidebarMenuItem,
 } from "~/components/ui/sidebar";
 import { ChevronDown } from "lucide-react";
-import InputDialog from "./input-dialog";
+import InputDialog from "../input-dialog";
 import { useMemo } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 
 export function UnfilteredAlgorithmList({
   module,
@@ -26,7 +32,6 @@ export function UnfilteredAlgorithmList({
   edges,
   setActiveAlgorithm,
   setActiveResponse,
-  onAlgorithmHover,
   isCollapsed,
 }: {
   module: GraphModule | null;
@@ -34,7 +39,6 @@ export function UnfilteredAlgorithmList({
   edges: GraphEdge[];
   setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
-  onAlgorithmHover: (a: BaseGraphAlgorithm | null) => void;
   isCollapsed: boolean;
 }) {
   return (
@@ -54,7 +58,7 @@ export function UnfilteredAlgorithmList({
                 {/* Algorithm Category Icon + Label */}
                 <div className="flex gap-2 items-center">
                   <algorithm.icon className="w-4 h-4" />
-                  {algorithm.label}
+                  <p className="truncate">{algorithm.label}</p>
                 </div>
                 <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
               </CollapsibleTrigger>
@@ -62,23 +66,30 @@ export function UnfilteredAlgorithmList({
             <CollapsibleContent>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {/* Algorithms in the Algorithm Category */}
-                  {algorithm.algorithms.map((algo) => (
-                    <SidebarMenuItem key={algo.title}>
-                      <InputDialog
-                        module={module}
-                        algorithm={algo}
-                        nodes={nodes}
-                        edges={edges}
-                        setActiveAlgorithm={setActiveAlgorithm}
-                        setActiveResponse={setActiveResponse}
-                        onMouseEnter={() => onAlgorithmHover(algo)}
-                        onMouseLeave={() => onAlgorithmHover(null)}
-                        inert={isCollapsed}
-                        separator
-                      />
-                    </SidebarMenuItem>
-                  ))}
+                  <TooltipProvider>
+                    {/* Algorithms in the Algorithm Category */}
+                    {algorithm.algorithms.map((algo) => (
+                      <SidebarMenuItem key={algo.title}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <InputDialog
+                              module={module}
+                              algorithm={algo}
+                              nodes={nodes}
+                              edges={edges}
+                              setActiveAlgorithm={setActiveAlgorithm}
+                              setActiveResponse={setActiveResponse}
+                              inert={isCollapsed}
+                              separator
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="w-40">
+                            {algo.description}
+                          </TooltipContent>
+                        </Tooltip>
+                      </SidebarMenuItem>
+                    ))}
+                  </TooltipProvider>
                 </SidebarMenu>
               </SidebarGroupContent>
             </CollapsibleContent>
@@ -96,7 +107,6 @@ export function FilteredAlgorithmList({
   edges,
   setActiveAlgorithm,
   setActiveResponse,
-  onAlgorithmHover,
   isCollapsed,
 }: {
   searchText: string;
@@ -105,7 +115,6 @@ export function FilteredAlgorithmList({
   edges: GraphEdge[];
   setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
-  onAlgorithmHover: (a: BaseGraphAlgorithm | null) => void;
   isCollapsed: boolean;
 }) {
   const allAlgorithms: BaseGraphAlgorithm[] = ALL_ALGORITHMS.reduce(
@@ -127,21 +136,29 @@ export function FilteredAlgorithmList({
         Search Results ({filteredAlgorithms.length})
       </h1>
       <SidebarMenu>
-        {filteredAlgorithms.map((algo) => (
-          <SidebarMenuItem key={algo.title}>
-            <InputDialog
-              module={module}
-              algorithm={algo}
-              nodes={nodes}
-              edges={edges}
-              setActiveAlgorithm={setActiveAlgorithm}
-              setActiveResponse={setActiveResponse}
-              onMouseEnter={() => onAlgorithmHover(algo)}
-              onMouseLeave={() => onAlgorithmHover(null)}
-              inert={isCollapsed}
-            />
-          </SidebarMenuItem>
-        ))}
+        <TooltipProvider>
+          {filteredAlgorithms.map((algo) => (
+            <SidebarMenuItem key={algo.title}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <InputDialog
+                    module={module}
+                    algorithm={algo}
+                    nodes={nodes}
+                    edges={edges}
+                    setActiveAlgorithm={setActiveAlgorithm}
+                    setActiveResponse={setActiveResponse}
+                    inert={isCollapsed}
+                    separator
+                  />
+                </TooltipTrigger>
+                <TooltipContent side="right" className="w-40">
+                  {algo.description}
+                </TooltipContent>
+              </Tooltip>
+            </SidebarMenuItem>
+          ))}
+        </TooltipProvider>
       </SidebarMenu>
     </div>
   );

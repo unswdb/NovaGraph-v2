@@ -1,7 +1,12 @@
 import { Label } from "~/components/form/label";
 import AlgorithmSelectInputComponent from "./algorithms/select/select-input";
 import { NumberInputComponent } from "./number";
-import type { InputComponentProps, InputType, InputValueType } from "./types";
+import type {
+  InputChangeResult,
+  InputComponentProps,
+  InputType,
+  InputValueType,
+} from "./types";
 import { FileInputComponent } from "./file";
 import { SwitchInputComponent } from "./switch";
 import TextInputComponent from "./text/text-input";
@@ -42,13 +47,16 @@ function hasDefaultValue(
 
 // Function to define empty records for input values
 export function createEmptyInputResults(inputs: InputType[]) {
-  return inputs.reduce<
-    Record<string, { value: InputValueType; success: boolean }>
-  >((acc, input) => {
+  return inputs.reduce<Record<string, InputChangeResult>>((acc, input) => {
     const defaultValueExists = hasDefaultValue(input);
     acc[input.label] = {
       value: defaultValueExists ? input.defaultValue : undefined,
-      success: defaultValueExists,
+      success: input.required ? defaultValueExists : true,
+      message: input.required
+        ? defaultValueExists
+          ? ""
+          : "This field is required"
+        : "",
     };
     return acc;
   }, {});

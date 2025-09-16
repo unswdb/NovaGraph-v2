@@ -5,4 +5,5 @@ export type AlgorithmSelectInput = BaseInputType<string> & {
   source: "nodes" | "edges" | "static"; // Where select options come from
   multiple?: boolean; // For multi-select
   options?: string[]; // For static options
+  required?: boolean;
 };
