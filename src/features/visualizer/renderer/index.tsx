@@ -11,6 +11,7 @@ import GraphRendererHeader from "./header";
 import GraphRendererFooter from "./footer";
 import { useGraphRendererHelpers } from "./hooks/use-graph-renderer-helpers";
 import { useZoomControls } from "./hooks/use-zoom-controls";
+import NodeAttributesForm from "./node-attributes";
 
 const INITIAL_ZOOM_LEVEL = 1;
 const SIMULATION_LINK_DISTANCE = 20;
@@ -55,6 +56,7 @@ export default function GraphRenderer({
   // States
   const [isSimulationPaused, setIsSimulationPaused] = useState(false);
   const [showDynamicLabels, setShowDynamicLabels] = useState(true);
+  const [clickedNode, setClickedNode] = useState<GraphNode | null>(null);
 
   // Hooks
   const { getNodeSize, getNodeColor, getLinkColor, getLinkWidth } =
@@ -70,13 +72,18 @@ export default function GraphRenderer({
     }
   }, [isSimulationPaused]);
 
+  const nodeOnClick = (node: GraphNode | undefined) => {
+    zoomToNode(node);
+    setClickedNode(node ?? null);
+  };
+
   return (
     <CosmographProvider nodes={nodes} links={edges}>
       <div className={cn("flex flex-col h-full relative", className)}>
         {/* Main Graph Visualizer */}
         <Cosmograph
           ref={cosmographRef}
-          onClick={zoomToNode}
+          onClick={nodeOnClick}
           initialZoomLevel={INITIAL_ZOOM_LEVEL}
           nodeSize={(_, id) => getNodeSize(id)}
           nodeColor={(_, id) => getNodeColor(id)}
@@ -101,6 +108,14 @@ export default function GraphRenderer({
           nodeLabelColor="white"
           className="bg-page flex-1"
         />
+
+        {/* Node Attributes Form */}
+        {clickedNode && (
+          <NodeAttributesForm
+            node={clickedNode}
+            onClose={() => setClickedNode(null)}
+          />
+        )}
 
         {/* Top Gradient Overlay */}
         <GradientOverlay position="top" />
