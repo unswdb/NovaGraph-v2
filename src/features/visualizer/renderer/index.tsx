@@ -72,9 +72,14 @@ export default function GraphRenderer({
     }
   }, [isSimulationPaused]);
 
-  const nodeOnClick = (node: GraphNode | undefined) => {
+  const selectNode = (node: GraphNode | undefined) => {
     zoomToNode(node);
     setClickedNode(node ?? null);
+  };
+
+  const unselectNode = (node: GraphNode | undefined) => {
+    cosmographRef.current?.unselectNodes();
+    setClickedNode(null);
   };
 
   return (
@@ -83,7 +88,7 @@ export default function GraphRenderer({
         {/* Main Graph Visualizer */}
         <Cosmograph
           ref={cosmographRef}
-          onClick={nodeOnClick}
+          onClick={selectNode}
           initialZoomLevel={INITIAL_ZOOM_LEVEL}
           nodeSize={(_, id) => getNodeSize(id)}
           nodeColor={(_, id) => getNodeColor(id)}
@@ -101,6 +106,7 @@ export default function GraphRenderer({
           simulationGravity={gravity}
           disableSimulation={false}
           showDynamicLabels={showDynamicLabels}
+          focusedNodeRingColor="#5f5ffa"
           hoveredNodeRingColor="#5f5ffa"
           renderHoveredNodeRing={true}
           backgroundColor="transparent"
@@ -113,7 +119,7 @@ export default function GraphRenderer({
         {clickedNode && (
           <NodeAttributesForm
             node={clickedNode}
-            onClose={() => setClickedNode(null)}
+            onClose={() => unselectNode(clickedNode)}
           />
         )}
 
