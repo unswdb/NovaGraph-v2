@@ -1,14 +1,13 @@
 import { cn } from "~/lib/utils";
 import { useLoading } from "./use-loading";
 import { LoaderCircle } from "lucide-react";
+import Logo from "../logo";
 
 export function Loading({
   className,
-  spinnerClassName,
   overlayClassName,
 }: {
   className?: string;
-  spinnerClassName?: string;
   overlayClassName?: string;
 }) {
   const { isLoading, loadingMessage } = useLoading();
@@ -32,8 +31,8 @@ export function Loading({
           className
         )}
       >
-        {/* Spinner */}
-        <LoaderCircle className={cn("animate-spin size-8", spinnerClassName)} />
+        {/* Logo */}
+        <Logo alt="Loading..." className="text-primary size-12" />
 
         {/* Loading message */}
         {loadingMessage && (

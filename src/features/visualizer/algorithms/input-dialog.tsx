@@ -1,4 +1,4 @@
-import { cloneElement, useMemo, useState } from "react";
+import { cloneElement, useEffect, useMemo, useState } from "react";
 import type { GraphEdge, GraphModule, GraphNode } from "../types";
 import type {
   BaseGraphAlgorithm,
@@ -23,6 +23,9 @@ import InputComponent, {
 } from "../inputs";
 import { toast } from "sonner";
 import { useLoading } from "~/components/ui/loading";
+
+// Worker singleton
+let AlgorithmWorker: Worker | null = null;
 
 export default function InputDialog({
   module,
@@ -52,6 +55,24 @@ export default function InputDialog({
     Record<string, InputChangeResult>
   >(createEmptyInputResults(algorithm.inputs));
 
+  useEffect(() => {
+    // Initialise worker if it doesn't exist
+    if (!AlgorithmWorker) {
+      AlgorithmWorker = new Worker(
+        new URL("algorithm-worker.ts", import.meta.url),
+        { type: "module" }
+      );
+    }
+
+    // Cleanup the worker on component unmount
+    return () => {
+      if (AlgorithmWorker) {
+        AlgorithmWorker.terminate();
+        AlgorithmWorker = null;
+      }
+    };
+  }, []);
+
   // Memoised values
   const isReadyToSubmit = useMemo(
     () => Object.values(inputResults).every((v) => v.success),
@@ -59,31 +80,31 @@ export default function InputDialog({
   );
 
   const handleSubmit = async () => {
-    if (!module) return;
+    if (!module || !AlgorithmWorker) return;
 
     setOpen(false);
     startLoading("Running Algorithm...");
 
-    try {
-      const args = algorithm.inputs.map(
-        (input) => inputResults[input.label].value
-      );
+    setTimeout(() => {
+      try {
+        const args = algorithm.inputs.map(
+          (input) => inputResults[input.label].value
+        );
 
-      const algorithmResponse = algorithm.wasmFunction(module, args);
-
-      setActiveAlgorithm(algorithm);
-      setActiveResponse(algorithmResponse);
-      setOpen(false);
-    } catch (err) {
-      toast.error(
-        module && typeof err == "number"
-          ? module.what_to_stderr(err)
-          : String(err) ??
-              "An unexpected error occurred. Please try again later."
-      );
-    } finally {
-      stopLoading();
-    }
+        const algorithmResponse = algorithm.wasmFunction(module, args);
+        setActiveAlgorithm(algorithm);
+        setActiveResponse(algorithmResponse);
+      } catch (err) {
+        toast.error(
+          module && typeof err == "number"
+            ? module.what_to_stderr(err)
+            : String(err) ??
+                "An unexpected error occurred. Please try again later."
+        );
+      } finally {
+        stopLoading();
+      }
+    }, 0);
   };
 
   const menuButton = (
