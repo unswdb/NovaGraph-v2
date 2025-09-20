@@ -22,6 +22,7 @@ import InputComponent, {
   type InputChangeResult,
 } from "../inputs";
 import { toast } from "sonner";
+import { useLoading } from "~/components/ui/loading";
 
 export default function InputDialog({
   module,
@@ -42,6 +43,9 @@ export default function InputDialog({
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
   separator?: boolean;
 }) {
+  // Hooks
+  const { startLoading, stopLoading } = useLoading();
+
   // States
   const [open, setOpen] = useState(false);
   const [inputResults, setInputResults] = useState<
@@ -54,13 +58,19 @@ export default function InputDialog({
     [inputResults, algorithm]
   );
 
-  // TODO: Handle error and loading state
   const handleSubmit = async () => {
+    if (!module) return;
+
+    setOpen(false);
+    startLoading("Running Algorithm...");
+
     try {
       const args = algorithm.inputs.map(
         (input) => inputResults[input.label].value
       );
+
       const algorithmResponse = algorithm.wasmFunction(module, args);
+
       setActiveAlgorithm(algorithm);
       setActiveResponse(algorithmResponse);
       setOpen(false);
@@ -68,8 +78,11 @@ export default function InputDialog({
       toast.error(
         module && typeof err == "number"
           ? module.what_to_stderr(err)
-          : "An unexpected error occurred. Please try again later."
+          : String(err) ??
+              "An unexpected error occurred. Please try again later."
       );
+    } finally {
+      stopLoading();
     }
   };
 

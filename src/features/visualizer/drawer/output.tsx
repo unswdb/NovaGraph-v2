@@ -16,7 +16,7 @@ export default function OutputTabContent({
 }) {
   return (
     <div className="flex flex-col gap-4 h-full">
-      <div className="flex-1">
+      <div className="h-38 overflow-auto">
         {!!activeAlgorithm &&
           !!activeResponse &&
           activeAlgorithm.output(activeResponse)}

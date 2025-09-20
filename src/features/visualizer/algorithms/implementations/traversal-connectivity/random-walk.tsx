@@ -35,7 +35,6 @@ export const randomWalk = createGraphAlgorithm<RandomWalkOutputData>({
       label: "Number of Steps",
       defaultValue: 10,
       min: 1,
-      max: 1000,
       step: 1,
       required: true,
     }),
