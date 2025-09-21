@@ -1,5 +1,11 @@
-import { getStructuredGraphSnapshot, snapshotGraphState, parseNodesResult, parseEdgesResult } from "./KuzuQueryExecutor"
-import { createSchemaQuery } from "../helpers/KuzuQueryBuilder"
+import { 
+  snapshotGraphState
+} from "./KuzuQueryExecutor"
+
+import { 
+  queryResultColorMapExtraction, 
+} from "./KuzuQueryResultExtractor"
+
 
 export default class KuzuBaseService {
   constructor() {
@@ -41,36 +47,6 @@ export default class KuzuBaseService {
     this.initialized = initialized;
   }
 
-
-  _isSubGraphResult(result) {
-    console.log(result)
-    if (!Array.isArray(result.objects) || result.objects.length === 0) {
-      if (!Array.isArray(result.objects)) {
-        console.log("it is because: !Array.isArray(result.objects")
-      }
-
-      if (result.objects.length === 0) {
-        console.log("it is because: result.objects.length === 0")
-      }
-
-      return false;
-    }
-
-    // If array contains a single object with key "result"
-    if (
-      result.objects.length === 1 &&
-      // typeof result.objects[0] === "object" &&
-      // result.objects[0] !== null &&
-      Object.prototype.hasOwnProperty.call(result.objects[0], "result")
-    ) {
-      console.log("it is because: result.objects.length === 1 and Object.prototype.hasOwnProperty.call(result.objects[0], result)")
-      return false;
-    }
-
-    // Otherwise, return true
-    return true;
-  }
-
   /**
    * Execute a Cypher query and process the results
    * @param {string} query - The Cypher query to execute
@@ -84,23 +60,21 @@ export default class KuzuBaseService {
       };
     }
 
+    // Init variable
+    const successQueries = [];
+    const failedQueries = [];
+    let allSuccess = true;
+    let nodes = [];
+    let edges = [];
+    let colorMap = {};
+    let resultType = "graph";
+
     try {
-      console.log("Executing query:", query);
       let currentResult = this.connection.query(query);
 
-      // Init variable
-      const successQueries = [];
-      const failedQueries = [];
-      let allSuccess = true;
-      let nodes = [];
-      let edges = [];
-      let colorMap = {}; // Add this line
-
-      // Handle result
+      // Loop through each query result and collect successnesss
       while (currentResult) {
-        // Process each result individually
         const queryResult = this._processQueryResult(currentResult);
-        
         if (queryResult.success) {
           successQueries.push(queryResult);
         } else {
@@ -108,45 +82,22 @@ export default class KuzuBaseService {
           failedQueries.push(queryResult);
         }
 
-        // Check if there are more query results
+        // Check last query result
         if (currentResult.hasNextQueryResult()) {
           currentResult = currentResult.getNextQueryResult();
         } else {
-          // If it is the last one 
-          // figure out the partern of subgraph 
-          if (this._isSubGraphResult(queryResult)) {
-            // If it return subgraph -> set node and edges to that subgraph
-            console.log("It is subgraph chat")
-
-            nodes = parseNodesResult(currentResult);
-            edges = parseEdgesResult(currentResult);
-            
-            // Generate colorMap for subgraph results
-            nodes.forEach(node => {
-              colorMap[node.id] = 0.8; // Warm color for subgraph nodes
-            });
-            edges.forEach(edge => {
-              colorMap[`${edge.source}-${edge.target}`] = 0.6; // Cool color for subgraph edges
-            });
-          } else {
-            // If it return no -> call getStructured query to get return nodes and edges
-            console.log("It is not a subgraph chat")
-
-            const graphState = snapshotGraphState(this.connection); 
-
-            nodes = graphState.nodes;
-            edges = graphState.edges;
-            
-            // No colorMap for whole graph snapshots (neutral colors)
-          }
-          
+          colorMap = queryResultColorMapExtraction(currentResult);
           break;
         }
       }
 
+      // Get snapshot set to nodes and edges 
+      nodes = snapshotGraphState(this.connection).nodes;
+      edges = snapshotGraphState(this.connection).edges;
+
       // Gracefully close the query result object
       currentResult.close();
-      console.warn("colorMap:", JSON.stringify(colorMap, null, 2));
+
       return {
         successQueries: successQueries,
         failedQueries: failedQueries,
@@ -156,7 +107,8 @@ export default class KuzuBaseService {
           : `Some queries failed. Check results for details.`,
         nodes: nodes,
         edges: edges,
-        colorMap: colorMap // Add this line
+        colorMap: colorMap,
+        resultType: resultType
       };
     } catch (err) {
       return {
@@ -170,16 +122,18 @@ export default class KuzuBaseService {
 
 
   /**
-   * Helper method to process a single query result (returns a single object)
+   * Helper method to process a single query result
+   * 
    * @private
    * @param {Object} result - A Kuzu query result object
-   * @returns {Object} - Standardized result object
+   * @returns {Object}
+   * TODO: in production, remove all toString
    */
   _processQueryResult(result) {
     if (!result.isSuccess()) {
       return {
         success: false,
-        object: null,
+        objects: null,
         message: result.getErrorMessage() || "Query failed - no specified message",
       };
     }
@@ -189,12 +143,12 @@ export default class KuzuBaseService {
       return {
         success: result.isSuccess(),
         objects: objects,
-        toString: result.toString() // remove in production mode
+        toString: result.toString() 
       };
     } catch (e) {
       return {
         success: false,
-        object: null,
+        objects: null,
         error: "Error processing query result. Error: " + result.getErrorMessage(),
       };
     }
