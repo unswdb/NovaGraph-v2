@@ -40,7 +40,7 @@ RUN cd kuzu/controllers && \
 RUN cd wasm && \
     git clone https://github.com/zeux/pugixml.git && \
     git clone https://github.com/Tencent/rapidjson.git && \
-    git clone https://github.com/igraph/igraph.git
+    git clone --branch 0.10.17 --depth 1 https://github.com/igraph/igraph.git
 
 # Build pugixml
 RUN cd wasm/pugixml && \
