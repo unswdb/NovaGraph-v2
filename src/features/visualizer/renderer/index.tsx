@@ -3,7 +3,7 @@ import {
   CosmographProvider,
   type CosmographRef,
 } from "@cosmograph/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { GraphDatabase, GraphEdge, GraphNode } from "../types";
 import { cn } from "~/lib/utils";
 import type { ColorMap, SizeMap } from "../algorithms/implementations";
@@ -11,7 +11,7 @@ import GraphRendererHeader from "./header";
 import GraphRendererFooter from "./footer";
 import { useGraphRendererHelpers } from "./hooks/use-graph-renderer-helpers";
 import { useZoomControls } from "./hooks/use-zoom-controls";
-import NodeAttributesForm from "./node-attributes";
+import NodeMetadata from "./node-metadata";
 
 const INITIAL_ZOOM_LEVEL = 1;
 const SIMULATION_LINK_DISTANCE = 20;
@@ -72,12 +72,36 @@ export default function GraphRenderer({
     }
   }, [isSimulationPaused]);
 
-  const selectNode = (node: GraphNode | undefined) => {
+  // Get nodes map
+  const nodesMap = useMemo(() => {
+    const map: Record<string, GraphNode> = {};
+    nodes.forEach((node) => {
+      map[node.id] = node;
+    });
+    return map;
+  }, [nodes]);
+
+  // Get outgoing edges map
+  const nodeOutgoingEdgesMap = useMemo(() => {
+    const map: Record<string, GraphNode[]> = {};
+    edges.forEach((edge) => {
+      if (!map[edge.source]) map[edge.source] = [];
+      map[edge.source].push(nodesMap[edge.target]);
+
+      if (!directed) {
+        if (!map[edge.target]) map[edge.target] = [];
+        map[edge.target].push(nodesMap[edge.source]);
+      }
+    });
+    return map;
+  }, [nodesMap, edges, directed]);
+
+  const selectNode = (node: GraphNode | null | undefined) => {
     zoomToNode(node);
     setClickedNode(node ?? null);
   };
 
-  const unselectNode = (node: GraphNode | undefined) => {
+  const unselectNode = (_: GraphNode | null | undefined) => {
     cosmographRef.current?.unselectNodes();
     setClickedNode(null);
   };
@@ -106,7 +130,6 @@ export default function GraphRenderer({
           simulationGravity={gravity}
           disableSimulation={false}
           showDynamicLabels={showDynamicLabels}
-          focusedNodeRingColor="#5f5ffa"
           hoveredNodeRingColor="#5f5ffa"
           renderHoveredNodeRing={true}
           backgroundColor="transparent"
@@ -117,8 +140,9 @@ export default function GraphRenderer({
 
         {/* Node Attributes Form */}
         {clickedNode && (
-          <NodeAttributesForm
+          <NodeMetadata
             node={clickedNode}
+            outgoingEdges={nodeOutgoingEdgesMap[clickedNode.id] ?? []}
             onClose={() => unselectNode(clickedNode)}
           />
         )}
@@ -132,6 +156,7 @@ export default function GraphRenderer({
           setDatabase={setDatabase}
           databases={databases}
           addDatabase={addDatabase}
+          onSelectNode={selectNode}
           cosmographRef={cosmographRef}
           nodes={nodes}
         />

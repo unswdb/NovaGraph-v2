@@ -33,7 +33,7 @@ export default function InputComponent({
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={input.id}>{input.label}</Label>
+      {!!input.showLabel && <Label htmlFor={input.id}>{input.label}</Label>}
       <InputComponent input={input} value={value} onChange={onChange} />
     </div>
   );
