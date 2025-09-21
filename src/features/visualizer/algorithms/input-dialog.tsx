@@ -24,9 +24,6 @@ import InputComponent, {
 import { toast } from "sonner";
 import { useLoading } from "~/components/ui/loading";
 
-// Worker singleton
-let AlgorithmWorker: Worker | null = null;
-
 export default function InputDialog({
   module,
   algorithm,
@@ -55,24 +52,6 @@ export default function InputDialog({
     Record<string, InputChangeResult>
   >(createEmptyInputResults(algorithm.inputs));
 
-  useEffect(() => {
-    // Initialise worker if it doesn't exist
-    if (!AlgorithmWorker) {
-      AlgorithmWorker = new Worker(
-        new URL("algorithm-worker.ts", import.meta.url),
-        { type: "module" }
-      );
-    }
-
-    // Cleanup the worker on component unmount
-    return () => {
-      if (AlgorithmWorker) {
-        AlgorithmWorker.terminate();
-        AlgorithmWorker = null;
-      }
-    };
-  }, []);
-
   // Memoised values
   const isReadyToSubmit = useMemo(
     () => Object.values(inputResults).every((v) => v.success),
@@ -80,7 +59,7 @@ export default function InputDialog({
   );
 
   const handleSubmit = async () => {
-    if (!module || !AlgorithmWorker) return;
+    if (!module) return;
 
     setOpen(false);
     startLoading("Running Algorithm...");

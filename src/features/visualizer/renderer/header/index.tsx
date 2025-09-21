@@ -1,8 +1,7 @@
 import type { GraphDatabase, GraphEdge, GraphNode } from "../../types";
 import { type RefObject } from "react";
 import type { CosmographRef } from "@cosmograph/react";
-import { useZoomControls } from "../hooks/use-zoom-controls";
-import { capitalize, cn } from "~/lib/utils";
+import { capitalize } from "~/lib/utils";
 import ImportDropdown from "../../import/import-dropdown";
 import GraphRendererSearch from "./search";
 
@@ -13,7 +12,7 @@ export default function GraphRendererHeader({
   databases,
   setDatabase,
   addDatabase,
-  cosmographRef,
+  onSelectNode,
   nodes,
 }: {
   database: GraphDatabase | null;
@@ -21,11 +20,9 @@ export default function GraphRendererHeader({
   setDatabase: (g: GraphDatabase) => void;
   addDatabase: (g: GraphDatabase) => void;
   cosmographRef: RefObject<CosmographRef<GraphNode, GraphEdge> | null>;
+  onSelectNode: (n: GraphNode | null) => void;
   nodes: GraphNode[];
 }) {
-  // Hooks
-  const { zoomToNode } = useZoomControls(cosmographRef);
-
   const accessors: Accessor[] =
     nodes.length > 0
       ? [
@@ -61,10 +58,9 @@ export default function GraphRendererHeader({
         <GraphRendererSearch
           nodes={nodes}
           accessors={accessors}
-          onSelect={(n) => zoomToNode(n)}
+          onSelect={(n) => onSelectNode(n)}
           className="p-4 rounded-md h-max"
         />
-        {/* TODO: Export */}
       </div>
     </div>
   );

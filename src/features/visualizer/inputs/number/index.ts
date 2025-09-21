@@ -12,6 +12,8 @@ export function createNumberInput(
     max: undefined,
     step: undefined,
     required: true,
+    showLabel: true,
+    disabled: false,
     ...input,
   };
 }

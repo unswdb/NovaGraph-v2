@@ -8,6 +8,8 @@ export function createFileInput(
     type: "file",
     accept: "*/*",
     required: true,
+    showLabel: true,
+    disabled: false,
     ...input,
   };
 }
