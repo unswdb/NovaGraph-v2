@@ -6,8 +6,8 @@ export function createSwitchInput(
 ): SwitchInput {
   return {
     type: "switch",
-    required: false,
     defaultValue: false,
+    required: true,
     ...input,
   };
 }

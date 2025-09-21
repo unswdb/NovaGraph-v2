@@ -20,6 +20,7 @@ val betweenness_centrality(void)
     double max_centrality = betweenness.max();
     val result = val::object();
     val sizeMap = val::object();
+    val colorMap = val::object();
     val data = val::object();
     data.set("algorithm", "Betweenness Centrality");
 
@@ -34,6 +35,7 @@ val betweenness_centrality(void)
         stream << std::fixed << std::setprecision(2) << centrality;
 
         sizeMap.set(v, scaled_centrality);
+        colorMap.set(v, 1);
         c.set("id", v);
         c.set("node", igraph_get_name(v));
         c.set("centrality", std::stod(stream.str()));
@@ -42,6 +44,7 @@ val betweenness_centrality(void)
     data.set("centralities", centralities);
 
     result.set("sizeMap", sizeMap);
+    result.set("colorMap", colorMap);
     result.set("mode", MODE_SIZE_SCALAR);
     result.set("data", data);
     return result;
@@ -56,6 +59,7 @@ val closeness_centrality(void)
     double max_centrality = closeness.max_nonan();
     val result = val::object();
     val sizeMap = val::object();
+    val colorMap = val::object();
     val data = val::object();
     data.set("algorithm", "Closeness Centrality");
 
@@ -70,6 +74,7 @@ val closeness_centrality(void)
         stream << std::fixed << std::setprecision(4) << centrality;
 
         sizeMap.set(v, scaled_centrality);
+        colorMap.set(v, 1);
         c.set("id", v);
         c.set("node", igraph_get_name(v));
         c.set("centrality", std::stod(stream.str()));
@@ -78,6 +83,7 @@ val closeness_centrality(void)
     data.set("centralities", centralities);
 
     result.set("sizeMap", sizeMap);
+    result.set("colorMap", colorMap);
     result.set("mode", MODE_SIZE_SCALAR);
     result.set("data", data);
     return result;
@@ -92,6 +98,7 @@ val degree_centrality(void)
     double max_centrality = degrees.max();
     val result = val::object();
     val sizeMap = val::object();
+    val colorMap = val::object();
     val data = val::object();
     data.set("algorithm", "Degree Centrality");
 
@@ -107,6 +114,7 @@ val degree_centrality(void)
         stream << std::fixed << std::setprecision(2) << centrality;
 
         sizeMap.set(v, scaled_centrality);
+        colorMap.set(v, 1);
         c.set("id", v);
         c.set("node", igraph_get_name(v));
         c.set("centrality", std::stod(stream.str()));
@@ -115,6 +123,7 @@ val degree_centrality(void)
     data.set("centralities", centralities);
 
     result.set("sizeMap", sizeMap);
+    result.set("colorMap", colorMap);
     result.set("mode", MODE_SIZE_SCALAR);
     result.set("data", data);
     return result;
@@ -130,6 +139,7 @@ val eigenvector_centrality(void)
     double max_centrality = evs.max();
     val result = val::object();
     val sizeMap = val::object();
+    val colorMap = val::object();
     val data = val::object();
     data.set("algorithm", "Eigenvector Centrality");
 
@@ -148,6 +158,7 @@ val eigenvector_centrality(void)
         stream << std::fixed << std::setprecision(4) << centrality;
 
         sizeMap.set(v, scaled_centrality);
+        colorMap.set(v, 1);
         c.set("id", v);
         c.set("node", igraph_get_name(v));
         c.set("centrality", std::stod(stream.str()));
@@ -156,6 +167,7 @@ val eigenvector_centrality(void)
     data.set("centralities", centralities);
 
     result.set("sizeMap", sizeMap);
+    result.set("colorMap", colorMap);
     result.set("mode", MODE_SIZE_SCALAR);
     result.set("data", data);
     return result;
@@ -170,6 +182,7 @@ val harmonic_centrality(void)
     double max_centrality = scores.max();
     val result = val::object();
     val sizeMap = val::object();
+    val colorMap = val::object();
     val data = val::object();
     data.set("algorithm", "Harmonic Centrality");
 
@@ -184,6 +197,7 @@ val harmonic_centrality(void)
         stream << std::fixed << std::setprecision(4) << centrality;
 
         sizeMap.set(v, scaled_centrality);
+        colorMap.set(v, 1);
         c.set("id", v);
         c.set("node", igraph_get_name(v));
         c.set("centrality", std::stod(stream.str()));
@@ -192,6 +206,7 @@ val harmonic_centrality(void)
     data.set("centralities", centralities);
 
     result.set("sizeMap", sizeMap);
+    result.set("colorMap", colorMap);
     result.set("mode", MODE_SIZE_SCALAR);
     result.set("data", data);
     return result;
@@ -206,6 +221,7 @@ val strength(void)
     double max_centrality = strengths.max();
     val result = val::object();
     val sizeMap = val::object();
+    val colorMap = val::object();
     val data = val::object();
     data.set("algorithm", "Strength Centrality");
 
@@ -220,6 +236,7 @@ val strength(void)
         stream << std::fixed << std::setprecision(2) << centrality;
 
         sizeMap.set(v, scaled_centrality);
+        colorMap.set(v, 1);
         c.set("id", v);
         c.set("node", igraph_get_name(v));
         c.set("centrality", std::stod(stream.str()));
@@ -228,6 +245,7 @@ val strength(void)
     data.set("centralities", centralities);
 
     result.set("sizeMap", sizeMap);
+    result.set("colorMap", colorMap);
     result.set("mode", MODE_SIZE_SCALAR);
     result.set("data", data);
     return result;
@@ -246,6 +264,7 @@ val pagerank(igraph_real_t damping)
     double max_centrality = vec.max();
     val result = val::object();
     val sizeMap = val::object();
+    val colorMap = val::object();
     val data = val::object();
     data.set("algorithm", "PageRank");
 
@@ -262,6 +281,7 @@ val pagerank(igraph_real_t damping)
         stream << std::fixed << std::setprecision(4) << centrality;
 
         sizeMap.set(v, scaled_centrality);
+        colorMap.set(v, 1);
         c.set("id", v);
         c.set("node", igraph_get_name(v));
         c.set("centrality", std::stod(stream.str()));
@@ -270,6 +290,7 @@ val pagerank(igraph_real_t damping)
     data.set("centralities", centralities);
 
     result.set("sizeMap", sizeMap);
+    result.set("colorMap", colorMap);
     result.set("mode", MODE_SIZE_SCALAR);
     result.set("data", data);
     return result;

@@ -13,10 +13,19 @@ export default function TextInputComponent({
 
   const handleTextOnChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
+    const required = input.required ?? false;
 
     const validator = await input.validator?.(newValue);
-    const isValid = validator ? validator.success : true;
-    const message = validator ? validator.message ?? "" : "";
+    const isValid = required
+      ? validator
+        ? validator.success
+        : !!newValue.trim()
+      : true;
+    const message = required
+      ? validator
+        ? validator.message ?? ""
+        : "This field is required."
+      : "";
 
     setShowError(!isValid);
     setErrorMessage(message);
@@ -37,6 +46,7 @@ export default function TextInputComponent({
         onChange={handleTextOnChange}
         required={input.required}
         placeholder={input.placeholder}
+        disabled={input.disabled}
       />
       {showError && errorMessage && (
         <p className="text-typography-critical xsmall-body mt-1">

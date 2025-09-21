@@ -10,14 +10,11 @@ export type InputType =
   | SwitchInput
   | FileInput
   | AlgorithmSelectInput;
-export type InputValueType =
-  | string
-  | number
-  | boolean
-  | File
-  | undefined;
+export type InputValueType = string | number | boolean | File | undefined;
 type InputResultType = { success: boolean; message?: string };
-export type InputChangeResult = { value: InputValueType } & InputResultType;
+export type InputChangeResult = {
+  value: InputValueType;
+} & InputResultType;
 
 export type InputComponentProps<T = InputType> = {
   input: T;

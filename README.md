@@ -42,7 +42,7 @@ docker run -it --entrypoint /bin/bash novagraph-dev
 
 Your application will be available at `http://localhost:5173`.
 
-Note: You need to build the image again if you install any new dependencies.
+Note: You need to build the image again if you install any new dependencies (i.e. changes to package.json or package-lock.json) or made changes to the WASM code.
 
 ## Production
 

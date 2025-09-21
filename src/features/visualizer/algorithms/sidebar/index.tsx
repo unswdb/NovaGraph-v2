@@ -1,5 +1,5 @@
 import { ChevronsLeft, ChevronsRight, Search, Waypoints } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "~/components/form/input";
 import { Separator } from "~/components/ui/separator";
 import {
@@ -36,21 +36,18 @@ export default function AlgorithmSidebar({
 }) {
   return (
     <SidebarProvider name="algorithm-sidebar" className="relative isolate z-10">
-      <Sidebar side="left">
-        <AlgorithmSidebarContent
-          module={module}
-          nodes={nodes}
-          edges={edges}
-          setActiveAlgorithm={setActiveAlgorithm}
-          setActiveResponse={setActiveResponse}
-        />
-      </Sidebar>
-      <AlgorithmSidebarControls />
+      <AlgorithmSidebarWrapper
+        module={module}
+        nodes={nodes}
+        edges={edges}
+        setActiveAlgorithm={setActiveAlgorithm}
+        setActiveResponse={setActiveResponse}
+      />
     </SidebarProvider>
   );
 }
 
-function AlgorithmSidebarContent({
+function AlgorithmSidebarWrapper({
   module,
   nodes,
   edges,
@@ -63,18 +60,51 @@ function AlgorithmSidebarContent({
   setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
 }) {
-  const { state } = useSidebar();
-  const [searchText, setSearchText] = useState("");
-  const [hoveredAlgorithm, setHoveredAlgorithm] =
-    useState<BaseGraphAlgorithm | null>(null);
+  const isMobile = useIsMobile();
+  const { open, openMobile } = useSidebar();
 
   return (
-    <SidebarContent className="p-6 space-y-4 bg-gradient-to-br from-neutral-low/20 to-neutral/20">
+    <>
+      <Sidebar side="left">
+        <AlgorithmSidebarContent
+          open={isMobile ? openMobile : open}
+          module={module}
+          nodes={nodes}
+          edges={edges}
+          setActiveAlgorithm={setActiveAlgorithm}
+          setActiveResponse={setActiveResponse}
+        />
+      </Sidebar>
+      <AlgorithmSidebarControls open={isMobile ? openMobile : open} />
+    </>
+  );
+}
+
+function AlgorithmSidebarContent({
+  open,
+  module,
+  nodes,
+  edges,
+  setActiveAlgorithm,
+  setActiveResponse,
+}: {
+  open: boolean;
+  module: GraphModule | null;
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
+  setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
+}) {
+  const [searchText, setSearchText] = useState("");
+
+  return (
+    <SidebarContent className="h-screen p-6 flex flex-col gap-4 bg-gradient-to-br from-neutral-low/20 to-neutral/20">
       {/* Search Bar */}
       <SearchBar
         searchText={searchText}
         setSearchText={setSearchText}
-        inert={state === "collapsed"}
+        disabled={!open}
+        inert={!open}
       />
       {/* Algorithm List */}
       {!!searchText ? (
@@ -85,8 +115,7 @@ function AlgorithmSidebarContent({
           edges={edges}
           setActiveAlgorithm={setActiveAlgorithm}
           setActiveResponse={setActiveResponse}
-          onAlgorithmHover={setHoveredAlgorithm}
-          isCollapsed={state === "collapsed"}
+          isCollapsed={!open}
         />
       ) : (
         <UnfilteredAlgorithmList
@@ -95,24 +124,9 @@ function AlgorithmSidebarContent({
           edges={edges}
           setActiveAlgorithm={setActiveAlgorithm}
           setActiveResponse={setActiveResponse}
-          onAlgorithmHover={setHoveredAlgorithm}
-          isCollapsed={state === "collapsed"}
+          isCollapsed={!open}
         />
       )}
-      {/* Hovered Algorithm Description */}
-      <div
-        className={cn(
-          "p-4 bg-tabdock flex flex-col gap-2 rounded-md transition-all duration-300 ease-out",
-          !!hoveredAlgorithm ? "opacity-100 h-fit" : "opacity-0 h-0"
-        )}
-      >
-        <p className="font-semibold small-title flex-1">
-          {hoveredAlgorithm?.title}
-        </p>
-        <p className="small-body text-typography-secondary">
-          {hoveredAlgorithm?.description}
-        </p>
-      </div>
     </SidebarContent>
   );
 }
@@ -147,20 +161,17 @@ function SearchBar({
   );
 }
 
-function AlgorithmSidebarControls() {
-  const { state } = useSidebar();
+function AlgorithmSidebarControls({ open }: { open: boolean }) {
   const isMobile = useIsMobile();
 
   return (
     <div
       className={`bg-page isolate overflow-hidden before:absolute before:bg-gradient-to-br before:from-neutral-low/20 before:to-neutral/20 before:inset-0 before:-z-10 p-2 flex flex-col items-center gap-2 h-max absolute top-1/2 -translate-y-1/2 ${
-        state === "collapsed" || isMobile
-          ? "left-0"
-          : "left-[calc(var(--sidebar-width))]"
+        !open || isMobile ? "left-0" : "left-[calc(var(--sidebar-width))]"
       } transition-all duration-200 ease-linear border border-l-transparent border-border rounded-tr-md rounded-br-md`}
     >
       <SidebarTrigger size="icon">
-        {state === "collapsed" || isMobile ? (
+        {!open || isMobile ? (
           <ChevronsRight className="w-6 h-6" />
         ) : (
           <ChevronsLeft className="w-6 h-6" />

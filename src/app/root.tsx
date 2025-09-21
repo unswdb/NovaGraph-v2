@@ -12,6 +12,8 @@ import "./globals.css";
 import { ThemeProvider } from "~/hooks/use-theme";
 import { TooltipProvider } from "~/components/ui/tooltip";
 import { Toaster } from "~/components/ui/sonner";
+import { LoadingProvider } from "~/components/ui/loading/loading-context";
+import { Loading } from "~/components/ui/loading";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -37,7 +39,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ThemeProvider>
-          <TooltipProvider>{children}</TooltipProvider>
+          <TooltipProvider>
+            <LoadingProvider>
+              {children}
+              <Loading />
+            </LoadingProvider>
+          </TooltipProvider>
         </ThemeProvider>
         <Toaster />
         <ScrollRestoration />

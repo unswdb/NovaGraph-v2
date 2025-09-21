@@ -7,6 +7,7 @@ export function createFileInput(
   return {
     type: "file",
     accept: "*/*",
+    required: true,
     ...input,
   };
 }

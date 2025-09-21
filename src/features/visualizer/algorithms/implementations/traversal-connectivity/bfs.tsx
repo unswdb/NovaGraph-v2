@@ -10,12 +10,14 @@ type BFSOutputData = {
 
 export const bfs = createGraphAlgorithm<BFSOutputData>({
   title: "Breadth-First Search",
-  description: "Traverse the graph using BFS starting from a node",
+  description:
+    "Traverses the graph from a source by exploring all neighbors level by level. It continues until all nodes are visited.",
   inputs: [
     createAlgorithmSelectInput({
       id: "bfs-start-node",
       label: "Start Node",
       source: "nodes",
+      required: true,
     }),
   ],
   wasmFunction: (module, [args]) => {
@@ -26,5 +28,5 @@ export const bfs = createGraphAlgorithm<BFSOutputData>({
 
 function BFS(props: GraphAlgorithmResult<BFSOutputData>) {
   const { source, nodesFound, layers } = props.data;
-  return <p>BFS output</p>;
+  return <p>BFS output: {JSON.stringify(props.data, null, 2)}</p>;
 }

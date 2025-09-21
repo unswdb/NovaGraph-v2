@@ -1,9 +1,9 @@
-import { cloneElement, useMemo, useState } from "react";
-import type { GraphEdge, GraphModule, GraphNode } from "../../types";
+import { cloneElement, useEffect, useMemo, useState } from "react";
+import type { GraphEdge, GraphModule, GraphNode } from "../types";
 import type {
   BaseGraphAlgorithm,
   BaseGraphAlgorithmResult,
-} from "../implementations";
+} from "./implementations";
 import { SidebarMenuButton } from "~/components/ui/sidebar";
 import { cn } from "~/lib/utils";
 import { Separator } from "~/components/ui/separator";
@@ -20,7 +20,12 @@ import { Button } from "~/components/ui/button";
 import InputComponent, {
   createEmptyInputResults,
   type InputChangeResult,
-} from "../../inputs";
+} from "../inputs";
+import { toast } from "sonner";
+import { useLoading } from "~/components/ui/loading";
+
+// Worker singleton
+let AlgorithmWorker: Worker | null = null;
 
 export default function InputDialog({
   module,
@@ -41,11 +46,32 @@ export default function InputDialog({
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
   separator?: boolean;
 }) {
+  // Hooks
+  const { startLoading, stopLoading } = useLoading();
+
   // States
   const [open, setOpen] = useState(false);
   const [inputResults, setInputResults] = useState<
     Record<string, InputChangeResult>
   >(createEmptyInputResults(algorithm.inputs));
+
+  useEffect(() => {
+    // Initialise worker if it doesn't exist
+    if (!AlgorithmWorker) {
+      AlgorithmWorker = new Worker(
+        new URL("algorithm-worker.ts", import.meta.url),
+        { type: "module" }
+      );
+    }
+
+    // Cleanup the worker on component unmount
+    return () => {
+      if (AlgorithmWorker) {
+        AlgorithmWorker.terminate();
+        AlgorithmWorker = null;
+      }
+    };
+  }, []);
 
   // Memoised values
   const isReadyToSubmit = useMemo(
@@ -53,17 +79,32 @@ export default function InputDialog({
     [inputResults, algorithm]
   );
 
-  // TODO: Handle error and loading state
   const handleSubmit = async () => {
-    try {
-      const args = algorithm.inputs.map((input) => inputResults[input.label]);
-      const algorithmResponse = algorithm.wasmFunction(module, args);
-      setActiveAlgorithm(algorithm);
-      setActiveResponse(algorithmResponse);
-      setOpen(false);
-    } catch (err) {
-      console.error(err);
-    }
+    if (!module || !AlgorithmWorker) return;
+
+    setOpen(false);
+    startLoading("Running Algorithm...");
+
+    setTimeout(() => {
+      try {
+        const args = algorithm.inputs.map(
+          (input) => inputResults[input.label].value
+        );
+
+        const algorithmResponse = algorithm.wasmFunction(module, args);
+        setActiveAlgorithm(algorithm);
+        setActiveResponse(algorithmResponse);
+      } catch (err) {
+        toast.error(
+          module && typeof err == "number"
+            ? module.what_to_stderr(err)
+            : String(err) ??
+                "An unexpected error occurred. Please try again later."
+        );
+      } finally {
+        stopLoading();
+      }
+    }, 0);
   };
 
   const menuButton = (

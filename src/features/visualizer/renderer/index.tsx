@@ -11,6 +11,7 @@ import GraphRendererHeader from "./header";
 import GraphRendererFooter from "./footer";
 import { useGraphRendererHelpers } from "./hooks/use-graph-renderer-helpers";
 import { useZoomControls } from "./hooks/use-zoom-controls";
+import NodeAttributesForm from "./node-attributes";
 
 const INITIAL_ZOOM_LEVEL = 1;
 const SIMULATION_LINK_DISTANCE = 20;
@@ -55,6 +56,7 @@ export default function GraphRenderer({
   // States
   const [isSimulationPaused, setIsSimulationPaused] = useState(false);
   const [showDynamicLabels, setShowDynamicLabels] = useState(true);
+  const [clickedNode, setClickedNode] = useState<GraphNode | null>(null);
 
   // Hooks
   const { getNodeSize, getNodeColor, getLinkColor, getLinkWidth } =
@@ -70,16 +72,26 @@ export default function GraphRenderer({
     }
   }, [isSimulationPaused]);
 
+  const selectNode = (node: GraphNode | undefined) => {
+    zoomToNode(node);
+    setClickedNode(node ?? null);
+  };
+
+  const unselectNode = (node: GraphNode | undefined) => {
+    cosmographRef.current?.unselectNodes();
+    setClickedNode(null);
+  };
+
   return (
     <CosmographProvider nodes={nodes} links={edges}>
       <div className={cn("flex flex-col h-full relative", className)}>
         {/* Main Graph Visualizer */}
         <Cosmograph
           ref={cosmographRef}
-          onClick={zoomToNode}
+          onClick={selectNode}
           initialZoomLevel={INITIAL_ZOOM_LEVEL}
           nodeSize={(_, id) => getNodeSize(id)}
-          nodeColor={(_, id) => getNodeColor(colors[id])}
+          nodeColor={(_, id) => getNodeColor(id)}
           nodeGreyoutOpacity={0.1}
           nodeLabelAccessor={(node) => (node.label ? node.label : node.id)}
           nodeSizeScale={nodeSizeScale}
@@ -94,13 +106,22 @@ export default function GraphRenderer({
           simulationGravity={gravity}
           disableSimulation={false}
           showDynamicLabels={showDynamicLabels}
-          hoveredNodeRingColor={"var(--color-positive)"}
+          focusedNodeRingColor="#5f5ffa"
+          hoveredNodeRingColor="#5f5ffa"
           renderHoveredNodeRing={true}
           backgroundColor="transparent"
           hoveredNodeLabelColor="white"
           nodeLabelColor="white"
           className="bg-page flex-1"
         />
+
+        {/* Node Attributes Form */}
+        {clickedNode && (
+          <NodeAttributesForm
+            node={clickedNode}
+            onClose={() => unselectNode(clickedNode)}
+          />
+        )}
 
         {/* Top Gradient Overlay */}
         <GradientOverlay position="top" />
