@@ -46,6 +46,7 @@ export default function TextInputComponent({
         onChange={handleTextOnChange}
         required={input.required}
         placeholder={input.placeholder}
+        disabled={input.disabled}
       />
       {showError && errorMessage && (
         <p className="text-typography-critical xsmall-body mt-1">
