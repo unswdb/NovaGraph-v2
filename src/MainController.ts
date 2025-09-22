@@ -4,7 +4,6 @@ import createModule from "./graph";
 class MainController {
   // Graph method starts here
   private wasmGraphModule: any = null;
-  private graphState: { nodes: any[], edges: any[] } | null = null;
 
   // Kuzu initialization
   async initKuzu(type: string, mode: string, options: any = {}) {
@@ -14,7 +13,6 @@ class MainController {
   async initGraph() {
     const mod = await this.getGraphModule();
     const result = mod.initGraph();
-    this.graphState = result;
     return result;
   }
 
