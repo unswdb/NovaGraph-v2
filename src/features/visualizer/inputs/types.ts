@@ -1,3 +1,4 @@
+import type { GraphEdge, GraphNode } from "../types";
 import type { AlgorithmSelectInput } from "./algorithms/select/types";
 import type { FileInput } from "./file";
 import type { NumberInput } from "./number";
@@ -10,7 +11,14 @@ export type InputType =
   | SwitchInput
   | FileInput
   | AlgorithmSelectInput;
-export type InputValueType = string | number | boolean | File | undefined;
+export type InputValueType =
+  | string
+  | number
+  | boolean
+  | File
+  | GraphNode
+  | GraphEdge
+  | undefined;
 type InputResultType = { success: boolean; message?: string };
 export type InputChangeResult = {
   value: InputValueType;
@@ -25,6 +33,9 @@ export type InputComponentProps<T = InputType> = {
 export type BaseInputType<T extends InputValueType = InputValueType> = {
   id: string;
   label: string;
+  required?: boolean;
+  showLabel?: boolean;
+  disabled?: boolean;
   validator?: (
     value: T,
     ...props: any[]

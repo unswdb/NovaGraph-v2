@@ -8,6 +8,8 @@ export function createTextInput(
     type: "text",
     placeholder: "",
     required: true,
+    showLabel: true,
+    disabled: false,
     ...input,
   };
 }

@@ -8,6 +8,8 @@ export function createSwitchInput(
     type: "switch",
     defaultValue: false,
     required: true,
+    showLabel: true,
+    disabled: false,
     ...input,
   };
 }
