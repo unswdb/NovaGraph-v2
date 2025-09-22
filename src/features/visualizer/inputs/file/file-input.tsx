@@ -1,7 +1,7 @@
 import { Input } from "~/components/form/input";
-import type { InputComponentProps } from "../types";
 import type { FileInput } from "./types";
 import { useState } from "react";
+import type { InputComponentProps } from "..";
 
 export default function FileInputComponent({
   input,
@@ -14,7 +14,7 @@ export default function FileInputComponent({
     const files = e.target.files;
     if (files && files.length > 0) {
       const newValue = files[0];
-      const required = input.required ?? false;
+      const required = !!input.required;
 
       const validator = await input.validator?.(newValue);
       const isValid = required

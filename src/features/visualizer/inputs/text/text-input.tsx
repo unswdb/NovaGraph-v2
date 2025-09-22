@@ -1,7 +1,7 @@
 import { Input } from "~/components/form/input";
-import type { InputComponentProps } from "../types";
 import type { TextInput } from "./types";
 import { useState } from "react";
+import type { InputComponentProps } from "..";
 
 export default function TextInputComponent({
   input,
@@ -13,7 +13,7 @@ export default function TextInputComponent({
 
   const handleTextOnChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    const required = input.required ?? false;
+    const required = !!input.required;
 
     const validator = await input.validator?.(newValue);
     const isValid = required

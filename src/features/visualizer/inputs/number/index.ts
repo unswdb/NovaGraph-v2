@@ -1,8 +1,8 @@
 import type { BaseInputType } from "../types";
-import type { NumberInput } from "./types";
+import type { NumberInput, NumberValues } from "./types";
 
 export function createNumberInput(
-  input: Partial<NumberInput> & BaseInputType<number>
+  input: Partial<NumberInput> & BaseInputType<NumberValues>
 ): NumberInput {
   return {
     type: "number",

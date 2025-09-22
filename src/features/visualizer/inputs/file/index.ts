@@ -1,8 +1,8 @@
 import type { BaseInputType } from "../types";
-import type { FileInput } from "./types";
+import type { FileInput, FileValues } from "./types";
 
 export function createFileInput(
-  input: Partial<FileInput> & BaseInputType<File>
+  input: Partial<FileInput> & BaseInputType<FileValues>
 ): FileInput {
   return {
     type: "file",

@@ -1,7 +1,7 @@
 import { Input } from "~/components/form/input";
 import type { NumberInput } from "./types";
-import type { InputComponentProps } from "../types";
 import { useState } from "react";
+import type { InputComponentProps } from "..";
 
 export default function NumberInputComponent({
   input,
@@ -15,7 +15,7 @@ export default function NumberInputComponent({
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const newValue = Number(e.target.value);
-    const required = input.required ?? false;
+    const required = !!input.required;
 
     if (isNaN(newValue)) {
       setShowError(true);

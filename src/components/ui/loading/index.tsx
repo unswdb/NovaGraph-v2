@@ -1,6 +1,5 @@
 import { cn } from "~/lib/utils";
 import { useLoading } from "./use-loading";
-import { LoaderCircle } from "lucide-react";
 import Logo from "../logo";
 
 export function Loading({

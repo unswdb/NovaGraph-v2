@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import InputComponent, {
   createEmptyInputResults,
   createTextInput,
-  type InputChangeResult,
 } from "../../inputs";
 import type { GraphNode } from "../../types";
 import { capitalize } from "~/lib/utils";
@@ -48,9 +47,7 @@ export default function AttributesForm({ node }: { node: GraphNode }) {
       : [],
   ].flat();
 
-  const [values, setValues] = useState<Record<string, InputChangeResult>>(
-    createEmptyInputResults(inputs)
-  );
+  const [values, setValues] = useState(createEmptyInputResults(inputs));
 
   const isReadyToSubmit = useMemo(
     () => Object.values(values).every((v) => v.success),

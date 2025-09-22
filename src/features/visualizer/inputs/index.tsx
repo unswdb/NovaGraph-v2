@@ -1,15 +1,16 @@
 import { Label } from "~/components/form/label";
 import AlgorithmSelectInputComponent from "./algorithms/select/select-input";
 import { NumberInputComponent } from "./number";
-import type {
-  InputChangeResult,
-  InputComponentProps,
-  InputType,
-  InputValueType,
-} from "./types";
+import type { InputChangeResult, InputType, ValueForInput } from "./types";
 import { FileInputComponent } from "./file";
 import { SwitchInputComponent } from "./switch";
 import TextInputComponent from "./text/text-input";
+
+export type InputComponentProps<T extends InputType> = {
+  input: T;
+  value: ValueForInput<T>;
+  onChange: (result: InputChangeResult<ValueForInput<T>>) => void;
+};
 
 const INPUT_COMPONENTS: Record<InputType["type"], React.ComponentType<any>> = {
   text: TextInputComponent,
@@ -19,11 +20,11 @@ const INPUT_COMPONENTS: Record<InputType["type"], React.ComponentType<any>> = {
   "algorithm-select": AlgorithmSelectInputComponent,
 } as const;
 
-export default function InputComponent({
+export default function InputComponent<T extends InputType>({
   input,
   value,
   onChange,
-}: InputComponentProps) {
+}: InputComponentProps<T>) {
   const InputComponent = INPUT_COMPONENTS[input.type];
 
   if (!InputComponent) {
@@ -39,15 +40,15 @@ export default function InputComponent({
   );
 }
 
-function hasDefaultValue(
-  input: InputType
-): input is InputType & { defaultValue: InputValueType } {
+function hasDefaultValue<T extends InputType>(
+  input: T
+): input is T & { defaultValue: ValueForInput<T> } {
   return "defaultValue" in input;
 }
 
 // Function to define empty records for input values
 export function createEmptyInputResults(inputs: InputType[]) {
-  return inputs.reduce<Record<string, InputChangeResult>>((acc, input) => {
+  return inputs.reduce<Record<string, InputChangeResult<any>>>((acc, input) => {
     const defaultValueExists = hasDefaultValue(input);
     acc[input.label] = {
       value: defaultValueExists ? input.defaultValue : undefined,
@@ -62,11 +63,7 @@ export function createEmptyInputResults(inputs: InputType[]) {
   }, {});
 }
 
-export {
-  type InputType,
-  type InputChangeResult,
-  type InputComponentProps,
-} from "./types";
+export { type InputType, type InputChangeResult } from "./types";
 
 export { createTextInput } from "./text";
 export { createFileInput } from "./file";

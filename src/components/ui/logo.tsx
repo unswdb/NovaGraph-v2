@@ -1,5 +1,3 @@
-import React from "react";
-
 type LogoProps = React.SVGProps<SVGSVGElement> & { alt: string };
 
 const Logo = (props: LogoProps) => (

@@ -1,5 +1,5 @@
 import { ChevronsLeft, ChevronsRight, Search, Waypoints } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import { Input } from "~/components/form/input";
 import { Separator } from "~/components/ui/separator";
 import {
