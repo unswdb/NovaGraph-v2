@@ -55,12 +55,14 @@ export default function GraphRendererHeader({
       </div>
       <div className="flex-1 flex justify-end h-18">
         {/* Search */}
-        <GraphRendererSearch
-          nodes={nodes}
-          accessors={accessors}
-          onSelect={(n) => onSelectNode(n)}
-          className="p-4 rounded-md h-max"
-        />
+        {nodes.length > 0 && (
+          <GraphRendererSearch
+            nodes={nodes}
+            accessors={accessors}
+            onSelect={(n) => onSelectNode(n)}
+            className="p-4 rounded-md h-max"
+          />
+        )}
       </div>
     </div>
   );
