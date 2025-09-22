@@ -20,7 +20,7 @@ export default function CodeTabContent({
   const isReadyToSubmit = useMemo(() => !!code, [code]);
 
   const handleRunQuery = async () => {
-    const result = await store.controller.executeQuery(code);
+    const result = await store.controller.db.executeQuery(code);
     // TODO: Handle query result (error and success state and colorMap)
     console.warn("query result");
     console.log(result);

@@ -22,9 +22,9 @@ class MainController {
 
   // Database operations namespace
   db = {
-    async createSchema(type: string, label: string, properties: any[], relInfo: any = null) {
-      return Promise.resolve(kuzuController.createSchema(type, label, properties, relInfo));
-    },
+    // async createSchema(type: string, label: string, properties: any[], relInfo: any = null) {
+    //   return Promise.resolve(kuzuController.createSchema(type, label, properties, relInfo));
+    // },
 
     // Execute query method
     async executeQuery(query: string) {
@@ -33,15 +33,7 @@ class MainController {
 
   };
 
-  // Algorithm operations namespace
   algorithms = {
-
-
-    // Path finding
-    dijkstra: async (source: number, target: number) => {
-      const mod = await this.getGraphModule();
-      return Promise.resolve(mod.dijkstra_source_to_target(source, target));
-    },
 
   };
 

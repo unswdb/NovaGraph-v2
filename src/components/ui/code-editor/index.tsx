@@ -13,24 +13,24 @@ export default function CodeEditor({
   const { textAreaRef, lineNumbersRef, handleOnScroll, renderLineNumbers } =
     useLineNumbers();
 
-  // Test createSchema functionality
-  useEffect(() => {
-    const testCreateSchema = async () => {
-      try {
-        await controller.initKuzu("inmemory", "sync");
-        console.warn('Testing createSchema...');
-        const result = await controller.db.createSchema('node', 'Person', [
-          { name: 'id', type: 'INT', primary: true },
-          { name: 'name', type: 'STRING' }
-        ]);
-        console.warn('createSchema result:', result);
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    };
+  // // Test createSchema functionality
+  // useEffect(() => {
+  //   const testCreateSchema = async () => {
+  //     try {
+  //       await controller.initKuzu("inmemory", "sync");
+  //       console.warn('Testing createSchema...');
+  //       const result = await controller.db.createSchema('node', 'Person', [
+  //         { name: 'id', type: 'INT', primary: true },
+  //         { name: 'name', type: 'STRING' }
+  //       ]);
+  //       console.warn('createSchema result:', result);
+  //     } catch (error) {
+  //       console.error('Error:', error);
+  //     }
+  //   };
 
-    testCreateSchema();
-  }, []);
+  //   testCreateSchema();
+  // }, []);
 
   return (
     <div className="relative flex h-full border border-border rounded-md">
