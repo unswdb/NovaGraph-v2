@@ -5,15 +5,28 @@ class MainController {
   // Graph method starts here
   private wasmGraphModule: any = null;
 
-  // Kuzu initialization
-  async initKuzu(type: string, mode: string, options: any = {}) {
-    return kuzuController.initialize(type, mode, options);
+  async getGraphModule() {
+    if (!this.wasmGraphModule) {
+      try {
+        this.wasmGraphModule = await createModule();
+      } catch (err) {
+        console.error("Failed to load WASM module", err);
+        throw err;
+      }
+    }
+    return this.wasmGraphModule;
   }
-  
+
+  // Kuzu db initialization
+  async initKuzu(type: string = "inmemory", mode: string = "sync", options: any = {}) {
+    return kuzuController.initialize(type, mode);
+  }
+
+  // Graph initialization
   async initGraph() {
     const mod = await this.getGraphModule();
-    const result = mod.initGraph();
-    return result;
+    const graph = mod.initGraph();
+    return graph;
   }
 
 
@@ -35,18 +48,6 @@ class MainController {
 
   };
 
-  // System operations
-  async getGraphModule() {
-    if (!this.wasmGraphModule) {
-      try {
-        this.wasmGraphModule = await createModule();
-      } catch (err) {
-        console.error("Failed to load WASM module", err);
-        throw err;
-      }
-    }
-    return this.wasmGraphModule;
-  }
 
 }
 

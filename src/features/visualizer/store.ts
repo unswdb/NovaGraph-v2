@@ -53,7 +53,7 @@ export default class VisualizerStore {
   // ACTIONS
   initialize = async () => {
     // Initialize Kuzu controller
-    await this.controller.initKuzu("inmemory", "sync");
+    await this.controller.initKuzu();
 
     // Initialize WASM module
     this.wasmModule = await this.controller.getGraphModule();
