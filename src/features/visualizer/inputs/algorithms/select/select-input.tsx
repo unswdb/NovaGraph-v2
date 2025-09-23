@@ -1,9 +1,14 @@
-import type { AlgorithmSelectInput } from "./types";
+import {
+  isMultipleSelectInput,
+  isSingleSelectInput,
+  type AlgorithmMultipleSelectInput,
+  type AlgorithmSelectInput,
+  type AlgorithmSingleSelectInput,
+  type MultipleValues,
+  type SingleValues,
+} from "./types";
 import { useStore } from "~/features/visualizer/hooks/use-store";
-import type { InputComponentProps } from "../../types";
-import { useEffect, useState } from "react";
-import type { GraphEdge, GraphNode } from "~/features/visualizer/types";
-import useAlgorithmSelectInputValue from "./use-algorithm-select-input";
+import { useEffect, useMemo, useState } from "react";
 import {
   Popover,
   PopoverContent,
@@ -20,106 +25,259 @@ import {
   CommandList,
 } from "~/components/ui/command";
 import { cn } from "~/lib/utils";
+import type { InputComponentProps } from "../..";
+import {
+  MultiSelect,
+  MultiSelectContent,
+  MultiSelectGroup,
+  MultiSelectItem,
+  MultiSelectTrigger,
+  MultiSelectValue,
+} from "~/components/form/multi-select";
+
+function buildItems(
+  input: AlgorithmSelectInput,
+  store: ReturnType<typeof useStore>
+) {
+  if (input.source === "nodes") {
+    const nodes = store.database?.graph.nodes ?? [];
+    const blacklist = new Set(input.blacklist ?? []);
+    return nodes
+      .filter((n) => !blacklist.has(n))
+      .map((n) => ({
+        value: n.id,
+        label: n.label ?? `Node ${n.id}`,
+      }));
+  }
+
+  if (input.source === "edges") {
+    const edges = store.database?.graph.edges ?? [];
+    const blacklist = new Set(input.blacklist ?? []);
+    return edges
+      .filter((e) => !blacklist.has(e))
+      .map((e) => ({
+        value: `${e.source}-${e.target}`,
+        label: `${e.source} → ${e.target}`,
+      }));
+  }
+
+  const blacklist = new Set(input.blacklist ?? []);
+  return (input.options ?? [])
+    .filter((opt) => !blacklist.has(opt))
+    .map((opt) => ({ value: opt, label: opt }));
+}
+
+function getInputPlaceholder(input: AlgorithmSelectInput) {
+  if (input.source === "nodes")
+    return !!input.multiple ? "Select nodes..." : "Select a node...";
+  if (input.source === "edges")
+    return !!input.multiple ? "Select edges..." : "Select an edge...";
+  return !!input.multiple ? "Select options..." : "Select an option...";
+}
+
+function getInputNoun(input: AlgorithmSelectInput) {
+  if (input.source === "nodes") return "node";
+  if (input.source === "edges") return "edge";
+  return "option";
+}
 
 export default function AlgorithmSelectInputComponent({
   input,
   value: inputValue,
   onChange,
 }: InputComponentProps<AlgorithmSelectInput>) {
-  // Hooks
   const store = useStore();
 
-  // States
-  const source = input.source;
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useAlgorithmSelectInputValue(input);
+  const sources = useMemo(() => buildItems(input, store), [input, store]);
 
-  const onValueChange = (value: GraphNode | GraphEdge | string | undefined) => {
-    setValue(value);
-    if (!input.required || (!!value && input.required)) {
-      onChange({ value, success: true });
-    } else {
-      onChange({ value, success: false });
-    }
+  if (isSingleSelectInput(input)) {
+    return (
+      <AlgorithmSingleSelectInputComponent
+        input={input}
+        value={inputValue as SingleValues}
+        onChange={onChange}
+        sources={sources}
+      />
+    );
+  }
+
+  if (isMultipleSelectInput(input)) {
+    return (
+      <AlgorithmMultipleSelectInputComponent
+        input={input}
+        value={inputValue as MultipleValues}
+        onChange={onChange}
+        sources={sources}
+      />
+    );
+  }
+
+  return null;
+}
+
+function AlgorithmSingleSelectInputComponent({
+  input,
+  value,
+  onChange,
+  sources,
+}: InputComponentProps<AlgorithmSingleSelectInput> & {
+  sources: { value: string; label: string }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const placeholder = useMemo(() => getInputPlaceholder(input), [input]);
+  const noun = useMemo(() => getInputNoun(input), [input]);
+
+  const onValueChange = async (value: string) => {
+    const newValue = value;
+    const required = !!input.required;
+
+    const validator = await input.validator?.(newValue);
+    const isValid = required
+      ? validator
+        ? validator.success
+        : !!newValue.trim()
+      : true;
+    const message = required
+      ? validator
+        ? validator.message ?? ""
+        : "This field is required."
+      : "";
+
+    setShowError(!isValid);
+    setErrorMessage(message);
+
+    onChange({
+      value: newValue,
+      success: isValid,
+      message: message,
+    });
   };
 
-  // Set value to default inputValue
+  return (
+    <>
+      <Popover open={open} onOpenChange={setOpen} modal={true}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between"
+          >
+            {value
+              ? sources.find((source) => source.value === value)?.label
+              : placeholder}
+            <ChevronsUpDown className="opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+          <Command>
+            <CommandInput placeholder={placeholder} className="h-9" />
+            <CommandList className="overflow-y-auto">
+              <CommandEmpty>No {noun} found.</CommandEmpty>
+              <CommandGroup>
+                {sources.map((source) => (
+                  <CommandItem
+                    key={source.value}
+                    value={source.label}
+                    onSelect={() => {
+                      onValueChange(source.value);
+                      setOpen(false);
+                    }}
+                  >
+                    {source.label}
+                    <Check
+                      className={cn(
+                        "ml-auto",
+                        value === source.value ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+      {showError && errorMessage && (
+        <p className="text-typography-critical xsmall-body mt-1">
+          {errorMessage}
+        </p>
+      )}
+    </>
+  );
+}
+
+function AlgorithmMultipleSelectInputComponent({
+  input,
+  value: inputValues,
+  onChange,
+  sources,
+}: InputComponentProps<AlgorithmMultipleSelectInput> & {
+  sources: { value: string; label: string }[];
+}) {
+  const [values, setValues] = useState<MultipleValues>(inputValues);
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const placeholder = useMemo(() => getInputPlaceholder(input), [input]);
+  const noun = useMemo(() => getInputNoun(input), [input]);
+
   useEffect(() => {
-    onValueChange(inputValue as GraphNode | GraphEdge | string | undefined);
-  }, [inputValue]);
+    setValues(inputValues);
+  }, [inputValues]);
 
-  const targetItemType =
-    source === "static" ? "option" : source === "edges" ? "edge" : "node";
+  const onValuesChange = async (newValues: string[]) => {
+    const required = !!input.required;
 
-  const placeholder =
-    source === "static"
-      ? "Select an option..."
-      : source === "edges"
-      ? "Select an edge..."
-      : "Select a node...";
+    const validator = await input.validator?.(newValues);
+    const isValid = required
+      ? validator
+        ? validator.success
+        : newValues.length > 0
+      : true;
+    const message = required
+      ? validator
+        ? validator.message ?? ""
+        : "This field is required."
+      : "";
 
-  const sources =
-    source === "static"
-      ? (input.options ?? [])
-          .filter((opt) => !(input.blacklist ?? []).includes(opt))
-          .map((opt) => ({ value: opt, label: opt }))
-      : source === "edges"
-      ? store.database?.graph.edges
-          .filter((edge) => !(input.blacklist ?? []).includes(edge))
-          .map((e) => ({
-            value: `${e.source}-${e.target}`,
-            label: `${e.source} → ${e.target}`,
-          })) ?? []
-      : store.database?.graph.nodes
-          .filter((node) => !(input.blacklist ?? []).includes(node))
-          .map((n) => ({
-            value: n.id,
-            label: n.label ?? `Node ${n.id}`,
-          })) ?? [];
+    setShowError(!isValid);
+    setErrorMessage(message);
+
+    onChange({
+      value: newValues,
+      success: isValid,
+      message: message,
+    });
+  };
 
   return (
-    <Popover open={open} onOpenChange={setOpen} modal={true}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between"
+    <>
+      <MultiSelect values={values} onValuesChange={onValuesChange}>
+        <MultiSelectTrigger className="w-full">
+          <MultiSelectValue placeholder={placeholder} />
+        </MultiSelectTrigger>
+        <MultiSelectContent
+          className="w-full"
+          search={{ placeholder, emptyMessage: `No ${noun} yet.` }}
         >
-          {value
-            ? sources.find((source) => source.value === value)?.label
-            : placeholder}
-          <ChevronsUpDown className="opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-        <Command>
-          <CommandInput placeholder={placeholder} className="h-9" />
-          <CommandList className="overflow-y-auto">
-            <CommandEmpty>No {targetItemType} found.</CommandEmpty>
-            <CommandGroup>
-              {sources.map((source) => (
-                <CommandItem
-                  key={source.value}
-                  value={source.label}
-                  onSelect={() => {
-                    onValueChange(source.value);
-                    setOpen(false);
-                  }}
-                >
-                  {source.label}
-                  <Check
-                    className={cn(
-                      "ml-auto",
-                      value === source.value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+          <MultiSelectGroup>
+            {sources.map((source, index) => (
+              <MultiSelectItem key={index} value={source.value}>
+                {source.label}
+              </MultiSelectItem>
+            ))}
+          </MultiSelectGroup>
+        </MultiSelectContent>
+      </MultiSelect>
+      {showError && errorMessage && (
+        <p className="text-typography-critical xsmall-body mt-1">
+          {errorMessage}
+        </p>
+      )}
+    </>
   );
 }

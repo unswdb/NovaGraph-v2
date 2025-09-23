@@ -19,7 +19,13 @@ import {
   createTextInput,
 } from "~/features/visualizer/inputs";
 
-const validateNodes = async (file: File) => {
+const validateNodes = async (file: File | undefined) => {
+  if (!file)
+    return {
+      success: false,
+      message: "Unable to read file content. Please try again.",
+    };
+
   try {
     const text = await file.text();
     const lines = text.trim().split("\n");
@@ -58,12 +64,19 @@ const validateNodes = async (file: File) => {
   } catch (error) {
     return {
       success: false,
-      message: "Unable to read file content. Please try again. ",
+      message: "Unable to read file content. Please try again.",
     };
   }
 };
 
-const validateEdges = async (file: File) => {
+const validateEdges = async (file: File | undefined) => {
+  if (!file)
+    return {
+      value: file,
+      success: false,
+      message: "Unable to read file content. Please try again.",
+    };
+
   try {
     const text = await file.text();
     const lines = text.trim().split("\n");

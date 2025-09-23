@@ -1,21 +1,39 @@
-import type { GraphEdge, GraphNode } from "~/features/visualizer/types";
-import type { AlgorithmSelectInput, BaseSelectInput } from "./types";
+import type { BaseInputType } from "../../types";
+import type {
+  AlgorithmMultipleSelectInput,
+  AlgorithmSelectInput,
+  AlgorithmSingleSelectInput,
+  MultipleValues,
+  SingleValues,
+} from "./types";
+
+type selectInputDefault = Pick<
+  AlgorithmSelectInput,
+  "required" | "showLabel" | "disabled"
+>;
+
+type SingleSelectInput = Omit<
+  AlgorithmSingleSelectInput,
+  "type" | "multiple" | keyof selectInputDefault
+> &
+  Partial<selectInputDefault> & { multiple?: false };
+
+type MultipleSelectInput = Omit<
+  AlgorithmMultipleSelectInput,
+  "type" | "multiple" | keyof selectInputDefault
+> &
+  Partial<selectInputDefault> & { multiple: true };
+
+// Overloads
+export function createAlgorithmSelectInput(
+  input: SingleSelectInput
+): AlgorithmSingleSelectInput;
+export function createAlgorithmSelectInput(
+  input: MultipleSelectInput
+): AlgorithmMultipleSelectInput;
 
 export function createAlgorithmSelectInput(
-  input:
-    | (BaseSelectInput & {
-        source: "nodes";
-        blacklist?: GraphNode[];
-      })
-    | (BaseSelectInput & {
-        source: "edges";
-        blacklist?: GraphEdge[];
-      })
-    | (BaseSelectInput & {
-        source: "static";
-        options: string[];
-        blacklist?: string[];
-      })
+  input: SingleSelectInput | MultipleSelectInput
 ): AlgorithmSelectInput {
   return {
     type: "algorithm-select",
@@ -24,7 +42,7 @@ export function createAlgorithmSelectInput(
     showLabel: true,
     disabled: false,
     ...input,
-  };
+  } as any;
 }
 
 export type { AlgorithmSelectInput } from "./types";

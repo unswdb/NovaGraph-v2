@@ -7,10 +7,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import ALL_IMPORTS, { type ImportOption } from "./implementations";
 import { useMemo, useState } from "react";
-import InputComponent, {
-  createEmptyInputResults,
-  type InputChangeResult,
-} from "../inputs";
+import InputComponent, { createEmptyInputResults } from "../inputs";
 import { Separator } from "~/components/ui/separator";
 import { Button } from "~/components/ui/button";
 import { toast } from "sonner";
@@ -58,9 +55,9 @@ export default function ImportDialog() {
 }
 
 function ImportContent({ option }: { option: ImportOption }) {
-  const [inputResults, setInputResults] = useState<
-    Record<string, InputChangeResult>
-  >(createEmptyInputResults(option.inputs));
+  const [inputResults, setInputResults] = useState(
+    createEmptyInputResults(option.inputs)
+  );
   const [error, setError] = useState("");
 
   // Memoised values

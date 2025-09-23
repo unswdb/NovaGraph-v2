@@ -1,4 +1,4 @@
-import { cloneElement, useEffect, useMemo, useState } from "react";
+import { cloneElement, useMemo, useState } from "react";
 import type { GraphEdge, GraphModule, GraphNode } from "../types";
 import type {
   BaseGraphAlgorithm,
@@ -17,10 +17,7 @@ import {
   DialogTrigger,
 } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
-import InputComponent, {
-  createEmptyInputResults,
-  type InputChangeResult,
-} from "../inputs";
+import InputComponent, { createEmptyInputResults } from "../inputs";
 import { toast } from "sonner";
 import { useLoading } from "~/components/ui/loading";
 
@@ -48,9 +45,9 @@ export default function InputDialog({
 
   // States
   const [open, setOpen] = useState(false);
-  const [inputResults, setInputResults] = useState<
-    Record<string, InputChangeResult>
-  >(createEmptyInputResults(algorithm.inputs));
+  const [inputResults, setInputResults] = useState(
+    createEmptyInputResults(algorithm.inputs)
+  );
 
   // Memoised values
   const isReadyToSubmit = useMemo(

@@ -1,6 +1,6 @@
 import { Switch } from "~/components/form/switch";
-import type { InputComponentProps } from "../types";
 import type { SwitchInput } from "./types";
+import type { InputComponentProps } from "..";
 
 export default function SwitchInputComponent({
   input,

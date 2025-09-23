@@ -1,6 +1,8 @@
 import type { BaseInputType } from "../types";
 
-export type NumberInput = BaseInputType<number> & {
+export type NumberValues = number | "";
+
+export type NumberInput = BaseInputType<NumberValues> & {
   type: "number";
   placeholder?: string;
   defaultValue?: number;
@@ -8,3 +10,5 @@ export type NumberInput = BaseInputType<number> & {
   max?: number;
   step?: number;
 };
+
+export type ValueForNumber<I> = I extends NumberInput ? NumberValues : never;

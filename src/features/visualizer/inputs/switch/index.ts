@@ -1,8 +1,8 @@
 import type { BaseInputType } from "../types";
-import type { SwitchInput } from "./types";
+import type { SwitchInput, SwitchValues } from "./types";
 
 export function createSwitchInput(
-  input: Partial<SwitchInput> & BaseInputType<boolean>
+  input: Partial<SwitchInput> & BaseInputType<SwitchValues>
 ): SwitchInput {
   return {
     type: "switch",
