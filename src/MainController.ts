@@ -33,9 +33,9 @@ class MainController {
 
   // Database operations namespace
   db = {
-    // async createSchema(type: string, label: string, properties: any[], relInfo: any = null) {
-    //   return Promise.resolve(kuzuController.createSchema(type, label, properties, relInfo));
-    // },
+    async createSchema(type: string, label: string, properties: any[], relInfo: any = null) {
+      return Promise.resolve(kuzuController.createSchema(type, label, properties, relInfo));
+    },
 
     // Execute query method
     async executeQuery(query: string) {
