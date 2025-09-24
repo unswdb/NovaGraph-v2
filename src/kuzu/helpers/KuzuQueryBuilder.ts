@@ -13,29 +13,53 @@
  * @param relInfo - For relationships only: { fromLabel: string, toLabel: string, direction: "->" | "<-" }
  * @returns Cypher query string for schema creation
  */
-export function createSchemaQuery(type: string, label: string, properties: Array<{name: string, type: string, primary?: boolean}>, relInfo: {fromLabel: string, toLabel: string, direction: "->" | "<-"} | null = null) {
-  const propsStr = properties.map(prop => {
-    const base = `${prop.name} ${prop.type}`;
-    return prop.primary ? `${base} PRIMARY KEY` : base;
-  }).join(', ');
+export function createSchemaQuery(
+  type: string,
+  label: string,
+  properties: Array<{ name: string; type: string; primary?: boolean; structFields?: Array<{ name: string; type: string }> }>,
+  relInfo: { fromLabel: string; toLabel: string; direction: "->" | "<-" } | null = null
+) {
+  const propsStr = properties
+    .map((prop) => {
+      if (prop.type.toUpperCase() === "STRUCT") {
+        if (!prop.structFields || prop.structFields.length === 0) {
+          throw new Error(`STRUCT property "${prop.name}" must have structFields defined`);
+        }
 
-  let query = '';
+        // Build inline struct field definition: STRUCT(field1 TYPE, field2 TYPE, ...)
+        const structDef = prop.structFields
+          .map((field) => `${field.name} ${field.type}`)
+          .join(", ");
 
-  if (type === 'node') {
+        return `${prop.name} STRUCT(${structDef})`;
+      }
+
+      // Normal primitive property
+      const base = `${prop.name} ${prop.type}`;
+      return prop.primary ? `${base} PRIMARY KEY` : base;
+    })
+    .join(", ");
+
+  let query = "";
+
+  if (type === "node") {
     query = `CREATE NODE TABLE ${label} (${propsStr});`;
-  } else if (type === 'rel' && relInfo) {
+  } else if (type === "rel" && relInfo) {
     const { fromLabel, toLabel } = relInfo;
-    if (propsStr !== '') {
+    if (propsStr !== "") {
       query = `CREATE REL TABLE ${label} (FROM ${fromLabel} TO ${toLabel}, ${propsStr});`;
     } else {
       query = `CREATE REL TABLE ${label} (FROM ${fromLabel} TO ${toLabel});`;
     }
   } else {
-    throw new Error('Invalid schema definition');
+    throw new Error("Invalid schema definition");
   }
 
+  console.log("createSchemaQuery: " + query);
   return query;
-} 
+}
+
+
 
 
 /**
@@ -44,20 +68,36 @@ export function createSchemaQuery(type: string, label: string, properties: Array
  * @param properties - Key-value pairs for node properties
  * @returns Result of the query
  */
+// Primitives supported for now
 type PrimitiveValue = string | number | boolean | null;
 
-export function createNode(
+// NestedValue can be a primitive, array of nested values, or an object (STRUCT)
+type NestedValue = PrimitiveValue | NestedValue[] | { [key: string]: NestedValue };
+
+function _serializeValue(value: NestedValue): string {
+  if (value === null) return "null";
+  if (typeof value === "string") return `"${value}"`;
+  if (typeof value === "number" || typeof value === "boolean") return `${value}`;
+  if (Array.isArray(value)) return `[${value.map(_serializeValue).join(", ")}]`;
+  if (typeof value === "object") {
+    const entries = Object.entries(value)
+      .map(([key, v]) => `${key}: ${_serializeValue(v)}`)
+      .join(", ");
+    return `{${entries}}`;
+  }
+  throw new Error("Unsupported type");
+}
+
+
+export function createNodeQuery(
   tableName: string,
-  props: Record<string, PrimitiveValue>
+  props: { [key: string]: NestedValue }
 ): string {
   const entries = Object.entries(props)
-    .map(([key, value]) => {
-      if (value === null) return `${key}: null`;
-      if (typeof value === "string") return `${key}: "${value}"`;
-      // number or boolean
-      return `${key}: ${value}`;
-    })
+    .map(([key, value]) => `${key}: ${_serializeValue(value)}`)
     .join(", ");
 
+
+  console.log("createNodeQuery: " + `CREATE (n:${tableName} {${entries}});`)
   return `CREATE (n:${tableName} {${entries}});`;
 }
