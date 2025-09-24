@@ -6,7 +6,8 @@
  */
 
 import type {
-  TypeSpec,
+  CompositeType,
+  ScalarType,
   ValueWithType
 } from '../../types/KuzuDBTypes'
 
@@ -67,16 +68,16 @@ export function createSchemaQuery(
 
 /**
  * Create a node with the given label and properties
- * @param label - The node label
+ * @param tableName - The node label
  * @param properties - Key-value pairs for node properties
  * @returns Result of the query
  */
 export function createNodeQuery(
   tableName: string,
-  typedProps: Record<string, ValueWithType>
+  properties: Record<string, ValueWithType>
 ): string {
-  const entries = Object.entries(typedProps)
-    .map(([key, [spec, val]]) => `${key}: ${_serialize(val, spec)}`)
+  const entries = Object.entries(properties)
+    .map(([key, [type, value]]) => `${key}: ${_serialize(type, value)}`)
     .join(', ');
   const q = `CREATE (n:${tableName} {${entries}});`;
   console.log('createNodeQuery:', q);
@@ -100,19 +101,69 @@ function _esc(s: string) {
 /**
  * Converts a value to a number and validates that it is finite.
  *
- * @param x - The value to convert.
- * @param ctx - Context string for error messages (e.g., the expected type).
+ * @param type - The value to convert.
+ * @param value - Context string for error messages (e.g., the expected type).
  * @returns The numeric value if valid.
  * @throws Will throw if the value cannot be converted to a finite number.
  *
  * @example
- * _ensureNumber("42", "INT32"); // 42
- * _ensureNumber("abc", "INT32"); // throws Error
+ * _ensureNumber("INT32", "42"); // 42
+ * _ensureNumber("INT32", "abc", ); // throws Error
  */
-function _ensureNumber(x: any, ctx: string): number {
-  const n = Number(x);
-  if (!Number.isFinite(n)) throw new Error(`${ctx}: expected finite number, got ${x}`);
+function _ensureNumber(type: string, value: any): number {
+  const n = Number(value);
+  if (!Number.isFinite(n)) throw new Error(`${type}: expected finite number, got ${value}`);
   return n;
+}
+
+
+/**
+ * Serializes scalar values using the scalar type name.
+ * @param type - Scalar DB type (e.g., 'INT32', 'STRING', 'UUID').
+ * @param value - Value to serialize.
+ */
+function _serializeScalar(type: ScalarType, value: any): string {
+  switch (type) {
+    case 'INT': case 'INT8': case 'INT16': case 'INT32': case 'INT64': case 'INT128':
+    case 'UINT8': case 'UINT16': case 'UINT32': case 'UINT64':
+      return String(_ensureNumber(type, value));
+
+    case 'FLOAT': case 'DOUBLE':
+      return String(_ensureNumber(type, value));
+
+    case 'BOOLEAN':
+      return value ? 'true' : 'false';
+
+    case 'STRING':
+      return `"${_esc(String(value))}"`;
+
+    case 'UUID':
+      return `uuid("${_esc(String(value))}")`;
+
+    case 'DATE':
+      return `date("${_esc(String(value))}")`;
+
+    case 'TIMESTAMP':
+      return `timestamp("${_esc(String(value))}")`;
+
+    case 'INTERVAL':
+      return `interval("${_esc(String(value))}")`;
+
+    case 'BLOB':
+      throw new Error('BLOB serialization not implemented yet. Consider base64 + blob() wrapper.');
+
+    case 'JSON':
+      return `json("${_esc(JSON.stringify(value))}")`;
+
+    case 'SERIAL':
+      return String(_ensureNumber(type, value));
+
+    case 'NULL':
+      return 'null';
+
+    default:
+      throw new Error(`Unknown scalar type: ${type}`);
+  }
 }
 
 /**
@@ -122,93 +173,56 @@ function _ensureNumber(x: any, ctx: string): number {
  * Supports scalars (e.g., STRING, INT, BOOLEAN, UUID) and STRUCTs.
  * Other complex types (LIST, MAP, UNION, etc.) may throw until implemented.
  *
+ * @param type - The CompositeType describing how the value should be serialized.
  * @param value - The runtime JavaScript value to serialize.
- * @param spec - The TypeSpec describing how the value should be serialized.
  * @returns A string representation of the value suitable for embedding in a query.
  * @throws Will throw if the value does not match the expected spec.
  *
  * @example
- * _serialize("Tom", "STRING");  // "\"Tom\""
- * _serialize(123, "INT32");     // "123"
- * _serialize("123e4567-e89b-12d3-a456-426614174000", "UUID");
+ * _serialize("STRING", "Tom");  // "\"Tom\""
+ * _serialize("INT32", 123);     // "123"
+ * _serialize("UUID", "123e4567-e89b-12d3-a456-426614174000");
  * // -> 'uuid("123e4567-e89b-12d3-a456-426614174000")'
  */
-function _serialize(value: any, spec: TypeSpec): string {
-  if (value === null) {
-    // explicit NULL type or any nullable position
-    return 'null';
+function _serialize(type: CompositeType, value: any): string {
+  if (value === null) return 'null';
+
+  if (typeof type === 'string') {
+    return _serializeScalar(type, value);
   }
 
-  if (typeof spec === 'string') {
-    switch (spec) {
-      case 'INT': case 'INT8': case 'INT16': case 'INT32': case 'INT64': case 'INT128':
-      case 'UINT8': case 'UINT16': case 'UINT32': case 'UINT64':
-        return String(_ensureNumber(value, spec));
-      case 'FLOAT': case 'DOUBLE':
-        return String(_ensureNumber(value, spec));
-      case 'BOOLEAN':
-        return value ? 'true' : 'false';
-      case 'STRING':
-        return `"${_esc(String(value))}"`;
-      case 'UUID':
-        return `uuid("${_esc(String(value))}")`;
-      // Todo: test from those down throughoutly
-      case 'DATE':
-        return `date("${_esc(String(value))}")`;
-      case 'TIMESTAMP':
-        return `timestamp("${_esc(String(value))}")`;
-      case 'INTERVAL':
-        return `interval("${_esc(String(value))}")`;
-      case 'BLOB':
-      // Todo: implement first 
-        throw new Error('BLOB serialization not implemented yet. Consider base64 and a blob() wrapper if supported.');
-      case 'JSON':
-        return `json("${_esc(JSON.stringify(value))}")`; // or just JSON string if your DB expects raw JSON
-      case 'SERIAL':
-        return String(_ensureNumber(value, spec));
-      case 'NULL':
-        return 'null';
-      default:
-        // Never here
-        throw new Error(`Unknown scalar type: ${spec}`);
-    }
+  if (type.kind === 'DECIMAL') {
+    // ctx first, value second
+    return String(_ensureNumber(`DECIMAL(${type.precision},${type.scale})`, value));
   }
 
-  if (spec.kind === 'DECIMAL') {
-    // Todo: test throughoutly 
-    return String(_ensureNumber(value, `DECIMAL(${spec.precision},${spec.scale})`));
-  }
-
-  if (spec.kind === 'STRUCT') {
+  if (type.kind === 'STRUCT') {
     const obj = value ?? {};
     const parts: string[] = [];
-    for (const [k, fieldSpec] of Object.entries(spec.fields)) {
-      // Allow missing optional fields: skip if undefined
-      if (obj[k] === undefined) continue;
-      parts.push(`${k}: ${_serialize(obj[k], fieldSpec)}`);
+    for (const [k, fieldSpec] of Object.entries(type.fields)) {
+      if (obj[k] === undefined) continue; // allow missing optionals
+      // type first, value later
+      parts.push(`${k}: ${_serialize(fieldSpec, obj[k])}`);
     }
     return `{${parts.join(', ')}}`;
   }
 
-  // Todo: implement those then test throughoutly  
-  if (spec.kind === 'LIST' || spec.kind === 'ARRAY') {
-    if (!Array.isArray(value)) throw new Error(`${spec.kind} expects an array`);
-    throw new Error(`${spec.kind} serialization not implemented yet`);
+  if (type.kind === 'LIST' || type.kind === 'ARRAY') {
+    if (!Array.isArray(value)) throw new Error(`${type.kind} expects an array`);
+    throw new Error(`${type.kind} serialization not implemented yet`);
   }
 
-  if (spec.kind === 'MAP') {
+  if (type.kind === 'MAP') {
     throw new Error('MAP serialization not implemented yet');
   }
 
-  if (spec.kind === 'UNION') {
-    // Common pattern: { tag: 'VariantName', value: ... } or { VariantName: payload }
+  if (type.kind === 'UNION') {
     throw new Error('UNION serialization not implemented yet');
   }
 
-  // --- Graph handles (typically appear in query results, not property literals) ---
-  if (spec.kind === 'NODE' || spec.kind === 'REL' || spec.kind === 'RECURSIVE_REL') {
-    throw new Error(`${spec.kind} is not a serializable property literal`);
+  if (type.kind === 'NODE' || type.kind === 'REL' || type.kind === 'RECURSIVE_REL') {
+    throw new Error(`${type.kind} is not a serializable property literal`);
   }
 
-  throw new Error(`Unsupported TypeSpec: ${JSON.stringify(spec)}`);
+  throw new Error(`Unsupported CompositeType: ${JSON.stringify(type)}`);
 }
