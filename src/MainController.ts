@@ -37,6 +37,10 @@ class MainController {
       return Promise.resolve(kuzuController.createSchema(type, label, properties, relInfo));
     },
 
+    async createNode(label: string, properties: Record<string, any> = {}) {
+      return Promise.resolve(kuzuController.createNode(label, properties));
+    },
+
     // Execute query method
     async executeQuery(query: string) {
       return Promise.resolve(kuzuController.executeQuery(query));

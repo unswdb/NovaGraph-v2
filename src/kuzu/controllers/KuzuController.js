@@ -134,6 +134,13 @@ class KuzuController {
     }
     return this.service.createSchema(type, label, properties, relInfo);
   }
+
+  createNode(label, properties) {
+    if (!this.service) {
+      throw new Error("Kuzu service not initialized");
+    }
+    return this.service.createNode(label, properties);
+  }
 }
 
 // Create a singleton instance

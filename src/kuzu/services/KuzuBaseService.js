@@ -6,6 +6,8 @@ import {
   queryResultColorMapExtraction, 
 } from "./KuzuQueryResultExtractor"
 
+import { createSchemaQuery, createNodeQuery } from "../helpers/KuzuQueryBuilder"
+
 
 export default class KuzuBaseService {
   constructor() {
@@ -303,6 +305,25 @@ export default class KuzuBaseService {
         success: false,
         error: `Error creating schema: ${err.message}`,
       };
+    }
+  }
+
+  createNode(label, properties) {
+    if (!this.helper) {
+      throw new Error("Kuzu service not initialized");
+    }
+    
+    try {
+      // Build the query using the function directly
+      const query = createNodeQuery(label, properties);
+      
+      // Execute the query using existing executeQuery method
+      const result = this.executeQuery(query);
+      
+      return result;
+    } catch (error) {
+      console.error("Error creating node:", error);
+      throw error;
     }
   }
 }
