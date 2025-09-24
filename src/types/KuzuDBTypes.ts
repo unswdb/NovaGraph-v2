@@ -38,7 +38,6 @@ export type CompositeType =
   | { kind: 'RECURSIVE_REL'; label?: string };
   
 
-// Values (runtime JS shapes)
 export type PrimitiveValue = string | number | boolean | null;
 export type NestedValue = PrimitiveValue | NestedValue[] | { [k: string]: NestedValue };
 export type ValueWithType = [CompositeType, NestedValue];

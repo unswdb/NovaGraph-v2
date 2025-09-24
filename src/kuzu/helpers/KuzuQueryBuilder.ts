@@ -126,12 +126,15 @@ function _serializeScalar(type: ScalarType, value: any): string {
   switch (type) {
     case 'INT': case 'INT8': case 'INT16': case 'INT32': case 'INT64': case 'INT128':
     case 'UINT8': case 'UINT16': case 'UINT32': case 'UINT64':
+      // Todo: test
       return String(_ensureNumber(type, value));
 
     case 'FLOAT': case 'DOUBLE':
+      // Todo: test
       return String(_ensureNumber(type, value));
 
     case 'BOOLEAN':
+      // Todo: test
       return value ? 'true' : 'false';
 
     case 'STRING':
@@ -141,21 +144,27 @@ function _serializeScalar(type: ScalarType, value: any): string {
       return `uuid("${_esc(String(value))}")`;
 
     case 'DATE':
+      // Todo: test
       return `date("${_esc(String(value))}")`;
 
     case 'TIMESTAMP':
+      // Todo: test
       return `timestamp("${_esc(String(value))}")`;
 
     case 'INTERVAL':
+      // Todo: test
       return `interval("${_esc(String(value))}")`;
 
     case 'BLOB':
+      // Todo: implement
       throw new Error('BLOB serialization not implemented yet. Consider base64 + blob() wrapper.');
 
     case 'JSON':
+      // Todo: implement
       return `json("${_esc(JSON.stringify(value))}")`;
 
     case 'SERIAL':
+      // Todo: implement
       return String(_ensureNumber(type, value));
 
     case 'NULL':
@@ -191,11 +200,6 @@ function _serialize(type: CompositeType, value: any): string {
     return _serializeScalar(type, value);
   }
 
-  if (type.kind === 'DECIMAL') {
-    // ctx first, value second
-    return String(_ensureNumber(`DECIMAL(${type.precision},${type.scale})`, value));
-  }
-
   if (type.kind === 'STRUCT') {
     const obj = value ?? {};
     const parts: string[] = [];
@@ -207,6 +211,12 @@ function _serialize(type: CompositeType, value: any): string {
     return `{${parts.join(', ')}}`;
   }
 
+  // Todo: test
+  if (type.kind === 'DECIMAL') {
+    return String(_ensureNumber(`DECIMAL(${type.precision},${type.scale})`, value));
+  }
+
+  // Todo: implement 
   if (type.kind === 'LIST' || type.kind === 'ARRAY') {
     if (!Array.isArray(value)) throw new Error(`${type.kind} expects an array`);
     throw new Error(`${type.kind} serialization not implemented yet`);
