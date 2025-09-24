@@ -40,7 +40,7 @@ export function parseNodesResult(result) {
     return [];
   }
   const objects = result.getAllObjects();
-  console.warn("Raw node objects:", objects);
+  // console.warn("Raw node objects:", objects);
 
   const nodes = [];
   for (const obj of objects) {
@@ -82,9 +82,9 @@ export function parseNodesResult(result) {
     };
     nodes.push(node);
   }
-  if (nodes.length === 0) {
-    console.warn("uh oh something wrong");
-  }
+  // if (nodes.length === 0) {
+  //   console.warn("uh oh something wrong");
+  // }
   return nodes;
 }
 
@@ -98,7 +98,7 @@ export function parseEdgesResult(result) {
     return [];
   }
   const objects = result.getAllObjects();
-  console.warn("Raw edge objects:", objects);
+  // console.warn("Raw edge objects:", objects);
 
   const edges = [];
   for (const obj of objects) {
@@ -152,9 +152,9 @@ export function parseEdgesResult(result) {
     };
     edges.push(edge);
   }
-  if (edges.length === 0) {
-    console.warn("No edges parsed");
-  }
+  // if (edges.length === 0) {
+  //   console.warn("No edges parsed");
+  // }
   return edges;
 }
 
@@ -181,13 +181,12 @@ export function queryResultColorMapExtraction(result) {
   }
 
   const colorMap = {};
-  console.warn("Processing query result for color mapping");
+  // console.warn("Processing query result for color mapping");
   try {
     const objects = result.getAllObjects();
-    console.log("Raw result objects:", objects);
     
     for (const obj of objects) {
-      console.log(obj);
+      // console.log(obj);
 
       for (let i = 0; i < Object.keys(obj).length; i++) {
         let entity = obj[Object.keys(obj)[i]]; 
