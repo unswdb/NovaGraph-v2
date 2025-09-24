@@ -1,9 +1,9 @@
-// --- Atomic database scalars (including widths/kinds you listed) ---
+// --- Atomic database scalars ---
 export type ScalarType =
   | 'INT' | 'INT8' | 'INT16' | 'INT32' | 'INT64' | 'INT128'
   | 'UINT8' | 'UINT16' | 'UINT32' | 'UINT64'
   | 'FLOAT' | 'DOUBLE'
-  | 'DECIMAL'          // parameterized (precision, scale) via a dedicated TypeSpec
+  | 'DECIMAL'          // parameterized (precision, scale) via a dedicated CompositeType
   | 'BOOLEAN'
   | 'UUID'
   | 'STRING'
@@ -23,14 +23,14 @@ export type MapKeyScalar =
 
 
 // --- Composite/parameterized types ---
-export type TypeSpec =
+export type CompositeType =
   | ScalarType
-  | { kind: 'STRUCT'; fields: Record<string, TypeSpec> }
+  | { kind: 'STRUCT'; fields: Record<string, CompositeType> }
   | { kind: 'DECIMAL'; precision: number; scale: number }
-  | { kind: 'LIST'; of: TypeSpec }
-  | { kind: 'ARRAY'; of: TypeSpec }               
-  | { kind: 'MAP'; key: MapKeyScalar; value: TypeSpec }
-  | { kind: 'UNION'; variants: Record<string, TypeSpec> } 
+  | { kind: 'LIST'; of: CompositeType }
+  | { kind: 'ARRAY'; of: CompositeType }               
+  | { kind: 'MAP'; key: MapKeyScalar; value: CompositeType }
+  | { kind: 'UNION'; variants: Record<string, CompositeType> } 
 
   // Graph-specific handles (placeholders; often used in query results, not property values):
   | { kind: 'NODE'; label?: string }
@@ -41,4 +41,4 @@ export type TypeSpec =
 // Values (runtime JS shapes)
 export type PrimitiveValue = string | number | boolean | null;
 export type NestedValue = PrimitiveValue | NestedValue[] | { [k: string]: NestedValue };
-export type ValueWithType = [TypeSpec, NestedValue];
+export type ValueWithType = [CompositeType, NestedValue];
