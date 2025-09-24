@@ -68,36 +68,64 @@ export function createSchemaQuery(
  * @param properties - Key-value pairs for node properties
  * @returns Result of the query
  */
-// Primitives supported for now
+// 1) Type system
+type ScalarType =
+  | 'STRING' | 'INT' | 'DOUBLE' | 'BOOLEAN'
+  | 'UUID' | 'DATE' | 'TIMESTAMP' | 'INTERVAL';
+
+type TypeSpec =
+  | ScalarType
+  | { kind: 'STRUCT'; fields: Record<string, TypeSpec> }
+  | { kind: 'LIST'; of: TypeSpec };
+
 type PrimitiveValue = string | number | boolean | null;
+type NestedValue = PrimitiveValue | NestedValue[] | { [k: string]: NestedValue };
+type ValueWithType = [TypeSpec, NestedValue];
 
-// NestedValue can be a primitive, array of nested values, or an object (STRUCT)
-type NestedValue = PrimitiveValue | NestedValue[] | { [key: string]: NestedValue };
-
-function _serializeValue(value: NestedValue): string {
-  if (value === null) return "null";
-  if (typeof value === "string") return `"${value}"`;
-  if (typeof value === "number" || typeof value === "boolean") return `${value}`;
-  if (Array.isArray(value)) return `[${value.map(_serializeValue).join(", ")}]`;
-  if (typeof value === "object") {
-    const entries = Object.entries(value)
-      .map(([key, v]) => `${key}: ${_serializeValue(v)}`)
-      .join(", ");
-    return `{${entries}}`;
-  }
-  throw new Error("Unsupported type");
+function esc(s: string) {
+  return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 }
 
+function serialize(value: any, spec: TypeSpec): string {
+  if (value === null) return 'null';
+
+  if (typeof spec === 'string') {
+    switch (spec) {
+      case 'UUID':       return `uuid("${esc(String(value))}")`;
+      case 'DATE':       return `date("${esc(String(value))}")`;
+      case 'TIMESTAMP':  return `timestamp("${esc(String(value))}")`;
+      case 'INTERVAL':   return `interval("${esc(String(value))}")`;
+      case 'BOOLEAN':    return value ? 'true' : 'false';
+      case 'INT':
+      case 'DOUBLE':     return `${Number(value)}`;
+      case 'STRING':
+      default:           return `"${esc(String(value))}"`;
+    }
+  }
+
+  if (spec.kind === 'LIST') {
+    if (!Array.isArray(value)) throw new Error('LIST expects an array');
+    return `[${value.map(v => serialize(v, spec.of)).join(', ')}]`;
+  }
+
+  if (spec.kind === 'STRUCT') {
+    const parts = Object.entries(spec.fields).map(([k, fs]) => {
+      return `${k}: ${serialize(value?.[k], fs)}`;
+    });
+    return `{${parts.join(', ')}}`;
+  }
+
+  throw new Error('Unsupported TypeSpec');
+}
 
 export function createNodeQuery(
   tableName: string,
-  props: { [key: string]: NestedValue }
+  typedProps: Record<string, ValueWithType>
 ): string {
-  const entries = Object.entries(props)
-    .map(([key, value]) => `${key}: ${_serializeValue(value)}`)
-    .join(", ");
-
-
-  console.log("createNodeQuery: " + `CREATE (n:${tableName} {${entries}});`)
-  return `CREATE (n:${tableName} {${entries}});`;
+  const entries = Object.entries(typedProps)
+    .map(([key, [spec, val]]) => `${key}: ${serialize(val, spec)}`)
+    .join(', ');
+  const q = `CREATE (n:${tableName} {${entries}});`;
+  console.log('createNodeQueryTyped:', q);
+  return q;
 }
