@@ -44,15 +44,20 @@ export function createSchemaQuery(type: string, label: string, properties: Array
  * @param properties - Key-value pairs for node properties
  * @returns Result of the query
  */
-export function createNodeQuery(label: string, properties: Record<string, any> = {}) {
-  // Format properties for Cypher
-  const propsArray = Object.entries(properties).map(([key, value]) => {
-    const formattedValue = typeof value === 'string' ? `'${value}'` : value;
-    return `${key}: ${formattedValue}`;
-  });
-  
-  const propsString = propsArray.length > 0 ? `{${propsArray.join(', ')}}` : '';
-  const query = `CREATE (n:${label} ${propsString}) RETURN n`;
-  
-  return query;
+type PrimitiveValue = string | number | boolean | null;
+
+export function createNode(
+  tableName: string,
+  props: Record<string, PrimitiveValue>
+): string {
+  const entries = Object.entries(props)
+    .map(([key, value]) => {
+      if (value === null) return `${key}: null`;
+      if (typeof value === "string") return `${key}: "${value}"`;
+      // number or boolean
+      return `${key}: ${value}`;
+    })
+    .join(", ");
+
+  return `CREATE (n:${tableName} {${entries}});`;
 }
