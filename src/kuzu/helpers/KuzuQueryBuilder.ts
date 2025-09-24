@@ -9,7 +9,7 @@
  * Create a node or relationship schema query
  * @param type - "node" or "rel"
  * @param label - Label of the node or relationship
- * @param properties - Array of property definitions, e.g. [{ name: "id", type: "INT", primary: true }]
+ * @param properties - Array of property definitions
  * @param relInfo - For relationships only: { fromLabel: string, toLabel: string, direction: "->" | "<-" }
  * @returns Cypher query string for schema creation
  */
