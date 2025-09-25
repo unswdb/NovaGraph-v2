@@ -13,116 +13,123 @@ export default function CodeEditor({
   const { textAreaRef, lineNumbersRef, handleOnScroll, renderLineNumbers } =
     useLineNumbers();
 
-  // // Test createSchema functionality
-  // useEffect(() => {
-  //   let hasRun = false; // Guard to prevent duplicate execution
+  // Test createSchema functionality
+  useEffect(() => {
+    let hasRun = false; // Guard to prevent duplicate execution
     
-  //   const testCreateSchema2 = async () => {
-  //     if (hasRun) {
-  //       console.warn('Schema creation already executed, skipping...');
-  //       return;
-  //     }
-  //     hasRun = true;
+    const testCreateSchema2 = async () => {
+      if (hasRun) {
+        console.warn('Schema creation already executed, skipping...');
+        return;
+      }
+      hasRun = true;
     
-  //     try {
-  //       await controller.initKuzu();
-  //       console.warn('Testing createSchema2...');
+      try {
+        await controller.initKuzu();
+        console.warn('Testing createSchema2...');
     
-  //       // ----------------------------
-  //       // 1. Create Person table (many primitives)
-  //       // ----------------------------
-  //       const personResult = await controller.db.createSchema('node', 'Person', [
-  //         { name: 'name', type: 'STRING', primary: true },
-  //         { name: 'age', type: 'INT' },
-  //         { name: 'alive', type: 'BOOLEAN' },
-  //         { name: 'height', type: 'DOUBLE' },
-  //         { name: 'uuid', type: 'UUID' }
-  //       ]);
-  //       console.warn('Person schema result:', personResult);
+        // ----------------------------
+        // 1. Create Person table (many primitives)
+        // ----------------------------
+        const personResult = await controller.db.createSchema(
+          'node',
+          'Person',
+          'name', // primaryKey
+          {
+            name: 'STRING',
+            age: 'INT',
+            alive: 'BOOLEAN',
+            height: 'DOUBLE',
+            uuid: 'UUID',
+          }
+        );
+        console.warn('Person schema result:', personResult);
     
-  //       // ----------------------------
-  //       // 2. Create Address table (STRUCT)
-  //       // ----------------------------
-  //       const addressResult = await controller.db.createSchema("node", "Address", [
-  //         { name: "id", type: "STRING", primary: true },
-  //         {
-  //           name: "location",
-  //           type: "STRUCT",
-  //           structFields: [
-  //             { name: "street", type: "STRING" },
-  //             { name: "city", type: "STRING" },
-  //             { name: "zipcode", type: "INT" },
-  //           ],
-  //         },
-  //       ]);
-  //       console.warn('Address schema result:', addressResult);
+        // ----------------------------
+        // 2. Create Address table (STRUCT)
+        // ----------------------------
+        const addressResult = await controller.db.createSchema(
+          "node",
+          "Address",
+          "id", // primaryKey
+          {
+            id: "STRING",
+            location: {
+              kind: "STRUCT",
+              fields: {
+                street: "STRING",
+                city: "STRING",
+                zipcode: "INT",
+              },
+            },
+          }
+        );
+        console.warn("Address schema result:", addressResult);
     
-  //       // ----------------------------
-  //       // 3. Use createNode to generate queries
-  //       // ----------------------------
+        // ----------------------------
+        // 3. Use createNode to generate queries
+        // ----------------------------
     
-  //       // Person node (primitive types)
-  //       const personQuery = await controller.db.createNode('Person', {
-  //         name:  ['STRING',  'Tom Hanks'],
-  //         age:   ['INT',     67],
-  //         alive: ['BOOLEAN', true],
-  //         height:['DOUBLE',  1.83],
-  //         uuid:  ['UUID',    '123e4567-e89b-12d3-a456-426614174000']
-  //       });
-  //       console.warn('Person create query:', personQuery);
-  //       // await controller.db.query(personQuery);
+        // Person node (primitive types)
+        const personQuery = await controller.db.createNode('Person', {
+          name:  ['STRING',  'Tom Hanks'],
+          age:   ['INT',     67],
+          alive: ['BOOLEAN', true],
+          height:['DOUBLE',  1.83],
+          uuid:  ['UUID',    '123e4567-e89b-12d3-a456-426614174000']
+        });
+        console.warn('Person create query:', personQuery);
+        // await controller.db.query(personQuery);
     
-  //       // Address node (STRUCT)
-  //       const addressQuery = await controller.db.createNode('Address', {
-  //         id: ['STRING', 'ADDR-001'],   // primary key
-  //         location: [
-  //           { kind: 'STRUCT', fields: {
-  //             street: 'STRING',
-  //             city:   'STRING',
-  //             zipcode:'INT'
-  //           }},
-  //           {
-  //             street:  '123 Main St',
-  //             city:    'Los Angeles',
-  //             zipcode: 90001
-  //           }
-  //         ]
-  //       });
+        // Address node (STRUCT)
+        const addressQuery = await controller.db.createNode('Address', {
+          id: ['STRING', 'ADDR-001'],   // primary key
+          location: [
+            { kind: 'STRUCT', fields: {
+              street: 'STRING',
+              city:   'STRING',
+              zipcode:'INT'
+            }},
+            {
+              street:  '123 Main St',
+              city:    'Los Angeles',
+              zipcode: 90001
+            }
+          ]
+        });
         
-  //       console.warn('Address create query:', addressQuery);
+        console.warn('Address create query:', addressQuery);
         
 
-  //       const addressQuery2 = await controller.db.createNode('Address', {
-  //         id: ['STRING', 'ADDR-0012'],   // primary key
-  //         // id2: ['STRING', 'ADDR-00123'],   // primary key
+        const addressQuery2 = await controller.db.createNode('Address', {
+          id: ['STRING', 'ADDR-0012'],   // primary key
+          // id2: ['STRING', 'ADDR-00123'],   // primary key
 
-  //         // location: [
-  //         //   { kind: 'STRUCT', fields: {
-  //         //     street: 'STRING',
-  //         //     city:   'STRING',
-  //         //     zipcode:'INT'
-  //         //   }},
-  //         //   {
-  //         //     street:  '123 Main St',
-  //         //     city:    'Los Angeles',
-  //         //     zipcode: 90001
-  //         //   }
-  //         // ]
-  //       });
+          // location: [
+          //   { kind: 'STRUCT', fields: {
+          //     street: 'STRING',
+          //     city:   'STRING',
+          //     zipcode:'INT'
+          //   }},
+          //   {
+          //     street:  '123 Main St',
+          //     city:    'Los Angeles',
+          //     zipcode: 90001
+          //   }
+          // ]
+        });
         
-  //       console.warn('Address create query:', addressQuery2);
-        
-  //       // await controller.db.query(addressQuery);
+        console.warn('Address create query:', addressQuery2);
     
-  //     } catch (error) {
-  //       console.error('Error:', error);
-  //       hasRun = false; // Reset on error so it can retry
-  //     }
-  //   };
+      } catch (error) {
+        console.error('Error:', error);
+        hasRun = false; // Reset on error so it can retry
+      }
+    };
     
 
-  //   testCreateSchema2();
-  // }, []);
+    testCreateSchema2();
+  }, []);
 
   return (
     <div className="relative flex h-full border border-border rounded-md">

@@ -12,58 +12,90 @@ import type {
 } from '../../types/KuzuDBTypes'
 
 /**
- * Create a node or relationship schema query
- * @param type - "node" or "rel"
- * @param label - Label of the node or relationship
- * @param properties - Array of property definitions
- * @param relInfo - For relationships only: { fromLabel: string, toLabel: string, direction: "->" | "<-" }
- * @returns Cypher query string for schema creation
+ * Builds a Cypher DDL query string for creating a node or relationship table in Kùzu.
+ *
+ * This is a thin bridge: it does not deeply validate inputs, leaving most errors
+ * to the database engine itself. Its purpose is simply to format schema definitions
+ * into the correct `CREATE TABLE` syntax.
+ *
+ * @param type - Table kind, either `"node"` or `"rel"` (case-insensitive).
+ * @param label - The name of the node or relationship table.
+ * @param primaryKey - For node tables only: the column to use as PRIMARY KEY.
+ *                     If omitted, no primary key clause is added.
+ * @param properties - A mapping of column name → `CompositeType`, describing the
+ *                     schema of each property. Supports scalars, STRUCTs, LIST/ARRAY,
+ *                     DECIMAL, MAP, and UNION.
+ * @param relInfo - For relationship tables only: `{ from, to }` labels indicating
+ *                  the source and target node tables.
+ *
+ * @returns A valid Cypher `CREATE NODE TABLE …` or `CREATE REL TABLE …` query string.
+ *
+ * @example
+ * // Create a Person node with a STRING primary key
+ * createSchemaQuery(
+ *   "node",
+ *   "Person",
+ *   "name",
+ *   {
+ *     name: "STRING",
+ *     age: "INT",
+ *     tags: { kind: "LIST", of: "STRING" },
+ *     meta: { kind: "STRUCT", fields: { height: "DOUBLE", weight: "DOUBLE" } },
+ *   }
+ * );
+ * // -> CREATE NODE TABLE Person(name STRING, age INT, tags LIST(STRING),
+ * //    meta STRUCT(height DOUBLE, weight DOUBLE), PRIMARY KEY (name));
+ *
+ * @example
+ * // Create a KNOWS relationship between Person → Person
+ * createSchemaQuery(
+ *   "rel",
+ *   "KNOWS",
+ *   undefined,
+ *   { since: "DATE" },
+ *   { from: "Person", to: "Person" }
+ * );
+ * // -> CREATE REL TABLE KNOWS (FROM Person TO Person, since DATE);
  */
 export function createSchemaQuery(
-  type: string,
+  type: "node" | "rel" | "NODE" | "REL",
   label: string,
-  properties: Array<{ name: string; type: string; primary?: boolean; structFields?: Array<{ name: string; type: string }> }>,
-  relInfo: { fromLabel: string; toLabel: string; direction: "->" | "<-" } | null = null
-) {
-  const propsStr = properties
-    .map((prop) => {
-      if (prop.type.toUpperCase() === "STRUCT") {
-        if (!prop.structFields || prop.structFields.length === 0) {
-          throw new Error(`STRUCT property "${prop.name}" must have structFields defined`);
-        }
+  primaryKey: string | undefined,
+  properties: Record<string, CompositeType>,
+  relInfo: { from: string; to: string } | null = null
+): string {
+  const kind = type.toLowerCase() as "node" | "rel";
 
-        // Build inline struct field definition: STRUCT(field1 TYPE, field2 TYPE, ...)
-        const structDef = prop.structFields
-          .map((field) => `${field.name} ${field.type}`)
-          .join(", ");
-
-        return `${prop.name} STRUCT(${structDef})`;
-      }
-
-      // Normal primitive property
-      const base = `${prop.name} ${prop.type}`;
-      return prop.primary ? `${base} PRIMARY KEY` : base;
-    })
-    .join(", ");
-
-  let query = "";
-
-  if (type === "node") {
-    query = `CREATE NODE TABLE ${label} (${propsStr});`;
-  } else if (type === "rel" && relInfo) {
-    const { fromLabel, toLabel } = relInfo;
-    if (propsStr !== "") {
-      query = `CREATE REL TABLE ${label} (FROM ${fromLabel} TO ${toLabel}, ${propsStr});`;
-    } else {
-      query = `CREATE REL TABLE ${label} (FROM ${fromLabel} TO ${toLabel});`;
+  const typeToDDL = (t: CompositeType): string => {
+    if (typeof t === "string") return t;
+    switch (t.kind) {
+      case "DECIMAL": return `DECIMAL(${t.precision},${t.scale})`;
+      case "LIST":
+      case "ARRAY":   return `LIST(${typeToDDL(t.of)})`;
+      case "STRUCT":  return `STRUCT(${Object.entries(t.fields).map(([k,v]) => `${k} ${typeToDDL(v)}`).join(", ")})`;
+      case "MAP":     return `MAP(${t.key},${typeToDDL(t.value)})`;
+      case "UNION":   return `UNION(${Object.entries(t.variants).map(([tag,v]) => `${tag}: ${typeToDDL(v)}`).join(", ")})`;
+      default:        return String(t as any);
     }
-  } else {
-    throw new Error("Invalid schema definition");
-  }
+  };
 
-  console.log("createSchemaQuery: " + query);
-  return query;
+  const cols = Object.entries(properties).map(
+    ([name, spec]) => `${name} ${typeToDDL(spec)}`
+  );
+  
+  if (kind === "node") {
+    const pkClause = primaryKey ? `, PRIMARY KEY (${primaryKey})` : "";
+    return `CREATE NODE TABLE ${label} (${cols.join(", ")}${pkClause});`;
+  } else {
+    if (!relInfo) {
+      throw new Error(`Relationship "${label}" requires relInfo { from, to }`);
+    }
+    return cols.length
+      ? `CREATE REL TABLE ${label} (FROM ${relInfo.from} TO ${relInfo.to}, ${cols.join(", ")});`
+      : `CREATE REL TABLE ${label} (FROM ${relInfo.from} TO ${relInfo.to});`;
+  }
 }
+
 
 
 /**

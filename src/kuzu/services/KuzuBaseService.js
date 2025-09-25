@@ -291,15 +291,10 @@ export default class KuzuBaseService {
    * @param {Object} [relInfo] - For relationships only: { fromLabel: string, toLabel: string, direction: "->" | "<-" }
    * @returns {Object} Result of the schema creation query
    */
-  createSchema(type, label, properties, relInfo = null) {
+  createSchema(type, label, primaryKey, properties, relInfo = null) {
     try {
-      // Build the query using the function directly
-      const query = createSchemaQuery(type, label, properties, relInfo);
-      
-      // Execute the query using existing executeQuery method
-      const result = this.executeQuery(query);
-      
-      return result;
+      const query = createSchemaQuery(type, label, primaryKey, properties, relInfo);
+      return this.executeQuery(query);
     } catch (err) {
       return {
         success: false,

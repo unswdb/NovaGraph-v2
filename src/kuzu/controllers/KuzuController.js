@@ -128,11 +128,11 @@ class KuzuController {
    * @param {Object} [relInfo] - For relationships only: { fromLabel: string, toLabel: string, direction: "->" | "<-" }
    * @returns {Object} Result of the schema creation query
    */
-  createSchema(type, label, properties, relInfo = null) {
+  createSchema(type, label, primaryKey, properties, relInfo = null) {
     if (!this.service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.createSchema(type, label, properties, relInfo);
+    return this.service.createSchema(type, label, primaryKey, properties, relInfo);
   }
 
   createNode(label, properties) {

@@ -1,5 +1,6 @@
 import kuzuController from './kuzu/controllers/KuzuController';
 import createModule from "./graph";
+import type { CompositeType } from './types/KuzuDBTypes';
 
 class MainController {
   // Graph method starts here
@@ -33,8 +34,16 @@ class MainController {
 
   // Database operations namespace
   db = {
-    async createSchema(type: string, label: string, properties: any[], relInfo: any = null) {
-      return Promise.resolve(kuzuController.createSchema(type, label, properties, relInfo));
+    async createSchema(
+      type: string,
+      label: string,
+      primaryKey?: string,
+      properties: Record<string, CompositeType> = {},
+      relInfo: { from: string; to: string } | null = null
+    ) {
+      return Promise.resolve(
+        kuzuController.createSchema(type, label, primaryKey, properties, relInfo)
+      );
     },
 
     async createNode(label: string, properties: Record<string, any> = {}) {
