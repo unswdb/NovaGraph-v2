@@ -304,10 +304,6 @@ export default class KuzuBaseService {
   }
 
   createNode(label, properties) {
-    if (!this.helper) {
-      throw new Error("Kuzu service not initialized");
-    }
-    
     try {
       // Build the query using the function directly
       const query = createNodeQuery(label, properties);
