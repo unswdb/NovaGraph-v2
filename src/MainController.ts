@@ -35,14 +35,14 @@ class MainController {
   // Database operations namespace
   db = {
     async createSchema(
-      type: string,
-      label: string,
+      type: "node" | "rel" | "NODE" | "REL",
+      tableName: string,
       primaryKey?: string,
       properties: Record<string, CompositeType> = {},
       relInfo: { from: string; to: string } | null = null
     ) {
       return Promise.resolve(
-        kuzuController.createSchema(type, label, primaryKey, properties, relInfo)
+        kuzuController.createSchema(type, tableName, primaryKey, properties, relInfo)
       );
     },
 
