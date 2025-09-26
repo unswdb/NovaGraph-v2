@@ -43,7 +43,7 @@ import type {
 export function createSchemaQuery(
   type: "node" | "rel" | "NODE" | "REL",
   label: string,
-  primaryKey: string,
+  primaryKey: string | undefined,
   properties: Record<string, CompositeType>,
   relInfo: { from: string; to: string } | null = null
 ): string {
