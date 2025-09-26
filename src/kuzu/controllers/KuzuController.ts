@@ -18,12 +18,14 @@ class KuzuController {
   // -- General function for all types of Kuzu db -- 
   /**
    * Initialize Kuzu with specified type and mode
-   * @param {string} type - 'inmemory' or 'persistent'
-   * @param {string} mode - 'sync' or 'async'
-   * @param {Object} options - Additional initialization options
-   * @param {string} options.dbPath - Path/name for persistent database
-   * @param {Object} options.dbOptions - Database configuration options
-   * @returns {Promise<Object>} - The initialized service
+   * 
+   * @param type - Either `"inmemory"` or `"persistent"`.
+   * @param mode - Either `"sync"` or `"async"`.
+   * @param options - Additional initialization options.
+   * @param options.dbPath - Path/name for persistent database.
+   * @param options.dbOptions - Database configuration options.
+   * 
+   * @returns The initialized service.
    */
   async initialize(type: string, mode: string, options = {}) {
     if (this.service) {
@@ -61,9 +63,10 @@ class KuzuController {
   }
 
   /**
-   * Execute a Cypher query
-   * @param {string} query - The Cypher query to execute
-   * @returns {Object} Query results
+   * Execute a Cypher query.
+   *
+   * @param query - The Cypher query to execute.
+   * @returns Query results.
    */
   executeQuery(query: string) {
     if (!this.service) {
@@ -130,12 +133,13 @@ class KuzuController {
   // }
 
   /**
-   * Create a node or relationship schema in the database
-   * @param {string} type - "node" or "rel"
-   * @param {string} tableName - Label of the node or relationship
-   * @param {Object[]} properties - Array of property definitions, e.g. [{ name: "id", type: "INT", primary: true }]
-   * @param {Object} [relInfo] - For relationships only: { fromLabel: string, toLabel: string, direction: "->" | "<-" }
-   * @returns {Object} Result of the schema creation query
+   * Create a node or relationship schema in the database.
+   *
+   * @param type - Either `"node"` or `"rel"`.
+   * @param tableName - Label of the node or relationship.
+   * @param properties - Array of property definitions.
+   * @param relInfo - For relationships only: `{ fromLabel, toLabel, direction }`.
+   * @returns Result of the schema creation query.
    */
   createSchema(  
     type: "node" | "rel" | "NODE" | "REL",
