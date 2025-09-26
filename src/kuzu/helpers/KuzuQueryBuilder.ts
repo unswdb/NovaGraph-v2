@@ -14,53 +14,36 @@ import type {
 /**
  * Builds a Cypher DDL query string for creating a node or relationship table in Kùzu.
  *
- * This is a thin bridge: it does not deeply validate inputs, leaving most errors
- * to the database engine itself. Its purpose is simply to format schema definitions
- * into the correct `CREATE TABLE` syntax.
+ * Thin bridge: formats schema definitions into `CREATE TABLE` syntax.
+ * Leaves validation to the database engine.
  *
- * @param type - Table kind, either `"node"` or `"rel"` (case-insensitive).
- * @param label - The name of the node or relationship table.
- * @param primaryKey - For node tables only: the column to use as PRIMARY KEY.
- *                     If omitted, no primary key clause is added.
- * @param properties - A mapping of column name → `CompositeType`, describing the
- *                     schema of each property. Supports scalars, STRUCTs, LIST/ARRAY,
- *                     DECIMAL, MAP, and UNION.
- * @param relInfo - For relationship tables only: `{ from, to }` labels indicating
- *                  the source and target node tables.
+ * @param type - Either `"node"` or `"rel"`.
+ * @param label - Name of the table.
+ * @param primaryKey - Node tables only: column to use as PRIMARY KEY.
+ *                      + Legal PK types: INT, INT8, INT16, INT32, INT64, INT128,
+ *                     UINT8, UINT16, UINT32, UINT64, FLOAT, DOUBLE, DECIMAL,
+ *                     UUID, STRING, DATE, TIMESTAMP, BLOB, SERIAL.
+ *                      + Illegal PK types: BOOLEAN, NULL, INTERVAL, JSON.
+ * @param properties - Column name → `CompositeType` (scalars, STRUCT, LIST, MAP, UNION, etc).
+ * @param relInfo - Rel tables only: `{ from, to }` node labels.
  *
- * @returns A valid Cypher `CREATE NODE TABLE …` or `CREATE REL TABLE …` query string.
- *
- * @example
- * // Create a Person node with a STRING primary key
- * createSchemaQuery(
- *   "node",
- *   "Person",
- *   "name",
- *   {
- *     name: "STRING",
- *     age: "INT",
- *     tags: { kind: "LIST", of: "STRING" },
- *     meta: { kind: "STRUCT", fields: { height: "DOUBLE", weight: "DOUBLE" } },
- *   }
- * );
- * // -> CREATE NODE TABLE Person(name STRING, age INT, tags LIST(STRING),
- * //    meta STRUCT(height DOUBLE, weight DOUBLE), PRIMARY KEY (name));
+ * @returns Cypher `CREATE NODE TABLE …` or `CREATE REL TABLE …` string.
  *
  * @example
- * // Create a KNOWS relationship between Person → Person
- * createSchemaQuery(
- *   "rel",
- *   "KNOWS",
- *   undefined,
- *   { since: "DATE" },
- *   { from: "Person", to: "Person" }
- * );
+ * // Node with STRING PK
+ * createSchemaQuery("node", "Person", "name", { name: "STRING", age: "INT" });
+ * // -> CREATE NODE TABLE Person(name STRING, age INT, PRIMARY KEY (name));
+ *
+ * @example
+ * // Rel between Person → Person
+ * createSchemaQuery("rel", "KNOWS", undefined, { since: "DATE" }, { from: "Person", to: "Person" });
  * // -> CREATE REL TABLE KNOWS (FROM Person TO Person, since DATE);
  */
+
 export function createSchemaQuery(
   type: "node" | "rel" | "NODE" | "REL",
   label: string,
-  primaryKey: string | undefined,
+  primaryKey: string,
   properties: Record<string, CompositeType>,
   relInfo: { from: string; to: string } | null = null
 ): string {
