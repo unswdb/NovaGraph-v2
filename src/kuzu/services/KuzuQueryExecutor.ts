@@ -2,13 +2,17 @@ import {
   _processQueryResult, 
   parseNodesResult, 
   parseEdgesResult 
-} from './KuzuQueryResultExtractor.js';
+} from './KuzuQueryResultExtractor';
+
+// type ConnectionSync = import("../../types/kuzu-wasm/sync/connection");
 
 /**
    * Snapshot the current state of the graph (nodes and relationships)
    * @returns {Object} Result with all nodes and relationships
    */
-  export function snapshotGraphState(connection) {
+  // export function snapshotGraphState(connection: ConnectionSync) {
+  export function snapshotGraphState(connection: any) {
+
     const nodesResult = connection.query(`MATCH (n) RETURN n`);
     const nodes = parseNodesResult(nodesResult);
 
