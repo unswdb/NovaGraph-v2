@@ -1,4 +1,3 @@
-// @ts-ignore
 import KuzuInMemorySync from "../services/KuzuInMemorySync";
 import type { 
   CompositeType, 
