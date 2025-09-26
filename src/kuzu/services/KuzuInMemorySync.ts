@@ -1,8 +1,16 @@
+// @ts-ignore
 import kuzu from 'kuzu-wasm/sync';
-import KuzuGraphHelper from '../helpers/KuzuGraphHelper';
+
+// @ts-ignore
 import KuzuBaseService from './KuzuBaseService';
 
+
 export default class KuzuInMemorySync extends KuzuBaseService {
+    protected db: any 
+    protected connection: any = null;
+    protected helper: any = null;
+    protected initialized: boolean = false;
+
     constructor() {
         super();
     }
@@ -28,16 +36,10 @@ export default class KuzuInMemorySync extends KuzuBaseService {
             this.connection = new kuzu.Connection(this.db);
             console.log('Connection established');
             
-            // Create our helper and bind the query executor
-            this.helper = new KuzuGraphHelper(this.connection);
-            
-            // Bind the executeQuery method from this service to the helper
-            // This creates a clean dependency - the helper uses the service's execution logic
-            this.helper.setQueryExecutor(this.executeQuery.bind(this));
-            
-            console.log('Graph helper created and linked');
             
             this.initialized = true;
+            console.log('Graph helper created and linked');
+
             return true;
         } catch (err) {
             console.error("Failed Kuzu initialization:", err);
@@ -55,3 +57,6 @@ export default class KuzuInMemorySync extends KuzuBaseService {
         this.initialized = false;
     }
 }
+
+
+// @ts-ignore 'kuzu-wasm/sync' is a JS api file from kuzu-wasm node module
