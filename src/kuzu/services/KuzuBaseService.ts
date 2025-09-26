@@ -3,7 +3,6 @@ import {
   snapshotGraphState
 } from "./KuzuQueryExecutor"
 
-// @ts-ignore
 import { 
   queryResultColorMapExtraction, 
 } from "./KuzuQueryResultExtractor"

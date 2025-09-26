@@ -1,3 +1,4 @@
+// type QueryResultSync = import("../../types/kuzu-wasm/sync/query_result");
 
 /**
  * Helper method to process a single query result (returns a single object)
@@ -5,7 +6,8 @@
  * @param {Object} result - A Kuzu query result object
  * @returns {Object} - Standardized result object
  */
-export function _processQueryResult(result) {
+// export function _processQueryResult(result: QueryResultSync) {
+export function _processQueryResult(result: any) {
   if (!result.isSuccess()) {
     return {
       success: false,
@@ -35,7 +37,8 @@ export function _processQueryResult(result) {
  * @param {Object} result - The Kuzu query result object from connection.query(`MATCH (n) RETURN n`)
  * @returns {Array} Array of nodes with { id, label, attributes? }
  */
-export function parseNodesResult(result) {
+// export function parseNodesResult(result: QueryResultSync) {
+export function parseNodesResult(result: any) {
   if (!result || typeof result.getAllObjects !== 'function') {
     return [];
   }
@@ -54,7 +57,7 @@ export function parseNodesResult(result) {
     if (id == null || label == null) continue;
 
     // Extract attributes (all keys except id/label variants and keys starting with _)
-    const attributes = {};
+    const attributes: any = {};
     for (const key in nodeObj) {
       if (
         key !== '_ID' && key !== '_id' && key !== 'id' &&
@@ -93,7 +96,8 @@ export function parseNodesResult(result) {
  * @param {Object} result - The Kuzu query result object from connection.query(`MATCH ()-[r]->() RETURN r`)
  * @returns {Array} Array of edges with { source, target, label, attributes? }
  */
-export function parseEdgesResult(result) {
+// export function parseEdgesResult(result: QueryResultSync) {
+export function parseEdgesResult(result: any) {
   if (!result || typeof result.getAllObjects !== 'function') {
     return [];
   }
@@ -113,7 +117,7 @@ export function parseEdgesResult(result) {
     if (!src || !dst || !label) continue;
 
     // Extract attributes (all keys except id/label/src/dst variants and keys starting with _)
-    const attributes = {};
+    const attributes: any = {};
     for (const key in edgeObj) {
       if (
         key !== '_ID' && key !== '_id' && key !== 'id' &&
@@ -174,13 +178,14 @@ export function parseEdgesResult(result) {
  * @throws {Error} When result object is invalid or missing required methods
  * @returns {Object} Color map or error object with error message
  */
-export function queryResultColorMapExtraction(result) {
+// export function queryResultColorMapExtraction(result: QueryResultSync) {
+export function queryResultColorMapExtraction(result: any) {
   if (!result || typeof result.getAllObjects !== 'function') {
     console.warn("Invalid result object - missing getAllObjects method");
     return { nodes: [], edges: [] };
   }
 
-  const colorMap = {};
+  const colorMap: any = {};
   // console.warn("Processing query result for color mapping");
   try {
     const objects = result.getAllObjects();
@@ -214,7 +219,7 @@ export function queryResultColorMapExtraction(result) {
       }
       
     }
-  } catch (err) {
+  } catch (err: any) {
     return {
       error: "Internal queryResultExtraction error: " +  err.message,
     }
@@ -223,71 +228,71 @@ export function queryResultColorMapExtraction(result) {
 }
 
 
-export function queryResultNodesAndEdgesExtraction(result) {
-  // if (!result || !result.objects) {
-  //     console.log(result.isSuccess());
-  //     console.log(result.toString());
+// export function queryResultNodesAndEdgesExtraction(result) {
+//   // if (!result || !result.objects) {
+//   //     console.log(result.isSuccess());
+//   //     console.log(result.toString());
 
-  //     console.warn("No graph data found");
-  //     return { nodes: [], edges: [] };
-  // }
+//   //     console.warn("No graph data found");
+//   //     return { nodes: [], edges: [] };
+//   // }
 
-  const nodeMap = new Map();
-  const edges = [];
+//   const nodeMap = new Map();
+//   const edges = [];
 
-  for (const row of result.objects) {
-    const n = row.n;
-    const m = row.m;
-    const r = row.r;
+//   for (const row of result.objects) {
+//     const n = row.n;
+//     const m = row.m;
+//     const r = row.r;
 
-    // Lamda function to extract props
-    const extractProps = (entity, excludeKeys = []) => {
-      const props = {};
-      for (const key in entity) {
-        if (!key.startsWith("_") && !excludeKeys.includes(key)) {
-          props[key] = entity[key];
-        }
-      }
-      return props;
-    };
+//     // Lamda function to extract props
+//     const extractProps = (entity, excludeKeys = []) => {
+//       const props = {};
+//       for (const key in entity) {
+//         if (!key.startsWith("_") && !excludeKeys.includes(key)) {
+//           props[key] = entity[key];
+//         }
+//       }
+//       return props;
+//     };
 
-    // Parse node 'n'
-    if (n?._id?.offset != null) {
-      const id = n._id.offset.toString();
-      const label = n._label;
-      const attributes = extractProps(n, ["id"]);
-      nodeMap.set(id, {
-        id,
-        label,
-        ...(Object.keys(attributes).length > 0 ? { attribute: attributes } : {})
-      });
-    }
+//     // Parse node 'n'
+//     if (n?._id?.offset != null) {
+//       const id = n._id.offset.toString();
+//       const label = n._label;
+//       const attributes = extractProps(n, ["id"]);
+//       nodeMap.set(id, {
+//         id,
+//         label,
+//         ...(Object.keys(attributes).length > 0 ? { attribute: attributes } : {})
+//       });
+//     }
 
-    // Parse node 'm'
-    if (m?._id?.offset != null) {
-      const id = m._id.offset.toString();
-      const label = m._label;
-      const attributes = extractProps(m, ["id"]);
-      nodeMap.set(id, {
-        id,
-        label,
-        ...(Object.keys(attributes).length > 0 ? { attribute: attributes } : {})
-      });
-    }
+//     // Parse node 'm'
+//     if (m?._id?.offset != null) {
+//       const id = m._id.offset.toString();
+//       const label = m._label;
+//       const attributes = extractProps(m, ["id"]);
+//       nodeMap.set(id, {
+//         id,
+//         label,
+//         ...(Object.keys(attributes).length > 0 ? { attribute: attributes } : {})
+//       });
+//     }
 
-    // Parse relationship 'r'
-    if (r?._id?.offset != null && r._src && r._dst) {
-      const attributes = extractProps(r);
-      edges.push({
-        source: r._src.offset.toString(),
-        target: r._dst.offset.toString(),
-        ...(Object.keys(attributes).length > 0 ? { attribute: attributes } : {})
-      });
-    }
-  }
+//     // Parse relationship 'r'
+//     if (r?._id?.offset != null && r._src && r._dst) {
+//       const attributes = extractProps(r);
+//       edges.push({
+//         source: r._src.offset.toString(),
+//         target: r._dst.offset.toString(),
+//         ...(Object.keys(attributes).length > 0 ? { attribute: attributes } : {})
+//       });
+//     }
+//   }
 
-  return {
-    nodes: Array.from(nodeMap.values()),
-    edges
-  };
-}
+//   return {
+//     nodes: Array.from(nodeMap.values()),
+//     edges
+//   };
+// }
