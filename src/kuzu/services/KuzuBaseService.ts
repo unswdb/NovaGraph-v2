@@ -78,8 +78,14 @@ export default class KuzuBaseService {
       }
 
       // Get snapshot set to nodes and edges 
-      nodes = snapshotGraphState(this.connection).nodes;
-      edges = snapshotGraphState(this.connection).edges;
+      const graphState: { 
+        nodes: any; 
+        edges: any; 
+        tables: any; 
+      } = snapshotGraphState(this.connection);
+
+      nodes = graphState.nodes;
+      edges = graphState.edges;
 
       // Gracefully close the query result object
       currentResult.close();
@@ -293,11 +299,7 @@ export default class KuzuBaseService {
   }
 
   createNode(tableName: string,
-    properties: Record<string, ValueWithType>) {
-    if (!this.helper) {
-      throw new Error("Kuzu service not initialized");
-    }
-    
+    properties: Record<string, ValueWithType>) {    
     try {
       // Build the query using the function directly
       const query = createNodeQuery(tableName, properties);
