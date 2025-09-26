@@ -1,5 +1,5 @@
 import { 
-  _processQueryResult, 
+  processQueryResult, 
   parseNodesResult, 
   parseEdgesResult 
 } from './KuzuQueryResultExtractor';
@@ -21,7 +21,7 @@ import {
     
     
     const tablesResult = connection.query(`CALL show_tables() RETURN *`);
-    const tables = _processQueryResult(tablesResult);
+    const tables = processQueryResult(tablesResult);
 
     return { nodes, edges, tables };
   }

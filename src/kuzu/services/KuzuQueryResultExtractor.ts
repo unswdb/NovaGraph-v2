@@ -7,7 +7,7 @@
  * @returns {Object} - Standardized result object
  */
 // export function _processQueryResult(result: QueryResultSync) {
-export function _processQueryResult(result: any) {
+export function processQueryResult(result: any) {
   if (!result.isSuccess()) {
     return {
       success: false,

@@ -4,6 +4,7 @@ import {
 
 import { 
   queryResultColorMapExtraction, 
+  processQueryResult
 } from "./KuzuQueryResultExtractor"
 
 import { 
@@ -60,7 +61,7 @@ export default class KuzuBaseService {
 
       // Loop through each query result and collect successnesss
       while (currentResult) {
-        const queryResult = this._processQueryResult(currentResult);
+        const queryResult = processQueryResult(currentResult);
         if (queryResult.success) {
           successQueries.push(queryResult);
         } else {
@@ -112,39 +113,39 @@ export default class KuzuBaseService {
 
 
 
-  /**
-   * Helper method to process a single query result
-   * 
-   * @private
-   * @param {Object} result - A Kuzu query result object
-   * @returns {Object}
-   * TODO: in production, remove all toString
-   */
-  // _processQueryResult(result: QueryResultSync) {
-  _processQueryResult(result: any) {
-    if (!result.isSuccess()) {
-      return {
-        success: false,
-        objects: null,
-        message: result.getErrorMessage() || "Query failed - no specified message",
-      };
-    }
+  // /**
+  //  * Helper method to process a single query result
+  //  * 
+  //  * @private
+  //  * @param {Object} result - A Kuzu query result object
+  //  * @returns {Object}
+  //  * TODO: in production, remove all toString
+  //  */
+  // // processQueryResult(result: QueryResultSync) {
+  // processQueryResult(result: any) {
+  //   if (!result.isSuccess()) {
+  //     return {
+  //       success: false,
+  //       objects: null,
+  //       message: result.getErrorMessage() || "Query failed - no specified message",
+  //     };
+  //   }
 
-    try {
-      const objects = result.getAllObjects();
-      return {
-        success: result.isSuccess(),
-        objects: objects,
-        toString: result.toString() 
-      };
-    } catch (e) {
-      return {
-        success: false,
-        objects: null,
-        error: "Error processing query result. Error: " + result.getErrorMessage(),
-      };
-    }
-  }
+  //   try {
+  //     const objects = result.getAllObjects();
+  //     return {
+  //       success: result.isSuccess(),
+  //       objects: objects,
+  //       toString: result.toString() 
+  //     };
+  //   } catch (e) {
+  //     return {
+  //       success: false,
+  //       objects: null,
+  //       error: "Error processing query result. Error: " + result.getErrorMessage(),
+  //     };
+  //   }
+  // }
 
   // /**
   //  * Execute a helper method by name with arguments
