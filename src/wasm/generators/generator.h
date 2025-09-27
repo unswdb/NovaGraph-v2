@@ -14,18 +14,16 @@ std::vector<std::string> split(const std::string &s, char delimiter);
 
 typedef std::unordered_map<std::string, int> NodeMap;
 
-NodeMap process_nodes_csv(const std::string &filename);
-void process_edges_csv(const std::string &edgesFilename, std::unordered_map<std::string, int> &nodeMap, bool directed);
-bool process_json(const std::string &filename);
-
 using namespace emscripten;
 
-val graph_nodes(void);
-val graph_edges(void);
-val graph_from_csv(const std::string &nodesFilename, const std::string &edgesFilename, bool directed);
-val graph_from_json(const std::string &filename);
-val graph_from_gml(const std::string &filename);
-val graph_from_gexf(const std::string &filename);
-val graph_from_n_nodes(igraph_integer_t n, igraph_real_t p, bool directed);
+val graph_nodes(igraph_t *g);
+val graph_edges(igraph_t *g);
+
+// Keep default ONLY in the header:
+void create_node(igraph_t *g,
+                 igraph_integer_t id,
+                 const char *label,
+                 const char *tableName,
+                 emscripten::val attributes);
 
 #endif

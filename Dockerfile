@@ -44,14 +44,11 @@ RUN cd wasm/pugixml && \
     emcmake cmake .. -DCMAKE_C_FLAGS="-Wno-error=uninitialized" && \
     emmake make
 
-# Patch WASM files
+# Build igraph
 RUN cd wasm/igraph && \
     sed -i 's/message(FATAL_ERROR "IEEE754 double endianness test terminated abnormally.")/set(IEEE754_DOUBLE_BIG_ENDIAN FALSE)\nset(IEEE754_DOUBLE_LITTLE_ENDIAN TRUE)/' etc/cmake/ieee754_endianness.cmake && \
     sed -i 's/message(FATAL_ERROR "igraph only supports platforms where IEEE754 doubles have the same endianness as uint64_t.")/set(IEEE754_DOUBLE_BIG_ENDIAN FALSE)\nset(IEEE754_DOUBLE_LITTLE_ENDIAN TRUE)/' etc/cmake/ieee754_endianness.cmake && \
-    sed -i '/include(etc\/cmake\/ieee754_endianness.cmake)/i set(IEEE754_DOUBLE_BIG_ENDIAN FALSE)\nset(IEEE754_DOUBLE_LITTLE_ENDIAN TRUE)' CMakeLists.txt
-
-# Build igraph
-RUN cd wasm/igraph && \
+    sed -i '/include(etc\/cmake\/ieee754_endianness.cmake)/i set(IEEE754_DOUBLE_BIG_ENDIAN FALSE)\nset(IEEE754_DOUBLE_LITTLE_ENDIAN TRUE)' CMakeLists.txt && \
     mkdir build && cd build && \
     emcmake cmake .. -DCMAKE_C_FLAGS="-Wno-error=uninitialized" && \
     emmake make

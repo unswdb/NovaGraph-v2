@@ -1,6 +1,6 @@
 import { Input } from "~/components/form/input";
 import type { TextInput } from "./types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { InputComponentProps } from "..";
 
 export default function TextInputComponent({
@@ -10,6 +10,12 @@ export default function TextInputComponent({
 }: InputComponentProps<TextInput>) {
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    if (input.defaultValue) {
+      onChange({ value: input.defaultValue, success: true });
+    }
+  }, [input.defaultValue]);
 
   const handleTextOnChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;

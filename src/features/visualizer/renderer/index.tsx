@@ -83,16 +83,20 @@ export default function GraphRenderer({
 
   // Get outgoing edges map
   const nodeOutgoingEdgesMap = useMemo(() => {
-    const map: Record<string, GraphNode[]> = {};
-    edges.forEach((edge) => {
-      if (!map[edge.source]) map[edge.source] = [];
-      map[edge.source].push(nodesMap[edge.target]);
+    const map: Record<string, [GraphNode, GraphEdge][]> = {};
 
+    edges.forEach((edge) => {
+      // Source → Target
+      if (!map[edge.source]) map[edge.source] = [];
+      map[edge.source].push([nodesMap[edge.target], edge]);
+
+      // If undirected, also add Target → Source
       if (!directed) {
         if (!map[edge.target]) map[edge.target] = [];
-        map[edge.target].push(nodesMap[edge.source]);
+        map[edge.target].push([nodesMap[edge.source], edge]);
       }
     });
+
     return map;
   }, [nodesMap, edges, directed]);
 
@@ -143,6 +147,7 @@ export default function GraphRenderer({
           <NodeMetadata
             node={clickedNode}
             outgoingEdges={nodeOutgoingEdgesMap[clickedNode.id] ?? []}
+            directed={directed}
             onClose={() => unselectNode(clickedNode)}
           />
         )}

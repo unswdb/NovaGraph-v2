@@ -1,10 +1,7 @@
-import type { BaseInputType } from "../../types";
 import type {
   AlgorithmMultipleSelectInput,
   AlgorithmSelectInput,
   AlgorithmSingleSelectInput,
-  MultipleValues,
-  SingleValues,
 } from "./types";
 
 type selectInputDefault = Pick<

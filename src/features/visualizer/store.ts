@@ -156,12 +156,15 @@ export default class VisualizerStore {
           graph: {
             nodes: graph.nodes.map((n: GraphNode) => ({
               id: String(n.id),
-              label: n.label,
-              attributes: n.attributes,
+              tableName: String(n.tableName),
+              ...n.label && { label: n.label },
+              ...n.attributes && { attributes : n.attributes },
             })),
             edges: graph.edges.map((e: GraphEdge) => ({
               source: String(e.source),
               target: String(e.target),
+              ...e.weight && { weight: Number(e) },
+              ...e.attributes && { attributes: e.attributes },
             })),
             directed: graph.directed,
           },
@@ -172,7 +175,7 @@ export default class VisualizerStore {
   };
 
   cleanup = () => {
-    // controller.cleanup();
+    // TODO: this.controller.cleanup();
   };
 
   setDatabase = (database: GraphDatabase) => {
@@ -182,13 +185,11 @@ export default class VisualizerStore {
   setNodes = (nodes: GraphNode[]) => {
     this.checkInitialization();
     this.database.graph.nodes = nodes;
-    // TODO: save the new database state to kuzu
   };
 
   setEdges = (edges: GraphEdge[]) => {
     this.checkInitialization();
     this.database.graph.edges = edges;
-    // TODO: save the new database state to kuzu
   };
 
   addDatabase = (database: GraphDatabase) => {

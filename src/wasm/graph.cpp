@@ -15,17 +15,29 @@ val initGraph(void)
 
     igraph_empty(&globalGraph, 10, IGRAPH_UNDIRECTED);
 
-    // Use European cities as nodes
-    SETVAS(&globalGraph, "label", 0, "London");
-    SETVAS(&globalGraph, "label", 1, "Paris");
-    SETVAS(&globalGraph, "label", 2, "Berlin");
-    SETVAS(&globalGraph, "label", 3, "Rome");
-    SETVAS(&globalGraph, "label", 4, "Madrid");
-    SETVAS(&globalGraph, "label", 5, "Athens");
-    SETVAS(&globalGraph, "label", 6, "Amsterdam");
-    SETVAS(&globalGraph, "label", 7, "Brussels");
-    SETVAS(&globalGraph, "label", 8, "Lisbon");
-    SETVAS(&globalGraph, "label", 9, "Prague");
+    const char *cityNames[10] = {
+        "London", "Paris", "Berlin", "Rome", "Madrid",
+        "Athens", "Amsterdam", "Brussels", "Lisbon", "Prague"};
+    const double lat[10] = {
+        51.5074, 48.8566, 52.5200, 41.9028, 40.4168, 37.9838,
+        52.3676, 50.8503, 38.7223, 50.0755};
+    const double lon[10] = {
+        -0.1278, 2.3522, 13.4050, 12.4964, -3.7038, 23.7275,
+        4.9041, 4.3517, -9.1393, 14.4378};
+    const int population[10] = {
+        9000000, 2148000, 3769000, 2873000, 3223000, 664000,
+        872000, 1860000, 545000, 1309000};
+
+    for (int i = 0; i < 10; i++)
+    {
+        val attrs = val::object();
+        attrs.set("latitude", std::to_string(lat[i]));
+        attrs.set("longitude", std::to_string(lon[i]));
+        attrs.set("population", std::to_string(population[i]));
+
+        // Create the node with label, tableName, and extra attributes
+        create_node(&globalGraph, i, cityNames[i], "City", attrs);
+    }
 
     // Create some edges to connect these cities in a network
     igraph_add_edge(&globalGraph, 0, 1);
@@ -41,8 +53,8 @@ val initGraph(void)
     igraph_add_edge(&globalGraph, 6, 7);
 
     val result = val::object();
-    result.set("nodes", graph_nodes());
-    result.set("edges", graph_edges());
+    result.set("nodes", graph_nodes(&globalGraph));
+    result.set("edges", graph_edges(&globalGraph));
     result.set("directed", false);
     return result;
 }
@@ -74,12 +86,6 @@ EMSCRIPTEN_BINDINGS(graph)
     function("initGraph", &initGraph);
     function("test", &test);
     function("what_to_stderr", &what_to_stderr);
-
-    function("generate_graph_from_csv", &graph_from_csv);
-    function("generate_graph_from_json", &graph_from_json);
-    function("generate_graph_from_gml", &graph_from_gml);
-    function("generate_graph_from_gexf", &graph_from_gexf);
-    function("generate_graph_from_n_nodes", &graph_from_n_nodes);
 
     function("dijkstra_source_to_target", &dijkstra_source_to_target);
     function("dijkstra_source_to_all", &dijkstra_source_to_all);

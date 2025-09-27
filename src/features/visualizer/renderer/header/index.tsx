@@ -30,13 +30,6 @@ export default function GraphRendererHeader({
           ...(nodes[0]?.label
             ? [{ label: "Label", accessor: (n: GraphNode) => String(n.label) }]
             : []),
-          ...(nodes[0]?.attributes
-            ? Object.keys(nodes[0].attributes).map((attribute) => ({
-                label: capitalize(attribute),
-                accessor: (n: GraphNode) =>
-                  String(n.attributes?.[attribute] ?? ""),
-              }))
-            : []),
         ]
       : [];
 

@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import type { GraphNode } from "../../types";
+import type { GraphEdge, GraphNode } from "../../types";
 import { Button } from "~/components/ui/button";
 import { ChevronDown, ChevronRight, Trash2, X } from "lucide-react";
 import { cn } from "~/lib/utils";
@@ -35,11 +35,13 @@ import EdgesList from "./edges";
 export default function NodeMetadata({
   node,
   outgoingEdges,
+  directed,
   onClose,
   className,
 }: {
   node: GraphNode;
-  outgoingEdges: GraphNode[];
+  outgoingEdges: [GraphNode, GraphEdge][];
+  directed: boolean;
   onClose: () => void;
   className?: string;
 }) {
@@ -51,16 +53,14 @@ export default function NodeMetadata({
     toast.success("Node deleted (not really, yet!)");
   };
 
-  console.log("outgoingEdges", outgoingEdges);
-
   return (
     <Card
       className={cn(
-        "absolute bottom-14 right-14 w-74 max-h-2/3 z-50 flex flex-col",
+        "absolute bottom-14 right-14 w-74 max-h-3/5 z-50 flex flex-col",
         className
       )}
     >
-      <CardHeader>
+      <CardHeader className="px-4">
         <CardTitle className="truncate">Node {node.label ?? node.id}</CardTitle>
         <CardDescription className="truncate">
           View and edit details to a node
@@ -96,7 +96,11 @@ export default function NodeMetadata({
             </span>
           </CollapsibleTrigger>
           <CollapsibleContent className="py-1 px-2 space-y-4 flex flex-col mt-4">
-            <EdgesList node={node} outgoingEdges={outgoingEdges} />
+            <EdgesList
+              node={node}
+              outgoingEdges={outgoingEdges}
+              directed={directed}
+            />
           </CollapsibleContent>
         </Collapsible>
       </CardContent>

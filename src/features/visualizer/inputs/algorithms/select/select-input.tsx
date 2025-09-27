@@ -61,6 +61,20 @@ function buildItems(
       }));
   }
 
+  if (input.source === "tables") {
+    const tables =
+      Array.from(
+        new Set(store.database?.graph.nodes.map((n) => n.tableName))
+      ) ?? [];
+    const blacklist = new Set(input.blacklist ?? []);
+    return tables
+      .filter((t) => !blacklist.has(t))
+      .map((t) => ({
+        value: t,
+        label: t,
+      }));
+  }
+
   const blacklist = new Set(input.blacklist ?? []);
   return (input.options ?? [])
     .filter((opt) => !blacklist.has(opt))
@@ -72,12 +86,15 @@ function getInputPlaceholder(input: AlgorithmSelectInput) {
     return !!input.multiple ? "Select nodes..." : "Select a node...";
   if (input.source === "edges")
     return !!input.multiple ? "Select edges..." : "Select an edge...";
+  if (input.source === "tables")
+    return !!input.multiple ? "Select tables..." : "Select a table...";
   return !!input.multiple ? "Select options..." : "Select an option...";
 }
 
 function getInputNoun(input: AlgorithmSelectInput) {
   if (input.source === "nodes") return "node";
   if (input.source === "edges") return "edge";
+  if (input.source === "tables") return "table";
   return "option";
 }
 
@@ -130,6 +147,12 @@ function AlgorithmSingleSelectInputComponent({
   const placeholder = useMemo(() => getInputPlaceholder(input), [input]);
   const noun = useMemo(() => getInputNoun(input), [input]);
 
+  useEffect(() => {
+    if (input.defaultValue) {
+      onChange({ value: input.defaultValue, success: true });
+    }
+  }, [input.defaultValue]);
+
   const onValueChange = async (value: string) => {
     const newValue = value;
     const required = !!input.required;
@@ -165,6 +188,7 @@ function AlgorithmSingleSelectInputComponent({
             role="combobox"
             aria-expanded={open}
             className="w-full justify-between"
+            disabled={input.disabled}
           >
             {value
               ? sources.find((source) => source.value === value)?.label
@@ -226,6 +250,12 @@ function AlgorithmMultipleSelectInputComponent({
   const noun = useMemo(() => getInputNoun(input), [input]);
 
   useEffect(() => {
+    if (input.defaultValues) {
+      onChange({ value: input.defaultValues, success: true });
+    }
+  }, [input.defaultValues]);
+
+  useEffect(() => {
     setValues(inputValues);
   }, [inputValues]);
 
@@ -257,7 +287,7 @@ function AlgorithmMultipleSelectInputComponent({
   return (
     <>
       <MultiSelect values={values} onValuesChange={onValuesChange}>
-        <MultiSelectTrigger className="w-full">
+        <MultiSelectTrigger className="w-full" disabled={input.disabled}>
           <MultiSelectValue placeholder={placeholder} />
         </MultiSelectTrigger>
         <MultiSelectContent
