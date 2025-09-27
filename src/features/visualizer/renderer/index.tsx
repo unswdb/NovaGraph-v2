@@ -99,6 +99,11 @@ export default function GraphRenderer({
   const selectNode = (node: GraphNode | null | undefined) => {
     zoomToNode(node);
     setClickedNode(node ?? null);
+    if (node === null || node === undefined) {
+
+    } else {
+      console.log("nodes:" + JSON.stringify(nodes, null, 2));
+    }
   };
 
   const unselectNode = (_: GraphNode | null | undefined) => {

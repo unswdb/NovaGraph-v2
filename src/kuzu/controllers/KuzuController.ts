@@ -1,3 +1,4 @@
+import type { GraphNode } from "~/features/visualizer/types";
 import KuzuInMemorySync from "../services/KuzuInMemorySync";
 import type { 
   CompositeType, 
@@ -160,35 +161,40 @@ class KuzuController {
     return this.service.createNode(tableName, properties);
   }
 
-  /**
-   * Builds a Cypher query to delete a node (and all its relationships) by primary key.
-   *
-   * @param tableName - Node label (table) to match.
-   * @param primaryKey - Property name used as primary key.
-   * @param primaryValue - Primary key value. Supported types:
-   *   INT, UINT, FLOAT, DOUBLE, DECIMAL, SERIAL,
-   *   STRING, UUID, DATE, TIMESTAMP, BLOB.
-   *   (Booleans/JSON not allowed as primary keys.)
-   *
-   * @returns Cypher `MATCH … DETACH DELETE` query string.
-   */
-  deleteNode(tableName: string,
-    primaryKey: string,
-    primaryValue: any) {
+  // /**
+  //  * Builds a Cypher query to delete a node (and all its relationships) by primary key.
+  //  *
+  //  * @param tableName - Node label (table) to match.
+  //  * @param primaryKey - Property name used as primary key.
+  //  * @param primaryValue - Primary key value. Supported types:
+  //  *   INT, UINT, FLOAT, DOUBLE, DECIMAL, SERIAL,
+  //  *   STRING, UUID, DATE, TIMESTAMP, BLOB.
+  //  *   (Booleans/JSON not allowed as primary keys.)
+  //  *
+  //  * @returns Cypher `MATCH … DETACH DELETE` query string.
+  //  */
+  // deleteNode(tableName: string,
+  //   primaryKey: string,
+  //   primaryValue: any) {
+  //   if (!this.service) {
+  //     throw new Error("Kuzu service not initialized");
+  //   }
+  //   return this.service.deleteNode(tableName, primaryKey, primaryValue);
+  // }
+
+  // deleteNodeWithoutPrimary(tableName: string, primaryValue: any) {
+  //   if (!this.service) {
+  //     throw new Error("Kuzu service not initialized");
+  //   }
+  //   return this.service.deleteNodeWithoutPrimary(tableName, primaryValue)
+  // }
+
+  deleteNode(node: GraphNode) {
     if (!this.service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.deleteNode(tableName, primaryKey, primaryValue);
+    return this.service.deleteNode(node);
   }
-
-  deleteNodeWithoutPrimary(tableName: string, primaryValue: any) {
-    if (!this.service) {
-      throw new Error("Kuzu service not initialized");
-    }
-    return this.service.deleteNodeWithoutPrimary(tableName, primaryValue)
-  }
-
-
 
   // -- Exclusive for Kuzu Persistent -- 
 

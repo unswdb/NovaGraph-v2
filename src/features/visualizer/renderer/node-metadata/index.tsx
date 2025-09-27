@@ -31,6 +31,7 @@ import {
 import AttributesForm from "./attributes";
 import { toast } from "sonner";
 import EdgesList from "./edges";
+import { useStore } from "../../hooks/use-store";
 
 export default function NodeMetadata({
   node,
@@ -47,8 +48,12 @@ export default function NodeMetadata({
   const [isEdgesExpanded, setIsEdgesExpanded] = useState(false);
 
   // TODO: Implement handleDelete
+  const store = useStore();
+  
+
   const handleDelete = (node: GraphNode) => {
-    toast.success("Node deleted (not really, yet!)");
+    store.controller.db.deleteNode(node);
+    toast.success("Node deleted");
   };
 
   console.log("outgoingEdges", outgoingEdges);

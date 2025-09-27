@@ -18,6 +18,7 @@ import type {
   CompositeType, 
   ValueWithType 
 } from "~/types/KuzuDBTypes";
+import type { GraphNode } from "~/features/visualizer/types";
 
 
 // type QueryResultSync = import("../../types/kuzu-wasm/sync/query_result");
@@ -317,22 +318,40 @@ export default class KuzuBaseService {
     }
   }
 
-  /**
-   * Builds a Cypher query to delete a node (and all its relationships) by primary key.
-   *
-   * @param tableName - Node label (table) to match.
-   * @param primaryKey - Property name used as primary key.
-   * @param primaryValue - Primary key value. Supported types:
-   *   INT, UINT, FLOAT, DOUBLE, DECIMAL, SERIAL,
-   *   STRING, UUID, DATE, TIMESTAMP, BLOB.
-   *   (Booleans/JSON not allowed as primary keys.)
-   *
-   * @returns Cypher `MATCH … DETACH DELETE` query string.
-   */
-  deleteNode(tableName: string,
-    primaryKey: string,
-    primaryValue: any ) {
+  // /**
+  //  * Builds a Cypher query to delete a node (and all its relationships) by primary key.
+  //  *
+  //  * @param tableName - Node label (table) to match.
+  //  * @param primaryKey - Property name used as primary key.
+  //  * @param primaryValue - Primary key value. Supported types:
+  //  *   INT, UINT, FLOAT, DOUBLE, DECIMAL, SERIAL,
+  //  *   STRING, UUID, DATE, TIMESTAMP, BLOB.
+  //  *   (Booleans/JSON not allowed as primary keys.)
+  //  *
+  //  * @returns Cypher `MATCH … DETACH DELETE` query string.
+  //  */
+  // deleteNode(tableName: string,
+  //   primaryKey: string,
+  //   primaryValue: any ) {
+  //   try {
+  //     // Build the query using the function directly
+  //     const query = deleteNodeQuery(tableName, primaryKey, primaryValue);
+      
+  //     // Execute the query using existing executeQuery method
+  //     const result = this.executeQuery(query);
+      
+  //     return result;
+  //   } catch (error) {
+  //     console.error("Error deleting node:", error);
+  //     throw error;
+  //   }
+  // }
+
+  deleteNode(node: GraphNode) {
     try {
+      const tableName: string | undefined = node.label
+      const primaryKey = this.findPrimaryKeyForNode(tableName)
+
       // Build the query using the function directly
       const query = deleteNodeQuery(tableName, primaryKey, primaryValue);
       
@@ -346,7 +365,9 @@ export default class KuzuBaseService {
     }
   }
 
-  findPrimaryKeyForNode(tableName: string) {
+
+
+  findPrimaryKeyForNode(tableName: string | undefined) {
     try {
       // Build the query using the function directly
       const query = findPrimaryKeyForNodeQuery(tableName);
