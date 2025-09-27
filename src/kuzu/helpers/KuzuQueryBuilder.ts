@@ -95,11 +95,46 @@ export function createNodeQuery(
     .map(([key, [type, value]]) => `${key}: ${_serialize(type, value)}`)
     .join(', ');
   const q = `CREATE (n:${tableName} {${entries}});`;
-  console.log('createNodeQuery:', q);
+  // console.log('createNodeQuery:', q);
   return q;
 }
 
 
+/**
+ * Builds a Cypher query to delete a node (and all its relationships) by primary key.
+ *
+ * @param tableName - Node label (table) to match.
+ * @param primaryKey - Property name used as primary key.
+ * @param primaryValue - Primary key value. Supported types:
+ *   INT, UINT, FLOAT, DOUBLE, DECIMAL, SERIAL,
+ *   STRING, UUID, DATE, TIMESTAMP, BLOB.
+ *   (Booleans/JSON not allowed as primary keys.)
+ *
+ * @returns Cypher `MATCH … DETACH DELETE` query string.
+ */
+export function deleteNodeQuery(
+  tableName: string,
+  primaryKey: string,
+  primaryValue: any 
+) {
+  const query = `MATCH (n:${tableName}) WHERE n.${primaryKey} = "${primaryValue}" DETACH DELETE n`;
+  // console.log("query: " + query)
+  return query;
+}
+
+/**
+ * Builds a Cypher query to retrieve the primary key column name
+ * of a given table in Kùzu.
+ *
+ * @param tableName - The name of the table to inspect.
+ * @returns Query string selecting the primary key column.
+ */
+export function findPrimaryKeyForNodeQuery(tableName: string) {
+  const query = `CALL TABLE_INFO('${tableName}') WHERE \`primary key\` = true RETURN name;`;
+  return query;
+}
+
+// Helper function down here
 /**
  * Escape special characters in a string for safe use in query literals.
  *

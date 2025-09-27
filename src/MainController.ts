@@ -50,6 +50,16 @@ class MainController {
       return Promise.resolve(kuzuController.createNode(label, properties));
     },
 
+    async deleteNodeWithPrimary(tableName: string,
+      primaryKey: string,
+      primaryValue: any) {
+      return Promise.resolve(kuzuController.deleteNode(tableName, primaryKey, primaryValue));
+    },
+
+    async deleteNodeWithoutPrimary(tableName: string, primaryValue: any) {
+      return Promise.resolve(kuzuController.deleteNodeWithoutPrimary(tableName, primaryValue));
+    },
+
     // Execute query method
     async executeQuery(query: string) {
       return Promise.resolve(kuzuController.executeQuery(query));
