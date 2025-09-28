@@ -8,7 +8,7 @@ export type GraphNode = {
 export type GraphEdge = {
   source: string; // Unique identifier of the node
   target: string; // Unique identifier of the node
-  weight?: number; // Optional weight for the edge
+  weight: number; // Weight for the edge. Default value is 0
   attributes?: Record<string, string | boolean | number>; // Additional attributes for the edge
 };
 

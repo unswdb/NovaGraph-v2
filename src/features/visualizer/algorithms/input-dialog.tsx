@@ -59,6 +59,7 @@ export default function InputDialog({
     if (!module) return;
 
     setOpen(false);
+    setInputResults(createEmptyInputResults(algorithm.inputs));
     startLoading("Running Algorithm...");
 
     setTimeout(() => {

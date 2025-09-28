@@ -13,33 +13,24 @@ import { ChevronDown, ChevronRight, Trash2, X } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { useState } from "react";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "~/components/ui/alert-dialog";
-import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
 import AttributesForm from "./attributes";
-import { toast } from "sonner";
 import EdgesList from "./edges";
+import DeleteNodeButton from "./delete-node";
 
 export default function NodeMetadata({
   node,
+  nodesMap,
   outgoingEdges,
   directed,
   onClose,
   className,
 }: {
   node: GraphNode;
+  nodesMap: Record<string, GraphNode>;
   outgoingEdges: [GraphNode, GraphEdge][];
   directed: boolean;
   onClose: () => void;
@@ -47,11 +38,6 @@ export default function NodeMetadata({
 }) {
   const [isAttributeExpanded, setIsAttributeExpanded] = useState(false);
   const [isEdgesExpanded, setIsEdgesExpanded] = useState(false);
-
-  // TODO: Implement handleDelete
-  const handleDelete = (node: GraphNode) => {
-    toast.success("Node deleted (not really, yet!)");
-  };
 
   return (
     <Card
@@ -98,6 +84,7 @@ export default function NodeMetadata({
           <CollapsibleContent className="py-1 px-2 space-y-4 flex flex-col mt-4">
             <EdgesList
               node={node}
+              nodesMap={nodesMap}
               outgoingEdges={outgoingEdges}
               directed={directed}
             />
@@ -105,30 +92,7 @@ export default function NodeMetadata({
         </Collapsible>
       </CardContent>
       <CardFooter>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="critical" className="w-full font-bold">
-              <Trash2 className="size-4" /> Delete Node
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                Are you sure you want to delete this node?
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                This will permanently remove the node and all of its connected
-                edges from the graph. The action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => handleDelete(node)}>
-                Continue
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <DeleteNodeButton node={node} />
       </CardFooter>
     </Card>
   );

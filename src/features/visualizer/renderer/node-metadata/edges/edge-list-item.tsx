@@ -29,7 +29,7 @@ import InputComponent, {
 import { capitalize } from "~/lib/utils";
 import { useMemo, useState } from "react";
 
-export default function EdgesDialog({
+export default function EdgeListItem({
   source,
   target,
   edge,
@@ -45,7 +45,7 @@ export default function EdgesDialog({
       id: "edge-weight",
       label: "Weight",
       placeholder: "Enter weight...",
-      defaultValue: edge.weight ? edge.weight : 0,
+      defaultValue: edge.weight ?? 0,
       min: 0,
       step: 1,
     }),
@@ -69,7 +69,7 @@ export default function EdgesDialog({
     [values]
   );
 
-  // TODO: Handle handleDeleteEdge
+  // TODO: Implement handleDeleteEdge
   const handleDeleteEdge = (node1: GraphNode, node2: GraphNode) => {
     toast.success("Edge deleted (not really, yet!)");
   };

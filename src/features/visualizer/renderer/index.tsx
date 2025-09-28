@@ -146,6 +146,7 @@ export default function GraphRenderer({
         {clickedNode && (
           <NodeMetadata
             node={clickedNode}
+            nodesMap={nodesMap}
             outgoingEdges={nodeOutgoingEdgesMap[clickedNode.id] ?? []}
             directed={directed}
             onClose={() => unselectNode(clickedNode)}
