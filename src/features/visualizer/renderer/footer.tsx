@@ -12,6 +12,11 @@ import {
   ZoomOut,
 } from "lucide-react";
 import { useZoomControls } from "./hooks/use-zoom-controls";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 
 export default function GraphRendererFooter({
   cosmographRef,
@@ -33,50 +38,80 @@ export default function GraphRendererFooter({
       {/* Left Side */}
       <div>
         {/* Play/Pause Simulation */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsSimulationPaused((prev) => !prev)}
-        >
-          {isSimulationPaused ? <Play /> : <Pause />}
-        </Button>
+        <Tooltip>
+          <TooltipTrigger>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsSimulationPaused((prev) => !prev)}
+            >
+              {isSimulationPaused ? <Play /> : <Pause />}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Play/Pause Simulation</TooltipContent>
+        </Tooltip>
         {/* Restart Simulation */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => cosmographRef.current?.create()}
-        >
-          <RotateCcw />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => cosmographRef.current?.create()}
+            >
+              <RotateCcw />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Restart Simulation</TooltipContent>
+        </Tooltip>
         {/* Fit All Nodes */}
-        <Button variant="ghost" size="icon" onClick={() => fitToScreen()}>
-          <Shrink />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger>
+            <Button variant="ghost" size="icon" onClick={() => fitToScreen()}>
+              <Shrink />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Fit All Nodes To Screen</TooltipContent>
+        </Tooltip>
       </div>
       {/* Right Side */}
       <div>
         {/* Zoom Out */}
-        <Button variant="ghost" size="icon" onClick={() => zoomOut()}>
-          <ZoomOut />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger>
+            <Button variant="ghost" size="icon" onClick={() => zoomOut()}>
+              <ZoomOut />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Zoom Out</TooltipContent>
+        </Tooltip>
         {/* Zoom In */}
-        <Button variant="ghost" size="icon" onClick={() => zoomIn()}>
-          <ZoomIn />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger>
+            <Button variant="ghost" size="icon" onClick={() => zoomIn()}>
+              <ZoomIn />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Zoom In</TooltipContent>
+        </Tooltip>
         {/* Dynamic Labels Toggle */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setShowDynamicLabels((prev) => !prev)}
-        >
-          <Tag
-            className={
-              showDynamicLabels
-                ? "stroke-page fill-typography-primary"
-                : "stroke-typography-primary fill-page"
-            }
-          />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowDynamicLabels((prev) => !prev)}
+            >
+              <Tag
+                className={
+                  showDynamicLabels
+                    ? "stroke-page fill-typography-primary"
+                    : "stroke-typography-primary fill-page"
+                }
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Show/Hide Node Labels</TooltipContent>
+        </Tooltip>
       </div>
     </div>
   );

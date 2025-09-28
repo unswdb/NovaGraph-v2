@@ -28,6 +28,11 @@ import InputComponent, {
 } from "~/features/visualizer/inputs";
 import { capitalize } from "~/lib/utils";
 import { useMemo, useState } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 
 export default function EdgeListItem({
   source,
@@ -89,16 +94,26 @@ export default function EdgeListItem({
             key={target.id}
             className="pl-2 flex-1 justify-between hover:bg-transparent"
           >
-            {target.label ? (
-              <span className="truncate">
-                {target.label}{" "}
-                <span className="text-typography-tertiary">
-                  (ID: {target.id})
-                </span>
-              </span>
-            ) : (
-              <span className="truncate">{target.id}</span>
-            )}
+            <Tooltip>
+              <TooltipTrigger>
+                {target.label ? (
+                  <span className="truncate">
+                    {target.label} ({edge.weight}){" "}
+                    <span className="text-typography-tertiary">
+                      (ID: {target.id})
+                    </span>
+                  </span>
+                ) : (
+                  <span className="truncate">
+                    {target.label} ({edge.weight}){" "}
+                  </span>
+                )}
+              </TooltipTrigger>
+              <TooltipContent>
+                ID: {target.id} {target.label && `• Label: ${target.label}`} •
+                Weight: {edge.weight}
+              </TooltipContent>
+            </Tooltip>
           </Button>
         </DialogTrigger>
         <DialogContent>

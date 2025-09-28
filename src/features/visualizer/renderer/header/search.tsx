@@ -345,7 +345,7 @@ function DesktopSearch({
   ) : (
     <div
       className={cn(
-        "flex gap-2 animate-in slide-in-from-right-0 duration-250 ease-out",
+        "flex animate-in slide-in-from-right-0 duration-250 ease-out",
         className
       )}
     >
