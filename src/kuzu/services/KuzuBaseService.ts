@@ -10,7 +10,8 @@ import {
 import { 
   createSchemaQuery, 
   createNodeQuery, 
-  findPrimaryKeyQuery
+  findPrimaryKeyQuery,
+  deleteNodeQuery
 } from "../helpers/KuzuQueryBuilder"
 
 import type { 
@@ -34,6 +35,10 @@ export default class KuzuBaseService {
     this.connection = null;
     this.helper = null;
     this.initialized = false;
+  }
+
+  snapshotGraphState() {
+    return snapshotGraphState(this.connection);
   }
 
   /**
@@ -311,9 +316,12 @@ export default class KuzuBaseService {
       const result = this.executeQuery(query);
       
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating node:", error);
-      throw error;
+      return {
+        success: false,
+        error: `Error creating node: ${error.message}`,
+      };
     }
   }
 
@@ -324,7 +332,31 @@ export default class KuzuBaseService {
       return result;
     } catch (error: any) {
       console.error("Error find Primary Key:", error);
-      throw error;
+      return {
+        success: false,
+        error: `Error find Primary Key: ${error.message}`,
+      };
+    }
+  }
+
+  /*
+  tableName: node.tableName
+  primaryKey: string,
+  primaryValue: node.label
+  */
+  deleteNode(node: GraphNode) {
+    try {
+      function extractPrimaryKey(nodeId: string): string {
+        return nodeId.split(":", 2)[1] ?? "";
+      }
+      const query = deleteNodeQuery(node.tableName, extractPrimaryKey(node.id), node.label);
+      const result = this.executeQuery(query);
+      return result;
+    } catch (error: any) {
+      return {
+        success: false,
+        error: `Error delete Node: ${error.message}`,
+      };
     }
   }
 }

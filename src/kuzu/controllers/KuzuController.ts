@@ -75,6 +75,13 @@ class KuzuController {
     return this.service.executeQuery(query);
   }
 
+  snapshotGraphState() {
+    if (!this.service) {
+      throw new Error("Kuzu service not initialized");
+    }
+    return this.service.snapshotGraphState();
+  }
+
   // /**
   //  * Execute a helper method
   //  * @param {string} operation - The helper method to call

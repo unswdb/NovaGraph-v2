@@ -68,8 +68,13 @@ class MainController {
     // Execute query method
     async executeQuery(query: string) {
       return Promise.resolve(kuzuController.executeQuery(query));
-    }
+    },
 
+    // snapshotGraphState
+    async snapshotGraphState() {
+      return Promise.resolve(kuzuController.snapshotGraphState());
+    }
+    
   };
 
   algorithms = {

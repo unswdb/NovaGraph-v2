@@ -1,6 +1,6 @@
 // type QueryResultSync = import("../../types/kuzu-wasm/sync/query_result");
 
-import type { GraphNode } from "~/features/visualizer/types";
+import type { GraphEdge, GraphNode } from "~/features/visualizer/types";
 import { findPrimaryKeyQuery } from "../helpers/KuzuQueryBuilder";
 
 /**
@@ -102,14 +102,14 @@ export function parseNodesResult(result: any, connection: any) : GraphNode[] {
  * @returns {Array} Array of edges with { source, target, label, attributes? }
  */
 // export function parseEdgesResult(result: QueryResultSync) {
-export function parseEdgesResult(result: any) {
+export function parseEdgesResult(result: any): GraphEdge[] {
   if (!result || typeof result.getAllObjects !== 'function') {
     return [];
   }
   const objects = result.getAllObjects();
   // console.warn("Raw edge objects:", objects);
 
-  const edges = [];
+  const edges: GraphEdge[] = [];
   for (const obj of objects) {
     // Get the first property value (e.g., obj.r)
     const edgeObj = obj[Object.keys(obj)[0]];
@@ -153,17 +153,15 @@ export function parseEdgesResult(result: any) {
       targetId = dst.toString();
     }
     
-    const edge = {
+    const edge: GraphEdge = {
       source: sourceId,
       target: targetId,
-      label: label.toString(),
+      weight: 0,
+      // label: label.toString(),
       ...(Object.keys(attributes).length > 0 ? { attributes } : {})
     };
     edges.push(edge);
   }
-  // if (edges.length === 0) {
-  //   console.warn("No edges parsed");
-  // }
   return edges;
 }
 

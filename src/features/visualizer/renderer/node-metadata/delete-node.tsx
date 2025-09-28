@@ -13,11 +13,18 @@ import { toast } from "sonner";
 import type { GraphNode } from "../../types";
 import { Button } from "~/components/ui/button";
 import { Trash2 } from "lucide-react";
+import { useStore } from "../../hooks/use-store";
 
 export default function DeleteNodeButton({ node }: { node: GraphNode }) {
-  // TODO: Implement handleDelete
-  const handleDelete = (node: GraphNode) => {
-    toast.success("Node deleted (not really, yet!)");
+  const store = useStore();
+  const handleDelete = async (node: GraphNode) => {
+    store.controller.db.deleteNode(node);
+    const result = await store.controller.db.snapshotGraphState();
+    store.setNodes(result.nodes);
+    store.setEdges(result.edges);
+    toast.success("Node deleted");
+    // console.log(store.database?.graph.nodes)
+    // console.log(result.nodes)
   };
 
   return (
