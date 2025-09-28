@@ -4,6 +4,7 @@ import type { BaseInputType } from "../../types";
 type Nodes = { source: "nodes"; sources: GraphNode[]; blacklist?: GraphNode[] };
 type Edges = { source: "edges"; sources: GraphEdge[]; blacklist?: GraphEdge[] };
 type Static = { source: "static"; options: string[]; blacklist?: string[] };
+type Tables = { source: "tables"; sources: string[]; blacklist?: string[] };
 
 export type SingleValues = string | undefined;
 export type MultipleValues = string[];
@@ -12,14 +13,16 @@ type AlgorithmSelectInputBase = { type: "algorithm-select" };
 
 export type AlgorithmSingleSelectInput = AlgorithmSelectInputBase &
   BaseInputType<SingleValues> &
-  (Nodes | Edges | Static) & {
+  (Nodes | Edges | Static | Tables) & {
     multiple?: false;
+    defaultValue?: SingleValues;
   };
 
 export type AlgorithmMultipleSelectInput = AlgorithmSelectInputBase &
   BaseInputType<MultipleValues> &
-  (Nodes | Edges | Static) & {
+  (Nodes | Edges | Static | Tables) & {
     multiple: true;
+    defaultValues?: MultipleValues;
   };
 
 export type AlgorithmSelectInput =

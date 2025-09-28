@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import InputComponent, {
+  createAlgorithmSelectInput,
   createEmptyInputResults,
   createTextInput,
 } from "../../inputs";
@@ -14,17 +15,25 @@ export default function AttributesForm({ node }: { node: GraphNode }) {
       id: "node-id",
       label: "ID",
       disabled: true,
-      placeholder: "Node ID",
+      placeholder: "Enter ID...",
       defaultValue: node.id,
       required: true,
+    }),
+    createAlgorithmSelectInput({
+      id: "node-table-name",
+      label: "Table Name",
+      source: "tables",
+      disabled: true,
+      required: true,
+      defaultValue: node.tableName,
     }),
     node.label
       ? createTextInput({
           id: "node-label",
           label: "Label",
-          placeholder: "Node Label",
+          placeholder: "Enter label...",
           defaultValue: node.label,
-          required: false,
+          required: true,
           validator: async (value) => {
             const isValid = value.trim().length > 0;
             return {
@@ -39,9 +48,9 @@ export default function AttributesForm({ node }: { node: GraphNode }) {
           createTextInput({
             id: `node-${key}`,
             label: capitalize(key),
-            placeholder: `Node ${capitalize(key)}`,
+            placeholder: `Enter ${key.toLocaleLowerCase()}...`,
             defaultValue: String(value),
-            required: false,
+            required: true,
           })
         )
       : [],

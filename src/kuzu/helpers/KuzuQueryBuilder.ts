@@ -99,7 +99,9 @@ export function createNodeQuery(
   return q;
 }
 
-
+export function findPrimaryKeyQuery(tableName: string) {
+  return `CALL TABLE_INFO('${tableName}') WHERE \`primary key\` = true RETURN name;`;
+}
 /**
  * Builds a Cypher query to delete a node (and all its relationships) by primary key.
  *

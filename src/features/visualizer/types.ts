@@ -1,14 +1,15 @@
-// TODO (Change where to infer): Infered from src/wasm/generators/generator.cpp
 export type GraphNode = {
-  id: string;
-  label?: string;
-  attributes?: Record<string, string>; // Additional attributes for the node
+  id: string; // Unique identifier of the node
+  tableName: string; // Unique identifier of the table it belongs to
+  label?: string; // Node name/label to display
+  attributes?: Record<string, string | boolean | number>; // Additional attributes for the node
 };
 
 export type GraphEdge = {
-  source: string;
-  target: string;
-  weight?: number; // Optional weight for the edge
+  source: string; // Unique identifier of the node
+  target: string; // Unique identifier of the node
+  weight: number; // Weight for the edge. Default value is 0
+  attributes?: Record<string, string | boolean | number>; // Additional attributes for the edge
 };
 
 export type GraphDatabase = {

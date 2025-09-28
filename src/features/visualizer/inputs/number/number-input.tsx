@@ -1,6 +1,6 @@
 import { Input } from "~/components/form/input";
 import type { NumberInput } from "./types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { InputComponentProps } from "..";
 
 export default function NumberInputComponent({
@@ -10,6 +10,12 @@ export default function NumberInputComponent({
 }: InputComponentProps<NumberInput>) {
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    if (input.defaultValue) {
+      onChange({ value: input.defaultValue, success: true });
+    }
+  }, [input.defaultValue]);
 
   const handleNumberOnChange = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -50,7 +56,7 @@ export default function NumberInputComponent({
     const isValid = required
       ? validator
         ? validator.success
-        : !!newValue
+        : newValue >= 0
       : true;
     const message = required
       ? validator

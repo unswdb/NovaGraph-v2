@@ -1,5 +1,8 @@
 // type QueryResultSync = import("../../types/kuzu-wasm/sync/query_result");
 
+import type { GraphNode } from "~/features/visualizer/types";
+import { findPrimaryKeyQuery } from "../helpers/KuzuQueryBuilder";
+
 /**
  * Helper method to process a single query result (returns a single object)
  * @private
@@ -37,57 +40,59 @@ export function processQueryResult(result: any) {
  * @param {Object} result - The Kuzu query result object from connection.query(`MATCH (n) RETURN n`)
  * @returns {Array} Array of nodes with { id, label, attributes? }
  */
-// export function parseNodesResult(result: QueryResultSync) {
-export function parseNodesResult(result: any) {
+// export function parseNodesResult(result: QueryResultSync, connection: ConnectionSync) {
+export function parseNodesResult(result: any, connection: any) : GraphNode[] {
   if (!result || typeof result.getAllObjects !== 'function') {
     return [];
   }
   const objects = result.getAllObjects();
-  // console.warn("Raw node objects:", objects);
+  console.warn("Raw node objects:", objects);
 
-  const nodes = [];
+  const nodes: GraphNode[] = [];
+  let foundTableName: Map<string | number, string | number> = new Map();
+
   for (const obj of objects) {
-    // Get the first property value (e.g., obj.n)
+    // Extract node out and check valid node
     const nodeObj = obj[Object.keys(obj)[0]];
     if (!nodeObj) continue;
+    const id = nodeObj._id;
+    const tableName = nodeObj._label;
+    if (id == null || tableName == null) continue;
 
-    // Accept both _ID/_id and _LABEL/_label for robustness
-    const id = nodeObj._ID || nodeObj._id || nodeObj.id;
-    const label = nodeObj._LABEL || nodeObj._label || nodeObj.label;
-    if (id == null || label == null) continue;
+    // Find primary key of node
+    let primaryKey;
+    if (foundTableName.has(tableName)) {
+      // if found table name -> retrive 
+      primaryKey = foundTableName.get(tableName);
+    } else {
+      // if not found table name -> call find primary key, then store
+      // Extract out primary key from running query  
+      primaryKey = connection.query(findPrimaryKeyQuery(tableName)).getAllObjects()[0].name;
+      foundTableName.set(tableName, primaryKey);
+    }
 
     // Extract attributes (all keys except id/label variants and keys starting with _)
+    let primaryKeyValue;
     const attributes: any = {};
     for (const key in nodeObj) {
-      if (
-        key !== '_ID' && key !== '_id' && key !== 'id' &&
-        key !== '_LABEL' && key !== '_label' && key !== 'label' &&
-        !key.startsWith('_')
-      ) {
+      if (key !== '_id' && key !== '_label' && !key.startsWith('_')) {
         attributes[key] = nodeObj[key];
+      }
+      if (key === primaryKey) {
+        primaryKeyValue = nodeObj[key];
       }
     }
     
     // Format node ID as table_offset
-    let nodeId;
-    if (typeof id === 'object' && id.table !== undefined && id.offset !== undefined) {
-      nodeId = `${id.table}_${id.offset}`;
-    } else if (typeof id === 'object' && id.offset !== undefined) {
-      nodeId = id.offset.toString();
-    } else {
-      nodeId = id.toString();
-    }
-    
-    const node = {
+    let nodeId = `${id.table}_${id.offset}:${primaryKey}`; ;
+    const node: GraphNode = {
       id: nodeId,
-      label: label.toString(),
+      label: primaryKeyValue,
+      tableName: tableName,
       ...(Object.keys(attributes).length > 0 ? { attributes } : {})
     };
     nodes.push(node);
   }
-  // if (nodes.length === 0) {
-  //   console.warn("uh oh something wrong");
-  // }
   return nodes;
 }
 

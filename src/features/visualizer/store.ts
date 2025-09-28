@@ -62,7 +62,7 @@ export default class VisualizerStore {
     const graph = await this.controller.initGraph();
 
     // console.warn('Testing createSchema2...');
-   
+
     // // ----------------------------
     // // 1. Create Person table (many primitives)
     // // ----------------------------
@@ -79,7 +79,7 @@ export default class VisualizerStore {
     //   }
     // );
     // console.warn('Person schema result:', personResult);
-    
+
     // const addressResult = await controller.db.createSchema(
     //   "node",
     //   "Address",
@@ -122,30 +122,27 @@ export default class VisualizerStore {
     //     }
     //   ]
     // });
-   
-    // console.warn('Address create query:', addressQuery);
-   
 
+    // console.warn('Address create query:', addressQuery);
 
     // const addressQuery2 = await controller.db.createNode('Address', {
     //   id: ['STRING', 'ADDR-0012'],   // primary key
     //   // id2: ['STRING', 'ADDR-00123'],   // primary key
 
-
-    //   location: [
-    //     { kind: 'STRUCT', fields: {
-    //       street: 'STRING',
-    //       city:   'STRING',
-    //       zipcode:'INT'
-    //     }},
-    //     {
-    //       street:  '123 Main St',
-    //       city:    'Los Angeles',
-    //       zipcode: 90001
-    //     }
-    //   ]
+    //   // location: [
+    //   //   { kind: 'STRUCT', fields: {
+    //   //     street: 'STRING',
+    //   //     city:   'STRING',
+    //   //     zipcode:'INT'
+    //   //   }},
+    //   //   {
+    //   //     street:  '123 Main St',
+    //   //     city:    'Los Angeles',
+    //   //     zipcode: 90001
+    //   //   }
+    //   // ]
     // });
-   
+
     // console.warn('Address create query:', addressQuery2);
 
     // this.setNodes(addressQuery2.nodes)
@@ -261,12 +258,15 @@ export default class VisualizerStore {
           graph: {
             nodes: graph.nodes.map((n: GraphNode) => ({
               id: String(n.id),
-              label: n.label,
-              attributes: n.attributes,
+              tableName: String(n.tableName),
+              ...(n.label && { label: n.label }),
+              ...(n.attributes && { attributes: n.attributes }),
             })),
             edges: graph.edges.map((e: GraphEdge) => ({
               source: String(e.source),
               target: String(e.target),
+              weight: e.weight ? Number(e.weight) : 0,
+              ...(e.attributes && { attributes: e.attributes }),
             })),
             directed: graph.directed,
           },
@@ -277,7 +277,7 @@ export default class VisualizerStore {
   };
 
   cleanup = () => {
-    // controller.cleanup();
+    // TODO: this.controller.cleanup();
   };
 
   setDatabase = (database: GraphDatabase) => {
@@ -287,13 +287,11 @@ export default class VisualizerStore {
   setNodes = (nodes: GraphNode[]) => {
     this.checkInitialization();
     this.database.graph.nodes = nodes;
-    // TODO: save the new database state to kuzu
   };
 
   setEdges = (edges: GraphEdge[]) => {
     this.checkInitialization();
     this.database.graph.edges = edges;
-    // TODO: save the new database state to kuzu
   };
 
   addDatabase = (database: GraphDatabase) => {

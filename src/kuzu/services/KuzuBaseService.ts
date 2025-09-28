@@ -9,9 +9,8 @@ import {
 
 import { 
   createSchemaQuery, 
-  createNodeQuery,
-  deleteNodeQuery, 
-  findPrimaryKeyForNodeQuery
+  createNodeQuery, 
+  findPrimaryKeyQuery
 } from "../helpers/KuzuQueryBuilder"
 
 import type { 
@@ -318,82 +317,13 @@ export default class KuzuBaseService {
     }
   }
 
-  // /**
-  //  * Builds a Cypher query to delete a node (and all its relationships) by primary key.
-  //  *
-  //  * @param tableName - Node label (table) to match.
-  //  * @param primaryKey - Property name used as primary key.
-  //  * @param primaryValue - Primary key value. Supported types:
-  //  *   INT, UINT, FLOAT, DOUBLE, DECIMAL, SERIAL,
-  //  *   STRING, UUID, DATE, TIMESTAMP, BLOB.
-  //  *   (Booleans/JSON not allowed as primary keys.)
-  //  *
-  //  * @returns Cypher `MATCH … DETACH DELETE` query string.
-  //  */
-  // deleteNode(tableName: string,
-  //   primaryKey: string,
-  //   primaryValue: any ) {
-  //   try {
-  //     // Build the query using the function directly
-  //     const query = deleteNodeQuery(tableName, primaryKey, primaryValue);
-      
-  //     // Execute the query using existing executeQuery method
-  //     const result = this.executeQuery(query);
-      
-  //     return result;
-  //   } catch (error) {
-  //     console.error("Error deleting node:", error);
-  //     throw error;
-  //   }
-  // }
-
-  deleteNode(node: GraphNode) {
+  findPrimaryKey(tableName: string) {
     try {
-      const tableName: string | undefined = node.label
-      const primaryKey = this.findPrimaryKeyForNode(tableName)
-
-      // Build the query using the function directly
-      const query = deleteNodeQuery(tableName, primaryKey, primaryValue);
-      
-      // Execute the query using existing executeQuery method
+      const query = findPrimaryKeyQuery(tableName);
       const result = this.executeQuery(query);
-      
       return result;
-    } catch (error) {
-      console.error("Error deleting node:", error);
-      throw error;
-    }
-  }
-
-
-
-  findPrimaryKeyForNode(tableName: string | undefined) {
-    try {
-      // Build the query using the function directly
-      const query = findPrimaryKeyForNodeQuery(tableName);
-      
-      // Execute the query using existing executeQuery method
-      const result = this.executeQuery(query);
-      
-      return result;
-    } catch (error) {
-      console.error("Error deleting node:", error);
-      throw error;
-    }
-  }
-  
-  // TODO: finish this up with finding primaryValue
-  deleteNodeWithoutPrimary(tableName: string, primaryValue: any) {
-    try {
-      const primaryKey = findPrimaryKeyForNodeQuery(tableName)
-      const query = deleteNodeQuery(tableName, primaryKey, primaryValue);
-
-      // Execute the query using existing executeQuery method
-      const result = this.executeQuery(query);
-      
-      return result;
-    } catch (error) {
-      console.error("Error deleting node:", error);
+    } catch (error: any) {
+      console.error("Error find Primary Key:", error);
       throw error;
     }
   }
