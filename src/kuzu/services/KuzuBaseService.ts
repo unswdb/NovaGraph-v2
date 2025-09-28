@@ -9,7 +9,8 @@ import {
 
 import { 
   createSchemaQuery, 
-  createNodeQuery 
+  createNodeQuery, 
+  findPrimaryKeyQuery
 } from "../helpers/KuzuQueryBuilder"
 
 import type { 
@@ -311,6 +312,17 @@ export default class KuzuBaseService {
       return result;
     } catch (error) {
       console.error("Error creating node:", error);
+      throw error;
+    }
+  }
+
+  findPrimaryKey(tableName: string) {
+    try {
+      const query = findPrimaryKeyQuery(tableName);
+      const result = this.executeQuery(query);
+      return result;
+    } catch (error: any) {
+      console.error("Error find Primary Key:", error);
       throw error;
     }
   }

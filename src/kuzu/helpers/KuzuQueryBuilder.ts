@@ -99,7 +99,9 @@ export function createNodeQuery(
   return q;
 }
 
-
+export function findPrimaryKeyQuery(tableName: string) {
+  return `CALL TABLE_INFO('${tableName}') WHERE \`primary key\` = true RETURN name;`;
+}
 /**
  * Escape special characters in a string for safe use in query literals.
  *
