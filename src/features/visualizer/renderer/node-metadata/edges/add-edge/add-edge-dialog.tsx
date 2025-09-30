@@ -8,7 +8,6 @@ import InputComponent, {
   createNumberInput,
 } from "~/features/visualizer/inputs";
 import type { GraphNode } from "~/features/visualizer/types";
-import { capitalize } from "~/lib/utils";
 
 export default function AddEdgeDialog({
   open,
@@ -58,8 +57,8 @@ export default function AddEdgeDialog({
           <DialogTitle>
             Add Edge{" "}
             <b>
-              {source.label ?? source.id} {directed ? "→" : "↔"}{" "}
-              {target.label ?? target.id}
+              {source._primaryKeyValue} {directed ? "→" : "↔"}{" "}
+              {target._primaryKeyValue}
             </b>
           </DialogTitle>
           <DialogDescription>

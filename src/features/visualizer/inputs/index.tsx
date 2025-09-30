@@ -5,6 +5,7 @@ import type { InputChangeResult, InputType, ValueForInput } from "./types";
 import { FileInputComponent } from "./file";
 import { SwitchInputComponent } from "./switch";
 import TextInputComponent from "./text/text-input";
+import { capitalize } from "~/lib/utils";
 
 export type InputComponentProps<T extends InputType> = {
   input: T;
@@ -34,7 +35,9 @@ export default function InputComponent<T extends InputType>({
 
   return (
     <div className="space-y-2">
-      {!!input.showLabel && <Label htmlFor={input.id}>{input.label}</Label>}
+      {!!input.showLabel && (
+        <Label htmlFor={input.id}>{capitalize(input.label)}</Label>
+      )}
       <InputComponent input={input} value={value} onChange={onChange} />
     </div>
   );

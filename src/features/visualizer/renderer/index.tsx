@@ -121,7 +121,7 @@ export default function GraphRenderer({
           nodeSize={(_, id) => getNodeSize(id)}
           nodeColor={(_, id) => getNodeColor(id)}
           nodeGreyoutOpacity={0.1}
-          nodeLabelAccessor={(node) => (node.label ? node.label : node.id)}
+          nodeLabelAccessor={(node) => String(node._primaryKeyValue)}
           nodeSizeScale={nodeSizeScale}
           linkColor={(link) => getLinkColor(link)}
           linkWidth={(link) => getLinkWidth(link)}

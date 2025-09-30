@@ -153,8 +153,9 @@ export default class VisualizerStore {
           graph: {
             nodes: graph.nodes.map((n: GraphNode) => ({
               id: String(n.id),
+              _primaryKey: String(n._primaryKey),
+              _primaryKeyValue: String(n._primaryKeyValue),
               tableName: String(n.tableName),
-              ...(n.label && { label: n.label }),
               ...(n.attributes && { attributes: n.attributes }),
             })),
             edges: graph.edges.map((e: GraphEdge) => ({

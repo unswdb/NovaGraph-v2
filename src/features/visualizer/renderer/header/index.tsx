@@ -24,15 +24,12 @@ export default function GraphRendererHeader({
   onSelectNode: (n: GraphNode | null) => void;
   nodes: GraphNode[];
 }) {
-  const accessors: Accessor[] =
-    nodes.length > 0
-      ? [
-          { label: "ID", accessor: (n: GraphNode) => String(n.id) },
-          ...(nodes[0]?.label
-            ? [{ label: "Label", accessor: (n: GraphNode) => String(n.label) }]
-            : []),
-        ]
-      : [];
+  const accessors: Accessor[] = [
+    {
+      label: "Label",
+      accessor: (n: GraphNode) => String(n._primaryKeyValue),
+    },
+  ];
 
   return (
     <div className="flex justify-between items-start h-fit w-full absolute inset-0">

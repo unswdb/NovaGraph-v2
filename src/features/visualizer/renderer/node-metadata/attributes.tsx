@@ -5,20 +5,11 @@ import InputComponent, {
   createTextInput,
 } from "../../inputs";
 import type { GraphNode } from "../../types";
-import { capitalize } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import { toast } from "sonner";
 
 export default function AttributesForm({ node }: { node: GraphNode }) {
   const inputs = [
-    createTextInput({
-      id: "node-id",
-      label: "ID",
-      disabled: true,
-      placeholder: "Enter ID...",
-      defaultValue: node.id,
-      required: true,
-    }),
     createAlgorithmSelectInput({
       id: "node-table-name",
       label: "Table Name",
@@ -27,27 +18,11 @@ export default function AttributesForm({ node }: { node: GraphNode }) {
       required: true,
       defaultValue: node.tableName,
     }),
-    node.label
-      ? createTextInput({
-          id: "node-label",
-          label: "Label",
-          placeholder: "Enter label...",
-          defaultValue: node.label,
-          required: true,
-          validator: async (value) => {
-            const isValid = value.trim().length > 0;
-            return {
-              success: isValid,
-              message: isValid ? "" : "Label cannot be empty",
-            };
-          },
-        })
-      : [],
     node.attributes
       ? Object.entries(node.attributes).map(([key, value]) =>
           createTextInput({
             id: `node-${key}`,
-            label: capitalize(key),
+            label: key,
             placeholder: `Enter ${key.toLocaleLowerCase()}...`,
             defaultValue: String(value),
             required: true,

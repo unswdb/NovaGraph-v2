@@ -58,7 +58,7 @@ export default function EdgeListItem({
       ? Object.entries(edge.attributes).map(([key, value]) =>
           createTextInput({
             id: `edge-${key}`,
-            label: capitalize(key),
+            label: key,
             placeholder: `Node ${capitalize(key)}`,
             defaultValue: String(value),
             required: false,
@@ -91,27 +91,16 @@ export default function EdgeListItem({
         <DialogTrigger asChild>
           <Button
             variant="ghost"
-            key={target.id}
             className="pl-2 flex-1 justify-between hover:bg-transparent"
           >
             <Tooltip>
               <TooltipTrigger>
-                {target.label ? (
-                  <span className="truncate">
-                    {target.label} ({edge.weight}){" "}
-                    <span className="text-typography-tertiary">
-                      (ID: {target.id})
-                    </span>
-                  </span>
-                ) : (
-                  <span className="truncate">
-                    {target.label} ({edge.weight}){" "}
-                  </span>
-                )}
+                <span className="truncate">
+                  {target._primaryKeyValue} ({edge.weight}){" "}
+                </span>
               </TooltipTrigger>
               <TooltipContent>
-                ID: {target.id} {target.label && `• Label: ${target.label}`} •
-                Weight: {edge.weight}
+                Label: {target._primaryKeyValue} • Weight: {edge.weight}
               </TooltipContent>
             </Tooltip>
           </Button>
@@ -121,8 +110,8 @@ export default function EdgeListItem({
             <DialogTitle>
               Edge{" "}
               <b>
-                {source.label ?? source.id} {directed ? "→" : "↔"}{" "}
-                {target.label ?? target.id}
+                {source._primaryKeyValue} {directed ? "→" : "↔"}{" "}
+                {target._primaryKeyValue}
               </b>
             </DialogTitle>
             <DialogDescription>

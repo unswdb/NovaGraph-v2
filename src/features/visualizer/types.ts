@@ -1,8 +1,12 @@
 export type GraphNode = {
   id: string; // Unique identifier of the node
-  tableName: string; // Unique identifier of the table it belongs to
-  label?: string; // Node name/label to display
-  attributes?: Record<string, string | boolean | number>; // Additional attributes for the node
+  _primaryKey: string;
+  // Unique identifier of the node in the table.
+  // Multiple nodes can have the same primary key value (if they're in a different table).
+  _primaryKeyValue: string | number;
+  tableName: string; // The table the node belongs to
+  // Additional attributes for the node (doesn't include primaryKey)
+  attributes?: Record<string, string | boolean | number>;
 };
 
 export type GraphEdge = {
