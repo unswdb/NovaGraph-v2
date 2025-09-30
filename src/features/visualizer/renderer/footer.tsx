@@ -39,7 +39,7 @@ export default function GraphRendererFooter({
       <div>
         {/* Play/Pause Simulation */}
         <Tooltip>
-          <TooltipTrigger>
+          <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
@@ -52,7 +52,7 @@ export default function GraphRendererFooter({
         </Tooltip>
         {/* Restart Simulation */}
         <Tooltip>
-          <TooltipTrigger>
+          <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
@@ -65,7 +65,7 @@ export default function GraphRendererFooter({
         </Tooltip>
         {/* Fit All Nodes */}
         <Tooltip>
-          <TooltipTrigger>
+          <TooltipTrigger asChild>
             <Button variant="ghost" size="icon" onClick={() => fitToScreen()}>
               <Shrink />
             </Button>
@@ -77,7 +77,7 @@ export default function GraphRendererFooter({
       <div>
         {/* Zoom Out */}
         <Tooltip>
-          <TooltipTrigger>
+          <TooltipTrigger asChild>
             <Button variant="ghost" size="icon" onClick={() => zoomOut()}>
               <ZoomOut />
             </Button>
@@ -86,7 +86,7 @@ export default function GraphRendererFooter({
         </Tooltip>
         {/* Zoom In */}
         <Tooltip>
-          <TooltipTrigger>
+          <TooltipTrigger asChild>
             <Button variant="ghost" size="icon" onClick={() => zoomIn()}>
               <ZoomIn />
             </Button>
@@ -95,7 +95,7 @@ export default function GraphRendererFooter({
         </Tooltip>
         {/* Dynamic Labels Toggle */}
         <Tooltip>
-          <TooltipTrigger>
+          <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="icon"

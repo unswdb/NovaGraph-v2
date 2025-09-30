@@ -15,16 +15,22 @@ import { Button } from "~/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { useStore } from "../../hooks/use-store";
 
-export default function DeleteNodeButton({ node }: { node: GraphNode }) {
+export default function DeleteNodeButton({
+  node,
+  onClose,
+}: {
+  node: GraphNode;
+  onClose: () => void;
+}) {
   const store = useStore();
+
   const handleDelete = async (node: GraphNode) => {
-    store.controller.db.deleteNode(node);
+    await store.controller.db.deleteNode(node);
     const result = await store.controller.db.snapshotGraphState();
     store.setNodes(result.nodes);
     store.setEdges(result.edges);
     toast.success("Node deleted");
-    // console.log(store.database?.graph.nodes)
-    // console.log(result.nodes)
+    onClose();
   };
 
   return (
