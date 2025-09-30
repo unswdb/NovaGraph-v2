@@ -136,6 +136,18 @@ export function findPrimaryKeyForNodeQuery(tableName: string) {
   return query;
 }
 
+/**
+ * Builds a Cypher query to retrieve all properties(columns name and its corresponding data type)
+ * of a given table in Kùzu.
+ *
+ * @param tableName - The name of the table to inspect.
+ * @returns Query string selecting name, type, primary key
+ */
+export function getSingleSchemaProperties(tableName: string) {
+  const query = `CALL TABLE_INFO('${tableName}') RETURN name, type, \`primary key\`;`
+  return query;
+}
+
 // Helper function down here
 /**
  * Escape special characters in a string for safe use in query literals.

@@ -11,7 +11,8 @@ import {
   createSchemaQuery, 
   createNodeQuery, 
   findPrimaryKeyQuery,
-  deleteNodeQuery
+  deleteNodeQuery,
+  getSingleSchemaProperties
 } from "../helpers/KuzuQueryBuilder"
 
 import type { 
@@ -353,6 +354,33 @@ export default class KuzuBaseService {
       return {
         success: false,
         error: `Error delete Node: ${error.message}`,
+      };
+    }
+  }
+
+  getSingleSchemaProperties(tableName: string) {
+    try {
+      const query = getSingleSchemaProperties(tableName);
+      let queryResult = this.connection.query(query);
+      let resultObjects = queryResult.getAllObjects();
+      const result = {
+        primaryKey: "",
+        primaryKeyType: "",
+        properties: {} as Record<string, string>,
+      };
+      for (const obj of resultObjects) {
+        result.properties[obj.name] = obj.type;
+        if (obj["primary key"]) {
+          result.primaryKey = obj.name;
+          result.primaryKeyType = obj.type;
+        }
+      }
+      console.log("result:", JSON.stringify(result, null, 2));
+      return result;
+    } catch (error: any) {
+      return {
+        success: false,
+        error: `Error get Schema Properties : ${error.message}`,
       };
     }
   }

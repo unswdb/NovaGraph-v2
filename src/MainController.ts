@@ -73,8 +73,25 @@ class MainController {
     // snapshotGraphState
     async snapshotGraphState() {
       return Promise.resolve(kuzuController.snapshotGraphState());
+    },
+
+  };
+
+  _internal = {
+    /**
+     * 
+     * @param tableName table name
+     * @returns 
+     * {
+          primaryKey: primaryKey,
+          primaryKeyType: primaryKeyType,
+          properties: Record<Property Name, Property Type> 
+        }
+      * @example await store.controller._internal.getSingleSchemaProperties(`Person`); 
+     */
+    async getSingleSchemaProperties(tableName: string) {
+      return Promise.resolve(kuzuController.getSingleSchemaProperties(tableName));
     }
-    
   };
 
   algorithms = {

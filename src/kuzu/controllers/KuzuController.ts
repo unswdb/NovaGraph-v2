@@ -203,6 +203,12 @@ class KuzuController {
     return this.service.deleteNode(node);
   }
 
+  getSingleSchemaProperties(tableName: string) {
+    if (!this.service) {
+      throw new Error("Kuzu service not initialized");
+    }
+    return this.service.getSingleSchemaProperties(tableName);
+  }
   // -- Exclusive for Kuzu Persistent -- 
 
 }
