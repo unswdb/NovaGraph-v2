@@ -2,6 +2,7 @@ import type {
   AlgorithmSelectInput,
   ValueForAlgorithmSelect,
 } from "./algorithms/select/types";
+import type { DatetimeLocalInput, ValueForDatetimeLocal } from "./datetime-local/types";
 import type { FileInput } from "./file";
 import type { ValueForFile } from "./file/types";
 import type { NumberInput } from "./number";
@@ -16,6 +17,7 @@ export type InputType =
   | NumberInput
   | SwitchInput
   | FileInput
+  | DatetimeLocalInput
   | AlgorithmSelectInput;
 
 export type ValueForInput<I> =
@@ -23,6 +25,7 @@ export type ValueForInput<I> =
   | ValueForNumber<I>
   | ValueForSwitch<I>
   | ValueForFile<I>
+  | ValueForDatetimeLocal<I>
   | ValueForAlgorithmSelect<I>;
 
 type InputResultType = { success: boolean; message?: string };

@@ -6,6 +6,7 @@ import { FileInputComponent } from "./file";
 import { SwitchInputComponent } from "./switch";
 import TextInputComponent from "./text/text-input";
 import { capitalize } from "~/lib/utils";
+import { DatetimeLocalInputComponent } from "./datetime-local";
 
 export type InputComponentProps<T extends InputType> = {
   input: T;
@@ -19,6 +20,7 @@ const INPUT_COMPONENTS: Record<InputType["type"], React.ComponentType<any>> = {
   switch: SwitchInputComponent,
   file: FileInputComponent,
   "algorithm-select": AlgorithmSelectInputComponent,
+  "datetime-local": DatetimeLocalInputComponent,
 } as const;
 
 export default function InputComponent<T extends InputType>({
@@ -73,3 +75,4 @@ export { createFileInput } from "./file";
 export { createSwitchInput } from "./switch";
 export { createAlgorithmSelectInput } from "./algorithms/select";
 export { createNumberInput } from "./number";
+export { createDatetimeLocalInput } from "./datetime-local";

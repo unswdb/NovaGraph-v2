@@ -27,9 +27,6 @@ docker build -t novagraph-dev --target development .
 # Copy graph.js, graph.wasm and graph.d.ts. to local workspace
 docker run --rm -v $(pwd):/host novagraph-dev cp ./src/graph.js ./src/graph.wasm ./src/graph.d.ts /host/src/
 
-# Copy KuzuController.d.ts file to local workspace
-docker run --rm -v $(pwd):/host novagraph-dev cp ./src/kuzu/controllers/KuzuController.d.ts /host/src/kuzu/controllers/
-
 # Run with volume mounting
 docker run -it --rm -v $(pwd):/src -w /src -p 5173:5173 -v /src/node_modules -e NODE_ENV=development novagraph-dev
 ```
