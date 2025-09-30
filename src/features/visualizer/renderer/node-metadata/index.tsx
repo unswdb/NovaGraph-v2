@@ -92,7 +92,7 @@ export default function NodeMetadata({
         </Collapsible>
       </CardContent>
       <CardFooter>
-        <DeleteNodeButton node={node} />
+        <DeleteNodeButton node={node} onClose={onClose} />
       </CardFooter>
     </Card>
   );

@@ -14,7 +14,7 @@ import {
   export function snapshotGraphState(connection: any) {
 
     const nodesResult = connection.query(`MATCH (n) RETURN n`);
-    const nodes = parseNodesResult(nodesResult);
+    const nodes = parseNodesResult(nodesResult, connection);
 
     const edgesResult = connection.query(`MATCH ()-[r]->() RETURN r`);
     const edges = parseEdgesResult(edgesResult);

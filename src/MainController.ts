@@ -1,6 +1,7 @@
 import kuzuController from './kuzu/controllers/KuzuController';
 import createModule from "./graph";
 import type { CompositeType } from './types/KuzuDBTypes';
+import type { GraphNode } from './features/visualizer/types';
 
 class MainController {
   // Graph method starts here
@@ -50,11 +51,30 @@ class MainController {
       return Promise.resolve(kuzuController.createNode(label, properties));
     },
 
+    // async deleteNodeWithPrimary(tableName: string,
+    //   primaryKey: string,
+    //   primaryValue: any) {
+    //   return Promise.resolve(kuzuController.deleteNode(tableName, primaryKey, primaryValue));
+    // },
+
+    // async deleteNodeWithoutPrimary(tableName: string, primaryValue: any) {
+    //   return Promise.resolve(kuzuController.deleteNodeWithoutPrimary(tableName, primaryValue));
+    // },
+
+    async deleteNode(node: GraphNode) {
+      return Promise.resolve(kuzuController.deleteNode(node));
+    },
+
     // Execute query method
     async executeQuery(query: string) {
       return Promise.resolve(kuzuController.executeQuery(query));
-    }
+    },
 
+    // snapshotGraphState
+    async snapshotGraphState() {
+      return Promise.resolve(kuzuController.snapshotGraphState());
+    }
+    
   };
 
   algorithms = {
