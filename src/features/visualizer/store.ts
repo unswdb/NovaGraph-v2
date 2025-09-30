@@ -59,7 +59,7 @@ export default class VisualizerStore {
     this.wasmModule = await this.controller.getGraphModule();
 
     // Define initial graph structure
-    const graph = await this.controller.initGraph();
+    const graph = await this.controller.db.snapshotGraphState();
 
     // console.warn('Testing createSchema2...');
 
@@ -269,7 +269,8 @@ export default class VisualizerStore {
               weight: e.weight ? Number(e.weight) : 0,
               ...(e.attributes && { attributes: e.attributes }),
             })),
-            directed: graph.directed,
+            // directed: graph.directed,
+            directed: true
           },
         },
       ];
