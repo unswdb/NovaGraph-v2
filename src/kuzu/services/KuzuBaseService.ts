@@ -346,10 +346,7 @@ export default class KuzuBaseService {
   */
   deleteNode(node: GraphNode) {
     try {
-      function extractPrimaryKey(nodeId: string): string {
-        return nodeId.split(":", 2)[1] ?? "";
-      }
-      const query = deleteNodeQuery(node.tableName, extractPrimaryKey(node.id), node.label);
+      const query = deleteNodeQuery(node.tableName, node._primaryKey, node._primaryKeyValue);
       const result = this.executeQuery(query);
       return result;
     } catch (error: any) {

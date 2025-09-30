@@ -87,7 +87,8 @@ export function parseNodesResult(result: any, connection: any) : GraphNode[] {
     let nodeId = `${id.table}_${id.offset}:${primaryKey}`; ;
     const node: GraphNode = {
       id: nodeId,
-      label: primaryKeyValue,
+      _primaryKey: primaryKey,
+      _primaryKeyValue: primaryKeyValue,
       tableName: tableName,
       ...(Object.keys(attributes).length > 0 ? { attributes } : {})
     };
