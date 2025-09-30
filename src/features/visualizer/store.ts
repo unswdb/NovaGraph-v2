@@ -270,7 +270,7 @@ export default class VisualizerStore {
               ...(e.attributes && { attributes: e.attributes }),
             })),
             // directed: graph.directed,
-            directed: true
+            directed: true // By default, all graph are directed, non-directed means 2 way directed
           },
         },
       ];
