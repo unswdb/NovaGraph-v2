@@ -209,6 +209,13 @@ class KuzuController {
     }
     return this.service.getSingleSchemaProperties(tableName);
   }
+
+  getAllSchemaProperties() {
+    if (!this.service) {
+      throw new Error("Kuzu service not initialized");
+    }
+    return this.service.getAllSchemaProperties();
+  }
   // -- Exclusive for Kuzu Persistent -- 
 
 }

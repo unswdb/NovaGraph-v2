@@ -12,7 +12,8 @@ import {
   createNodeQuery, 
   findPrimaryKeyQuery,
   deleteNodeQuery,
-  getSingleSchemaProperties
+  getSingleSchemaPropertiesQuery,
+  getAllSchemaPropertiesQuery
 } from "../helpers/KuzuQueryBuilder"
 
 import type { 
@@ -357,10 +358,12 @@ export default class KuzuBaseService {
       };
     }
   }
+  
+
 
   getSingleSchemaProperties(tableName: string) {
     try {
-      const query = getSingleSchemaProperties(tableName);
+      const query = getSingleSchemaPropertiesQuery(tableName);
       let queryResult = this.connection.query(query);
       let resultObjects = queryResult.getAllObjects();
       const result = {
@@ -369,18 +372,60 @@ export default class KuzuBaseService {
         properties: {} as Record<string, string>,
       };
       for (const obj of resultObjects) {
-        result.properties[obj.name] = obj.type;
         if (obj["primary key"]) {
           result.primaryKey = obj.name;
           result.primaryKeyType = obj.type;
+        } else {
+          result.properties[obj.name] = obj.type;
         }
       }
-      console.log("result:", JSON.stringify(result, null, 2));
+      // console.log("result:", JSON.stringify(result, null, 2));
       return result;
     } catch (error: any) {
       return {
         success: false,
-        error: `Error get Schema Properties : ${error.message}`,
+        error: `Error get single Schema Properties : ${error.message}`,
+      };
+    }
+  }
+
+  getAllSchemaProperties() {
+    try {
+      const query = getAllSchemaPropertiesQuery();
+      let queryResult = this.connection.query(query);
+      let resultObjects = queryResult.getAllObjects();
+      
+      const result: {
+        tableName: string;
+        tableType: "NODE" | "REL";
+        primaryKey: string;
+        primaryKeyType: string;
+        properties: Record<string, string>,
+      }[] = [];
+
+      for (const obj of resultObjects) {
+        const { primaryKey, primaryKeyType, properties } =
+          this.getSingleSchemaProperties(obj.name) as {
+            primaryKey: string;
+            primaryKeyType: string;
+            properties: Record<string, string>;
+          };
+      
+        const singleTable = {
+          tableName: obj.name,
+          tableType: obj.type as "NODE" | "REL",
+          primaryKey,
+          primaryKeyType,
+          properties,
+        };
+      
+        result.push(singleTable);
+      }
+      return result
+    } catch (error: any) {
+      return {
+        success: false,
+        error: `Error get all Schema Properties : ${error.message}`,
       };
     }
   }

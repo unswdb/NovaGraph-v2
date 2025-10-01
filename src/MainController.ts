@@ -91,6 +91,10 @@ class MainController {
      */
     async getSingleSchemaProperties(tableName: string) {
       return Promise.resolve(kuzuController.getSingleSchemaProperties(tableName));
+    },
+
+    async getAllSchemaProperties() {
+      return Promise.resolve(kuzuController.getAllSchemaProperties());
     }
   };
 
