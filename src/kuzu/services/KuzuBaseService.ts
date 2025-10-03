@@ -14,7 +14,8 @@ import {
   deleteNodeQuery,
   getSingleSchemaPropertiesQuery,
   getAllSchemaPropertiesQuery,
-  createEdgeSchemaQuery
+  createEdgeSchemaQuery,
+  createEdgeQuery
 } from "../helpers/KuzuQueryBuilder"
 
 import type { 
@@ -370,11 +371,28 @@ export default class KuzuBaseService {
       const query = createEdgeSchemaQuery(tableName, tablePairs, properties, relationshipType);
       const result = this.executeQuery(query);
       return result;
-      // return "Implementing";
     } catch (error: any) {
       return {
         success: false,
         error: `Error create Edge Schema: ${error.message}`,
+      };
+    }
+  }
+
+  createEdge(  
+    node1: GraphNode,
+    node2: GraphNode,
+    edgeTableName: string,
+    attributes?: Record<string, string | number | boolean>
+  ) {
+    try {
+      const query = createEdgeQuery(node1, node2, edgeTableName, attributes)
+      const result = this.executeQuery(query);
+      return result;
+    } catch (error: any) {
+      return {
+        success: false,
+        error: `Error create Edge: ${error.message}`,
       };
     }
   }

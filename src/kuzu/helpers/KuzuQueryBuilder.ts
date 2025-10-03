@@ -5,11 +5,41 @@
  * Each function returns a Cypher query string that can be executed by any query executor.
  */
 
+import type { GraphNode } from '~/features/visualizer/types';
 import type {
   CompositeType,
   ScalarType,
   ValueWithType
 } from '../../types/KuzuDBTypes'
+
+export function createEdgeQuery(
+  node1: GraphNode,
+  node2: GraphNode,
+  edgeTableName: string,
+  attributes?: Record<string, string | number | boolean>
+) {
+  const propString =
+  attributes && Object.keys(attributes).length > 0
+      ? `{ ${Object.entries(attributes)
+          .map(([key, value]) =>
+            typeof value === "string"
+              ? `${key}: "${value}"`
+              : `${key}: ${value}`
+          )
+          .join(", ")} }`
+      : "";
+
+  const query = `
+  MATCH (u1:\`${node1.tableName}\`), (u2:\`${node2.tableName}\`)
+  WHERE u1.\`${node1._primaryKey}\` = "${node1._primaryKeyValue}"
+    AND u2.\`${node2._primaryKey}\` = "${node2._primaryKeyValue}"
+  CREATE (u1)-[:\`${edgeTableName}\` ${propString}]->(u2);
+  `;
+
+  console.log("Query: " + query)
+  return query;
+}
+
 
 export function createEdgeSchemaQuery(
   tableName: string,
@@ -146,8 +176,7 @@ export function deleteNodeQuery(
   primaryKey: string,
   primaryValue: any 
 ) {
-  const query = `MATCH (n:${tableName}) WHERE n.${primaryKey} = "${primaryValue}" DETACH DELETE n`;
-  // console.log("query: " + query)
+  const query = `MATCH (n:\`${tableName}\`) WHERE n.\`${primaryKey}\` = "${primaryValue}" DETACH DELETE n`;
   return query;
 }
 

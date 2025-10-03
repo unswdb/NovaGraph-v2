@@ -82,6 +82,15 @@ class MainController {
       relationshipType?: "MANY_ONE" | "ONE_MANY" 
     ) {
       return Promise.resolve(kuzuController.createEdgeSchema(tableName, tablePairs, properties, relationshipType));
+    },
+
+    async createEdge(    
+      node1: GraphNode,
+      node2: GraphNode,
+      edgeTableName: string,
+      attributes?: Record<string, string | number | boolean>
+    ) {
+      return Promise.resolve(kuzuController.createEdge(node1, node2, edgeTableName, attributes));
     }
   };
 

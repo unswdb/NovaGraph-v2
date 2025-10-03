@@ -99,7 +99,7 @@ export function parseNodesResult(result: any, connection: any) : GraphNode[] {
     }
     
     // Format node ID as table_offset
-    let nodeId = `${id.table}_${id.offset}:${primaryKey}`;
+    let nodeId = `${id.table}_${id.offset}`;
     const node: GraphNode = {
       id: nodeId,
       _primaryKey: primaryKey,
