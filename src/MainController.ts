@@ -75,6 +75,14 @@ class MainController {
       return Promise.resolve(kuzuController.snapshotGraphState());
     },
 
+    async createEdgeSchema(
+      tableName: string,
+      tablePairs: Array<[string | number, string | number]>,
+      properties?: Record<string, CompositeType>,
+      relationshipType?: "MANY_ONE" | "ONE_MANY" 
+    ) {
+      return Promise.resolve(kuzuController.createEdgeSchema(tableName, tablePairs, properties, relationshipType));
+    }
   };
 
   _internal = {

@@ -13,7 +13,8 @@ import {
   findPrimaryKeyQuery,
   deleteNodeQuery,
   getSingleSchemaPropertiesQuery,
-  getAllSchemaPropertiesQuery
+  getAllSchemaPropertiesQuery,
+  createEdgeSchemaQuery
 } from "../helpers/KuzuQueryBuilder"
 
 import type { 
@@ -359,7 +360,24 @@ export default class KuzuBaseService {
     }
   }
   
-
+  createEdgeSchema(  
+    tableName: string,
+    tablePairs: Array<[string | number, string | number]>,
+    properties?: Record<string, CompositeType>,
+    relationshipType?: "MANY_ONE" | "ONE_MANY" 
+  ) {
+    try {
+      const query = createEdgeSchemaQuery(tableName, tablePairs, properties, relationshipType);
+      const result = this.executeQuery(query);
+      return result;
+      // return "Implementing";
+    } catch (error: any) {
+      return {
+        success: false,
+        error: `Error create Edge Schema: ${error.message}`,
+      };
+    }
+  }
 
   getSingleSchemaProperties(tableName: string) {
     try {

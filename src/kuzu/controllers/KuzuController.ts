@@ -168,6 +168,18 @@ class KuzuController {
     return this.service.createNode(tableName, properties);
   }
 
+  createEdgeSchema(
+    tableName: string,
+    tablePairs: Array<[string | number, string | number]>,
+    properties?: Record<string, CompositeType>,
+    relationshipType?: "MANY_ONE" | "ONE_MANY" 
+  ) {
+    if (!this.service) {
+      throw new Error("Kuzu service not initialized");
+    }
+    return this.service.createEdgeSchema(tableName, tablePairs, properties, relationshipType);
+  }
+
   // /**
   //  * Builds a Cypher query to delete a node (and all its relationships) by primary key.
   //  *

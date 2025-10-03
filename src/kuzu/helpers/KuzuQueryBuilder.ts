@@ -11,6 +11,33 @@ import type {
   ValueWithType
 } from '../../types/KuzuDBTypes'
 
+export function createEdgeSchemaQuery(
+  tableName: string,
+  tablePairs: Array<[string | number, string | number]>, // Cant use record because of allowing dup
+  properties?: Record<string, CompositeType>,
+  relationshipType?: "MANY_ONE" | "ONE_MANY"
+): string {
+  // Build the FROM...TO parts
+  const pairParts = tablePairs.map(([fromTable, toTable]) => {
+    return `FROM \`${fromTable}\` TO \`${toTable}\``;
+  });
+
+  // Build property parts (if any)
+  const propParts =
+    properties && Object.keys(properties).length > 0
+      ? Object.entries(properties).map(([name, type]) => `\`${name}\` ${type}`)
+      : [];
+
+  // Add relationshipType at the end (if provided)
+  const tailParts = relationshipType ? [relationshipType] : [];
+
+  const inner = [...pairParts, ...propParts, ...tailParts].join(", ");
+  const query = `CREATE REL TABLE \`${tableName}\` (${inner});`;
+
+  // console.log("create edge table query:", query);
+  return query;
+}
+
 /**
  * Builds a Cypher DDL query string for creating a node or relationship table in Kùzu.
  *
