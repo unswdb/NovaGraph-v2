@@ -20,7 +20,8 @@ export const bellmanFordAToAll =
     inputs: [
       createAlgorithmSelectInput({
         id: "bellman-ford-a-to-all-start-node",
-        label: "Start Node",
+        key: "start_node",
+        displayName: "Start Node",
         source: "nodes",
         required: true,
       }),

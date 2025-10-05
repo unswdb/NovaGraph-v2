@@ -23,7 +23,8 @@ export default function AddEdge({
 
   const addEdgeInput = createAlgorithmSelectInput({
     id: "add-edge-target-node",
-    label: "Target Node",
+    key: "target",
+    displayName: "Target Node",
     source: "nodes",
     blacklist: [source, ...outgoingEdges.map((e) => e[0])],
     required: true,
@@ -43,10 +44,10 @@ export default function AddEdge({
   );
 
   const target = useMemo(() => {
-    const id = values[addEdgeInput.label].value;
+    const id = values[addEdgeInput.key].value;
     if (!id) return null;
     return nodesMap.get(id) ?? null;
-  }, [nodesMap, values[addEdgeInput.label].value]);
+  }, [nodesMap, values[addEdgeInput.key].value]);
 
   const onClose = () => {
     setDialogOpen(false);
@@ -88,11 +89,11 @@ export default function AddEdge({
         <div className="flex-1">
           <InputComponent
             input={addEdgeInput}
-            value={values[addEdgeInput.label]?.value}
+            value={values[addEdgeInput.key]?.value}
             onChange={(value) =>
               setValues((prev) => ({
                 ...prev,
-                [addEdgeInput.label]: value,
+                [addEdgeInput.key]: value,
               }))
             }
           />

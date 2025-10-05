@@ -73,7 +73,7 @@ export default function InputDialog({
     setTimeout(() => {
       try {
         const args = algorithm.inputs.map(
-          (input) => inputResults[input.label].value
+          (input) => inputResults[input.key].value
         );
 
         const algorithmResponse = algorithm.wasmFunction(module, args);
@@ -127,11 +127,11 @@ export default function InputDialog({
             <InputComponent
               key={index}
               input={input}
-              value={inputResults[input.label]?.value}
+              value={inputResults[input.key]?.value}
               onChange={(value) =>
                 setInputResults((prev) => ({
                   ...prev,
-                  [input.label]: value,
+                  [input.key]: value,
                 }))
               }
             />

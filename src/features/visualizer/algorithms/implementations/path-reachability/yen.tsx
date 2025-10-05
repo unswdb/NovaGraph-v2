@@ -23,19 +23,22 @@ export const yen = createGraphAlgorithm<YenOutputData>({
   inputs: [
     createAlgorithmSelectInput({
       id: "yen-start-node",
-      label: "Start Node",
+      key: "start_node",
+      displayName: "Start Node",
       source: "nodes",
       required: true,
     }),
     createAlgorithmSelectInput({
       id: "yen-end-node",
-      label: "End Node",
+      key: "end_node",
+      displayName: "End Node",
       source: "nodes",
       required: true,
     }),
     createNumberInput({
       id: "yen-k-paths",
-      label: "K Paths",
+      key: "k_path",
+      displayName: "K Paths",
       defaultValue: 3,
       min: 1,
       step: 1,

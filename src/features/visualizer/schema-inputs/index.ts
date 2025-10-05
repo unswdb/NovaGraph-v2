@@ -14,3 +14,5 @@ export const NON_PK_SCHEMA_INPUTS = SCHEMA_INPUTS.filter(
 );
 export const NON_PK_SCHEMA_TYPES = NON_PK_SCHEMA_INPUTS.map((i) => i.type);
 export type NonPrimaryKeyType = typeof NON_PK_SCHEMA_TYPES[number];
+
+export type SchemaKeyType = PrimaryKeyType | NonPrimaryKeyType;

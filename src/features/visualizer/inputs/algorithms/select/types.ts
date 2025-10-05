@@ -15,14 +15,12 @@ export type AlgorithmSingleSelectInput = AlgorithmSelectInputBase &
   BaseInputType<SingleValues> &
   (Nodes | Edges | Static | Tables) & {
     multiple?: false;
-    defaultValue?: SingleValues;
   };
 
 export type AlgorithmMultipleSelectInput = AlgorithmSelectInputBase &
   BaseInputType<MultipleValues> &
   (Nodes | Edges | Static | Tables) & {
     multiple: true;
-    defaultValues?: MultipleValues;
   };
 
 export type AlgorithmSelectInput =

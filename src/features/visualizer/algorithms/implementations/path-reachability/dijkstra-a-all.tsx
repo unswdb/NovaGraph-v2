@@ -14,7 +14,8 @@ export const dijkstraAToAll = createGraphAlgorithm<DijkstraAToAllOutputData>({
   inputs: [
     createAlgorithmSelectInput({
       id: "dijkstra-a-to-all-start-node",
-      label: "Start Node",
+      key: "start_node",
+      displayName: "Start Node",
       source: "nodes",
       required: true,
     }),

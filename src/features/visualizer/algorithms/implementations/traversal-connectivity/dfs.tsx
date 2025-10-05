@@ -15,7 +15,8 @@ export const dfs = createGraphAlgorithm<DFSOutputData>({
   inputs: [
     createAlgorithmSelectInput({
       id: "dfs-start-node",
-      label: "Start Node",
+      key: "start_node",
+      displayName: "Start Node",
       source: "nodes",
       required: true,
     }),

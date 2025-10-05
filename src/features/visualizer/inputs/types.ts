@@ -42,10 +42,12 @@ export type InputChangeResult<T> = { value: T } & InputResultType;
 
 export interface BaseInputType<T> {
   id: string;
-  label: string;
+  key: string;
+  displayName: string;
   required?: boolean;
   showLabel?: boolean;
   disabled?: boolean;
+  defaultValue?: T;
   validator?: (
     value: T,
     ...props: any[]

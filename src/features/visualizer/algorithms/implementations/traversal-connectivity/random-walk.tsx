@@ -26,13 +26,15 @@ export const randomWalk = createGraphAlgorithm<RandomWalkOutputData>({
   inputs: [
     createAlgorithmSelectInput({
       id: "random-walk-start-node",
-      label: "Start Node",
+      key: "start_node",
+      displayName: "Start Node",
       source: "nodes",
       required: true,
     }),
     createNumberInput({
       id: "random-walk-steps",
-      label: "Number of Steps",
+      key: "num_of_steps",
+      displayName: "Number of Steps",
       defaultValue: 10,
       min: 1,
       step: 1,

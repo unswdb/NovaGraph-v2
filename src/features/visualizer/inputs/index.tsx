@@ -5,13 +5,12 @@ import type { InputChangeResult, InputType, ValueForInput } from "./types";
 import { FileInputComponent } from "./file";
 import { SwitchInputComponent } from "./switch";
 import TextInputComponent from "./text/text-input";
-import { capitalize } from "~/lib/utils";
 import { DatetimeLocalInputComponent } from "./datetime-local";
 
-export type InputComponentProps<T extends InputType> = {
-  input: T;
-  value: ValueForInput<T>;
-  onChange: (result: InputChangeResult<ValueForInput<T>>) => void;
+export type InputComponentProps<I extends InputType> = {
+  input: I;
+  value: ValueForInput<I> | undefined;
+  onChange: (result: InputChangeResult<ValueForInput<I> | undefined>) => void;
 };
 
 const INPUT_COMPONENTS: Record<InputType["type"], React.ComponentType<any>> = {
@@ -38,9 +37,14 @@ export default function InputComponent<T extends InputType>({
   return (
     <div className="space-y-2">
       {!!input.showLabel && (
-        <Label htmlFor={input.id}>{capitalize(input.label)}</Label>
+        <Label htmlFor={input.id}>{input.displayName}</Label>
       )}
-      <InputComponent input={input} value={value} onChange={onChange} />
+      <InputComponent
+        id={input.id}
+        input={input}
+        value={value}
+        onChange={onChange}
+      />
     </div>
   );
 }
@@ -51,19 +55,28 @@ function hasDefaultValue<T extends InputType>(
   return "defaultValue" in input;
 }
 
-// Function to define empty records for input values
+// Function to define empty records for inputs
+export function createEmptyInputResult<I extends InputType>(
+  input: I
+): InputChangeResult<ValueForInput<I> | undefined> {
+  const defaultValueExists = hasDefaultValue(input);
+  const value = defaultValueExists ? input.defaultValue : undefined;
+  const isValueDefined = value !== undefined;
+  const result = {
+    value,
+    success: input.required ? isValueDefined : true,
+    message: input.required
+      ? isValueDefined
+        ? ""
+        : "This field is required"
+      : "",
+  };
+  return result;
+}
+
 export function createEmptyInputResults(inputs: InputType[]) {
   return inputs.reduce<Record<string, InputChangeResult<any>>>((acc, input) => {
-    const defaultValueExists = hasDefaultValue(input);
-    acc[input.label] = {
-      value: defaultValueExists ? input.defaultValue : undefined,
-      success: input.required ? defaultValueExists : true,
-      message: input.required
-        ? defaultValueExists
-          ? ""
-          : "This field is required"
-        : "",
-    };
+    acc[input.key] = createEmptyInputResult(input);
     return acc;
   }, {});
 }

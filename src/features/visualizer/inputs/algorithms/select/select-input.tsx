@@ -242,7 +242,7 @@ function AlgorithmMultipleSelectInputComponent({
 }: InputComponentProps<AlgorithmMultipleSelectInput> & {
   sources: { value: string; label: string }[];
 }) {
-  const [values, setValues] = useState<MultipleValues>(inputValues);
+  const [values, setValues] = useState<MultipleValues>(inputValues ?? []);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -250,13 +250,13 @@ function AlgorithmMultipleSelectInputComponent({
   const noun = useMemo(() => getInputNoun(input), [input]);
 
   useEffect(() => {
-    if (input.defaultValues) {
-      onChange({ value: input.defaultValues, success: true });
+    if (input.defaultValue) {
+      onChange({ value: input.defaultValue, success: true });
     }
-  }, [input.defaultValues]);
+  }, [input.defaultValue]);
 
   useEffect(() => {
-    setValues(inputValues);
+    setValues(inputValues ?? []);
   }, [inputValues]);
 
   const onValuesChange = async (newValues: string[]) => {

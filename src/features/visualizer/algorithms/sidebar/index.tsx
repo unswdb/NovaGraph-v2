@@ -123,6 +123,7 @@ function SearchBar({
     >
       <Search className="w-4 h-4" />
       <Input
+        id="algorithm-search-bar"
         type="text"
         variant="ghost"
         value={searchText}

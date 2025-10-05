@@ -14,7 +14,8 @@ export const louvain = createGraphAlgorithm<LouvainOutputData>({
   inputs: [
     createNumberInput({
       id: "louvain-resolution",
-      label: "Resolution",
+      key: "resolution",
+      displayName: "Resolution",
       defaultValue: 1,
       min: 0.1,
       max: 2,

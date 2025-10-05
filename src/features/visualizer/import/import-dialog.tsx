@@ -116,11 +116,11 @@ function ImportContent({ option }: { option: ImportOption }) {
               <InputComponent
                 key={index}
                 input={input}
-                value={inputResults[input.label]?.value}
+                value={inputResults[input.key]?.value}
                 onChange={(value) =>
                   setInputResults((prev) => ({
                     ...prev,
-                    [input.label]: value,
+                    [input.key]: value,
                   }))
                 }
               />

@@ -15,7 +15,8 @@ export const leiden = createGraphAlgorithm<LeidenOutputData>({
   inputs: [
     createNumberInput({
       id: "leiden-resolution",
-      label: "Resolution",
+      key: "resolution",
+      displayName: "Resolution",
       defaultValue: 0.25,
       min: 0.1,
       max: 2,

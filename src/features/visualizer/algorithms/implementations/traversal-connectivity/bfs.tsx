@@ -15,7 +15,8 @@ export const bfs = createGraphAlgorithm<BFSOutputData>({
   inputs: [
     createAlgorithmSelectInput({
       id: "bfs-start-node",
-      label: "Start Node",
+      key: "start_node",
+      displayName: "Start Node",
       source: "nodes",
       required: true,
     }),

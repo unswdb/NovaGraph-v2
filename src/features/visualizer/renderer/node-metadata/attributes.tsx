@@ -7,12 +7,14 @@ import InputComponent, {
 import type { GraphNode } from "../../types";
 import { Button } from "~/components/ui/button";
 import { toast } from "sonner";
+import { capitalize } from "~/lib/utils";
 
 export default function AttributesForm({ node }: { node: GraphNode }) {
   const inputs = [
     createAlgorithmSelectInput({
       id: "node-table-name",
-      label: "Table Name",
+      key: "name",
+      displayName: "Table Name",
       source: "tables",
       disabled: true,
       required: true,
@@ -22,7 +24,8 @@ export default function AttributesForm({ node }: { node: GraphNode }) {
       ? Object.entries(node.attributes).map(([key, value]) =>
           createTextInput({
             id: `node-${key}`,
-            label: key,
+            key,
+            displayName: capitalize(key),
             placeholder: `Enter ${key.toLocaleLowerCase()}...`,
             defaultValue: String(value),
             required: true,
@@ -50,11 +53,11 @@ export default function AttributesForm({ node }: { node: GraphNode }) {
           <InputComponent
             key={index}
             input={input}
-            value={values[input.label].value}
+            value={values[input.key].value}
             onChange={(value) =>
               setValues((prev) => ({
                 ...prev,
-                [input.label]: value,
+                [input.key]: value,
               }))
             }
           />

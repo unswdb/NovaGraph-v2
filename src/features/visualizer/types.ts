@@ -18,7 +18,7 @@ export type GraphEdge = {
   attributes?: Record<string, string | boolean | number>; // Additional attributes for the edge
 };
 
-type GraphSchema = {
+export type GraphSchema = {
   tableName: string;
   tableType: "NODE" | "REL";
   primaryKey: string;

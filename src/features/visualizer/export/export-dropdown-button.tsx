@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Separator } from "~/components/ui/separator";
-import ALL_EXPORTS, { type ExportOption } from "./implementations";
+import ALL_EXPORTS from "./implementations";
 import type { BaseGraphAlgorithmResult } from "../algorithms/implementations";
 
 export default function ExportDropdownButton({

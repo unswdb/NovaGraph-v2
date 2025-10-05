@@ -20,7 +20,8 @@ export const jaccardSimilarity =
     inputs: [
       createAlgorithmSelectInput({
         id: "jaccard-nodes",
-        label: "Nodes",
+        key: "nodes",
+        displayName: "Nodes",
         source: "nodes",
         multiple: true,
         required: true,

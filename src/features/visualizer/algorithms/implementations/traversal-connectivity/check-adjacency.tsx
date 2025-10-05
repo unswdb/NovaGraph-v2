@@ -15,13 +15,15 @@ export const checkAdjacency = createGraphAlgorithm<CheckAdjacencyOutputData>({
   inputs: [
     createAlgorithmSelectInput({
       id: "check-adjacency-start-node",
-      label: "Start Node",
+      key: "start_node",
+      displayName: "Start Node",
       source: "nodes",
       required: true,
     }),
     createAlgorithmSelectInput({
       id: "check-adjacency-end-node",
-      label: "End Node",
+      key: "end_node",
+      displayName: "End Node",
       source: "nodes",
       required: true,
     }),

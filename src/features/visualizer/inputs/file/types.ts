@@ -1,6 +1,6 @@
 import type { BaseInputType } from "../types";
 
-export type FileValues = File | undefined;
+export type FileValues = File;
 
 export type FileInput = BaseInputType<FileValues> & {
   type: "file";

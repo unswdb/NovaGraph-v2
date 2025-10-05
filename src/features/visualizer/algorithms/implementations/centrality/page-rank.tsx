@@ -12,7 +12,8 @@ export const pageRank = createGraphAlgorithm<PageRankOutputData>({
   inputs: [
     createNumberInput({
       id: "page-rank-damping",
-      label: "Damping Factor",
+      key: "damping_factor",
+      displayName: "Damping Factor",
       defaultValue: 0.85,
       min: 0,
       max: 1,

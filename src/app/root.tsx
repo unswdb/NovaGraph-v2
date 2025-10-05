@@ -5,7 +5,6 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useRouteError,
 } from "react-router";
 
 import type { Route } from "./+types/root";
@@ -17,6 +16,7 @@ import { LoadingProvider } from "~/components/ui/loading/loading-context";
 import { Loading } from "~/components/ui/loading";
 import { toast } from "sonner";
 import { useEffect } from "react";
+import isNoise from "./errors";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -34,12 +34,21 @@ export const links: Route.LinksFunction = () => [
 export function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     function handleError(event: ErrorEvent) {
-      console.error(event.error || event.message);
+      const msg = String(event?.error?.message ?? event?.message ?? "");
+      if (isNoise(msg)) return; // ignore harmless Cosmograph/WebGL/Resize noise
+
+      console.error(msg);
       toast.error("An unexpected error occurred.");
     }
 
     function handleRejection(event: PromiseRejectionEvent) {
-      console.error(event.reason);
+      const msg =
+        typeof event.reason === "string"
+          ? event.reason
+          : String(event.reason?.message ?? "");
+      if (isNoise(msg)) return;
+
+      console.error(msg);
       toast.error("Something went wrong. Please try again later.");
     }
 

@@ -18,7 +18,8 @@ export const kCore = createGraphAlgorithm<KCoreOutputData>({
   inputs: [
     createNumberInput({
       id: "k-core-k",
-      label: "K",
+      key: "k",
+      displayName: "K",
       defaultValue: 1,
       min: 1,
       step: 1,

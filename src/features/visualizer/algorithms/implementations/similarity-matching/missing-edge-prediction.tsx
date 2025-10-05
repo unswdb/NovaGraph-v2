@@ -18,7 +18,8 @@ export const missingEdgePrediction =
     inputs: [
       createNumberInput({
         id: "missing-edge-prediction-sample-size",
-        label: "Sample Size (Accuracy)",
+        key: "sample_size",
+        displayName: "Sample Size (Accuracy)",
         defaultValue: 2,
         min: 1,
         step: 1,
@@ -26,7 +27,8 @@ export const missingEdgePrediction =
       }),
       createNumberInput({
         id: "missing-edge-prediction-bins",
-        label: "Number of Bins (Precision)",
+        key: "num_of_bins",
+        displayName: "Number of Bins (Precision)",
         defaultValue: 10,
         min: 1,
         step: 1,

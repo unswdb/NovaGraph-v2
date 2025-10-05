@@ -48,7 +48,8 @@ export default function EdgeListItem({
   const inputs = [
     createNumberInput({
       id: "edge-weight",
-      label: "Weight",
+      key: "weight",
+      displayName: "Weight",
       placeholder: "Enter weight...",
       defaultValue: edge.weight ?? 0,
       min: 0,
@@ -58,7 +59,8 @@ export default function EdgeListItem({
       ? Object.entries(edge.attributes).map(([key, value]) =>
           createTextInput({
             id: `edge-${key}`,
-            label: key,
+            key,
+            displayName: capitalize(key),
             placeholder: `Node ${capitalize(key)}`,
             defaultValue: String(value),
             required: false,
@@ -122,11 +124,11 @@ export default function EdgeListItem({
             <InputComponent
               key={index}
               input={input}
-              value={values[input.label].value}
+              value={values[input.key].value}
               onChange={(value) =>
                 setValues((prev) => ({
                   ...prev,
-                  [input.label]: value,
+                  [input.key]: value,
                 }))
               }
             />

@@ -21,13 +21,15 @@ export const bellmanFordAToB = createGraphAlgorithm<BellmanFordAToBOutputData>({
   inputs: [
     createAlgorithmSelectInput({
       id: "bellman-ford-a-to-b-start-node",
-      label: "Start Node",
+      key: "start_node",
+      displayName: "Start Node",
       source: "nodes",
       required: true,
     }),
     createAlgorithmSelectInput({
       id: "bellman-ford-a-to-b-end-node",
-      label: "End Node",
+      key: "end_node",
+      displayName: "End Node",
       source: "nodes",
       required: true,
     }),
