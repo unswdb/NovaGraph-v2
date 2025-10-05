@@ -2,35 +2,22 @@ import type {
   AlgorithmMultipleSelectInput,
   AlgorithmSelectInput,
   AlgorithmSingleSelectInput,
+  PropsForAlgorithmSelect,
+  PropsForMultipleSelect,
+  PropsForSingleSelect,
 } from "./types";
-
-type selectInputDefault = Pick<
-  AlgorithmSelectInput,
-  "required" | "showLabel" | "disabled"
->;
-
-type SingleSelectInput = Omit<
-  AlgorithmSingleSelectInput,
-  "type" | "multiple" | keyof selectInputDefault
-> &
-  Partial<selectInputDefault> & { multiple?: false };
-
-type MultipleSelectInput = Omit<
-  AlgorithmMultipleSelectInput,
-  "type" | "multiple" | keyof selectInputDefault
-> &
-  Partial<selectInputDefault> & { multiple: true };
 
 // Overloads
 export function createAlgorithmSelectInput(
-  input: SingleSelectInput
+  input: PropsForSingleSelect
 ): AlgorithmSingleSelectInput;
+
 export function createAlgorithmSelectInput(
-  input: MultipleSelectInput
+  input: PropsForMultipleSelect
 ): AlgorithmMultipleSelectInput;
 
 export function createAlgorithmSelectInput(
-  input: SingleSelectInput | MultipleSelectInput
+  input: PropsForAlgorithmSelect<AlgorithmSelectInput>
 ): AlgorithmSelectInput {
   return {
     type: "algorithm-select",
@@ -42,5 +29,9 @@ export function createAlgorithmSelectInput(
   } as any;
 }
 
-export type { AlgorithmSelectInput } from "./types";
+export type {
+  AlgorithmSelectInput,
+  ValueForAlgorithmSelect,
+  PropsForAlgorithmSelect,
+} from "./types";
 export { default as SelectInputComponent } from "./select-input";

@@ -1,16 +1,17 @@
 import type {
   AlgorithmSelectInput,
+  PropsForAlgorithmSelect,
   ValueForAlgorithmSelect,
-} from "./algorithms/select/types";
-import type { DatetimeLocalInput, ValueForDatetimeLocal } from "./datetime-local/types";
-import type { FileInput } from "./file";
-import type { ValueForFile } from "./file/types";
-import type { NumberInput } from "./number";
-import type { ValueForNumber } from "./number/types";
-import type { SwitchInput } from "./switch";
-import type { ValueForSwitch } from "./switch/types";
-import type { TextInput } from "./text";
-import type { ValueForText } from "./text/types";
+} from "./algorithms/select";
+import type {
+  DatetimeLocalInput,
+  PropsForDatetimeLocal,
+  ValueForDatetimeLocal,
+} from "./datetime-local";
+import type { FileInput, PropsForFile, ValueForFile } from "./file";
+import type { NumberInput, PropsForNumber, ValueForNumber } from "./number";
+import type { PropsForSwitch, SwitchInput, ValueForSwitch } from "./switch";
+import type { PropsForText, TextInput, ValueForText } from "./text";
 
 export type InputType =
   | TextInput
@@ -28,10 +29,18 @@ export type ValueForInput<I> =
   | ValueForDatetimeLocal<I>
   | ValueForAlgorithmSelect<I>;
 
+export type PropsForInput<I> =
+  | PropsForText<I>
+  | PropsForNumber<I>
+  | PropsForSwitch<I>
+  | PropsForFile<I>
+  | PropsForDatetimeLocal<I>
+  | PropsForAlgorithmSelect<I>;
+
 type InputResultType = { success: boolean; message?: string };
 export type InputChangeResult<T> = { value: T } & InputResultType;
 
-export type BaseInputType<T> = {
+export interface BaseInputType<T> {
   id: string;
   label: string;
   required?: boolean;
@@ -41,4 +50,4 @@ export type BaseInputType<T> = {
     value: T,
     ...props: any[]
   ) => InputResultType | Promise<InputResultType>;
-};
+}

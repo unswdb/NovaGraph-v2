@@ -58,6 +58,14 @@ export default function InputDialog({
   const handleSubmit = async () => {
     if (!module) return;
 
+    // Don't run when there's no nodes
+    if (nodes.length === 0) {
+      toast.error(
+        "Cannot run algorithm — no nodes found. Try adding some nodes first."
+      );
+      return;
+    }
+
     setOpen(false);
     setInputResults(createEmptyInputResults(algorithm.inputs));
     startLoading("Running Algorithm...");
@@ -78,6 +86,7 @@ export default function InputDialog({
             : String(err) ??
                 "An unexpected error occurred. Please try again later."
         );
+        console.log(err);
       } finally {
         stopLoading();
       }

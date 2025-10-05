@@ -68,11 +68,22 @@ export function createEmptyInputResults(inputs: InputType[]) {
   }, {});
 }
 
-export { type InputType, type InputChangeResult } from "./types";
+export {
+  type InputType,
+  type InputChangeResult,
+  type ValueForInput,
+  type PropsForInput,
+} from "./types";
 
-export { createTextInput } from "./text";
-export { createFileInput } from "./file";
-export { createSwitchInput } from "./switch";
-export { createAlgorithmSelectInput } from "./algorithms/select";
-export { createNumberInput } from "./number";
-export { createDatetimeLocalInput } from "./datetime-local";
+export { createTextInput, type TextInput } from "./text";
+export { createFileInput, type FileInput } from "./file";
+export { createSwitchInput, type SwitchInput } from "./switch";
+export {
+  createAlgorithmSelectInput,
+  type AlgorithmSelectInput,
+} from "./algorithms/select";
+export { createNumberInput, type NumberInput } from "./number";
+export {
+  createDatetimeLocalInput,
+  type DatetimeLocalInput,
+} from "./datetime-local";

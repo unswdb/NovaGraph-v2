@@ -1,8 +1,7 @@
-import type { BaseInputType } from "../types";
-import type { DatetimeLocalInput, DatetimeLocalValues } from "./types";
+import type { DatetimeLocalInput, PropsForDatetimeLocal } from "./types";
 
 export function createDatetimeLocalInput(
-  input: Partial<DatetimeLocalInput> & BaseInputType<DatetimeLocalValues>
+  input: PropsForDatetimeLocal<DatetimeLocalInput>
 ): DatetimeLocalInput {
   return {
     type: "datetime-local",
@@ -17,5 +16,9 @@ export function createDatetimeLocalInput(
   };
 }
 
-export type { DatetimeLocalInput } from "./types";
+export type {
+  DatetimeLocalInput,
+  ValueForDatetimeLocal,
+  PropsForDatetimeLocal,
+} from "./types";
 export { default as DatetimeLocalInputComponent } from "./datetime-local-input";

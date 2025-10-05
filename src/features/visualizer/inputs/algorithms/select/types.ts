@@ -35,6 +35,29 @@ export type ValueForAlgorithmSelect<I> = I extends AlgorithmSelectInput
     : MultipleValues
   : never;
 
+type PropsForSelectDefault = Pick<
+  AlgorithmSelectInput,
+  "required" | "showLabel" | "disabled"
+>;
+
+export type PropsForSingleSelect = Omit<
+  AlgorithmSingleSelectInput,
+  "type" | "multiple" | keyof PropsForSelectDefault
+> &
+  Partial<PropsForSelectDefault> & { multiple?: false };
+
+export type PropsForMultipleSelect = Omit<
+  AlgorithmMultipleSelectInput,
+  "type" | "multiple" | keyof PropsForSelectDefault
+> &
+  Partial<PropsForSelectDefault> & { multiple: true };
+
+export type PropsForAlgorithmSelect<I> = I extends AlgorithmSelectInput
+  ? I extends AlgorithmSingleSelectInput
+    ? PropsForSingleSelect
+    : PropsForMultipleSelect
+  : never;
+
 export function isSingleSelectInput(
   input: AlgorithmSelectInput
 ): input is AlgorithmSingleSelectInput {

@@ -63,3 +63,7 @@ export type DatetimeLocalInput = BaseInputType<DatetimeLocalValues> & {
 export type ValueForDatetimeLocal<I> = I extends DatetimeLocalInput
   ? DatetimeLocalValues
   : never;
+
+export type PropsForDatetimeLocal<I> = I extends DatetimeLocalInput
+  ? Partial<DatetimeLocalInput> & BaseInputType<DatetimeLocalValues>
+  : never;

@@ -1,8 +1,7 @@
-import type { BaseInputType } from "../types";
-import type { NumberInput, NumberValues } from "./types";
+import type { NumberInput, PropsForNumber } from "./types";
 
 export function createNumberInput(
-  input: Partial<NumberInput> & BaseInputType<NumberValues>
+  input: PropsForNumber<NumberInput>
 ): NumberInput {
   return {
     type: "number",
@@ -18,5 +17,5 @@ export function createNumberInput(
   };
 }
 
-export type { NumberInput } from "./types";
+export type { NumberInput, ValueForNumber, PropsForNumber } from "./types";
 export { default as NumberInputComponent } from "./number-input";

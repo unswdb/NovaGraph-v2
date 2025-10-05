@@ -61,6 +61,9 @@ export default class VisualizerStore {
     // Define initial graph structure
     const graph = await this.controller.db.snapshotGraphState();
 
+    // Get all schema properties of the current database's graph
+    const schema = await this.controller._internal.getAllSchemaProperties();
+
     runInAction(() => {
       // TODO: Change to controller helper function that retrieves
       // all the database list
@@ -74,7 +77,8 @@ export default class VisualizerStore {
             nodesMap,
             edges,
             edgesMap,
-            directed: true, // By default, all graph are directed, non-directed means 2 way directed
+            schema,
+            directed: true, // TODO: Distinguish between directed/non-directed in Kuzu
           },
         },
       ];

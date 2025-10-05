@@ -1,9 +1,6 @@
-import type { BaseInputType } from "../types";
-import type { TextInput, TextValues } from "./types";
+import type { PropsForText, TextInput } from "./types";
 
-export function createTextInput(
-  input: Partial<TextInput> & BaseInputType<TextValues>
-): TextInput {
+export function createTextInput(input: PropsForText<TextInput>): TextInput {
   return {
     type: "text",
     placeholder: "",
@@ -14,5 +11,5 @@ export function createTextInput(
   };
 }
 
-export type { TextInput } from "./types";
+export type { TextInput, ValueForText, PropsForText } from "./types";
 export { default as TextInputComponent } from "./text-input";

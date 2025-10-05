@@ -1,9 +1,6 @@
-import type { BaseInputType } from "../types";
-import type { FileInput, FileValues } from "./types";
+import type { FileInput, PropsForFile } from "./types";
 
-export function createFileInput(
-  input: Partial<FileInput> & BaseInputType<FileValues>
-): FileInput {
+export function createFileInput(input: PropsForFile<FileInput>): FileInput {
   return {
     type: "file",
     accept: "*/*",
@@ -14,5 +11,5 @@ export function createFileInput(
   };
 }
 
-export type { FileInput } from "./types";
+export type { FileInput, ValueForFile, PropsForFile } from "./types";
 export { default as FileInputComponent } from "./file-input";

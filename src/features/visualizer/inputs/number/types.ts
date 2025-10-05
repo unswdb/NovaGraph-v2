@@ -12,3 +12,7 @@ export type NumberInput = BaseInputType<NumberValues> & {
 };
 
 export type ValueForNumber<I> = I extends NumberInput ? NumberValues : never;
+
+export type PropsForNumber<I> = I extends NumberInput
+  ? Partial<NumberInput> & BaseInputType<NumberValues>
+  : never;

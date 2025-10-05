@@ -1,8 +1,7 @@
-import type { BaseInputType } from "../types";
-import type { SwitchInput, SwitchValues } from "./types";
+import type { PropsForSwitch, SwitchInput } from "./types";
 
 export function createSwitchInput(
-  input: Partial<SwitchInput> & BaseInputType<SwitchValues>
+  input: PropsForSwitch<SwitchInput>
 ): SwitchInput {
   return {
     type: "switch",
@@ -14,5 +13,5 @@ export function createSwitchInput(
   };
 }
 
-export type { SwitchInput } from "./types";
+export type { SwitchInput, ValueForSwitch, PropsForSwitch } from "./types";
 export { default as SwitchInputComponent } from "./switch-input";

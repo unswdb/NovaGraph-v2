@@ -8,3 +8,7 @@ export type FileInput = BaseInputType<FileValues> & {
 };
 
 export type ValueForFile<I> = I extends FileInput ? FileValues : never;
+
+export type PropsForFile<I> = I extends FileInput
+  ? Partial<FileInput> & BaseInputType<FileValues>
+  : never;

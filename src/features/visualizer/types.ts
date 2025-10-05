@@ -1,3 +1,5 @@
+import type { NonPrimaryKeyType, PrimaryKeyType } from "./schema-inputs";
+
 export type GraphNode = {
   id: string; // Unique identifier of the node
   _primaryKey: string;
@@ -16,6 +18,16 @@ export type GraphEdge = {
   attributes?: Record<string, string | boolean | number>; // Additional attributes for the edge
 };
 
+type GraphSchema = {
+  tableName: string;
+  tableType: "NODE" | "REL";
+  primaryKey: string;
+  primaryKeyType: PrimaryKeyType;
+  properties: {
+    [key: string]: NonPrimaryKeyType;
+  };
+};
+
 export type GraphDatabase = {
   label: string;
   graph: {
@@ -23,6 +35,7 @@ export type GraphDatabase = {
     edges: GraphEdge[];
     nodesMap: Map<string, GraphNode>;
     edgesMap: Map<[string, string], GraphEdge>;
+    schema: GraphSchema[];
     directed: boolean;
   };
 };
