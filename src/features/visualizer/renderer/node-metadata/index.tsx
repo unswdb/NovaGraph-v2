@@ -9,7 +9,7 @@ import {
 } from "~/components/ui/card";
 import type { GraphEdge, GraphNode } from "../../types";
 import { Button } from "~/components/ui/button";
-import { ChevronDown, ChevronRight, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronRight, X } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { useState } from "react";
 import {
@@ -23,14 +23,12 @@ import DeleteNodeButton from "./delete-node";
 
 export default function NodeMetadata({
   node,
-  nodesMap,
   outgoingEdges,
   directed,
   onClose,
   className,
 }: {
   node: GraphNode;
-  nodesMap: Record<string, GraphNode>;
   outgoingEdges: [GraphNode, GraphEdge][];
   directed: boolean;
   onClose: () => void;
@@ -84,7 +82,6 @@ export default function NodeMetadata({
           <CollapsibleContent className="py-1 px-2 space-y-4 flex flex-col mt-4">
             <EdgesList
               node={node}
-              nodesMap={nodesMap}
               outgoingEdges={outgoingEdges}
               directed={directed}
             />

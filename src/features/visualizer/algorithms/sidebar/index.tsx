@@ -20,57 +20,31 @@ import {
   FilteredAlgorithmList,
   UnfilteredAlgorithmList,
 } from "./algorithm-list";
+import { useStore } from "../../hooks/use-store";
 
-export default function AlgorithmSidebar({
-  module,
-  nodes,
-  edges,
-  setActiveAlgorithm,
-  setActiveResponse,
-}: {
-  module: GraphModule | null;
-  nodes: GraphNode[];
-  edges: GraphEdge[];
-  setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
-  setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
-}) {
+export default function AlgorithmSidebar() {
   return (
     <SidebarProvider name="algorithm-sidebar" className="relative isolate z-10">
-      <AlgorithmSidebarWrapper
-        module={module}
-        nodes={nodes}
-        edges={edges}
-        setActiveAlgorithm={setActiveAlgorithm}
-        setActiveResponse={setActiveResponse}
-      />
+      <AlgorithmSidebarWrapper />
     </SidebarProvider>
   );
 }
 
-function AlgorithmSidebarWrapper({
-  module,
-  nodes,
-  edges,
-  setActiveAlgorithm,
-  setActiveResponse,
-}: {
-  module: GraphModule | null;
-  nodes: GraphNode[];
-  edges: GraphEdge[];
-  setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
-  setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
-}) {
+function AlgorithmSidebarWrapper() {
   const isMobile = useIsMobile();
   const { open, openMobile } = useSidebar();
+
+  const { wasmModule, database, setActiveAlgorithm, setActiveResponse } =
+    useStore();
 
   return (
     <>
       <Sidebar side="left">
         <AlgorithmSidebarContent
           open={isMobile ? openMobile : open}
-          module={module}
-          nodes={nodes}
-          edges={edges}
+          module={wasmModule}
+          nodes={database?.graph.nodes ?? []}
+          edges={database?.graph.edges ?? []}
           setActiveAlgorithm={setActiveAlgorithm}
           setActiveResponse={setActiveResponse}
         />

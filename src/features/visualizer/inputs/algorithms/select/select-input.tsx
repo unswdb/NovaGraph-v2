@@ -46,7 +46,7 @@ function buildItems(
       .filter((n) => !blacklist.has(n))
       .map((n) => ({
         value: n.id,
-        label: n.label ?? `Node ${n.id}`,
+        label: `${n._primaryKeyValue} (${n.tableName})`,
       }));
   }
 

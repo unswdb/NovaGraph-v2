@@ -18,7 +18,13 @@ export type GraphEdge = {
 
 export type GraphDatabase = {
   label: string;
-  graph: { nodes: GraphNode[]; edges: GraphEdge[]; directed: boolean };
+  graph: {
+    nodes: GraphNode[];
+    edges: GraphEdge[];
+    nodesMap: Map<string, GraphNode>;
+    edgesMap: Map<[string, string], GraphEdge>;
+    directed: boolean;
+  };
 };
 
 export { type MainModule as GraphModule } from "~/graph";

@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from "~/components/ui/dialog";
 
-export default function CreateNode({}) {
+export default function CreateNode() {
   const inputs = [
     // TODO: Make inputs based on schema
   ].flat();
@@ -32,7 +32,7 @@ export default function CreateNode({}) {
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">
           <Plus /> Node
@@ -47,21 +47,7 @@ export default function CreateNode({}) {
             within the graph.
           </DialogDescription>
         </DialogHeader>
-        {/* <div className="space-y-3 flex-1">
-          {inputs.map((input, index) => (
-            <InputComponent
-              key={index}
-              input={input}
-              value={values[input.label].value}
-              onChange={(value) =>
-                setValues((prev) => ({
-                  ...prev,
-                  [input.label]: value,
-                }))
-              }
-            />
-          ))}
-        </div> */}
+        {/* TODO: Inputs for create node */}
         <div className="ml-auto">
           <Button
             type="submit"

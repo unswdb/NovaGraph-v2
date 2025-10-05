@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { ColorMap, SizeMap } from "../../algorithms/implementations";
 import type { GraphEdge } from "../../types";
-import { MODE } from "../../constant";
+import { MODE } from "../constant";
 import chroma from "chroma-js";
 
 const DEFAULT_NODE_SIZE = 7;

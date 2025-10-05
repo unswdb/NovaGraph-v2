@@ -24,4 +24,3 @@ README.md
 src/graph.js
 src/graph.wasm
 src/graph.d.ts
-src/kuzu/controllers/KuzuController.d.ts

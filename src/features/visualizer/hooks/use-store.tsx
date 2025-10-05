@@ -1,5 +1,6 @@
 import { createContext, useContext, type ReactNode } from "react";
 import type VisualizerStore from "../store";
+import type { InitializedVisualizerStore } from "../store";
 
 const StoreContext = createContext<VisualizerStore | null>(null);
 
@@ -8,7 +9,10 @@ export const useStore = () => {
   if (!store) {
     throw new Error("useStore must be used within a StoreProvider");
   }
-  return store;
+  if (!store.wasmModule || !store.database) {
+    throw new Error("useStore must be used after store is initialized");
+  }
+  return store as InitializedVisualizerStore;
 };
 
 export const StoreProvider = ({

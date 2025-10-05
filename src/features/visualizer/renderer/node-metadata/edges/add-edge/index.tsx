@@ -7,18 +7,20 @@ import InputComponent, {
 } from "~/features/visualizer/inputs";
 import type { GraphEdge, GraphNode } from "~/features/visualizer/types";
 import AddEdgeDialog from "./add-edge-dialog";
+import { useStore } from "~/features/visualizer/hooks/use-store";
 
 export default function AddEdge({
   source,
-  nodesMap,
   outgoingEdges,
   directed,
 }: {
   source: GraphNode;
-  nodesMap: Record<string, GraphNode>;
   outgoingEdges: [GraphNode, GraphEdge][];
   directed: boolean;
 }) {
+  const { database } = useStore();
+  const { nodesMap } = database.graph;
+
   const addEdgeInput = createAlgorithmSelectInput({
     id: "add-edge-target-node",
     label: "Target Node",
@@ -43,7 +45,7 @@ export default function AddEdge({
   const target = useMemo(() => {
     const id = values[addEdgeInput.label].value;
     if (!id) return null;
-    return nodesMap[id] ?? null;
+    return nodesMap.get(id) ?? null;
   }, [nodesMap, values[addEdgeInput.label].value]);
 
   const onClose = () => {

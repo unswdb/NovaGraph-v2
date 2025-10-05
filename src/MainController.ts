@@ -1,7 +1,7 @@
-import kuzuController from './kuzu/controllers/KuzuController';
+import kuzuController from "./kuzu/controllers/KuzuController";
 import createModule from "./graph";
-import type { CompositeType } from './types/KuzuDBTypes';
-import type { GraphNode } from './features/visualizer/types';
+import type { CompositeType } from "./types/KuzuDBTypes";
+import type { GraphNode } from "./features/visualizer/types";
 
 class MainController {
   // Graph method starts here
@@ -20,7 +20,11 @@ class MainController {
   }
 
   // Kuzu db initialization
-  async initKuzu(type: string = "inmemory", mode: string = "sync", options: any = {}) {
+  async initKuzu(
+    type: string = "inmemory",
+    mode: string = "sync",
+    options: any = {}
+  ) {
     return kuzuController.initialize(type, mode);
   }
 
@@ -30,8 +34,6 @@ class MainController {
     const graph = mod.initGraph();
     return graph;
   }
-
-
 
   // Database operations namespace
   db = {
@@ -43,7 +45,13 @@ class MainController {
       relInfo: { from: string; to: string } | null = null
     ) {
       return Promise.resolve(
-        kuzuController.createSchema(type, tableName, primaryKey, properties, relInfo)
+        kuzuController.createSchema(
+          type,
+          tableName,
+          primaryKey,
+          properties,
+          relInfo
+        )
       );
     },
 
@@ -79,47 +87,54 @@ class MainController {
       tableName: string,
       tablePairs: Array<[string | number, string | number]>,
       properties?: Record<string, CompositeType>,
-      relationshipType?: "MANY_ONE" | "ONE_MANY" 
+      relationshipType?: "MANY_ONE" | "ONE_MANY"
     ) {
-      return Promise.resolve(kuzuController.createEdgeSchema(tableName, tablePairs, properties, relationshipType));
+      return Promise.resolve(
+        kuzuController.createEdgeSchema(
+          tableName,
+          tablePairs,
+          properties,
+          relationshipType
+        )
+      );
     },
 
-    async createEdge(    
+    async createEdge(
       node1: GraphNode,
       node2: GraphNode,
       edgeTableName: string,
       attributes?: Record<string, string | number | boolean>
     ) {
-      return Promise.resolve(kuzuController.createEdge(node1, node2, edgeTableName, attributes));
-    }
+      return Promise.resolve(
+        kuzuController.createEdge(node1, node2, edgeTableName, attributes)
+      );
+    },
   };
 
   _internal = {
     /**
-     * 
+     *
      * @param tableName table name
-     * @returns 
+     * @returns
      * {
           primaryKey: primaryKey,
           primaryKeyType: primaryKeyType,
-          properties: Record<Property Name, Property Type> 
+          properties: Record<Property Name, Property Type>
         }
       * @example await store.controller._internal.getSingleSchemaProperties(`Person`); 
      */
     async getSingleSchemaProperties(tableName: string) {
-      return Promise.resolve(kuzuController.getSingleSchemaProperties(tableName));
+      return Promise.resolve(
+        kuzuController.getSingleSchemaProperties(tableName)
+      );
     },
 
     async getAllSchemaProperties() {
       return Promise.resolve(kuzuController.getAllSchemaProperties());
-    }
+    },
   };
 
-  algorithms = {
-
-  };
-
-
+  algorithms = {};
 }
 
 // Singleton instance

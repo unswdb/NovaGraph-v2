@@ -4,14 +4,16 @@ import {
   type CosmographRef,
 } from "@cosmograph/react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { GraphDatabase, GraphEdge, GraphNode } from "../types";
+import type { GraphEdge, GraphNode } from "../types";
 import { cn } from "~/lib/utils";
-import type { ColorMap, SizeMap } from "../algorithms/implementations";
 import GraphRendererHeader from "./header";
 import GraphRendererFooter from "./footer";
 import { useGraphRendererHelpers } from "./hooks/use-graph-renderer-helpers";
 import { useZoomControls } from "./hooks/use-zoom-controls";
 import NodeMetadata from "./node-metadata";
+import { useStore } from "../hooks/use-store";
+import { MODE } from "./constant";
+import type { ColorMap, SizeMap } from "../algorithms/implementations";
 
 const INITIAL_ZOOM_LEVEL = 1;
 const SIMULATION_LINK_DISTANCE = 20;
@@ -19,35 +21,25 @@ const SIMULATION_SPRING = 0.02;
 const SIMULATION_DECAY = 100000;
 const SIMULATION_REPULSION = 2;
 
-export default function GraphRenderer({
-  nodes,
-  edges,
-  directed,
-  database,
-  databases,
-  setDatabase,
-  addDatabase,
-  sizes,
-  colors,
-  mode,
-  gravity,
-  nodeSizeScale,
-  className,
-}: {
-  nodes: GraphNode[];
-  edges: GraphEdge[];
-  directed: boolean;
-  database: GraphDatabase | null;
-  databases: GraphDatabase[];
-  setDatabase: (g: GraphDatabase) => void;
-  addDatabase: (g: GraphDatabase) => void;
-  sizes: SizeMap;
-  colors: ColorMap; // From algorithm's response
-  mode: number; // From algorithm's response
-  gravity: number; // From settings sidebar
-  nodeSizeScale: number; // From settings sidebar
-  className?: string;
-}) {
+export default function GraphRenderer({ className }: { className?: string }) {
+  const { database, gravity, nodeSizeScale, activeResponse } = useStore();
+
+  const { nodes, edges, nodesMap, directed } = database.graph;
+
+  const { sizes, colors, mode } = useMemo(() => {
+    const result: { sizes: SizeMap; colors: ColorMap; mode: number } = {
+      sizes: {},
+      colors: {},
+      mode: MODE.COLOR_SHADE_DEFAULT,
+    };
+    if (!!activeResponse) {
+      !!activeResponse.sizeMap && (result.sizes = activeResponse.sizeMap);
+      result.colors = activeResponse.colorMap;
+      result.mode = activeResponse.mode;
+    }
+    return result;
+  }, [activeResponse]);
+
   // Refs
   const cosmographRef = useRef<CosmographRef<GraphNode, GraphEdge> | null>(
     null
@@ -60,7 +52,12 @@ export default function GraphRenderer({
 
   // Hooks
   const { getNodeSize, getNodeColor, getLinkColor, getLinkWidth } =
-    useGraphRendererHelpers({ mode, colors, sizes, directed });
+    useGraphRendererHelpers({
+      mode,
+      colors,
+      sizes,
+      directed: database.graph.directed,
+    });
   const { zoomToNode } = useZoomControls(cosmographRef);
 
   // Start/pause simulation based on isSimulationPaused state
@@ -72,28 +69,21 @@ export default function GraphRenderer({
     }
   }, [isSimulationPaused]);
 
-  // Get nodes map
-  const nodesMap = useMemo(() => {
-    const map: Record<string, GraphNode> = {};
-    nodes.forEach((node) => {
-      map[node.id] = node;
-    });
-    return map;
-  }, [nodes]);
-
   // Get outgoing edges map
   const nodeOutgoingEdgesMap = useMemo(() => {
     const map: Record<string, [GraphNode, GraphEdge][]> = {};
 
-    edges.forEach((edge) => {
+    database.graph.edges.forEach((edge) => {
       // Source → Target
       if (!map[edge.source]) map[edge.source] = [];
-      map[edge.source].push([nodesMap[edge.target], edge]);
+      const target = nodesMap.get(edge.target);
+      if (!!target) map[edge.source].push([target, edge]);
 
       // If undirected, also add Target → Source
       if (!directed) {
         if (!map[edge.target]) map[edge.target] = [];
-        map[edge.target].push([nodesMap[edge.source], edge]);
+        const source = nodesMap.get(edge.source);
+        if (!!source) map[edge.target].push([source, edge]);
       }
     });
 
@@ -146,7 +136,6 @@ export default function GraphRenderer({
         {clickedNode && (
           <NodeMetadata
             node={clickedNode}
-            nodesMap={nodesMap}
             outgoingEdges={nodeOutgoingEdgesMap[clickedNode.id] ?? []}
             directed={directed}
             onClose={() => unselectNode(clickedNode)}
@@ -157,15 +146,7 @@ export default function GraphRenderer({
         <GradientOverlay position="top" />
 
         {/* Visualizer Header */}
-        <GraphRendererHeader
-          database={database}
-          setDatabase={setDatabase}
-          databases={databases}
-          addDatabase={addDatabase}
-          onSelectNode={selectNode}
-          cosmographRef={cosmographRef}
-          nodes={nodes}
-        />
+        <GraphRendererHeader onSelectNode={selectNode} />
 
         {/* Bottom Gradient Overlay */}
         <GradientOverlay position="bottom" />

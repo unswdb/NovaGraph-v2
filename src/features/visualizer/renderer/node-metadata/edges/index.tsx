@@ -4,12 +4,10 @@ import EdgeListItem from "./edge-list-item";
 
 export default function EdgesList({
   node,
-  nodesMap,
   outgoingEdges,
   directed,
 }: {
   node: GraphNode;
-  nodesMap: Record<string, GraphNode>;
   outgoingEdges: [GraphNode, GraphEdge][];
   directed: boolean;
 }) {
@@ -38,7 +36,6 @@ export default function EdgesList({
       {/* Add Edge */}
       <AddEdge
         source={node}
-        nodesMap={nodesMap}
         outgoingEdges={outgoingEdges}
         directed={directed}
       />

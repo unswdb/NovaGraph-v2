@@ -15,46 +15,24 @@ import {
   NODE_SIZE_SCALE,
   type Gravity,
   type NodeSizeScale,
-} from "./constant";
+} from "./renderer/constant";
+import { useStore } from "./hooks/use-store";
 
-export default function SettingsSidebar({
-  gravity,
-  setGravity,
-  nodeSizeScale,
-  setNodeSizeScale,
-}: {
-  gravity: Gravity;
-  setGravity: (g: Gravity) => void;
-  nodeSizeScale: NodeSizeScale;
-  setNodeSizeScale: (n: NodeSizeScale) => void;
-}) {
+export default function SettingsSidebar() {
   return (
     <SidebarProvider
       name="config-sidebar"
       className="relative isolate z-10"
       defaultOpen={false}
     >
-      <SettingsSidebarWrapper
-        gravity={gravity}
-        setGravity={setGravity}
-        nodeSizeScale={nodeSizeScale}
-        setNodeSizeScale={setNodeSizeScale}
-      />
+      <SettingsSidebarWrapper />
     </SidebarProvider>
   );
 }
 
-function SettingsSidebarWrapper({
-  gravity,
-  setGravity,
-  nodeSizeScale,
-  setNodeSizeScale,
-}: {
-  gravity: Gravity;
-  setGravity: (g: Gravity) => void;
-  nodeSizeScale: NodeSizeScale;
-  setNodeSizeScale: (n: NodeSizeScale) => void;
-}) {
+function SettingsSidebarWrapper() {
+  const { gravity, setGravity, nodeSizeScale, setNodeSizeScale } = useStore();
+
   const isMobile = useIsMobile();
   const { open, openMobile } = useSidebar();
 

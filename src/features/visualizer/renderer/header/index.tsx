@@ -1,29 +1,19 @@
-import type { GraphDatabase, GraphEdge, GraphNode } from "../../types";
-import { type RefObject } from "react";
-import type { CosmographRef } from "@cosmograph/react";
-import { capitalize } from "~/lib/utils";
+import type { GraphNode } from "../../types";
 import ImportDropdown from "../../import/import-dropdown";
 import GraphRendererSearch from "./search";
 import CreateNode from "./create-node";
+import { useStore } from "../../hooks/use-store";
 
 export type Accessor = { label: string; accessor: (n: GraphNode) => string };
 
 export default function GraphRendererHeader({
-  database,
-  databases,
-  setDatabase,
-  addDatabase,
   onSelectNode,
-  nodes,
 }: {
-  database: GraphDatabase | null;
-  databases: GraphDatabase[];
-  setDatabase: (g: GraphDatabase) => void;
-  addDatabase: (g: GraphDatabase) => void;
-  cosmographRef: RefObject<CosmographRef<GraphNode, GraphEdge> | null>;
   onSelectNode: (n: GraphNode | null) => void;
-  nodes: GraphNode[];
 }) {
+  const { database, setDatabase, databases, addDatabase } = useStore();
+  const { nodes } = database.graph;
+
   const accessors: Accessor[] = [
     {
       label: "Label",

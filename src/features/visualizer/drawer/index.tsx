@@ -3,24 +3,15 @@ import { ChevronUp, ChevronDown } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent } from "~/components/ui/tabs";
-import type {
-  BaseGraphAlgorithm,
-  BaseGraphAlgorithmResult,
-} from "../algorithms/implementations";
 import CodeTabContent from "./code";
 import OutputTabContent from "./output";
+import { useStore } from "../hooks/use-store";
 
 const DRAWER_HEIGHT = "18rem";
 
-export function CodeOutputDrawer({
-  activeAlgorithm = null,
-  activeResponse = null,
-  className,
-}: {
-  activeAlgorithm: BaseGraphAlgorithm | null;
-  activeResponse: BaseGraphAlgorithmResult | null;
-  className?: string;
-}) {
+export function CodeOutputDrawer({ className }: { className?: string }) {
+  const { activeAlgorithm, activeResponse } = useStore();
+
   // States
   const [tabValue, setTabValue] = useState("code");
   const [isExpanded, setIsExpanded] = useState(false);
