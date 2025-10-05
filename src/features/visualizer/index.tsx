@@ -36,7 +36,7 @@ const Visualizer = observer(() => {
         <Header />
         <div className="flex flex-row flex-1 [&>*]:h-[calc(100vh-64px)]">
           <AlgorithmSidebar />
-          <main className="flex flex-col">
+          <main className="flex flex-col w-full">
             <GraphRenderer className="relative flex-1 overflow-hidden" />
             <CodeOutputDrawer />
           </main>

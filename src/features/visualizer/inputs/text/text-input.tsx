@@ -23,12 +23,12 @@ export default function TextInputComponent({
 
     const validator = await input.validator?.(newValue);
     const isValid = required
-      ? validator
+      ? validator && !!newValue.trim()
         ? validator.success
         : !!newValue.trim()
       : true;
     const message = required
-      ? validator
+      ? validator && !!newValue.trim()
         ? validator.message ?? ""
         : "This field is required."
       : "";

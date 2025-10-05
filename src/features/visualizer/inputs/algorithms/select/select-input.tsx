@@ -159,12 +159,12 @@ function AlgorithmSingleSelectInputComponent({
 
     const validator = await input.validator?.(newValue);
     const isValid = required
-      ? validator
+      ? validator && !!newValue.trim()
         ? validator.success
         : !!newValue.trim()
       : true;
     const message = required
-      ? validator
+      ? validator && !!newValue.trim()
         ? validator.message ?? ""
         : "This field is required."
       : "";
@@ -264,12 +264,12 @@ function AlgorithmMultipleSelectInputComponent({
 
     const validator = await input.validator?.(newValues);
     const isValid = required
-      ? validator
+      ? validator && newValues.length > 0
         ? validator.success
         : newValues.length > 0
       : true;
     const message = required
-      ? validator
+      ? validator && newValues.length > 0
         ? validator.message ?? ""
         : "This field is required."
       : "";

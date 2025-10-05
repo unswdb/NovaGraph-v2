@@ -18,12 +18,12 @@ export default function FileInputComponent({
 
       const validator = await input.validator?.(newValue);
       const isValid = required
-        ? validator
+        ? validator && !!newValue
           ? validator.success
           : !!newValue
         : true;
       const message = required
-        ? validator
+        ? validator && !!newValue
           ? validator.message ?? ""
           : "This field is required."
         : "";

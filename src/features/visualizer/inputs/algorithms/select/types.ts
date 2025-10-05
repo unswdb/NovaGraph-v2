@@ -1,10 +1,10 @@
 import type { GraphEdge, GraphNode } from "~/features/visualizer/types";
 import type { BaseInputType } from "../../types";
 
-type Nodes = { source: "nodes"; sources: GraphNode[]; blacklist?: GraphNode[] };
-type Edges = { source: "edges"; sources: GraphEdge[]; blacklist?: GraphEdge[] };
+type Nodes = { source: "nodes"; blacklist?: GraphNode[] };
+type Edges = { source: "edges"; blacklist?: GraphEdge[] };
 type Static = { source: "static"; options: string[]; blacklist?: string[] };
-type Tables = { source: "tables"; sources: string[]; blacklist?: string[] };
+type Tables = { source: "tables"; blacklist?: string[] };
 
 export type SingleValues = string | undefined;
 export type MultipleValues = string[];
@@ -12,16 +12,16 @@ export type MultipleValues = string[];
 type AlgorithmSelectInputBase = { type: "algorithm-select" };
 
 export type AlgorithmSingleSelectInput = AlgorithmSelectInputBase &
-  BaseInputType<SingleValues> &
-  (Nodes | Edges | Static | Tables) & {
-    multiple?: false;
-  };
+  (BaseInputType<SingleValues> &
+    (Nodes | Edges | Static | Tables) & {
+      multiple?: false;
+    });
 
 export type AlgorithmMultipleSelectInput = AlgorithmSelectInputBase &
-  BaseInputType<MultipleValues> &
-  (Nodes | Edges | Static | Tables) & {
-    multiple: true;
-  };
+  (BaseInputType<MultipleValues> &
+    (Nodes | Edges | Static | Tables) & {
+      multiple: true;
+    });
 
 export type AlgorithmSelectInput =
   | AlgorithmSingleSelectInput
@@ -38,16 +38,24 @@ type PropsForSelectDefault = Pick<
   "required" | "showLabel" | "disabled"
 >;
 
-export type PropsForSingleSelect = Omit<
+type DistributiveOmit<T, K extends PropertyKey> = T extends any
+  ? Omit<T, K>
+  : never;
+
+// Strip per-branch, but *distributively*
+type SingleStripped = DistributiveOmit<
   AlgorithmSingleSelectInput,
   "type" | "multiple" | keyof PropsForSelectDefault
-> &
-  Partial<PropsForSelectDefault> & { multiple?: false };
-
-export type PropsForMultipleSelect = Omit<
+>;
+type MultipleStripped = DistributiveOmit<
   AlgorithmMultipleSelectInput,
   "type" | "multiple" | keyof PropsForSelectDefault
-> &
+>;
+
+// 4) Re-add shared defaults (this intersection stays distributive)
+export type PropsForSingleSelect = SingleStripped &
+  Partial<PropsForSelectDefault> & { multiple?: false };
+export type PropsForMultipleSelect = MultipleStripped &
   Partial<PropsForSelectDefault> & { multiple: true };
 
 export type PropsForAlgorithmSelect<I> = I extends AlgorithmSelectInput

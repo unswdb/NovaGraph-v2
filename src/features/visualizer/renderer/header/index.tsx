@@ -24,8 +24,8 @@ export default function GraphRendererHeader({
   return (
     <div className="flex justify-between items-start h-fit w-full absolute inset-0">
       {/* Import */}
-      <div className="ml-4 md:mt-4 flex-1 flex flex-wrap items-center gap-2">
-        <span className="whitespace-nowrap font-medium">Database:</span>
+      <div className="ml-4 mt-4 flex-1 flex flex-wrap items-center gap-2">
+        <span className="whitespace-nowrap">Database:</span>
         <ImportDropdown
           database={database}
           setDatabase={setDatabase}

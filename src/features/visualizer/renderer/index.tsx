@@ -102,7 +102,7 @@ export default function GraphRenderer({ className }: { className?: string }) {
 
   return (
     <CosmographProvider nodes={nodes} links={edges}>
-      <div className={cn("flex flex-col h-full relative", className)}>
+      <div className={cn("flex flex-col w-full h-full relative", className)}>
         {/* Main Graph Visualizer */}
         <Cosmograph
           ref={cosmographRef}
