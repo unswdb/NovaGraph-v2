@@ -1,5 +1,5 @@
-import { createTextInput, type TextInput } from "../inputs";
-import { defineSchemaInput } from "./types";
+import { createTextInput, type TextInput } from "../../inputs";
+import { defineSchemaInput } from "../types";
 
 export const StringSchemaInput = defineSchemaInput<TextInput>({
   type: "STRING",

@@ -6,10 +6,10 @@ export function createNumberInput(
   return {
     type: "number",
     placeholder: "",
-    defaultValue: 0,
     min: undefined,
     max: undefined,
     step: undefined,
+    validate: true,
     required: true,
     showLabel: true,
     disabled: false,

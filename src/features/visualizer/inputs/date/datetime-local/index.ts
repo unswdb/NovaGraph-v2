@@ -5,10 +5,10 @@ export function createDatetimeLocalInput(
 ): DatetimeLocalInput {
   return {
     type: "datetime-local",
-    placeholder: "",
     min: undefined,
     max: undefined,
     step: undefined,
+    validate: true,
     required: true,
     showLabel: true,
     disabled: false,

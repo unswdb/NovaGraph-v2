@@ -1,13 +1,13 @@
-import { MONTHS, type DatetimeLocalParts, type Month } from "./types";
-
-export function isValidDate(date: Date): boolean {
-  return !isNaN(date.getTime());
-}
-
-export function parseISOToDate(iso: string) {
-  const date = new Date(iso);
-  return date;
-}
+import { MONTHS } from "../types";
+import {
+  daysInMonthFor,
+  isInteger,
+  isValidDate,
+  monthToIndex,
+  pad,
+  parseISOToDate,
+} from "../util";
+import type { DatetimeLocalParts } from "./types";
 
 export function parseISOToDatetimeLocalParts(iso: string): DatetimeLocalParts {
   const date = parseISOToDate(iso);
@@ -26,55 +26,6 @@ export function parseISOToDatetimeLocalParts(iso: string): DatetimeLocalParts {
     second: date.getSeconds(),
     millisecond: date.getMilliseconds(),
   };
-}
-
-function isInteger(n: unknown): n is number {
-  return typeof n === "number" && Number.isInteger(n);
-}
-
-function pad(n: number, len = 2): string {
-  return n.toString().padStart(len, "0");
-}
-
-function isLeapYear(year: number) {
-  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-}
-
-function daysInMonthFor(year: number, month: number): number {
-  switch (month) {
-    case 1:
-      return 31; // Jan
-    case 2:
-      return isLeapYear(year) ? 29 : 28; // Feb
-    case 3:
-      return 31; // Mar
-    case 4:
-      return 30; // Apr
-    case 5:
-      return 31; // May
-    case 6:
-      return 30; // Jun
-    case 7:
-      return 31; // Jul
-    case 8:
-      return 31; // Aug
-    case 9:
-      return 30; // Sep
-    case 10:
-      return 31; // Oct
-    case 11:
-      return 30; // Nov
-    case 12:
-      return 31; // Dec
-    default:
-      throw new Error(`Invalid month index: ${month}`);
-  }
-}
-
-function monthToIndex(month: Month): number {
-  const idx = MONTHS.indexOf(month);
-  if (idx === -1) throw new Error(`Invalid month value: ${month}`);
-  return idx + 1; // 1..12
 }
 
 export function parseDatetimeLocalPartsToISO(

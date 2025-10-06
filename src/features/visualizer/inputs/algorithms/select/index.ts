@@ -22,6 +22,7 @@ export function createAlgorithmSelectInput(
   return {
     type: "algorithm-select",
     multiple: false,
+    validate: true,
     required: true,
     showLabel: true,
     disabled: false,

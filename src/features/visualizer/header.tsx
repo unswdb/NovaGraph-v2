@@ -15,7 +15,12 @@ export default function Header() {
       </div>
       <div className="flex items-center gap-2">
         {/* Light/Dark Mode Toggle */}
-        <Button variant="ghost" size="icon" onClick={() => toggleTheme()}>
+        <Button
+          title="Toggle Light/Dark Mode"
+          variant="ghost"
+          size="icon"
+          onClick={() => toggleTheme()}
+        >
           {theme === "dark" ? (
             <Sun className="w-6 h-6" />
           ) : (

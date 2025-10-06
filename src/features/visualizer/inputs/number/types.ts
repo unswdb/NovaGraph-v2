@@ -1,6 +1,6 @@
 import type { BaseInputType } from "../types";
 
-export type NumberValues = number | "";
+export type NumberValues = number;
 
 export type NumberInput = BaseInputType<NumberValues> & {
   type: "number";

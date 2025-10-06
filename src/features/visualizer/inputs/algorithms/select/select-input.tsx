@@ -147,15 +147,13 @@ function AlgorithmSingleSelectInputComponent({
   const placeholder = useMemo(() => getInputPlaceholder(input), [input]);
   const noun = useMemo(() => getInputNoun(input), [input]);
 
-  useEffect(() => {
-    if (input.defaultValue) {
-      onChange({ value: input.defaultValue, success: true });
-    }
-  }, [input.defaultValue]);
-
   const onValueChange = async (value: string) => {
     const newValue = value;
     const required = !!input.required;
+
+    if (!input.validate) {
+      return { value: newValue, success: true };
+    }
 
     const validator = await input.validator?.(newValue);
     const isValid = required
@@ -178,6 +176,12 @@ function AlgorithmSingleSelectInputComponent({
       message: message,
     });
   };
+
+  useEffect(() => {
+    if (input.defaultValue) {
+      onValueChange(input.defaultValue);
+    }
+  }, [input.defaultValue]);
 
   return (
     <>
@@ -249,18 +253,12 @@ function AlgorithmMultipleSelectInputComponent({
   const placeholder = useMemo(() => getInputPlaceholder(input), [input]);
   const noun = useMemo(() => getInputNoun(input), [input]);
 
-  useEffect(() => {
-    if (input.defaultValue) {
-      onChange({ value: input.defaultValue, success: true });
-    }
-  }, [input.defaultValue]);
-
-  useEffect(() => {
-    setValues(inputValues ?? []);
-  }, [inputValues]);
-
   const onValuesChange = async (newValues: string[]) => {
     const required = !!input.required;
+
+    if (!input.validate) {
+      return { value: newValues, success: true };
+    }
 
     const validator = await input.validator?.(newValues);
     const isValid = required
@@ -283,6 +281,16 @@ function AlgorithmMultipleSelectInputComponent({
       message: message,
     });
   };
+
+  useEffect(() => {
+    if (input.defaultValue) {
+      onValuesChange(input.defaultValue);
+    }
+  }, [input.defaultValue]);
+
+  useEffect(() => {
+    setValues(inputValues ?? []);
+  }, [inputValues]);
 
   return (
     <>

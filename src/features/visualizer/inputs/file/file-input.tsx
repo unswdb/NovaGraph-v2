@@ -1,6 +1,6 @@
 import { Input } from "~/components/form/input";
 import type { FileInput } from "./types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { InputComponentProps } from "..";
 
 export default function FileInputComponent({
@@ -10,32 +10,39 @@ export default function FileInputComponent({
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  const handleFile = async (newValue: File) => {
+    const required = !!input.required;
+
+    if (!input.validate) {
+      return { value: newValue, success: true };
+    }
+
+    const validator = await input.validator?.(newValue);
+    const isValid = required
+      ? validator && !!newValue
+        ? validator.success
+        : !!newValue
+      : true;
+    const message = required
+      ? validator && !!newValue
+        ? validator.message ?? ""
+        : "This field is required."
+      : "";
+
+    setShowError(!isValid);
+    setErrorMessage(message);
+
+    onChange({
+      value: newValue,
+      success: isValid,
+      message: message,
+    });
+  };
+
   const handleFileOnChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      const newValue = files[0];
-      const required = !!input.required;
-
-      const validator = await input.validator?.(newValue);
-      const isValid = required
-        ? validator && !!newValue
-          ? validator.success
-          : !!newValue
-        : true;
-      const message = required
-        ? validator && !!newValue
-          ? validator.message ?? ""
-          : "This field is required."
-        : "";
-
-      setShowError(!isValid);
-      setErrorMessage(message);
-
-      onChange({
-        value: newValue,
-        success: isValid,
-        message: message,
-      });
+      handleFile(files[0]);
     } else {
       const errorMessage =
         "There's something wrong with uploading the file. Please try again.";
@@ -49,6 +56,12 @@ export default function FileInputComponent({
       });
     }
   };
+
+  useEffect(() => {
+    if (input.defaultValue) {
+      handleFile(input.defaultValue);
+    }
+  }, [input.defaultValue]);
 
   return (
     <>

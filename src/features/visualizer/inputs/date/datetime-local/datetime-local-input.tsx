@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
-import type { InputComponentProps } from "..";
+import { useEffect, useState } from "react";
+import type { InputComponentProps } from "../..";
 import type { DatetimeLocalInput } from "./types";
 import {
-  isValidDate,
   parseDatetimeLocalPartsToDate,
   parseDatetimeLocalPartsToISO,
-  parseISOToDate,
 } from "./util";
 import { Input } from "~/components/form/input";
+import { isValidDate, parseISOToDate } from "../util";
 
 export default function DatetimeLocalInputComponent({
   input,
@@ -17,34 +16,12 @@ export default function DatetimeLocalInputComponent({
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  useEffect(() => {
-    if (input.defaultValue) {
-      const required = !!input.required;
-      const date = parseISOToDate(input.defaultValue);
-
-      if (
-        !isValidDate(date) ||
-        (!!input.min && date < parseDatetimeLocalPartsToDate(input.min)) ||
-        (!!input.max && date > parseDatetimeLocalPartsToDate(input.max))
-      ) {
-        onChange({
-          value: input.defaultValue,
-          success: !required,
-        });
-      } else {
-        onChange({
-          value: input.defaultValue,
-          success: true,
-        });
-      }
-    }
-  }, [input.defaultValue]);
-
-  const handleDatetimeLocalOnChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const newValue = e.target.value;
+  const handleDatetimeLocalOnChange = async (newValue: string) => {
     const required = !!input.required;
+
+    if (!input.validate) {
+      return { value: newValue, success: true };
+    }
 
     const newDate = parseISOToDate(newValue);
     if (isNaN(newDate.getTime())) {
@@ -104,13 +81,19 @@ export default function DatetimeLocalInputComponent({
     });
   };
 
+  useEffect(() => {
+    if (input.defaultValue) {
+      handleDatetimeLocalOnChange(input.defaultValue);
+    }
+  }, [input.defaultValue]);
+
   return (
     <>
       <Input
         id={input.id}
         type="datetime-local"
         value={value ? String(value) : ""}
-        onChange={handleDatetimeLocalOnChange}
+        onChange={(e) => handleDatetimeLocalOnChange(e.target.value)}
         min={input.min ? parseDatetimeLocalPartsToISO(input.min) : ""}
         max={input.max ? parseDatetimeLocalPartsToISO(input.max) : ""}
         step={input.step}

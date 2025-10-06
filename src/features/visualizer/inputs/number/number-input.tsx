@@ -11,41 +11,40 @@ export default function NumberInputComponent({
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  useEffect(() => {
-    if (input.defaultValue) {
-      onChange({ value: input.defaultValue, success: true });
-    }
-  }, [input.defaultValue]);
-
-  const handleNumberOnChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const newValue = Number(e.target.value);
+  const handleNumberOnChange = async (newValue: number) => {
     const required = !!input.required;
+
+    if (!input.validate) {
+      return { value: newValue, success: true };
+    }
 
     if (isNaN(newValue)) {
       setShowError(true);
       setErrorMessage("Please enter a valid number.");
-      onChange({ value: "", success: !required, message: "Invalid number" });
+      onChange({
+        value: undefined,
+        success: !required,
+        message: "Invalid number",
+      });
       return;
     }
 
-    if (!!input.min && newValue < input.min) {
+    if (input.min !== undefined && newValue < input.min) {
       setShowError(true);
       setErrorMessage(`Value must be at least ${input.min}.`);
       onChange({
-        value: "",
+        value: undefined,
         success: !required,
         message: `Value must be at least ${input.min}.`,
       });
       return;
     }
 
-    if (!!input.max && newValue > input.max) {
+    if (input.max !== undefined && newValue > input.max) {
       setShowError(true);
       setErrorMessage(`Value must not exceed ${input.max}.`);
       onChange({
-        value: "",
+        value: undefined,
         success: !required,
         message: `Value must not exceed ${input.max}.`,
       });
@@ -74,6 +73,12 @@ export default function NumberInputComponent({
     });
   };
 
+  useEffect(() => {
+    if (input.defaultValue) {
+      handleNumberOnChange(input.defaultValue);
+    }
+  }, [input.defaultValue]);
+
   return (
     <>
       <Input
@@ -84,7 +89,7 @@ export default function NumberInputComponent({
         step={input.step ?? 1}
         value={String(value) ?? ""}
         placeholder={input.placeholder}
-        onChange={handleNumberOnChange}
+        onChange={(e) => handleNumberOnChange(Number(e.target.value))}
       />
       {showError && errorMessage && (
         <p className="text-typography-critical xsmall-body mt-1">

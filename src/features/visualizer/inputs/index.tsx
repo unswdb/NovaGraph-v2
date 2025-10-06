@@ -5,7 +5,8 @@ import type { InputChangeResult, InputType, ValueForInput } from "./types";
 import { FileInputComponent } from "./file";
 import { SwitchInputComponent } from "./switch";
 import TextInputComponent from "./text/text-input";
-import { DatetimeLocalInputComponent } from "./datetime-local";
+import { DatetimeLocalInputComponent } from "./date/datetime-local";
+import { DateInputComponent } from "./date";
 
 export type InputComponentProps<I extends InputType> = {
   input: I;
@@ -18,6 +19,7 @@ const INPUT_COMPONENTS: Record<InputType["type"], React.ComponentType<any>> = {
   number: NumberInputComponent,
   switch: SwitchInputComponent,
   file: FileInputComponent,
+  date: DateInputComponent,
   "algorithm-select": AlgorithmSelectInputComponent,
   "datetime-local": DatetimeLocalInputComponent,
 } as const;
@@ -64,9 +66,9 @@ export function createEmptyInputResult<I extends InputType>(
   const isValueDefined = value !== undefined;
   const result = {
     value,
-    success: input.required ? isValueDefined : true,
+    success: input.required ? isValueDefined || !input.validate : true,
     message: input.required
-      ? isValueDefined
+      ? isValueDefined || !input.validate
         ? ""
         : "This field is required"
       : "",
@@ -99,4 +101,4 @@ export { createNumberInput, type NumberInput } from "./number";
 export {
   createDatetimeLocalInput,
   type DatetimeLocalInput,
-} from "./datetime-local";
+} from "./date/datetime-local";

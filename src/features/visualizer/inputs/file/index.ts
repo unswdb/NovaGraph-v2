@@ -4,6 +4,7 @@ export function createFileInput(input: PropsForFile<FileInput>): FileInput {
   return {
     type: "file",
     accept: "*/*",
+    validate: true,
     required: true,
     showLabel: true,
     disabled: false,

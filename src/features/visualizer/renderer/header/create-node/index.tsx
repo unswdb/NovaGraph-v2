@@ -41,7 +41,7 @@ export default function CreateNode() {
 
   return (
     <>
-      <Button variant="outline" onClick={openDialog}>
+      <Button title="Create Node" variant="outline" onClick={openDialog}>
         <Plus /> Node
       </Button>
       <CreateNodeSchemaDialog

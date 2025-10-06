@@ -4,6 +4,7 @@ export function createTextInput(input: PropsForText<TextInput>): TextInput {
   return {
     type: "text",
     placeholder: "",
+    validate: true,
     required: true,
     showLabel: true,
     disabled: false,

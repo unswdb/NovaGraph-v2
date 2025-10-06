@@ -11,15 +11,12 @@ export default function TextInputComponent({
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  useEffect(() => {
-    if (input.defaultValue) {
-      onChange({ value: input.defaultValue, success: true });
-    }
-  }, [input.defaultValue]);
-
-  const handleTextOnChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
+  const handleTextOnChange = async (newValue: string) => {
     const required = !!input.required;
+
+    if (!input.validate) {
+      return { value: newValue, success: true };
+    }
 
     const validator = await input.validator?.(newValue);
     const isValid = required
@@ -43,13 +40,19 @@ export default function TextInputComponent({
     });
   };
 
+  useEffect(() => {
+    if (input.defaultValue) {
+      handleTextOnChange(input.defaultValue);
+    }
+  }, [input.defaultValue]);
+
   return (
     <>
       <Input
         id={input.id}
         type="text"
         value={value ? String(value) : ""}
-        onChange={handleTextOnChange}
+        onChange={(e) => handleTextOnChange(e.target.value)}
         required={input.required}
         placeholder={input.placeholder}
         disabled={input.disabled}

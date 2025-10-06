@@ -6,6 +6,7 @@ export function createSwitchInput(
   return {
     type: "switch",
     defaultValue: false,
+    validate: true,
     required: true,
     showLabel: true,
     disabled: false,
