@@ -97,17 +97,30 @@ export default class VisualizerStore {
   setNodes = (nodes: GraphNode[]) => {
     this.checkInitialization();
     const { nodes: newNodes, nodesMap } = this.buildNodesWithMap(nodes);
-    this.database.graph.nodes = newNodes;
-    this.database.graph.nodesMap = nodesMap;
+    this.database = {
+      ...this.database,
+      graph: {
+        ...this.database.graph,
+        nodes: newNodes,
+        nodesMap, // can remain plain Map if you don’t need deep reactivity
+      },
+    };
   };
-
+ 
   setEdges = (edges: GraphEdge[]) => {
     this.checkInitialization();
     const { edges: newEdges, edgesMap } = this.buildEdgesWithMap(edges);
-    this.database.graph.edges = newEdges;
-    this.database.graph.edgesMap = edgesMap;
+    this.database = {
+      ...this.database,
+      graph: {
+        ...this.database.graph,
+        edges: newEdges,
+        edgesMap, // can remain plain Map if you don’t need deep reactivity
+      },
+    };
   };
-
+ 
+ 
   addDatabase = (database: GraphDatabase) => {
     this.databases = [...this.databases, database];
   };
