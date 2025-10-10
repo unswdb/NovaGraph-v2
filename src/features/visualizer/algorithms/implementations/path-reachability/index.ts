@@ -1,4 +1,3 @@
-// Export all path & reachability algorithms
 export * from "./dijkstra-a-b";
 export * from "./dijkstra-a-all";
 export * from "./yen";
