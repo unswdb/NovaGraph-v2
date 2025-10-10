@@ -106,7 +106,7 @@ export default class VisualizerStore {
       },
     };
   };
- 
+
   setEdges = (edges: GraphEdge[]) => {
     this.checkInitialization();
     const { edges: newEdges, edgesMap } = this.buildEdgesWithMap(edges);
@@ -119,8 +119,7 @@ export default class VisualizerStore {
       },
     };
   };
- 
- 
+
   addDatabase = (database: GraphDatabase) => {
     this.databases = [...this.databases, database];
   };

@@ -7,6 +7,7 @@ import { SwitchInputComponent } from "./switch";
 import TextInputComponent from "./text/text-input";
 import { DatetimeLocalInputComponent } from "./date/datetime-local";
 import { DateInputComponent } from "./date";
+import { UUIDInputComponent } from "./uuid";
 
 export type InputComponentProps<I extends InputType> = {
   input: I;
@@ -22,6 +23,7 @@ const INPUT_COMPONENTS: Record<InputType["type"], React.ComponentType<any>> = {
   date: DateInputComponent,
   "algorithm-select": AlgorithmSelectInputComponent,
   "datetime-local": DatetimeLocalInputComponent,
+  uuid: UUIDInputComponent,
 } as const;
 
 export default function InputComponent<T extends InputType>({
