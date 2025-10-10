@@ -8,9 +8,16 @@ type WithoutValidator<I extends InputType> = Omit<
 >;
 
 export interface SchemaInput<I extends InputType> {
+  /** Type/name of the Kuzu type */
   readonly type: string;
+
+  /** Label/display name of the Kuzu type when shown as an option */
   readonly displayName: string;
+
+  /** Contexts where the type is supported (e.g., primary, non-primary, or both) */
   readonly contexts: readonly FieldContextKind[];
+
+  /** Function that builds the input */
   readonly build: (args: WithoutValidator<I>) => I;
 }
 
