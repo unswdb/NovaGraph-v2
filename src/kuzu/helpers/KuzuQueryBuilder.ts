@@ -1,16 +1,16 @@
 /**
  * KuzuQueryBuilder - A collection of query construction functions for Kùzu graph database operations
- * 
+ *
  * This module provides pure query construction functions without any database dependencies.
  * Each function returns a Cypher query string that can be executed by any query executor.
  */
 
-import type { GraphNode } from '~/features/visualizer/types';
+import type { GraphNode } from "~/features/visualizer/types";
 import type {
   CompositeType,
   ScalarType,
-  ValueWithType
-} from '../../types/KuzuDBTypes'
+  ValueWithType,
+} from "../../types/KuzuDBTypes";
 
 export function createEdgeQuery(
   node1: GraphNode,
@@ -19,7 +19,7 @@ export function createEdgeQuery(
   attributes?: Record<string, string | number | boolean>
 ) {
   const propString =
-  attributes && Object.keys(attributes).length > 0
+    attributes && Object.keys(attributes).length > 0
       ? `{ ${Object.entries(attributes)
           .map(([key, value]) =>
             typeof value === "string"
@@ -36,20 +36,19 @@ export function createEdgeQuery(
   CREATE (u1)-[:\`${edgeTableName}\` ${propString}]->(u2);
   `;
 
-  console.log("Query: " + query)
+  console.log("Query: " + query);
   return query;
 }
-
 
 export function deleteEdgeQuery(
   edgeTableName: string,
   node1: GraphNode,
-  node2: GraphNode,
+  node2: GraphNode
 ) {
   const query = `MATCH (u:\`${node1.tableName}\`)-[f:\`${edgeTableName}\`]->(u1:\`${node2.tableName}\`)
 WHERE u.\`${node1._primaryKey}\` = '${node1._primaryKeyValue}' AND u1.\`${node2._primaryKey}\` = '${node2._primaryKeyValue}'
 DELETE f;
-`
+`;
   return query;
 }
 
@@ -121,20 +120,30 @@ export function createSchemaQuery(
   const typeToDDL = (t: CompositeType): string => {
     if (typeof t === "string") return t;
     switch (t.kind) {
-      case "DECIMAL": return `DECIMAL(${t.precision},${t.scale})`;
+      case "DECIMAL":
+        return `DECIMAL(${t.precision},${t.scale})`;
       case "LIST":
-      case "ARRAY":   return `LIST(${typeToDDL(t.of)})`;
-      case "STRUCT":  return `STRUCT(${Object.entries(t.fields).map(([k,v]) => `${k} ${typeToDDL(v)}`).join(", ")})`;
-      case "MAP":     return `MAP(${t.key},${typeToDDL(t.value)})`;
-      case "UNION":   return `UNION(${Object.entries(t.variants).map(([tag,v]) => `${tag}: ${typeToDDL(v)}`).join(", ")})`;
-      default:        return String(t as any);
+      case "ARRAY":
+        return `LIST(${typeToDDL(t.of)})`;
+      case "STRUCT":
+        return `STRUCT(${Object.entries(t.fields)
+          .map(([k, v]) => `${k} ${typeToDDL(v)}`)
+          .join(", ")})`;
+      case "MAP":
+        return `MAP(${t.key},${typeToDDL(t.value)})`;
+      case "UNION":
+        return `UNION(${Object.entries(t.variants)
+          .map(([tag, v]) => `${tag}: ${typeToDDL(v)}`)
+          .join(", ")})`;
+      default:
+        return String(t as any);
     }
   };
 
   const cols = Object.entries(properties).map(
     ([name, spec]) => `${name} ${typeToDDL(spec)}`
   );
-  
+
   if (kind === "node") {
     const pkClause = primaryKey ? `, PRIMARY KEY (${primaryKey})` : "";
     return `CREATE NODE TABLE ${label} (${cols.join(", ")}${pkClause});`;
@@ -143,12 +152,12 @@ export function createSchemaQuery(
       throw new Error(`Relationship "${label}" requires relInfo { from, to }`);
     }
     return cols.length
-      ? `CREATE REL TABLE ${label} (FROM ${relInfo.from} TO ${relInfo.to}, ${cols.join(", ")});`
+      ? `CREATE REL TABLE ${label} (FROM ${relInfo.from} TO ${
+          relInfo.to
+        }, ${cols.join(", ")});`
       : `CREATE REL TABLE ${label} (FROM ${relInfo.from} TO ${relInfo.to});`;
   }
 }
-
-
 
 /**
  * Create a node with the given label and properties
@@ -162,7 +171,7 @@ export function createNodeQuery(
 ): string {
   const entries = Object.entries(properties)
     .map(([key, [type, value]]) => `${key}: ${_serialize(type, value)}`)
-    .join(', ');
+    .join(", ");
   const q = `CREATE (n:${tableName} {${entries}});`;
   // console.log('createNodeQuery:', q);
   return q;
@@ -186,7 +195,7 @@ export function findPrimaryKeyQuery(tableName: string) {
 export function deleteNodeQuery(
   tableName: string,
   primaryKey: string,
-  primaryValue: any 
+  primaryValue: any
 ) {
   const query = `MATCH (n:\`${tableName}\`) WHERE n.\`${primaryKey}\` = "${primaryValue}" DETACH DELETE n`;
   return query;
@@ -212,7 +221,7 @@ export function findPrimaryKeyForNodeQuery(tableName: string) {
  * @returns Query string selecting name, type, primary key
  */
 export function getSingleSchemaPropertiesQuery(tableName: string) {
-  const query = `CALL TABLE_INFO('${tableName}') RETURN name, type, \`primary key\`;`
+  const query = `CALL TABLE_INFO('${tableName}') RETURN name, type, \`primary key\`;`;
   return query;
 }
 
@@ -224,7 +233,7 @@ export function getSingleSchemaPropertiesQuery(tableName: string) {
  * @returns Query string selecting name, type, primary key
  */
 export function getAllSchemaPropertiesQuery() {
-  const query = `CALL show_tables() RETURN name, type;`
+  const query = `CALL show_tables() RETURN name, type;`;
   return query;
 }
 
@@ -239,7 +248,7 @@ export function getAllSchemaPropertiesQuery() {
  * _esc('He said "hi"'); // "He said \"hi\""
  */
 function _esc(s: string) {
-  return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
 /**
@@ -256,10 +265,10 @@ function _esc(s: string) {
  */
 function _ensureNumber(type: string, value: any): number {
   const n = Number(value);
-  if (!Number.isFinite(n)) throw new Error(`${type}: expected finite number, got ${value}`);
+  if (!Number.isFinite(n))
+    throw new Error(`${type}: expected finite number, got ${value}`);
   return n;
 }
-
 
 /**
  * Serializes scalar values using the scalar type name.
@@ -268,51 +277,62 @@ function _ensureNumber(type: string, value: any): number {
  */
 function _serializeScalar(type: ScalarType, value: any): string {
   switch (type) {
-    case 'INT': case 'INT8': case 'INT16': case 'INT32': case 'INT64': case 'INT128':
-    case 'UINT8': case 'UINT16': case 'UINT32': case 'UINT64':
+    case "INT":
+    case "INT8":
+    case "INT16":
+    case "INT32":
+    case "INT64":
+    case "INT128":
+    case "UINT8":
+    case "UINT16":
+    case "UINT32":
+    case "UINT64":
       // Todo: test
       return String(_ensureNumber(type, value));
 
-    case 'FLOAT': case 'DOUBLE':
+    case "FLOAT":
+    case "DOUBLE":
       // Todo: test
       return String(_ensureNumber(type, value));
 
-    case 'BOOLEAN':
+    case "BOOLEAN":
       // Todo: test
-      return value ? 'true' : 'false';
+      return value ? "true" : "false";
 
-    case 'STRING':
+    case "STRING":
       return `"${_esc(String(value))}"`;
 
-    case 'UUID':
+    case "UUID":
       return `uuid("${_esc(String(value))}")`;
 
-    case 'DATE':
+    case "DATE":
       // Todo: test
       return `date("${_esc(String(value))}")`;
 
-    case 'TIMESTAMP':
+    case "TIMESTAMP":
       // Todo: test
       return `timestamp("${_esc(String(value))}")`;
 
-    case 'INTERVAL':
+    case "INTERVAL":
       // Todo: test
       return `interval("${_esc(String(value))}")`;
 
-    case 'BLOB':
+    case "BLOB":
       // Todo: implement
-      throw new Error('BLOB serialization not implemented yet. Consider base64 + blob() wrapper.');
+      throw new Error(
+        "BLOB serialization not implemented yet. Consider base64 + blob() wrapper."
+      );
 
-    case 'JSON':
+    case "JSON":
       // Todo: implement
       return `json("${_esc(JSON.stringify(value))}")`;
 
-    case 'SERIAL':
+    case "SERIAL":
       // Todo: implement
       return String(_ensureNumber(type, value));
 
-    case 'NULL':
-      return 'null';
+    case "NULL":
+      return "null";
 
     default:
       throw new Error(`Unknown scalar type: ${type}`);
@@ -338,13 +358,13 @@ function _serializeScalar(type: ScalarType, value: any): string {
  * // -> 'uuid("123e4567-e89b-12d3-a456-426614174000")'
  */
 function _serialize(type: CompositeType, value: any): string {
-  if (value === null) return 'null';
+  if (value === null) return "null";
 
-  if (typeof type === 'string') {
+  if (typeof type === "string") {
     return _serializeScalar(type, value);
   }
 
-  if (type.kind === 'STRUCT') {
+  if (type.kind === "STRUCT") {
     const obj = value ?? {};
     const parts: string[] = [];
     for (const [k, fieldSpec] of Object.entries(type.fields)) {
@@ -352,29 +372,35 @@ function _serialize(type: CompositeType, value: any): string {
       // type first, value later
       parts.push(`${k}: ${_serialize(fieldSpec, obj[k])}`);
     }
-    return `{${parts.join(', ')}}`;
+    return `{${parts.join(", ")}}`;
   }
 
   // Todo: test
-  if (type.kind === 'DECIMAL') {
-    return String(_ensureNumber(`DECIMAL(${type.precision},${type.scale})`, value));
+  if (type.kind === "DECIMAL") {
+    return String(
+      _ensureNumber(`DECIMAL(${type.precision},${type.scale})`, value)
+    );
   }
 
-  // Todo: implement 
-  if (type.kind === 'LIST' || type.kind === 'ARRAY') {
+  // Todo: implement
+  if (type.kind === "LIST" || type.kind === "ARRAY") {
     if (!Array.isArray(value)) throw new Error(`${type.kind} expects an array`);
     throw new Error(`${type.kind} serialization not implemented yet`);
   }
 
-  if (type.kind === 'MAP') {
-    throw new Error('MAP serialization not implemented yet');
+  if (type.kind === "MAP") {
+    throw new Error("MAP serialization not implemented yet");
   }
 
-  if (type.kind === 'UNION') {
-    throw new Error('UNION serialization not implemented yet');
+  if (type.kind === "UNION") {
+    throw new Error("UNION serialization not implemented yet");
   }
 
-  if (type.kind === 'NODE' || type.kind === 'REL' || type.kind === 'RECURSIVE_REL') {
+  if (
+    type.kind === "NODE" ||
+    type.kind === "REL" ||
+    type.kind === "RECURSIVE_REL"
+  ) {
     throw new Error(`${type.kind} is not a serializable property literal`);
   }
 

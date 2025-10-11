@@ -74,6 +74,7 @@ export default class VisualizerStore {
       // all the database list
       const { nodes, nodesMap } = this.buildNodesWithMap(graph.nodes);
       const { edges, edgesMap } = this.buildEdgesWithMap(graph.edges);
+      const tables = this.buildTables(graph.tables);
       this.databases = [
         {
           label: "Default",
@@ -182,6 +183,16 @@ export default class VisualizerStore {
     if (!this.wasmModule && !this.database) {
       throw new Error("WASM module is not initialized");
     }
+  }
+
+  private buildTables(tables: GraphSchema[]) {
+    return tables.map((t) => ({
+      tableName: String(t.tableName),
+      tableType: t.tableType,
+      primaryKey: String(t.primaryKey),
+      primaryKeyType: t.primaryKeyType,
+      properties: t.properties,
+    }));
   }
 
   private buildNodesWithMap(nodes: GraphNode[]): {

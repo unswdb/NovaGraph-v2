@@ -1,7 +1,11 @@
 // type QueryResultSync = import("../../types/kuzu-wasm/sync/query_result");
 
-import type { GraphEdge, GraphNode } from "~/features/visualizer/types";
-import { findPrimaryKeyQuery, getSingleSchemaPropertiesQuery } from "../helpers/KuzuQueryBuilder";
+import type {
+  GraphEdge,
+  GraphNode,
+  GraphSchema,
+} from "~/features/visualizer/types";
+import { getSingleSchemaPropertiesQuery } from "../helpers/KuzuQueryBuilder";
 
 /**
  * Helper method to process a single query result (returns a single object)
@@ -15,7 +19,8 @@ export function processQueryResult(result: any) {
     return {
       success: false,
       object: null,
-      message: result.getErrorMessage() || "Query failed - no specified message",
+      message:
+        result.getErrorMessage() || "Query failed - no specified message",
     };
   }
 
@@ -24,15 +29,64 @@ export function processQueryResult(result: any) {
     return {
       success: result.isSuccess(),
       objects: objects,
-      toString: result.toString() // remove in production mode
+      toString: result.toString(), // remove in production mode
     };
   } catch (e) {
     return {
       success: false,
       object: null,
-      error: "Error processing query result. Error: " + result.getErrorMessage(),
+      error:
+        "Error processing query result. Error: " + result.getErrorMessage(),
     };
   }
+}
+
+export function parseTablesResult(
+  result: any
+): Pick<GraphSchema, "tableName" | "tableType">[] {
+  if (!result || typeof result.getAllObjects !== "function") {
+    return [];
+  }
+
+  const objects = result.getAllObjects();
+  const tables = [];
+
+  for (const obj of objects) {
+    tables.push({
+      tableName: obj.name,
+      tableType: obj.type,
+    });
+  }
+
+  return tables;
+}
+
+export function parseSingleTableResult(
+  result: any
+): Omit<GraphSchema, "tableName" | "tableType"> | null {
+  if (!result || typeof result.getAllObjects !== "function") {
+    return null;
+  }
+
+  const objects = result.getAllObjects();
+  if (!objects) return null;
+
+  let tableProps = {
+    primaryKey: "",
+    primaryKeyType: "",
+    properties: {} as Record<string, string>,
+  };
+
+  for (const obj of objects) {
+    if (obj["primary key"]) {
+      tableProps.primaryKey = obj.name;
+      tableProps.primaryKeyType = obj.type;
+    } else {
+      tableProps.properties[obj.name] = obj.type;
+    }
+  }
+
+  return tableProps;
 }
 
 /**
@@ -41,8 +95,8 @@ export function processQueryResult(result: any) {
  * @returns {Array} Array of nodes with { id, label, attributes? }
  */
 // export function parseNodesResult(result: QueryResultSync, connection: ConnectionSync) {
-export function parseNodesResult(result: any, connection: any) : GraphNode[] {
-  if (!result || typeof result.getAllObjects !== 'function') {
+export function parseNodesResult(result: any, connection: any): GraphNode[] {
+  if (!result || typeof result.getAllObjects !== "function") {
     return [];
   }
   const objects = result.getAllObjects();
@@ -65,12 +119,14 @@ export function parseNodesResult(result: any, connection: any) : GraphNode[] {
     let tableProperties;
 
     if (foundTablePrimaryKey.has(tableName)) {
-      // if found table name -> retrive 
+      // if found table name -> retrive
       primaryKey = foundTablePrimaryKey.get(tableName);
       tableProperties = foundTableProperties.get(tableName);
     } else {
       // if not found table name -> call find primary key, then store
-      let schemaReturnObjs = connection.query(getSingleSchemaPropertiesQuery(tableName)).getAllObjects();
+      let schemaReturnObjs = connection
+        .query(getSingleSchemaPropertiesQuery(tableName))
+        .getAllObjects();
       for (const schemaDetail of schemaReturnObjs) {
         if (schemaDetail["primary key"]) {
           primaryKey = schemaDetail["name"];
@@ -90,14 +146,13 @@ export function parseNodesResult(result: any, connection: any) : GraphNode[] {
     for (const key in nodeObj) {
       if (key === primaryKey) {
         primaryKeyValue = nodeObj[key];
-      }
-      else if (key !== '_id' && key !== '_label' && !key.startsWith('_')) {
+      } else if (key !== "_id" && key !== "_label" && !key.startsWith("_")) {
         if (foundTableProperties.get(tableName)?.has(key)) {
           attributes[key] = nodeObj[key];
         }
       }
     }
-    
+
     // Format node ID as table_offset
     let nodeId = `${id.table}_${id.offset}`;
     const node: GraphNode = {
@@ -105,7 +160,7 @@ export function parseNodesResult(result: any, connection: any) : GraphNode[] {
       _primaryKey: primaryKey,
       _primaryKeyValue: primaryKeyValue,
       tableName: tableName,
-      ...(Object.keys(attributes).length > 0 ? { attributes } : {})
+      ...(Object.keys(attributes).length > 0 ? { attributes } : {}),
     };
     nodes.push(node);
   }
@@ -119,7 +174,7 @@ export function parseNodesResult(result: any, connection: any) : GraphNode[] {
  */
 // export function parseEdgesResult(result: QueryResultSync) {
 export function parseEdgesResult(result: any): GraphEdge[] {
-  if (!result || typeof result.getAllObjects !== 'function') {
+  if (!result || typeof result.getAllObjects !== "function") {
     return [];
   }
   const objects = result.getAllObjects();
@@ -141,40 +196,56 @@ export function parseEdgesResult(result: any): GraphEdge[] {
     const attributes: any = {};
     for (const key in edgeObj) {
       if (
-        key !== '_ID' && key !== '_id' && key !== 'id' &&
-        key !== '_LABEL' && key !== '_label' && key !== 'label' &&
-        key !== '_SRC' && key !== '_src' && key !== 'src' &&
-        key !== '_DST' && key !== '_dst' && key !== 'dst' &&
-        !key.startsWith('_')
+        key !== "_ID" &&
+        key !== "_id" &&
+        key !== "id" &&
+        key !== "_LABEL" &&
+        key !== "_label" &&
+        key !== "label" &&
+        key !== "_SRC" &&
+        key !== "_src" &&
+        key !== "src" &&
+        key !== "_DST" &&
+        key !== "_dst" &&
+        key !== "dst" &&
+        !key.startsWith("_")
       ) {
         attributes[key] = edgeObj[key];
       }
     }
-    
+
     // Format source and target IDs as table_offset
     let sourceId, targetId;
-    if (typeof src === 'object' && src.table !== undefined && src.offset !== undefined) {
+    if (
+      typeof src === "object" &&
+      src.table !== undefined &&
+      src.offset !== undefined
+    ) {
       sourceId = `${src.table}_${src.offset}`;
-    } else if (typeof src === 'object' && src.offset !== undefined) {
+    } else if (typeof src === "object" && src.offset !== undefined) {
       sourceId = src.offset.toString();
     } else {
       sourceId = src.toString();
     }
-    
-    if (typeof dst === 'object' && dst.table !== undefined && dst.offset !== undefined) {
+
+    if (
+      typeof dst === "object" &&
+      dst.table !== undefined &&
+      dst.offset !== undefined
+    ) {
       targetId = `${dst.table}_${dst.offset}`;
-    } else if (typeof dst === 'object' && dst.offset !== undefined) {
+    } else if (typeof dst === "object" && dst.offset !== undefined) {
       targetId = dst.offset.toString();
     } else {
       targetId = dst.toString();
     }
-    
+
     const edge: GraphEdge = {
       source: sourceId,
       target: targetId,
       weight: 0,
       // label: label.toString(),
-      ...(Object.keys(attributes).length > 0 ? { attributes } : {})
+      ...(Object.keys(attributes).length > 0 ? { attributes } : {}),
     };
     edges.push(edge);
   }
@@ -184,22 +255,22 @@ export function parseEdgesResult(result: any): GraphEdge[] {
 /**
  * Extracts color mapping information from Kuzu query results.
  * Creates a color map for nodes and edges based on their table and offset IDs.
- * 
+ *
  * @param {Object} result - The Kuzu query result object from connection.query()
  * @returns {Object} Color map with format:
  *   - Node colors: { "table_offset": colorValue }
  *   - Edge colors: { "sourceId-targetId": colorValue }
- * 
+ *
  * @example
  * // Returns: { "0_0": 0.8, "1_0": 0.8, "0_0-1_0": 1 }
  * queryResultExtraction(result)
- * 
+ *
  * @throws {Error} When result object is invalid or missing required methods
  * @returns {Object} Color map or error object with error message
  */
 // export function queryResultColorMapExtraction(result: QueryResultSync) {
 export function queryResultColorMapExtraction(result: any) {
-  if (!result || typeof result.getAllObjects !== 'function') {
+  if (!result || typeof result.getAllObjects !== "function") {
     console.warn("Invalid result object - missing getAllObjects method");
     return { nodes: [], edges: [] };
   }
@@ -208,13 +279,13 @@ export function queryResultColorMapExtraction(result: any) {
   // console.warn("Processing query result for color mapping");
   try {
     const objects = result.getAllObjects();
-    
+
     for (const obj of objects) {
       // console.log(obj);
 
       for (let i = 0; i < Object.keys(obj).length; i++) {
-        let entity = obj[Object.keys(obj)[i]]; 
-    
+        let entity = obj[Object.keys(obj)[i]];
+
         // Entity structure examples:
         // Node: {_id, _label, ...} - has _id, _label, but no _src/_dst
         // Edge: {_id, _label, _src, _dst, ...} - has _id, _label, _src, _dst
@@ -224,28 +295,25 @@ export function queryResultColorMapExtraction(result: any) {
           if (entity._id && entity._label && !entity._src && !entity._dst) {
             const nodeId = `${entity._id.table}_${entity._id.offset}`;
             colorMap[nodeId] = 0.8;
-          } 
+          }
           // If it is edge
           else if (entity._id && entity._label && entity._src && entity._dst) {
             const sourceId = `${entity._src.table}_${entity._src.offset}`;
             const targetId = `${entity._dst.table}_${entity._dst.offset}`;
             colorMap[`${sourceId}-${targetId}`] = 1;
-          } 
-          else {
+          } else {
             console.log("Unrecognized entity type - skipping");
           }
         }
       }
-      
     }
   } catch (err: any) {
     return {
-      error: "Internal queryResultExtraction error: " +  err.message,
-    }
+      error: "Internal queryResultExtraction error: " + err.message,
+    };
   }
   return colorMap;
 }
-
 
 // export function queryResultNodesAndEdgesExtraction(result) {
 //   // if (!result || !result.objects) {

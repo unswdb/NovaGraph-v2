@@ -1,35 +1,32 @@
-import { 
-  snapshotGraphState
-} from "./KuzuQueryExecutor"
+import { snapshotGraphState } from "./KuzuQueryExecutor";
 
-import { 
-  queryResultColorMapExtraction, 
-  processQueryResult
-} from "./KuzuQueryResultExtractor"
+import {
+  queryResultColorMapExtraction,
+  processQueryResult,
+} from "./KuzuQueryResultExtractor";
 
-import { 
-  createSchemaQuery, 
-  createNodeQuery, 
+import {
+  createSchemaQuery,
+  createNodeQuery,
   findPrimaryKeyQuery,
   deleteNodeQuery,
   getSingleSchemaPropertiesQuery,
   getAllSchemaPropertiesQuery,
   createEdgeSchemaQuery,
-  createEdgeQuery
-} from "../helpers/KuzuQueryBuilder"
+  createEdgeQuery,
+} from "../helpers/KuzuQueryBuilder";
 
-import type { 
-  CompositeType, 
-  ValueWithType 
-} from "~/types/KuzuDBTypes";
-import type { GraphNode } from "~/features/visualizer/types";
-
+import type { CompositeType, ValueWithType } from "~/types/KuzuDBTypes";
+import type {
+  GraphEdge,
+  GraphNode,
+  GraphSchema,
+} from "~/features/visualizer/types";
 
 // type QueryResultSync = import("../../types/kuzu-wasm/sync/query_result");
 
-
 export default class KuzuBaseService {
-  protected db: any 
+  protected db: any;
   protected connection: any = null;
   protected helper: any = null;
   protected initialized: boolean = false;
@@ -89,15 +86,8 @@ export default class KuzuBaseService {
         }
       }
 
-      // Get snapshot set to nodes and edges 
-      const graphState: { 
-        nodes: any; 
-        edges: any; 
-        tables: any; 
-      } = snapshotGraphState(this.connection);
-
-      nodes = graphState.nodes;
-      edges = graphState.edges;
+      // Get snapshot set to nodes and edges
+      const { nodes, edges, tables } = snapshotGraphState(this.connection);
 
       // Gracefully close the query result object
       currentResult.close();
@@ -111,22 +101,21 @@ export default class KuzuBaseService {
           : `Some queries failed. Check results for details.`,
         nodes: nodes,
         edges: edges,
+        tables: tables,
         colorMap: colorMap,
-        resultType: resultType
+        resultType: resultType,
       };
     } catch (err: any) {
       return {
         success: false,
-        error: "Internal executeQuery error: " +  err.message,
+        error: "Internal executeQuery error: " + err.message,
       };
     }
   }
 
-
-
   // /**
   //  * Helper method to process a single query result
-  //  * 
+  //  *
   //  * @private
   //  * @param {Object} result - A Kuzu query result object
   //  * @returns {Object}
@@ -147,7 +136,7 @@ export default class KuzuBaseService {
   //     return {
   //       success: result.isSuccess(),
   //       objects: objects,
-  //       toString: result.toString() 
+  //       toString: result.toString()
   //     };
   //   } catch (e) {
   //     return {
@@ -294,13 +283,21 @@ export default class KuzuBaseService {
    * @param relInfo - For relationships only: `{ fromLabel, toLabel, direction }`.
    * @returns Result of the schema creation query.
    */
-  createSchema(  type: "node" | "rel" | "NODE" | "REL",
+  createSchema(
+    type: "node" | "rel" | "NODE" | "REL",
     tableName: string,
     primaryKey: string | undefined,
     properties: Record<string, CompositeType>,
-    relInfo: { from: string; to: string } | null = null) {
+    relInfo: { from: string; to: string } | null = null
+  ) {
     try {
-      const query = createSchemaQuery(type, tableName, primaryKey, properties, relInfo);
+      const query = createSchemaQuery(
+        type,
+        tableName,
+        primaryKey,
+        properties,
+        relInfo
+      );
       return this.executeQuery(query);
     } catch (err: any) {
       return {
@@ -310,15 +307,14 @@ export default class KuzuBaseService {
     }
   }
 
-  createNode(tableName: string,
-    properties: Record<string, ValueWithType>) {    
+  createNode(tableName: string, properties: Record<string, ValueWithType>) {
     try {
       // Build the query using the function directly
       const query = createNodeQuery(tableName, properties);
-      
+
       // Execute the query using existing executeQuery method
       const result = this.executeQuery(query);
-      
+
       return result;
     } catch (error: any) {
       console.error("Error creating node:", error);
@@ -350,7 +346,11 @@ export default class KuzuBaseService {
   */
   deleteNode(node: GraphNode) {
     try {
-      const query = deleteNodeQuery(node.tableName, node._primaryKey, node._primaryKeyValue);
+      const query = deleteNodeQuery(
+        node.tableName,
+        node._primaryKey,
+        node._primaryKeyValue
+      );
       const result = this.executeQuery(query);
       return result;
     } catch (error: any) {
@@ -360,15 +360,20 @@ export default class KuzuBaseService {
       };
     }
   }
-  
-  createEdgeSchema(  
+
+  createEdgeSchema(
     tableName: string,
     tablePairs: Array<[string | number, string | number]>,
     properties?: Record<string, CompositeType>,
-    relationshipType?: "MANY_ONE" | "ONE_MANY" 
+    relationshipType?: "MANY_ONE" | "ONE_MANY"
   ) {
     try {
-      const query = createEdgeSchemaQuery(tableName, tablePairs, properties, relationshipType);
+      const query = createEdgeSchemaQuery(
+        tableName,
+        tablePairs,
+        properties,
+        relationshipType
+      );
       const result = this.executeQuery(query);
       return result;
     } catch (error: any) {
@@ -379,89 +384,20 @@ export default class KuzuBaseService {
     }
   }
 
-  createEdge(  
+  createEdge(
     node1: GraphNode,
     node2: GraphNode,
     edgeTableName: string,
     attributes?: Record<string, string | number | boolean>
   ) {
     try {
-      const query = createEdgeQuery(node1, node2, edgeTableName, attributes)
+      const query = createEdgeQuery(node1, node2, edgeTableName, attributes);
       const result = this.executeQuery(query);
       return result;
     } catch (error: any) {
       return {
         success: false,
         error: `Error create Edge: ${error.message}`,
-      };
-    }
-  }
-
-  getSingleSchemaProperties(tableName: string) {
-    try {
-      const query = getSingleSchemaPropertiesQuery(tableName);
-      let queryResult = this.connection.query(query);
-      let resultObjects = queryResult.getAllObjects();
-      const result = {
-        primaryKey: "",
-        primaryKeyType: "",
-        properties: {} as Record<string, string>,
-      };
-      for (const obj of resultObjects) {
-        if (obj["primary key"]) {
-          result.primaryKey = obj.name;
-          result.primaryKeyType = obj.type;
-        } else {
-          result.properties[obj.name] = obj.type;
-        }
-      }
-      // console.log("result:", JSON.stringify(result, null, 2));
-      return result;
-    } catch (error: any) {
-      return {
-        success: false,
-        error: `Error get single Schema Properties : ${error.message}`,
-      };
-    }
-  }
-
-  getAllSchemaProperties() {
-    try {
-      const query = getAllSchemaPropertiesQuery();
-      let queryResult = this.connection.query(query);
-      let resultObjects = queryResult.getAllObjects();
-      
-      const result: {
-        tableName: string;
-        tableType: "NODE" | "REL";
-        primaryKey: string;
-        primaryKeyType: string;
-        properties: Record<string, string>,
-      }[] = [];
-
-      for (const obj of resultObjects) {
-        const { primaryKey, primaryKeyType, properties } =
-          this.getSingleSchemaProperties(obj.name) as {
-            primaryKey: string;
-            primaryKeyType: string;
-            properties: Record<string, string>;
-          };
-      
-        const singleTable = {
-          tableName: obj.name,
-          tableType: obj.type as "NODE" | "REL",
-          primaryKey,
-          primaryKeyType,
-          properties,
-        };
-      
-        result.push(singleTable);
-      }
-      return result
-    } catch (error: any) {
-      return {
-        success: false,
-        error: `Error get all Schema Properties : ${error.message}`,
       };
     }
   }

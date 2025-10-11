@@ -1,9 +1,6 @@
 import type { GraphNode } from "~/features/visualizer/types";
 import KuzuInMemorySync from "../services/KuzuInMemorySync";
-import type { 
-  CompositeType, 
-  ValueWithType 
-} from "~/types/KuzuDBTypes";
+import type { CompositeType, ValueWithType } from "~/types/KuzuDBTypes";
 
 /**
  * This class is used to handle logic related to Kuzu before exposing into the highest API
@@ -15,16 +12,16 @@ class KuzuController {
     this.service = null;
   }
 
-  // -- General function for all types of Kuzu db -- 
+  // -- General function for all types of Kuzu db --
   /**
    * Initialize Kuzu with specified type and mode
-   * 
+   *
    * @param type - Either `"inmemory"` or `"persistent"`.
    * @param mode - Either `"sync"` or `"async"`.
    * @param options - Additional initialization options.
    * @param options.dbPath - Path/name for persistent database.
    * @param options.dbOptions - Database configuration options.
-   * 
+   *
    * @returns The initialized service.
    */
   async initialize(type: string, mode: string, options = {}) {
@@ -33,10 +30,10 @@ class KuzuController {
     }
 
     if (type === "inmemory" && mode === "sync") {
-        this.service = new KuzuInMemorySync();
-        await this.service.initialize();
+      this.service = new KuzuInMemorySync();
+      await this.service.initialize();
     } else {
-      throw Error ("Other version of Kuzu not implemented yet")
+      throw Error("Other version of Kuzu not implemented yet");
     }
 
     // const serviceKey = `${type}_${mode}`;
@@ -44,17 +41,17 @@ class KuzuController {
     // if (serviceKey === "inmemory_sync") {
     //   this.service = new KuzuInMemorySync();
     //   await this.service.initialize();
-    // } 
+    // }
     // else if (serviceKey === "persistent_sync") {
     //   this.service = new KuzuPersistentSync();
     //   await this.service.initialize();
     // }
     // else if (serviceKey === "inmemory_async") {
     //   throw new Error("In-memory async mode not yet implemented");
-    // } 
+    // }
     // else if (serviceKey === "persistent_async") {
     //   throw new Error("Persistent async mode not yet implemented");
-    // } 
+    // }
     // else {
     //   throw new Error("Invalid Kuzu type or mode");
     // }
@@ -148,20 +145,26 @@ class KuzuController {
    * @param relInfo - For relationships only: `{ fromLabel, toLabel, direction }`.
    * @returns Result of the schema creation query.
    */
-  createSchema(  
+  createSchema(
     type: "node" | "rel" | "NODE" | "REL",
     tableName: string,
     primaryKey: string | undefined,
     properties: Record<string, CompositeType>,
-    relInfo: { from: string; to: string } | null = null)  {
+    relInfo: { from: string; to: string } | null = null
+  ) {
     if (!this.service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.createSchema(type, tableName, primaryKey, properties, relInfo);
+    return this.service.createSchema(
+      type,
+      tableName,
+      primaryKey,
+      properties,
+      relInfo
+    );
   }
 
-  createNode(tableName: string,
-    properties: Record<string, ValueWithType>) {
+  createNode(tableName: string, properties: Record<string, ValueWithType>) {
     if (!this.service) {
       throw new Error("Kuzu service not initialized");
     }
@@ -172,15 +175,21 @@ class KuzuController {
     tableName: string,
     tablePairs: Array<[string | number, string | number]>,
     properties?: Record<string, CompositeType>,
-    relationshipType?: "MANY_ONE" | "ONE_MANY" 
+    relationshipType?: "MANY_ONE" | "ONE_MANY"
   ) {
     if (!this.service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.createEdgeSchema(tableName, tablePairs, properties, relationshipType);
+    return this.service.createEdgeSchema(
+      tableName,
+      tablePairs,
+      properties,
+      relationshipType
+    );
   }
 
-  createEdge(node1: GraphNode,
+  createEdge(
+    node1: GraphNode,
     node2: GraphNode,
     edgeTableName: string,
     attributes?: Record<string, string | number | boolean>
@@ -189,7 +198,6 @@ class KuzuController {
       throw new Error("Kuzu service not initialized");
     }
     return this.service.createEdge(node1, node2, edgeTableName, attributes);
-
   }
   // /**
   //  * Builds a Cypher query to delete a node (and all its relationships) by primary key.
@@ -225,22 +233,7 @@ class KuzuController {
     }
     return this.service.deleteNode(node);
   }
-
-  getSingleSchemaProperties(tableName: string) {
-    if (!this.service) {
-      throw new Error("Kuzu service not initialized");
-    }
-    return this.service.getSingleSchemaProperties(tableName);
-  }
-
-  getAllSchemaProperties() {
-    if (!this.service) {
-      throw new Error("Kuzu service not initialized");
-    }
-    return this.service.getAllSchemaProperties();
-  }
-  // -- Exclusive for Kuzu Persistent -- 
-
+  // -- Exclusive for Kuzu Persistent --
 }
 
 const kuzuController = new KuzuController();
