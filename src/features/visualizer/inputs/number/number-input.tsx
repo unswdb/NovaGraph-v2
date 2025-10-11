@@ -87,7 +87,7 @@ export default function NumberInputComponent({
         min={input.min ?? 0}
         max={input.max}
         step={input.step ?? 1}
-        value={String(value) ?? ""}
+        value={String(value ?? "")}
         placeholder={input.placeholder}
         onChange={(e) => handleNumberOnChange(Number(e.target.value))}
       />

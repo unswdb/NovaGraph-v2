@@ -120,19 +120,21 @@ export default function EdgeListItem({
               Edit the properties of the selected edge between the two nodes.
             </DialogDescription>
           </DialogHeader>
-          {inputs.map((input, index) => (
-            <InputComponent
-              key={index}
-              input={input}
-              value={values[input.key].value}
-              onChange={(value) =>
-                setValues((prev) => ({
-                  ...prev,
-                  [input.key]: value,
-                }))
-              }
-            />
-          ))}
+          <div className="space-y-3 flex-1">
+            {inputs.map((input, index) => (
+              <InputComponent
+                key={index}
+                input={input}
+                value={values[input.key].value}
+                onChange={(value) =>
+                  setValues((prev) => ({
+                    ...prev,
+                    [input.key]: value,
+                  }))
+                }
+              />
+            ))}
+          </div>
           <div className="ml-auto">
             <Button
               type="submit"

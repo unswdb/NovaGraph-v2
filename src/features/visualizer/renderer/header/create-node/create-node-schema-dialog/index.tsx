@@ -11,10 +11,12 @@ import type { GraphSchema } from "~/features/visualizer/types";
 export default function CreateNodeSchemaDialog({
   open,
   setOpen,
+  onSubmit,
   nodeSchemas,
 }: {
   open: boolean;
   setOpen: (b: boolean) => void;
+  onSubmit: () => void;
   nodeSchemas: GraphSchema[];
 }) {
   return (
@@ -26,7 +28,7 @@ export default function CreateNodeSchemaDialog({
             Define your node structure and properties to start creating nodes.
           </DialogDescription>
         </DialogHeader>
-        <CreateNodeSchemaForm nodeSchemas={nodeSchemas} />
+        <CreateNodeSchemaForm nodeSchemas={nodeSchemas} onSubmit={onSubmit} />
       </DialogContent>
     </Dialog>
   );

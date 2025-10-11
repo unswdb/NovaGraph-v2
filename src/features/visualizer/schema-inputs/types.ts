@@ -2,11 +2,6 @@ import type { InputType, PropsForInput } from "../inputs";
 
 type FieldContextKind = "primary" | "non-primary";
 
-type WithoutValidator<I extends InputType> = Omit<
-  PropsForInput<I>,
-  "validator"
->;
-
 export interface SchemaInput<I extends InputType> {
   /** Type/name of the Kuzu type */
   readonly type: string;
@@ -18,7 +13,7 @@ export interface SchemaInput<I extends InputType> {
   readonly contexts: readonly FieldContextKind[];
 
   /** Function that builds the input */
-  readonly build: (args: WithoutValidator<I>) => I;
+  readonly build: (args: PropsForInput<I>) => I;
 }
 
 export function defineSchemaInput<I extends InputType>(

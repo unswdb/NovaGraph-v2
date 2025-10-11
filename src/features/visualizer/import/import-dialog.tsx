@@ -110,7 +110,7 @@ function ImportContent({ option }: { option: ImportOption }) {
               </p>
             )}
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Inputs */}
             {option.inputs.map((input, index) => (
               <InputComponent

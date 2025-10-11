@@ -14,6 +14,9 @@ export const FloatSchemaInput = defineSchemaInput<NumberInput>({
         if (!Number.isFinite(n)) {
           return { success: false, message: "Must be a finite number" };
         }
+        if (!!args.validator) {
+          return args.validator(n);
+        }
         return { success: true };
       },
     });

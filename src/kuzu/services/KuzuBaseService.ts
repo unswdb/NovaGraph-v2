@@ -59,8 +59,6 @@ export default class KuzuBaseService {
     const successQueries = [];
     const failedQueries = [];
     let allSuccess = true;
-    let nodes = [];
-    let edges = [];
     let colorMap = {};
     let resultType = "graph";
 

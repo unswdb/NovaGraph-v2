@@ -18,15 +18,26 @@ export type GraphEdge = {
   attributes?: Record<string, string | boolean | number>; // Additional attributes for the edge
 };
 
-export type GraphSchema = {
+type BaseGraphSchema = {
   tableName: string;
-  tableType: "NODE" | "REL";
   primaryKey: string;
   primaryKeyType: PrimaryKeyType;
   properties: {
     [key: string]: NonPrimaryKeyType;
   };
 };
+
+export type NodeSchema = BaseGraphSchema & { tableType: "NODE" };
+export function isNodeSchema(s: GraphSchema): s is NodeSchema {
+  return s.tableType === "NODE";
+}
+
+export type EdgeSchema = BaseGraphSchema & { tableType: "REL" };
+export function isEdgeSchema(s: GraphSchema): s is EdgeSchema {
+  return s.tableType === "REL";
+}
+
+export type GraphSchema = NodeSchema | EdgeSchema;
 
 export type GraphDatabase = {
   label: string;

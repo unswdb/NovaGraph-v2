@@ -2,8 +2,14 @@ import { Plus } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { useMemo, useState } from "react";
 import { useStore } from "~/features/visualizer/hooks/use-store";
-import CreateNodeSchemaDialog from "./create-node-schema";
-import CreateNodeDialog from "./create-node";
+import CreateNodeSchemaDialog from "./create-node-schema-dialog";
+import CreateNodeDialog from "./create-node-dialog";
+import { isNodeSchema, type NodeSchema } from "~/features/visualizer/types";
+
+export type NonEmptyNodeSchemas = [NodeSchema, ...NodeSchema[]];
+function isNonEmpty(arr: NodeSchema[]): arr is NonEmptyNodeSchemas {
+  return arr.length > 0;
+}
 
 export default function CreateNode() {
   const { database } = useStore();
@@ -13,17 +19,31 @@ export default function CreateNode() {
     createNodeSchema: false,
   });
 
-  const nodeSchemas = useMemo(
-    () => database.graph.tables.filter((s) => s.tableType === "NODE"),
-    [database.graph.tables]
-  );
+  const { nodeSchemas, nodeSchemasMap } = useMemo(() => {
+    let nodeSchemas: NodeSchema[] = [];
+    let nodeSchemasMap: Record<string, NodeSchema> = {};
+    database.graph.tables.forEach((s) => {
+      if (isNodeSchema(s)) {
+        nodeSchemas.push(s);
+        nodeSchemasMap[s.tableName] = s;
+      }
+    });
+    return { nodeSchemas, nodeSchemasMap };
+  }, [database.graph.tables]);
 
-  console.log("nodeSchemas", nodeSchemas);
+  const onCloseCreateNode = () => {
+    setDialogStatus({ createNode: false, createNodeSchema: false });
+  };
 
-  const setCreateNodeOpen = (open: boolean) => {
-    if (nodeSchemas.length !== 0) {
-      setDialogStatus({ createNode: open, createNodeSchema: !open });
-    }
+  const onCreateSchemaClickCreateNode = () => {
+    setDialogStatus((prev) => ({
+      createNode: !prev.createNode,
+      createNodeSchema: true,
+    }));
+  };
+
+  const onSubmitCreateNodeSchema = () => {
+    setDialogStatus({ createNode: true, createNodeSchema: false });
   };
 
   const setCreateNodeSchemaOpen = (open: boolean) => {
@@ -50,12 +70,16 @@ export default function CreateNode() {
       <CreateNodeSchemaDialog
         open={dialogStatus.createNodeSchema}
         setOpen={setCreateNodeSchemaOpen}
+        onSubmit={onSubmitCreateNodeSchema}
         nodeSchemas={nodeSchemas}
       />
-      {nodeSchemas.length > 0 && (
+      {isNonEmpty(nodeSchemas) && (
         <CreateNodeDialog
           open={dialogStatus.createNode}
-          setOpen={setCreateNodeOpen}
+          onClose={onCloseCreateNode}
+          onCreateSchemaClick={onCreateSchemaClickCreateNode}
+          nodeSchemas={nodeSchemas}
+          nodeSchemasMap={nodeSchemasMap}
         />
       )}
     </>

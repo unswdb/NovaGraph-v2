@@ -15,6 +15,9 @@ export const Uint8SchemaInput = defineSchemaInput<NumberInput>({
         if (!Number.isInteger(n)) {
           return { success: false, message: "Must be an integer" };
         }
+        if (!!args.validator) {
+          return args.validator(n);
+        }
         return { success: true };
       },
     });

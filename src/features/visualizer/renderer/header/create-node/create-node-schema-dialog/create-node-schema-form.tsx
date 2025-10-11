@@ -30,8 +30,10 @@ type SchemaField =
 
 export default function CreateNodeSchemaForm({
   nodeSchemas,
+  onSubmit,
 }: {
   nodeSchemas: GraphSchema[];
+  onSubmit: () => void;
 }) {
   const tableNameInput = createTextInput({
     id: "schema-node-table-name",
@@ -68,11 +70,17 @@ export default function CreateNodeSchemaForm({
     [fields]
   );
 
+  const allFieldNamesUnique = useMemo(
+    () => new Set(fields.map((f) => f.name.trim())).size === fields.length,
+    [fields]
+  );
+
   const isReadyToSubmit = useMemo(
     () =>
-      tableName.success &&
-      fields.every((f) => !!f.name.trim()) &&
-      primaryKeyCount === 1,
+      tableName.success && // table name is valid
+      fields.every((f) => !!f.name.trim()) && // every key isn't empty
+      primaryKeyCount === 1 && // only one primary key is allowed
+      allFieldNamesUnique, // all names unique
     [tableName, fields, primaryKeyCount]
   );
 
@@ -117,17 +125,35 @@ export default function CreateNodeSchemaForm({
   };
 
   // TODO: Handle create schema on submit
-  const handleOnSubmit = () => {
+  const handleOnSubmit = async () => {
     const primaryKeyField = fields.find((f) => f.isPrimary);
     const nonPrimaryFields = fields.filter((f) => !f.isPrimary);
 
-    toast.success("Node schema created (not really, yet!)");
     console.log({
       tableName: tableName.value,
       primaryKey: primaryKeyField!.name,
       primaryKeyType: primaryKeyField!.type,
       fields: nonPrimaryFields,
     });
+
+    toast.success("Node schema created (not really, yet!)");
+    onSubmit();
+  };
+
+  const NodeSchemaFormError = () => {
+    let errorMsg = "";
+
+    if (primaryKeyCount === 0) {
+      errorMsg = "You must specify exactly one primary key.";
+    } else if (primaryKeyCount > 1) {
+      errorMsg = "Only one primary key is allowed.";
+    } else if (!allFieldNamesUnique) {
+      errorMsg = "Field names must be unique.";
+    }
+
+    return errorMsg ? (
+      <p className="text-sm text-critical">{errorMsg}</p>
+    ) : null;
   };
 
   return (
@@ -140,16 +166,8 @@ export default function CreateNodeSchemaForm({
 
       <div className="space-y-2">
         <p className="small-title">Fields</p>
-        {primaryKeyCount === 0 && (
-          <p className="text-sm text-critical">
-            At least one primary key is required
-          </p>
-        )}
-        {primaryKeyCount > 1 && (
-          <p className="text-sm text-critical">
-            Only one primary key is allowed
-          </p>
-        )}
+        {/* Error */}
+        <NodeSchemaFormError />
         {fields.map((field, index) => (
           <SchemaFieldInputs
             key={index}

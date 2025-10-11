@@ -122,7 +122,7 @@ export default function InputDialog({
           <DialogDescription>{algorithm.description}</DialogDescription>
         </DialogHeader>
         {/* Inputs */}
-        <div className="space-y-6 mt-2">
+        <div className="space-y-3 mt-2">
           {algorithm.inputs.map((input, index) => (
             <InputComponent
               key={index}
