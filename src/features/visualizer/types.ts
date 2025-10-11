@@ -35,7 +35,7 @@ export type GraphDatabase = {
     edges: GraphEdge[];
     nodesMap: Map<string, GraphNode>;
     edgesMap: Map<[string, string], GraphEdge>;
-    schema: GraphSchema[];
+    tables: GraphSchema[];
     directed: boolean;
   };
 };

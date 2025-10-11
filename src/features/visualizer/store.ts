@@ -1,5 +1,11 @@
 import { action, makeObservable, observable, runInAction } from "mobx";
-import type { GraphDatabase, GraphEdge, GraphModule, GraphNode } from "./types";
+import type {
+  GraphDatabase,
+  GraphEdge,
+  GraphModule,
+  GraphNode,
+  GraphSchema,
+} from "./types";
 import {
   GRAVITY,
   NODE_SIZE_SCALE,
@@ -30,8 +36,10 @@ export default class VisualizerStore {
       initialize: action,
       cleanup: action,
       setDatabase: action,
+      setGraphState: action,
       setNodes: action,
       setEdges: action,
+      setSchema: action,
       addDatabase: action,
       setGravity: action,
       setNodeSizeScale: action,
@@ -61,9 +69,6 @@ export default class VisualizerStore {
     // Define initial graph structure
     const graph = await this.controller.db.snapshotGraphState();
 
-    // Get all schema properties of the current database's graph
-    const schema = await this.controller._internal.getAllSchemaProperties();
-
     runInAction(() => {
       // TODO: Change to controller helper function that retrieves
       // all the database list
@@ -77,7 +82,7 @@ export default class VisualizerStore {
             nodesMap,
             edges,
             edgesMap,
-            schema,
+            tables,
             directed: true, // TODO: Distinguish between directed/non-directed in Kuzu
           },
         },
@@ -92,6 +97,27 @@ export default class VisualizerStore {
 
   setDatabase = (database: GraphDatabase) => {
     this.database = database;
+  };
+
+  setGraphState = ({
+    nodes,
+    edges,
+    tables,
+  }: {
+    nodes: GraphNode[];
+    edges: GraphEdge[];
+    tables: GraphSchema[];
+  }) => {
+    this.checkInitialization();
+    this.database = {
+      ...this.database,
+      graph: {
+        ...this.database.graph,
+        nodes,
+        edges,
+        tables,
+      },
+    };
   };
 
   setNodes = (nodes: GraphNode[]) => {
@@ -116,6 +142,17 @@ export default class VisualizerStore {
         ...this.database.graph,
         edges: newEdges,
         edgesMap, // can remain plain Map if you don’t need deep reactivity
+      },
+    };
+  };
+
+  setSchema = (schema: GraphSchema[]) => {
+    this.checkInitialization();
+    this.database = {
+      ...this.database,
+      graph: {
+        ...this.database.graph,
+        schema,
       },
     };
   };

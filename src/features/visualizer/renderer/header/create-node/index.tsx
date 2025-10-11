@@ -3,6 +3,7 @@ import { Button } from "~/components/ui/button";
 import { useMemo, useState } from "react";
 import { useStore } from "~/features/visualizer/hooks/use-store";
 import CreateNodeSchemaDialog from "./create-node-schema";
+import CreateNodeDialog from "./create-node";
 
 export default function CreateNode() {
   const { database } = useStore();
@@ -13,9 +14,11 @@ export default function CreateNode() {
   });
 
   const nodeSchemas = useMemo(
-    () => database.graph.schema.filter((s) => s.tableType === "NODE"),
-    [database.graph.schema]
+    () => database.graph.tables.filter((s) => s.tableType === "NODE"),
+    [database.graph.tables]
   );
+
+  console.log("nodeSchemas", nodeSchemas);
 
   const setCreateNodeOpen = (open: boolean) => {
     if (nodeSchemas.length !== 0) {
@@ -49,7 +52,12 @@ export default function CreateNode() {
         setOpen={setCreateNodeSchemaOpen}
         nodeSchemas={nodeSchemas}
       />
-      {/* <CreateNodeDialog open={dialogStatus.createNode} /> */}
+      {nodeSchemas.length > 0 && (
+        <CreateNodeDialog
+          open={dialogStatus.createNode}
+          setOpen={setCreateNodeOpen}
+        />
+      )}
     </>
   );
 }
