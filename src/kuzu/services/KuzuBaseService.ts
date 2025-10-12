@@ -87,7 +87,9 @@ export default class KuzuBaseService {
       }
 
       // Get snapshot set to nodes and edges
-      const { nodes, edges, tables } = snapshotGraphState(this.connection);
+      const { nodes, edges, nodeTables, edgeTables } = snapshotGraphState(
+        this.connection
+      );
 
       // Gracefully close the query result object
       currentResult.close();
@@ -101,7 +103,8 @@ export default class KuzuBaseService {
           : `Some queries failed. Check results for details.`,
         nodes: nodes,
         edges: edges,
-        tables: tables,
+        nodeTables,
+        edgeTables,
         colorMap: colorMap,
         resultType: resultType,
       };
@@ -311,27 +314,37 @@ export default class KuzuBaseService {
     tableName: string,
     primaryKey: string,
     primaryKeyType: string,
-    properties: { name: string; type: NonPrimaryKeyType; isPrimary?: boolean }[] = [],
+    properties: {
+      name: string;
+      type: NonPrimaryKeyType;
+      isPrimary?: boolean;
+    }[] = [],
     relInfo: { from: string; to: string } | null = null
   ) {
-    const query = createNodeSchemaQuery(tableName, primaryKey, primaryKeyType, properties, relInfo);
+    const query = createNodeSchemaQuery(
+      tableName,
+      primaryKey,
+      primaryKeyType,
+      properties,
+      relInfo
+    );
     const result = this.executeQuery(query);
     if (!result.success) {
       const fq = result.failedQueries?.[0];
       const rawMsg = fq?.message ?? "Unknown error";
       console.error("Failed query (full):", fq);
-    
+
       let friendlyMsg = rawMsg;
       if (rawMsg.includes("already exists in catalog")) {
         friendlyMsg = `Schema "${tableName}" already exists in the catalog.`;
       }
-    
+
       // Throw only the friendly/raw message — no prefix here
       throw new Error(friendlyMsg);
     }
-    
+
     return result;
-  };
+  }
 
   createNode(tableName: string, properties: Record<string, ValueWithType>) {
     try {

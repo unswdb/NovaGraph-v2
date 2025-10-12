@@ -1,10 +1,14 @@
 import { action, makeObservable, observable, runInAction } from "mobx";
-import type {
-  GraphDatabase,
-  GraphEdge,
-  GraphModule,
-  GraphNode,
-  GraphSchema,
+import {
+  isEdgeSchema,
+  isNodeSchema,
+  type EdgeSchema,
+  type GraphDatabase,
+  type GraphEdge,
+  type GraphModule,
+  type GraphNode,
+  type GraphSchema,
+  type NodeSchema,
 } from "./types";
 import {
   GRAVITY,
@@ -74,7 +78,8 @@ export default class VisualizerStore {
       // all the database list
       const { nodes, nodesMap } = this.buildNodesWithMap(graph.nodes);
       const { edges, edgesMap } = this.buildEdgesWithMap(graph.edges);
-      const tables = this.buildTables(graph.tables);
+      const nodeTables = this.buildNodeTables(graph.nodeTables);
+      const edgeTables = this.buildEdgeTables(graph.edgeTables);
       this.databases = [
         {
           label: "Default",
@@ -83,7 +88,8 @@ export default class VisualizerStore {
             nodesMap,
             edges,
             edgesMap,
-            tables,
+            nodeTables,
+            edgeTables,
             directed: true, // TODO: Distinguish between directed/non-directed in Kuzu
           },
         },
@@ -103,11 +109,13 @@ export default class VisualizerStore {
   setGraphState = ({
     nodes,
     edges,
-    tables,
+    nodeTables,
+    edgeTables,
   }: {
     nodes: GraphNode[];
     edges: GraphEdge[];
-    tables: GraphSchema[];
+    nodeTables: NodeSchema[];
+    edgeTables: EdgeSchema[];
   }) => {
     this.checkInitialization();
     this.database = {
@@ -116,7 +124,8 @@ export default class VisualizerStore {
         ...this.database.graph,
         nodes,
         edges,
-        tables,
+        nodeTables,
+        edgeTables,
       },
     };
   };
@@ -147,13 +156,14 @@ export default class VisualizerStore {
     };
   };
 
-  setSchema = (schema: GraphSchema[]) => {
+  setSchema = (nodeTables: NodeSchema[], edgeTables: EdgeSchema[]) => {
     this.checkInitialization();
     this.database = {
       ...this.database,
       graph: {
         ...this.database.graph,
-        schema,
+        nodeTables,
+        edgeTables,
       },
     };
   };
@@ -185,14 +195,44 @@ export default class VisualizerStore {
     }
   }
 
-  private buildTables(tables: GraphSchema[]) {
-    return tables.map((t) => ({
-      tableName: String(t.tableName),
-      tableType: t.tableType,
-      primaryKey: String(t.primaryKey),
-      primaryKeyType: t.primaryKeyType,
-      properties: t.properties,
-    }));
+  private buildNodeTables(nodeTables: NodeSchema[]) {
+    const builtNodeTables: NodeSchema[] = [];
+
+    nodeTables.forEach((t) => {
+      const newTable = {
+        tableName: String(t.tableName),
+        tableType: t.tableType,
+        primaryKey: String(t.primaryKey),
+        primaryKeyType: t.primaryKeyType,
+        properties: t.properties,
+      };
+
+      if (isNodeSchema(newTable)) {
+        builtNodeTables.push(newTable);
+      }
+    });
+
+    return builtNodeTables;
+  }
+
+  private buildEdgeTables(edgeTables: EdgeSchema[]) {
+    const builtEdgeTables: EdgeSchema[] = [];
+
+    edgeTables.forEach((t) => {
+      const newTable = {
+        tableName: String(t.tableName),
+        tableType: t.tableType,
+        primaryKey: String(t.primaryKey),
+        primaryKeyType: t.primaryKeyType,
+        properties: t.properties,
+      };
+
+      if (isEdgeSchema(newTable)) {
+        builtEdgeTables.push(newTable);
+      }
+    });
+
+    return builtEdgeTables;
   }
 
   private buildNodesWithMap(nodes: GraphNode[]): {

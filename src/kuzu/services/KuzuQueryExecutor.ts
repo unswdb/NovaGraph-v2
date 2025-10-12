@@ -1,7 +1,10 @@
-import type {
-  GraphEdge,
-  GraphNode,
-  GraphSchema,
+import {
+  isEdgeSchema,
+  isNodeSchema,
+  type EdgeSchema,
+  type GraphEdge,
+  type GraphNode,
+  type NodeSchema,
 } from "~/features/visualizer/types";
 import {
   getAllSchemaPropertiesQuery,
@@ -24,7 +27,8 @@ import {
 export function snapshotGraphState(connection: any): {
   nodes: GraphNode[];
   edges: GraphEdge[];
-  tables: GraphSchema[];
+  nodeTables: NodeSchema[];
+  edgeTables: EdgeSchema[];
 } {
   const nodesResult = connection.query(`MATCH (n) RETURN n`);
   const nodes = parseNodesResult(nodesResult, connection);
@@ -35,14 +39,22 @@ export function snapshotGraphState(connection: any): {
   const tablesResult = connection.query(getAllSchemaPropertiesQuery());
   const tablesWithoutProps = parseTablesResult(tablesResult);
 
-  let tables: GraphSchema[] = [];
+  let nodeTables: NodeSchema[] = [];
+  let edgeTables: EdgeSchema[] = [];
   for (const table of tablesWithoutProps) {
     const tableWithPropsResult = connection.query(
       getSingleSchemaPropertiesQuery(table.tableName)
     );
     const tableWithProps = parseSingleTableResult(tableWithPropsResult);
-    if (tableWithProps) tables.push({ ...table, ...tableWithProps });
+    if (tableWithProps) {
+      const newTable = { ...table, ...tableWithProps };
+      if (isEdgeSchema(newTable)) {
+        edgeTables.push(newTable);
+      } else if (isNodeSchema(newTable)) {
+        nodeTables.push(newTable);
+      }
+    }
   }
 
-  return { nodes, edges, tables };
+  return { nodes, edges, edgeTables, nodeTables };
 }

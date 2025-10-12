@@ -24,8 +24,19 @@ export default function CodeTabContent({
     const result = await store.controller.db.executeQuery(code);
     console.warn("query code - query result");
     console.log(result);
-    const { nodes, edges, tables } = result;
-    store.setGraphState({ nodes, edges, tables });
+    if (
+      !!result.nodes &&
+      !!result.edges &&
+      !!result.nodeTables &&
+      !!result.edgeTables
+    ) {
+      store.setGraphState({
+        nodes: result.nodes,
+        edges: result.edges,
+        nodeTables: result.nodeTables,
+        edgeTables: result.edgeTables,
+      });
+    }
   };
 
   return (

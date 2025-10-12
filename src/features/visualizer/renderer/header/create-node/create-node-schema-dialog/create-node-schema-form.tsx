@@ -16,6 +16,7 @@ import {
   type PrimaryKeyType,
 } from "~/features/visualizer/schema-inputs";
 import type { GraphSchema } from "~/features/visualizer/types";
+import { useAsyncFn } from "~/hooks/use-async-fn";
 
 type SchemaField =
   | {
@@ -36,6 +37,21 @@ export default function CreateNodeSchemaForm({
   nodeSchemas: GraphSchema[];
   onSubmit: () => void;
 }) {
+  const { controller } = useStore();
+  const {
+    run: createNodeSchema,
+    isLoading,
+    getErrorMessage,
+  } = useAsyncFn(controller.db.createNodeSchema.bind(controller.db), {
+    onSuccess: (result) => {
+      toast.success("Node schema created successfully!");
+      onSubmit();
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err));
+    },
+  });
+
   const tableNameInput = createTextInput({
     id: "schema-node-table-name",
     key: "table_name",
@@ -130,38 +146,26 @@ export default function CreateNodeSchemaForm({
 
   const handleOnSubmit = async () => {
     // setIsLoading(true);
-    try {
-      const primaryKeyField = fields.find((f) => f.isPrimary);
-      const nonPrimaryFields = fields.filter((f) => !f.isPrimary);
-  
-      if (!tableName.value) {
-        throw new Error("Table name is missing");
-      }
-  
-      console.log({
-        tableName: tableName.value,
-        primaryKey: primaryKeyField!.name,
-        primaryKeyType: primaryKeyField!.type,
-        fields: nonPrimaryFields,
-      });
-  
-      const result = await store.controller.db.createNodeSchema(
-        tableName.value,
-        primaryKeyField!.name,
-        primaryKeyField!.type,
-        nonPrimaryFields
-      );
-  
-      console.log(result);
-      toast.success("Node schema created successfully!");
-      onSubmit();
-    } catch (err: any) {
-      console.error("Schema creation failed:", err);
-      toast.error(`Schema creation failed: ${err.message || err}`);
-    } 
-    // finally {
-    //   setIsLoading(false);
-    // }
+    const primaryKeyField = fields.find((f) => f.isPrimary);
+    const nonPrimaryFields = fields.filter((f) => !f.isPrimary);
+
+    if (!tableName.value) {
+      throw new Error("Table name is missing");
+    }
+
+    console.log({
+      tableName: tableName.value,
+      primaryKey: primaryKeyField!.name,
+      primaryKeyType: primaryKeyField!.type,
+      fields: nonPrimaryFields,
+    });
+
+    createNodeSchema(
+      tableName.value,
+      primaryKeyField!.name,
+      primaryKeyField!.type,
+      nonPrimaryFields
+    );
   };
   const NodeSchemaFormError = () => {
     let errorMsg = "";

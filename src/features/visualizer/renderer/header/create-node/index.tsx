@@ -19,17 +19,13 @@ export default function CreateNode() {
     createNodeSchema: false,
   });
 
-  const { nodeSchemas, nodeSchemasMap } = useMemo(() => {
-    let nodeSchemas: NodeSchema[] = [];
+  const nodeSchemasMap = useMemo(() => {
     let nodeSchemasMap: Record<string, NodeSchema> = {};
-    database.graph.tables.forEach((s) => {
-      if (isNodeSchema(s)) {
-        nodeSchemas.push(s);
-        nodeSchemasMap[s.tableName] = s;
-      }
+    database.graph.nodeTables.forEach((s) => {
+      nodeSchemasMap[s.tableName] = s;
     });
-    return { nodeSchemas, nodeSchemasMap };
-  }, [database.graph.tables]);
+    return nodeSchemasMap;
+  }, [database.graph.nodeTables]);
 
   const onCloseCreateNode = () => {
     setDialogStatus({ createNode: false, createNodeSchema: false });
@@ -47,7 +43,7 @@ export default function CreateNode() {
   };
 
   const setCreateNodeSchemaOpen = (open: boolean) => {
-    if (nodeSchemas.length === 0) {
+    if (!isNonEmpty(database.graph.nodeTables)) {
       setDialogStatus({ createNode: false, createNodeSchema: open });
     } else {
       setDialogStatus({ createNode: !open, createNodeSchema: open });
@@ -55,7 +51,7 @@ export default function CreateNode() {
   };
 
   const openDialog = () => {
-    if (nodeSchemas.length === 0) {
+    if (!isNonEmpty(database.graph.nodeTables)) {
       setDialogStatus({ createNode: false, createNodeSchema: true });
     } else {
       setDialogStatus({ createNode: true, createNodeSchema: false });
@@ -71,14 +67,14 @@ export default function CreateNode() {
         open={dialogStatus.createNodeSchema}
         setOpen={setCreateNodeSchemaOpen}
         onSubmit={onSubmitCreateNodeSchema}
-        nodeSchemas={nodeSchemas}
+        nodeSchemas={database.graph.nodeTables}
       />
-      {isNonEmpty(nodeSchemas) && (
+      {isNonEmpty(database.graph.nodeTables) && (
         <CreateNodeDialog
           open={dialogStatus.createNode}
           onClose={onCloseCreateNode}
           onCreateSchemaClick={onCreateSchemaClickCreateNode}
-          nodeSchemas={nodeSchemas}
+          nodeSchemas={database.graph.nodeTables}
           nodeSchemasMap={nodeSchemasMap}
         />
       )}
