@@ -42,7 +42,11 @@ class MainController {
       tableName: string,
       primaryKey: string,
       primaryKeyType: string,
-      properties: { name: string; type: NonPrimaryKeyType; isPrimary?: boolean }[] = [],
+      properties: {
+        name: string;
+        type: NonPrimaryKeyType;
+        isPrimary?: boolean;
+      }[] = [],
       relInfo: { from: string; to: string } | null = null
     ) {
       return Promise.resolve(
@@ -142,9 +146,12 @@ class MainController {
         }
       * @example await store.controller._internal.getSingleSchemaProperties(`Person`); 
      */
-    async getSingleSchemaProperties(tableName: string) {
+    async getSingleSchemaProperties(
+      tableName: string,
+      tableType: "NODE" | "REL"
+    ) {
       return Promise.resolve(
-        kuzuController.getSingleSchemaProperties(tableName)
+        kuzuController.getSingleSchemaProperties(tableName, tableType)
       );
     },
 

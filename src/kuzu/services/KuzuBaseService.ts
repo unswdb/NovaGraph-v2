@@ -440,4 +440,18 @@ export default class KuzuBaseService {
       };
     }
   }
+
+  getAllSchemaProperties() {
+    const { nodeTables, edgeTables } = this.snapshotGraphState();
+    return { nodeTables, edgeTables };
+  }
+
+  getSingleSchemaProperties(tableName: string, tableType: "NODE" | "REL") {
+    const { nodeTables, edgeTables } = this.getAllSchemaProperties();
+    if (tableType === "NODE") {
+      return nodeTables.find((n) => n.tableName === tableName) ?? null;
+    } else {
+      return edgeTables.find((e) => e.tableName === tableName) ?? null;
+    }
+  }
 }

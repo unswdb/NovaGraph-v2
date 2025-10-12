@@ -169,7 +169,11 @@ class KuzuController {
     tableName: string,
     primaryKey: string,
     primaryKeyType: string,
-    properties: { name: string; type: NonPrimaryKeyType; isPrimary?: boolean }[] = [],
+    properties: {
+      name: string;
+      type: NonPrimaryKeyType;
+      isPrimary?: boolean;
+    }[] = [],
     relInfo: { from: string; to: string } | null = null
   ) {
     if (!this.service) {
@@ -182,9 +186,7 @@ class KuzuController {
       properties,
       relInfo
     );
-  };
-
-
+  }
 
   createNode(tableName: string, properties: Record<string, ValueWithType>) {
     if (!this.service) {
@@ -254,6 +256,20 @@ class KuzuController {
       throw new Error("Kuzu service not initialized");
     }
     return this.service.deleteNode(node);
+  }
+
+  getAllSchemaProperties() {
+    if (!this.service) {
+      throw new Error("Kuzu service not initialized");
+    }
+    return this.service.getAllSchemaProperties();
+  }
+
+  getSingleSchemaProperties(tableName: string, tableType: "NODE" | "REL") {
+    if (!this.service) {
+      throw new Error("Kuzu service not initialized");
+    }
+    return this.service.getSingleSchemaProperties(tableName, tableType);
   }
   // -- Exclusive for Kuzu Persistent --
 }
