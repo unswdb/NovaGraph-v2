@@ -11,6 +11,7 @@ import type {
   ScalarType,
   ValueWithType,
 } from "../../types/KuzuDBTypes";
+import type { NonPrimaryKeyType } from "~/features/visualizer/schema-inputs";
 
 export function createEdgeQuery(
   node1: GraphNode,
@@ -76,6 +77,56 @@ export function createEdgeSchemaQuery(
   const query = `CREATE REL TABLE \`${tableName}\` (${inner});`;
 
   // console.log("create edge table query:", query);
+  return query;
+}
+
+/**
+ * Generates a Cypher DDL query string for creating a simple node table.
+ *
+ * This function builds a `CREATE NODE TABLE` statement for defining a node schema
+ * with basic scalar property types (e.g., STRING, INT, DOUBLE, BOOLEAN, DATE, etc.).
+ * Complex composite types such as DECIMAL, LIST, STRUCT, MAP, or UNION are intentionally
+ * not supported in this simplified version.
+ *
+ * @param tableName - The name of the node table to create.
+ * @param primaryKey - The property name to use as the table's primary key.
+ * @param primaryKeyType - The data type of the primary key (e.g., STRING, INT).
+ * @param properties - Optional additional properties for the node, as key–type pairs.
+ * @param _relInfo - Reserved for compatibility with the original function signature; unused here.
+ *
+ * @returns A formatted Cypher DDL string that creates a node table with the given schema.
+ *
+ * @example
+ * ```ts
+ * createNodeSchemaQuery("Person", "name", "STRING", {
+ *   age: "INT",
+ *   alive: "BOOLEAN"
+ * });
+ * // → CREATE NODE TABLE Person (name STRING, age INT, alive BOOLEAN, PRIMARY KEY (name));
+ * ```
+ */
+export function createNodeSchemaQuery(
+  tableName: string,
+  primaryKey: string,
+  primaryKeyType: string,
+  properties: { name: string; type: NonPrimaryKeyType; isPrimary?: boolean }[] = [],
+  _relInfo: { from: string; to: string } | null = null
+): string {
+  const typeToDDL = (t: NonPrimaryKeyType): string => {
+    if (typeof t === "string") return t;
+    return String(t as any);
+  };
+
+  // Ensure primary key column is first and avoid duplicates
+  const cols: string[] = [
+    `${primaryKey} ${primaryKeyType}`,
+    ...properties
+      .filter((f) => f.name !== primaryKey)
+      .map((f) => `${f.name} ${typeToDDL(f.type)}`),
+  ];
+
+  const query = `CREATE NODE TABLE ${tableName} (${cols.join(", ")}, PRIMARY KEY (${primaryKey}));`;
+  // console.warn("q: " + q);
   return query;
 }
 

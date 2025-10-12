@@ -2,6 +2,7 @@ import kuzuController from "./kuzu/controllers/KuzuController";
 import createModule from "./graph";
 import type { CompositeType } from "./types/KuzuDBTypes";
 import type { GraphNode } from "./features/visualizer/types";
+import type { NonPrimaryKeyType } from "./features/visualizer/schema-inputs";
 
 class MainController {
   // Graph method starts here
@@ -37,6 +38,24 @@ class MainController {
 
   // Database operations namespace
   db = {
+    async createNodeSchema(
+      tableName: string,
+      primaryKey: string,
+      primaryKeyType: string,
+      properties: { name: string; type: NonPrimaryKeyType; isPrimary?: boolean }[] = [],
+      relInfo: { from: string; to: string } | null = null
+    ) {
+      return Promise.resolve(
+        kuzuController.createNodeSchema(
+          tableName,
+          primaryKey,
+          primaryKeyType,
+          properties,
+          relInfo
+        )
+      );
+    },
+
     async createSchema(
       type: "node" | "rel" | "NODE" | "REL",
       tableName: string,

@@ -14,6 +14,7 @@ import {
   getAllSchemaPropertiesQuery,
   createEdgeSchemaQuery,
   createEdgeQuery,
+  createNodeSchemaQuery,
 } from "../helpers/KuzuQueryBuilder";
 
 import type { CompositeType, ValueWithType } from "~/types/KuzuDBTypes";
@@ -22,6 +23,7 @@ import type {
   GraphNode,
   GraphSchema,
 } from "~/features/visualizer/types";
+import type { NonPrimaryKeyType } from "~/features/visualizer/schema-inputs";
 
 // type QueryResultSync = import("../../types/kuzu-wasm/sync/query_result");
 
@@ -304,6 +306,32 @@ export default class KuzuBaseService {
       };
     }
   }
+
+  createNodeSchema(
+    tableName: string,
+    primaryKey: string,
+    primaryKeyType: string,
+    properties: { name: string; type: NonPrimaryKeyType; isPrimary?: boolean }[] = [],
+    relInfo: { from: string; to: string } | null = null
+  ) {
+    const query = createNodeSchemaQuery(tableName, primaryKey, primaryKeyType, properties, relInfo);
+    const result = this.executeQuery(query);
+    if (!result.success) {
+      const fq = result.failedQueries?.[0];
+      const rawMsg = fq?.message ?? "Unknown error";
+      console.error("Failed query (full):", fq);
+    
+      let friendlyMsg = rawMsg;
+      if (rawMsg.includes("already exists in catalog")) {
+        friendlyMsg = `Schema "${tableName}" already exists in the catalog.`;
+      }
+    
+      // Throw only the friendly/raw message — no prefix here
+      throw new Error(friendlyMsg);
+    }
+    
+    return result;
+  };
 
   createNode(tableName: string, properties: Record<string, ValueWithType>) {
     try {

@@ -1,6 +1,7 @@
 import type { GraphNode } from "~/features/visualizer/types";
 import KuzuInMemorySync from "../services/KuzuInMemorySync";
 import type { CompositeType, ValueWithType } from "~/types/KuzuDBTypes";
+import type { NonPrimaryKeyType } from "~/features/visualizer/schema-inputs";
 
 /**
  * This class is used to handle logic related to Kuzu before exposing into the highest API
@@ -163,6 +164,27 @@ class KuzuController {
       relInfo
     );
   }
+
+  createNodeSchema(
+    tableName: string,
+    primaryKey: string,
+    primaryKeyType: string,
+    properties: { name: string; type: NonPrimaryKeyType; isPrimary?: boolean }[] = [],
+    relInfo: { from: string; to: string } | null = null
+  ) {
+    if (!this.service) {
+      throw new Error("Kuzu service not initialized");
+    }
+    return this.service.createNodeSchema(
+      tableName,
+      primaryKey,
+      primaryKeyType,
+      properties,
+      relInfo
+    );
+  };
+
+
 
   createNode(tableName: string, properties: Record<string, ValueWithType>) {
     if (!this.service) {

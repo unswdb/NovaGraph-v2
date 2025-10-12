@@ -2,6 +2,7 @@ import { Key, Plus, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
+import { useStore } from "~/features/visualizer/hooks/use-store";
 import InputComponent, {
   createAlgorithmSelectInput,
   createEmptyInputResult,
@@ -124,22 +125,44 @@ export default function CreateNodeSchemaForm({
     );
   };
 
-  // TODO: Handle create schema on submit
+  // Hooks
+  const store = useStore();
+
   const handleOnSubmit = async () => {
-    const primaryKeyField = fields.find((f) => f.isPrimary);
-    const nonPrimaryFields = fields.filter((f) => !f.isPrimary);
-
-    console.log({
-      tableName: tableName.value,
-      primaryKey: primaryKeyField!.name,
-      primaryKeyType: primaryKeyField!.type,
-      fields: nonPrimaryFields,
-    });
-
-    toast.success("Node schema created (not really, yet!)");
-    onSubmit();
+    // setIsLoading(true);
+    try {
+      const primaryKeyField = fields.find((f) => f.isPrimary);
+      const nonPrimaryFields = fields.filter((f) => !f.isPrimary);
+  
+      if (!tableName.value) {
+        throw new Error("Table name is missing");
+      }
+  
+      console.log({
+        tableName: tableName.value,
+        primaryKey: primaryKeyField!.name,
+        primaryKeyType: primaryKeyField!.type,
+        fields: nonPrimaryFields,
+      });
+  
+      const result = await store.controller.db.createNodeSchema(
+        tableName.value,
+        primaryKeyField!.name,
+        primaryKeyField!.type,
+        nonPrimaryFields
+      );
+  
+      console.log(result);
+      toast.success("Node schema created successfully!");
+      onSubmit();
+    } catch (err: any) {
+      console.error("Schema creation failed:", err);
+      toast.error(`Schema creation failed: ${err.message || err}`);
+    } 
+    // finally {
+    //   setIsLoading(false);
+    // }
   };
-
   const NodeSchemaFormError = () => {
     let errorMsg = "";
 
