@@ -23,7 +23,10 @@ import type {
   GraphNode,
   GraphSchema,
 } from "~/features/visualizer/types";
-import type { NonPrimaryKeyType } from "~/features/visualizer/schema-inputs";
+import type {
+  NonPrimaryKeyType,
+  PrimaryKeyType,
+} from "~/features/visualizer/schema-inputs";
 
 // type QueryResultSync = import("../../types/kuzu-wasm/sync/query_result");
 
@@ -313,7 +316,7 @@ export default class KuzuBaseService {
   createNodeSchema(
     tableName: string,
     primaryKey: string,
-    primaryKeyType: string,
+    primaryKeyType: PrimaryKeyType,
     properties: {
       name: string;
       type: NonPrimaryKeyType;

@@ -104,3 +104,5 @@ export {
   createDatetimeLocalInput,
   type DatetimeLocalInput,
 } from "./date/datetime-local";
+export { createDateInput, type DateInput } from "./date";
+export { createUUIDInput, type UUIDInput } from "./uuid";

@@ -1,11 +1,15 @@
-import { createSwitchInput, type SwitchInput } from "../../inputs";
+import {
+  createSwitchInput,
+  type PropsForInput,
+  type SwitchInput,
+} from "../../inputs";
 import { defineSchemaInput } from "../types";
 
-export const BooleanSchemaInput = defineSchemaInput<SwitchInput>({
-  type: "BOOLEAN",
+export const BooleanSchemaInput = defineSchemaInput({
+  type: "BOOLEAN" as const,
   displayName: "BOOLEAN",
   contexts: ["non-primary"],
-  build: (args) => {
+  build: (args: PropsForInput<SwitchInput>) => {
     return createSwitchInput({
       ...args,
     });

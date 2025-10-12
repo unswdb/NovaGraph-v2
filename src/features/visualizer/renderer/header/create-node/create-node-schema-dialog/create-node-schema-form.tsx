@@ -128,7 +128,9 @@ export default function CreateNodeSchemaForm({
           return {
             ...field,
             isPrimary: true,
-            type: PK_SCHEMA_TYPES[0],
+            type: PK_SCHEMA_TYPES.includes(field.type)
+              ? field.type
+              : PK_SCHEMA_TYPES[0],
           };
         }
         return {

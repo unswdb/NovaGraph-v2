@@ -1,11 +1,15 @@
-import { createNumberInput, type NumberInput } from "../../inputs";
+import {
+  createNumberInput,
+  type NumberInput,
+  type PropsForInput,
+} from "../../inputs";
 import { defineSchemaInput } from "../types";
 
-export const Uint16SchemaInput = defineSchemaInput<NumberInput>({
-  type: "UINT16",
+export const Uint16SchemaInput = defineSchemaInput({
+  type: "UINT16" as const,
   displayName: "UINT16",
   contexts: ["primary", "non-primary"],
-  build: (args) => {
+  build: (args: PropsForInput<NumberInput>) => {
     return createNumberInput({
       ...args,
       min: 0,

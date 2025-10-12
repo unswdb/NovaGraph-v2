@@ -1,11 +1,15 @@
-import { createFileInput, type FileInput } from "../../inputs";
+import {
+  createFileInput,
+  type FileInput,
+  type PropsForInput,
+} from "../../inputs";
 import { defineSchemaInput } from "../types";
 
-export const BlobSchemaInput = defineSchemaInput<FileInput>({
-  type: "BLOB",
+export const BlobSchemaInput = defineSchemaInput({
+  type: "BLOB" as const,
   displayName: "BLOB",
-  contexts: ["non-primary"],
-  build: (args) => {
+  contexts: ["non-primary"] as const,
+  build: (args: PropsForInput<FileInput>) => {
     return createFileInput({
       ...args,
     });

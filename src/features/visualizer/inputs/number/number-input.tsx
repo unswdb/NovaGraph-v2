@@ -75,7 +75,7 @@ export default function NumberInputComponent({
 
   useEffect(() => {
     if (input.defaultValue) {
-      handleNumberOnChange(input.defaultValue);
+      handleNumberOnChange(Number(input.defaultValue));
     }
   }, [input.defaultValue]);
 

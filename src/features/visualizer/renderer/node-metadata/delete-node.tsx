@@ -29,7 +29,6 @@ export default function DeleteNodeButton({
     let result = await store.controller.db.snapshotGraphState();
     store.setNodes(result.nodes);
     store.setEdges(result.edges);
-    toast.success("Node deleted");
     onClose();
   };
 

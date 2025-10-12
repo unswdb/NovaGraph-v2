@@ -6,6 +6,7 @@ import type {
   GraphSchema,
 } from "~/features/visualizer/types";
 import { getSingleSchemaPropertiesQuery } from "../helpers/KuzuQueryBuilder";
+import type { PrimaryKeyType } from "~/features/visualizer/schema-inputs";
 
 /**
  * Helper method to process a single query result (returns a single object)
@@ -144,7 +145,7 @@ export function parseNodesResult(result: any, connection: any): GraphNode[] {
 
     // Extract attributes (all keys except id/label variants and keys starting with _)
     let primaryKeyValue;
-    const attributes: Record<string, string | boolean | number> = {};
+    const attributes: Record<string, PrimaryKeyType> = {};
     for (const key in nodeObj) {
       if (key === primaryKey) {
         primaryKeyValue = nodeObj[key];

@@ -1,11 +1,15 @@
-import { createNumberInput, type NumberInput } from "../../inputs";
+import {
+  createNumberInput,
+  type NumberInput,
+  type PropsForInput,
+} from "../../inputs";
 import { defineSchemaInput } from "../types";
 
-export const FloatSchemaInput = defineSchemaInput<NumberInput>({
-  type: "FLOAT",
+export const FloatSchemaInput = defineSchemaInput({
+  type: "FLOAT" as const,
   displayName: "FLOAT",
   contexts: ["primary", "non-primary"],
-  build: (args) => {
+  build: (args: PropsForInput<NumberInput>) => {
     return createNumberInput({
       ...args,
       min: -3.4028235e38,
