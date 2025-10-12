@@ -1,11 +1,15 @@
-import { createNumberInput, type NumberInput } from "../../inputs";
+import {
+  createNumberInput,
+  type NumberInput,
+  type PropsForInput,
+} from "../../inputs";
 import { defineSchemaInput } from "../types";
 
-export const SerialSchemaInput = defineSchemaInput<NumberInput>({
-  type: "SERIAL",
+export const SerialSchemaInput = defineSchemaInput({
+  type: "SERIAL" as const,
   displayName: "SERIAL",
   contexts: ["primary"],
-  build: (args) => {
+  build: (args: PropsForInput<NumberInput>) => {
     return createNumberInput({
       ...args,
     });

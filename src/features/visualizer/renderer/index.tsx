@@ -24,7 +24,7 @@ const SIMULATION_REPULSION = 2;
 export default function GraphRenderer({ className }: { className?: string }) {
   const { database, gravity, nodeSizeScale, activeResponse } = useStore();
 
-  const { nodes, edges, nodesMap, directed } = database.graph;
+  const { nodes, edges, nodesMap, nodeTables, directed } = database.graph;
 
   const { sizes, colors, mode } = useMemo(() => {
     const result: { sizes: SizeMap; colors: ColorMap; mode: number } = {
@@ -90,6 +90,15 @@ export default function GraphRenderer({ className }: { className?: string }) {
     return map;
   }, [nodesMap, edges, directed]);
 
+  const clickedNodeSchema = useMemo(() => {
+    if (clickedNode) {
+      return (
+        nodeTables.find((n) => n.tableName === clickedNode.tableName) ?? null
+      );
+    }
+    return null;
+  }, [clickedNode, nodeTables]);
+
   const selectNode = (node: GraphNode | null | undefined) => {
     zoomToNode(node);
     setClickedNode(node ?? null);
@@ -133,9 +142,10 @@ export default function GraphRenderer({ className }: { className?: string }) {
         />
 
         {/* Node Attributes Form */}
-        {clickedNode && (
+        {!!clickedNode && !!clickedNodeSchema && (
           <NodeMetadata
             node={clickedNode}
+            nodeSchema={clickedNodeSchema}
             outgoingEdges={nodeOutgoingEdgesMap[clickedNode.id] ?? []}
             directed={directed}
             onClose={() => unselectNode(clickedNode)}

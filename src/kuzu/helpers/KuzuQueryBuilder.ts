@@ -11,7 +11,10 @@ import type {
   ScalarType,
   ValueWithType,
 } from "../../types/KuzuDBTypes";
-import type { NonPrimaryKeyType } from "~/features/visualizer/schema-inputs";
+import type {
+  NonPrimaryKeyType,
+  PrimaryKeyType,
+} from "~/features/visualizer/schema-inputs";
 
 export function createEdgeQuery(
   node1: GraphNode,
@@ -108,25 +111,31 @@ export function createEdgeSchemaQuery(
 export function createNodeSchemaQuery(
   tableName: string,
   primaryKey: string,
-  primaryKeyType: string,
-  properties: { name: string; type: NonPrimaryKeyType; isPrimary?: boolean }[] = [],
+  primaryKeyType: PrimaryKeyType,
+  properties: {
+    name: string;
+    type: NonPrimaryKeyType;
+    isPrimary?: boolean;
+  }[] = [],
   _relInfo: { from: string; to: string } | null = null
 ): string {
   const qid = (s: string) => `\`${String(s).replace(/`/g, "``")}\``;
 
   const typeToDDL = (t: NonPrimaryKeyType): string => {
-    if (typeof t === "string") return t;      // types stay raw, e.g., STRING, INT, DATE
+    if (typeof t === "string") return t; // types stay raw, e.g., STRING, INT, DATE
     return String(t as any);
   };
-  
+
   const cols: string[] = [
     `${qid(primaryKey)} ${typeToDDL(primaryKeyType)}`,
     ...properties
       .filter((f) => f.name !== primaryKey)
       .map((f) => `${qid(f.name)} ${typeToDDL(f.type)}`),
   ];
-  
-  const query = `CREATE NODE TABLE ${qid(tableName)} (${cols.join(", ")}, PRIMARY KEY (${qid(primaryKey)}));`;
+
+  const query = `CREATE NODE TABLE ${qid(tableName)} (${cols.join(
+    ", "
+  )}, PRIMARY KEY (${qid(primaryKey)}));`;
   // console.warn(query)
   return query;
 }

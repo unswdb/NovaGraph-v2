@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import type { GraphEdge, GraphNode } from "../../types";
+import type { GraphEdge, GraphNode, NodeSchema } from "../../types";
 import { Button } from "~/components/ui/button";
 import { ChevronDown, ChevronRight, X } from "lucide-react";
 import { cn } from "~/lib/utils";
@@ -23,12 +23,14 @@ import DeleteNodeButton from "./delete-node";
 
 export default function NodeMetadata({
   node,
+  nodeSchema,
   outgoingEdges,
   directed,
   onClose,
   className,
 }: {
   node: GraphNode;
+  nodeSchema: NodeSchema;
   outgoingEdges: [GraphNode, GraphEdge][];
   directed: boolean;
   onClose: () => void;
@@ -68,7 +70,7 @@ export default function NodeMetadata({
             </span>
           </CollapsibleTrigger>
           <CollapsibleContent className="py-1 px-2 space-y-4 flex flex-col mt-4">
-            <AttributesForm node={node} />
+            <AttributesForm node={node} nodeSchema={nodeSchema} />
           </CollapsibleContent>
         </Collapsible>
         {/* Node edges */}

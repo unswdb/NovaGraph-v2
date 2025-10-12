@@ -2,36 +2,44 @@ import { useMemo, useState } from "react";
 import InputComponent, {
   createAlgorithmSelectInput,
   createEmptyInputResults,
-  createTextInput,
 } from "../../inputs";
-import type { GraphNode } from "../../types";
+import type { GraphNode, NodeSchema } from "../../types";
 import { Button } from "~/components/ui/button";
 import { toast } from "sonner";
 import { capitalize } from "~/lib/utils";
+import { createSchemaInput } from "../../schema-inputs";
 
-export default function AttributesForm({ node }: { node: GraphNode }) {
+export default function AttributesForm({
+  node,
+  nodeSchema,
+}: {
+  node: GraphNode;
+  nodeSchema: NodeSchema;
+}) {
   const inputs = [
     createAlgorithmSelectInput({
       id: "node-table-name",
-      key: "name",
+      key: "tableName",
       displayName: "Table Name",
       source: "tables",
       disabled: true,
       required: true,
       defaultValue: node.tableName,
     }),
-    node.attributes
-      ? Object.entries(node.attributes).map(([key, value]) =>
-          createTextInput({
-            id: `node-${key}`,
-            key,
-            displayName: capitalize(key),
-            placeholder: `Enter ${key.toLocaleLowerCase()}...`,
-            defaultValue: String(value),
-            required: true,
-          })
-        )
-      : [],
+    createSchemaInput(nodeSchema.primaryKeyType, {
+      id: `node-${nodeSchema.primaryKey}-pk`,
+      key: nodeSchema.primaryKey,
+      displayName: capitalize(nodeSchema.primaryKey),
+      defaultValue: node._primaryKeyValue,
+    }),
+    ...Object.entries(nodeSchema.properties).map(([key, type]) =>
+      createSchemaInput(type, {
+        id: `node-${key}-non-pk`,
+        key: key,
+        displayName: capitalize(key),
+        defaultValue: (node.attributes ?? {})[key],
+      })
+    ),
   ].flat();
 
   const [values, setValues] = useState(createEmptyInputResults(inputs));
@@ -43,6 +51,11 @@ export default function AttributesForm({ node }: { node: GraphNode }) {
 
   // TODO: Implement handleSubmit
   const handleSubmit = () => {
+    console.log({
+      tableName: values.tableName,
+      title: values.title, // pk
+      year: values.year, // non-pk
+    });
     toast.success("Attributes updated (not really, yet!)");
   };
 

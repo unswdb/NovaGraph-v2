@@ -39,7 +39,9 @@ export default function CreateNode() {
   };
 
   const onSubmitCreateNodeSchema = () => {
-    setDialogStatus({ createNode: true, createNodeSchema: false });
+    if (dialogStatus.createNodeSchema) {
+      setDialogStatus({ createNode: true, createNodeSchema: false });
+    }
   };
 
   const setCreateNodeSchemaOpen = (open: boolean) => {

@@ -1,11 +1,15 @@
-import { createNumberInput, type NumberInput } from "../../inputs";
+import {
+  createNumberInput,
+  type NumberInput,
+  type PropsForInput,
+} from "../../inputs";
 import { defineSchemaInput } from "../types";
 
-export const DoubleSchemaInput = defineSchemaInput<NumberInput>({
-  type: "DOUBLE",
+export const DoubleSchemaInput = defineSchemaInput({
+  type: "DOUBLE" as const,
   displayName: "DOUBLE",
   contexts: ["primary", "non-primary"],
-  build: (args) => {
+  build: (args: PropsForInput<NumberInput>) => {
     return createNumberInput({
       ...args,
       min: -Number.MAX_VALUE,

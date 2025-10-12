@@ -1,30 +1,29 @@
 import type { InputType, PropsForInput } from "../inputs";
 
-type FieldContextKind = "primary" | "non-primary";
+export type FieldContextKind = "primary" | "non-primary";
 
-export interface SchemaInput<I extends InputType> {
+export interface SchemaInput<
+  I extends InputType,
+  T extends string = string,
+  C extends readonly FieldContextKind[] = readonly FieldContextKind[]
+> {
   /** Type/name of the Kuzu type */
-  readonly type: string;
+  readonly type: T;
 
   /** Label/display name of the Kuzu type when shown as an option */
   readonly displayName: string;
 
   /** Contexts where the type is supported (e.g., primary, non-primary, or both) */
-  readonly contexts: readonly FieldContextKind[];
+  readonly contexts: C;
 
   /** Function that builds the input */
   readonly build: (args: PropsForInput<I>) => I;
 }
 
-export function defineSchemaInput<I extends InputType>(
-  schemaInput: SchemaInput<I>
-): SchemaInput<I> {
+export function defineSchemaInput<
+  I extends InputType,
+  const T extends string,
+  const C extends readonly FieldContextKind[]
+>(schemaInput: SchemaInput<I, T, C>): SchemaInput<I, T, C> {
   return schemaInput;
-}
-
-export function supportContext<C extends FieldContextKind>(ctx: C) {
-  return <T extends { contexts: readonly FieldContextKind[] }>(
-    s: T
-  ): s is T & { contexts: readonly (C | FieldContextKind)[] } =>
-    s.contexts.includes(ctx);
 }
