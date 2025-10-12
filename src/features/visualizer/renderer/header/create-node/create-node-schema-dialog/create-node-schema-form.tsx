@@ -1,4 +1,4 @@
-import { Key, Plus, X } from "lucide-react";
+import { Key, Loader, Plus, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
@@ -38,6 +38,7 @@ export default function CreateNodeSchemaForm({
   onSubmit: () => void;
 }) {
   const { controller } = useStore();
+
   const {
     run: createNodeSchema,
     isLoading,
@@ -221,10 +222,10 @@ export default function CreateNodeSchemaForm({
       <Button
         type="button"
         onClick={handleOnSubmit}
-        disabled={!isReadyToSubmit}
+        disabled={!isReadyToSubmit || isLoading}
         className="w-full"
       >
-        Create Schema
+        {isLoading ? <Loader className="animate-spin" /> : "Create Schema"}
       </Button>
     </div>
   );

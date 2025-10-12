@@ -446,12 +446,9 @@ export default class KuzuBaseService {
     return { nodeTables, edgeTables };
   }
 
-  getSingleSchemaProperties(tableName: string, tableType: "NODE" | "REL") {
+  getSingleSchemaProperties(tableName: string) {
     const { nodeTables, edgeTables } = this.getAllSchemaProperties();
-    if (tableType === "NODE") {
-      return nodeTables.find((n) => n.tableName === tableName) ?? null;
-    } else {
-      return edgeTables.find((e) => e.tableName === tableName) ?? null;
-    }
+    const tables = { ...nodeTables, ...edgeTables };
+    return tables.find((t) => t.tableName === tableName) ?? null;
   }
 }

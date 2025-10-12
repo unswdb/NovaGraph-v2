@@ -146,12 +146,9 @@ class MainController {
         }
       * @example await store.controller._internal.getSingleSchemaProperties(`Person`); 
      */
-    async getSingleSchemaProperties(
-      tableName: string,
-      tableType: "NODE" | "REL"
-    ) {
+    async getSingleSchemaProperties(tableName: string) {
       return Promise.resolve(
-        kuzuController.getSingleSchemaProperties(tableName, tableType)
+        kuzuController.getSingleSchemaProperties(tableName)
       );
     },
 
