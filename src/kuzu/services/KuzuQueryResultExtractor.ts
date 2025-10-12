@@ -6,7 +6,7 @@ import type {
   GraphSchema,
 } from "~/features/visualizer/types";
 import { getSingleSchemaPropertiesQuery } from "../helpers/KuzuQueryBuilder";
-import type { PrimaryKeyType } from "~/features/visualizer/schema-inputs";
+import type { NonPrimaryKeyType, PrimaryKeyType } from "~/features/visualizer/schema-inputs";
 
 /**
  * Helper method to process a single query result (returns a single object)
@@ -74,18 +74,19 @@ export function parseSingleTableResult(
   const objects = result.getAllObjects();
   if (!objects) return null;
 
+  
   let tableProps = {
     primaryKey: "",
-    primaryKeyType: "",
-    properties: {} as Record<string, string>,
+    primaryKeyType: "NULL" as PrimaryKeyType,
+    properties: {} as Record<string, NonPrimaryKeyType>,
   };
 
   for (const obj of objects) {
     if (obj["primary key"]) {
       tableProps.primaryKey = obj.name;
-      tableProps.primaryKeyType = obj.type;
+      tableProps.primaryKeyType = obj.type as PrimaryKeyType;
     } else {
-      tableProps.properties[obj.name] = obj.type;
+      tableProps.properties[obj.name] = obj.type as NonPrimaryKeyType;
     }
   }
 
