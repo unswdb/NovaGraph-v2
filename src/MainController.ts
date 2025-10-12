@@ -2,7 +2,7 @@ import kuzuController from "./kuzu/controllers/KuzuController";
 import createModule from "./graph";
 import type { CompositeType } from "./types/KuzuDBTypes";
 import type { GraphNode } from "./features/visualizer/types";
-import type { NonPrimaryKeyType } from "./features/visualizer/schema-inputs";
+import type { NonPrimaryKeyType, PrimaryKeyType } from "./features/visualizer/schema-inputs";
 
 class MainController {
   // Graph method starts here
@@ -41,7 +41,7 @@ class MainController {
     async createNodeSchema(
       tableName: string,
       primaryKey: string,
-      primaryKeyType: string,
+      primaryKeyType: PrimaryKeyType,
       properties: {
         name: string;
         type: NonPrimaryKeyType;
