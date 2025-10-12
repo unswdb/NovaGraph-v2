@@ -112,21 +112,22 @@ export function createNodeSchemaQuery(
   properties: { name: string; type: NonPrimaryKeyType; isPrimary?: boolean }[] = [],
   _relInfo: { from: string; to: string } | null = null
 ): string {
+  const qid = (s: string) => `\`${String(s).replace(/`/g, "``")}\``;
+
   const typeToDDL = (t: NonPrimaryKeyType): string => {
-    if (typeof t === "string") return t;
+    if (typeof t === "string") return t;      // types stay raw, e.g., STRING, INT, DATE
     return String(t as any);
   };
-
-  // Ensure primary key column is first and avoid duplicates
+  
   const cols: string[] = [
-    `${primaryKey} ${primaryKeyType}`,
+    `${qid(primaryKey)} ${typeToDDL(primaryKeyType)}`,
     ...properties
       .filter((f) => f.name !== primaryKey)
-      .map((f) => `${f.name} ${typeToDDL(f.type)}`),
+      .map((f) => `${qid(f.name)} ${typeToDDL(f.type)}`),
   ];
-
-  const query = `CREATE NODE TABLE ${tableName} (${cols.join(", ")}, PRIMARY KEY (${primaryKey}));`;
-  // console.warn("q: " + q);
+  
+  const query = `CREATE NODE TABLE ${qid(tableName)} (${cols.join(", ")}, PRIMARY KEY (${qid(primaryKey)}));`;
+  // console.warn(query)
   return query;
 }
 
