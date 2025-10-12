@@ -282,7 +282,7 @@ export function findPrimaryKeyForNodeQuery(tableName: string) {
  * @returns Query string selecting name, type, primary key
  */
 export function getSingleSchemaPropertiesQuery(tableName: string) {
-  const query = `CALL TABLE_INFO('${tableName}') RETURN name, type, \`primary key\`;`;
+  const query = `CALL TABLE_INFO('${tableName}') RETURN *;`;
   return query;
 }
 

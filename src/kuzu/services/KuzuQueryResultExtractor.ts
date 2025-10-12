@@ -68,7 +68,9 @@ export function parseSingleTableResult(
   if (!result || typeof result.getAllObjects !== "function") {
     return null;
   }
-
+  if (!result.isSuccess()) {
+    throw Error("parseSingleTableResult has error input result")
+  }
   const objects = result.getAllObjects();
   if (!objects) return null;
 
