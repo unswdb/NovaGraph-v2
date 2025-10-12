@@ -95,7 +95,7 @@ export default function CreateNodeSchemaForm({
 
   const isReadyToSubmit = useMemo(
     () =>
-      tableName.success && // table name is valid
+      !!tableName.success && // table name is valid
       fields.every((f) => !!f.name.trim()) && // every key isn't empty
       primaryKeyCount === 1 && // only one primary key is allowed
       allFieldNamesUnique, // all names unique
@@ -144,31 +144,18 @@ export default function CreateNodeSchemaForm({
     );
   };
 
-  // Hooks
-  const store = useStore();
-
   const handleOnSubmit = async () => {
-    // setIsLoading(true);
-    const primaryKeyField = fields.find((f) => f.isPrimary);
-    const nonPrimaryFields = fields.filter((f) => !f.isPrimary);
+    if (isReadyToSubmit) {
+      const primaryKeyField = fields.find((f) => f.isPrimary);
+      const nonPrimaryFields = fields.filter((f) => !f.isPrimary);
 
-    if (!tableName.value) {
-      throw new Error("Table name is missing");
+      createNodeSchema(
+        tableName.value!,
+        primaryKeyField!.name,
+        primaryKeyField!.type,
+        nonPrimaryFields
+      );
     }
-
-    console.log({
-      tableName: tableName.value,
-      primaryKey: primaryKeyField!.name,
-      primaryKeyType: primaryKeyField!.type,
-      fields: nonPrimaryFields,
-    });
-
-    createNodeSchema(
-      tableName.value,
-      primaryKeyField!.name,
-      primaryKeyField!.type,
-      nonPrimaryFields
-    );
   };
   const NodeSchemaFormError = () => {
     let errorMsg = "";
