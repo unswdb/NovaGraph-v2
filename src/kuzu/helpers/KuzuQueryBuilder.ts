@@ -20,11 +20,14 @@ export function createEdgeQuery(
   node1: GraphNode,
   node2: GraphNode,
   edgeTableName: string,
+  weight: number,
   attributes?: Record<string, string | number | boolean>
 ) {
+  const allAttributes = { weight, ...(attributes ?? {}) };
+
   const propString =
-    attributes && Object.keys(attributes).length > 0
-      ? `{ ${Object.entries(attributes)
+    allAttributes && Object.keys(allAttributes).length > 0
+      ? `{ ${Object.entries(allAttributes)
           .map(([key, value]) =>
             typeof value === "string"
               ? `${key}: "${value}"`

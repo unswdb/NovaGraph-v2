@@ -19,6 +19,7 @@ export type GraphNode = {
 export type GraphEdge = {
   source: string; // Unique identifier of the node
   target: string; // Unique identifier of the node
+  tableName: string; // The table the egde belongs to
   weight: number; // Weight for the edge. Default value is 0
   attributes?: Record<string, NonPrimaryKeyValueType>; // Additional attributes for the edge
 };
@@ -52,7 +53,9 @@ export type GraphDatabase = {
     nodesMap: Map<string, GraphNode>;
     edgesMap: Map<[string, string], GraphEdge>;
     nodeTables: NodeSchema[];
+    nodeTablesMap: Map<string, NodeSchema>;
     edgeTables: EdgeSchema[];
+    edgeTablesMap: Map<string, EdgeSchema>;
     directed: boolean;
   };
 };

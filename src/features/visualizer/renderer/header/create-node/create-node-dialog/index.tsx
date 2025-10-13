@@ -6,8 +6,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
-import type { NonEmptyNodeSchemas } from "..";
-import type { NodeSchema } from "~/features/visualizer/types";
 import InputComponent, {
   createAlgorithmSelectInput,
   createEmptyInputResult,
@@ -15,28 +13,28 @@ import InputComponent, {
 import CreateNodeDialogForm from "./create-node-form";
 import { Separator } from "~/components/ui/separator";
 import { Button } from "~/components/ui/button";
+import { useStore } from "~/features/visualizer/hooks/use-store";
 
 export default function CreateNodeDialog({
   open,
   onClose,
   onCreateSchemaClick,
-  nodeSchemas,
-  nodeSchemasMap,
 }: {
   open: boolean;
   onClose: () => void;
   onCreateSchemaClick: () => void;
-  nodeSchemas: NonEmptyNodeSchemas;
-  nodeSchemasMap: Record<string, NodeSchema>;
 }) {
+  const { database } = useStore();
+  const { nodeTables, nodeTablesMap } = database.graph;
+
   const selectNodeSchemaInput = createAlgorithmSelectInput({
     id: "select-schema",
     key: "selectedNodeSchema",
     displayName: "Schema:",
     showLabel: false,
     source: "static",
-    options: nodeSchemas.map((n) => n.tableName),
-    defaultValue: nodeSchemas[0].tableName,
+    options: nodeTables.map((n) => n.tableName),
+    defaultValue: nodeTables[0].tableName,
   });
 
   const [selectedNodeSchema, setSelectedNodeSchema] = useState(
@@ -49,7 +47,7 @@ export default function CreateNodeDialog({
         <DialogHeader>
           <DialogTitle>Create Node</DialogTitle>
           <DialogDescription>
-            Choose a node type, then provide values for its fields
+            Choose a node schema, then provide values for its fields
           </DialogDescription>
         </DialogHeader>
         <div className="flex gap-2 items-end">
@@ -69,7 +67,7 @@ export default function CreateNodeDialog({
           <CreateNodeDialogForm
             key={selectedNodeSchema.value}
             selectedNodeSchema={selectedNodeSchema.value}
-            nodeSchemasMap={nodeSchemasMap}
+            nodeTablesMap={nodeTablesMap}
           />
         )}
       </DialogContent>

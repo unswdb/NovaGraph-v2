@@ -7,7 +7,6 @@ import {
   type GraphEdge,
   type GraphModule,
   type GraphNode,
-  type GraphSchema,
   type NodeSchema,
 } from "./types";
 import {
@@ -41,9 +40,6 @@ export default class VisualizerStore {
       cleanup: action,
       setDatabase: action,
       setGraphState: action,
-      setNodes: action,
-      setEdges: action,
-      setSchema: action,
       addDatabase: action,
       setGravity: action,
       setNodeSizeScale: action,
@@ -78,8 +74,12 @@ export default class VisualizerStore {
       // all the database list
       const { nodes, nodesMap } = this.buildNodesWithMap(graph.nodes);
       const { edges, edgesMap } = this.buildEdgesWithMap(graph.edges);
-      const nodeTables = this.buildNodeTables(graph.nodeTables);
-      const edgeTables = this.buildEdgeTables(graph.edgeTables);
+      const { nodeTables, nodeTablesMap } = this.buildNodeTablesWithMap(
+        graph.nodeTables
+      );
+      const { edgeTables, edgeTablesMap } = this.buildEdgeTablesWithMap(
+        graph.edgeTables
+      );
       this.databases = [
         {
           label: "Default",
@@ -89,7 +89,9 @@ export default class VisualizerStore {
             edges,
             edgesMap,
             nodeTables,
+            nodeTablesMap,
             edgeTables,
+            edgeTablesMap,
             directed: true, // TODO: Distinguish between directed/non-directed in Kuzu
           },
         },
@@ -107,10 +109,10 @@ export default class VisualizerStore {
   };
 
   setGraphState = ({
-    nodes,
-    edges,
-    nodeTables,
-    edgeTables,
+    nodes: newNodes,
+    edges: newEdges,
+    nodeTables: newNodeTables,
+    edgeTables: newEdgeTables,
   }: {
     nodes: GraphNode[];
     edges: GraphEdge[];
@@ -118,52 +120,26 @@ export default class VisualizerStore {
     edgeTables: EdgeSchema[];
   }) => {
     this.checkInitialization();
+
+    const { nodes, nodesMap } = this.buildNodesWithMap(newNodes);
+    const { edges, edgesMap } = this.buildEdgesWithMap(newEdges);
+    const { nodeTables, nodeTablesMap } =
+      this.buildNodeTablesWithMap(newNodeTables);
+    const { edgeTables, edgeTablesMap } =
+      this.buildEdgeTablesWithMap(newEdgeTables);
+
     this.database = {
       ...this.database,
       graph: {
         ...this.database.graph,
         nodes,
         edges,
+        nodesMap,
+        edgesMap,
         nodeTables,
+        nodeTablesMap,
         edgeTables,
-      },
-    };
-  };
-
-  setNodes = (nodes: GraphNode[]) => {
-    this.checkInitialization();
-    const { nodes: newNodes, nodesMap } = this.buildNodesWithMap(nodes);
-    this.database = {
-      ...this.database,
-      graph: {
-        ...this.database.graph,
-        nodes: newNodes,
-        nodesMap, // can remain plain Map if you don’t need deep reactivity
-      },
-    };
-  };
-
-  setEdges = (edges: GraphEdge[]) => {
-    this.checkInitialization();
-    const { edges: newEdges, edgesMap } = this.buildEdgesWithMap(edges);
-    this.database = {
-      ...this.database,
-      graph: {
-        ...this.database.graph,
-        edges: newEdges,
-        edgesMap, // can remain plain Map if you don’t need deep reactivity
-      },
-    };
-  };
-
-  setSchema = (nodeTables: NodeSchema[], edgeTables: EdgeSchema[]) => {
-    this.checkInitialization();
-    this.database = {
-      ...this.database,
-      graph: {
-        ...this.database.graph,
-        nodeTables,
-        edgeTables,
+        edgeTablesMap,
       },
     };
   };
@@ -195,8 +171,9 @@ export default class VisualizerStore {
     }
   }
 
-  private buildNodeTables(nodeTables: NodeSchema[]) {
+  private buildNodeTablesWithMap(nodeTables: NodeSchema[]) {
     const builtNodeTables: NodeSchema[] = [];
+    const nodeTablesMap: Map<string, NodeSchema> = new Map();
 
     nodeTables.forEach((t) => {
       const newTable = {
@@ -209,14 +186,16 @@ export default class VisualizerStore {
 
       if (isNodeSchema(newTable)) {
         builtNodeTables.push(newTable);
+        nodeTablesMap.set(t.tableName, newTable);
       }
     });
 
-    return builtNodeTables;
+    return { nodeTables: builtNodeTables, nodeTablesMap };
   }
 
-  private buildEdgeTables(edgeTables: EdgeSchema[]) {
+  private buildEdgeTablesWithMap(edgeTables: EdgeSchema[]) {
     const builtEdgeTables: EdgeSchema[] = [];
+    const edgeTablesMap: Map<string, EdgeSchema> = new Map();
 
     edgeTables.forEach((t) => {
       const newTable = {
@@ -229,10 +208,11 @@ export default class VisualizerStore {
 
       if (isEdgeSchema(newTable)) {
         builtEdgeTables.push(newTable);
+        edgeTablesMap.set(t.tableName, newTable);
       }
     });
 
-    return builtEdgeTables;
+    return { edgeTables: builtEdgeTables, edgeTablesMap };
   }
 
   private buildNodesWithMap(nodes: GraphNode[]): {
@@ -274,6 +254,7 @@ export default class VisualizerStore {
         source,
         target,
         weight: parseWeight(e.weight),
+        tableName: String(e.tableName),
         ...(e.attributes ? { attributes: e.attributes } : {}),
       };
       builtEdges.push(builtEdge);

@@ -219,12 +219,19 @@ class KuzuController {
     node1: GraphNode,
     node2: GraphNode,
     edgeTableName: string,
+    weight: number,
     attributes?: Record<string, string | number | boolean>
   ) {
     if (!this.service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.createEdge(node1, node2, edgeTableName, attributes);
+    return this.service.createEdge(
+      node1,
+      node2,
+      edgeTableName,
+      weight,
+      attributes
+    );
   }
   // /**
   //  * Builds a Cypher query to delete a node (and all its relationships) by primary key.

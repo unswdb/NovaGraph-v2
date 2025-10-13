@@ -1,15 +1,10 @@
 import { Plus } from "lucide-react";
 import { Button } from "~/components/ui/button";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useStore } from "~/features/visualizer/hooks/use-store";
 import CreateNodeSchemaDialog from "./create-node-schema-dialog";
 import CreateNodeDialog from "./create-node-dialog";
-import { isNodeSchema, type NodeSchema } from "~/features/visualizer/types";
-
-export type NonEmptyNodeSchemas = [NodeSchema, ...NodeSchema[]];
-function isNonEmpty(arr: NodeSchema[]): arr is NonEmptyNodeSchemas {
-  return arr.length > 0;
-}
+import { isNonEmpty } from "~/lib/utils";
 
 export default function CreateNode() {
   const { database } = useStore();
@@ -18,14 +13,6 @@ export default function CreateNode() {
     createNode: false,
     createNodeSchema: false,
   });
-
-  const nodeSchemasMap = useMemo(() => {
-    let nodeSchemasMap: Record<string, NodeSchema> = {};
-    database.graph.nodeTables.forEach((s) => {
-      nodeSchemasMap[s.tableName] = s;
-    });
-    return nodeSchemasMap;
-  }, [database.graph.nodeTables]);
 
   const onCloseCreateNode = () => {
     setDialogStatus({ createNode: false, createNodeSchema: false });
@@ -69,15 +56,12 @@ export default function CreateNode() {
         open={dialogStatus.createNodeSchema}
         setOpen={setCreateNodeSchemaOpen}
         onSubmit={onSubmitCreateNodeSchema}
-        nodeSchemas={database.graph.nodeTables}
       />
       {isNonEmpty(database.graph.nodeTables) && (
         <CreateNodeDialog
           open={dialogStatus.createNode}
           onClose={onCloseCreateNode}
           onCreateSchemaClick={onCreateSchemaClickCreateNode}
-          nodeSchemas={database.graph.nodeTables}
-          nodeSchemasMap={nodeSchemasMap}
         />
       )}
     </>

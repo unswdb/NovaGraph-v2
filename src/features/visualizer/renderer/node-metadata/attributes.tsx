@@ -52,12 +52,7 @@ export default function AttributesForm({
 
   // TODO: Implement handleSubmit
   const handleSubmit = () => {
-    console.log({
-      tableName: values.tableName,
-      title: values.title, // pk
-      year: values.year, // non-pk
-    });
-    toast.success("Attributes updated (not really, yet!)");
+    toast.success("Node attributes updated (not really, yet!)");
   };
 
   return (

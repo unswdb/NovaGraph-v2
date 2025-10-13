@@ -1,7 +1,14 @@
-import { Key, Loader, Plus, X } from "lucide-react";
 import { useMemo, useState } from "react";
-import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
+import { Key, Loader, Plus, X } from "lucide-react";
+import { toast } from "sonner";
+import { useAsyncFn } from "~/hooks/use-async-fn";
+import {
+  NON_PK_SCHEMA_TYPES,
+  PK_SCHEMA_TYPES,
+  type NonPrimaryKeyType,
+  type PrimaryKeyType,
+} from "~/features/visualizer/schema-inputs";
 import { useStore } from "~/features/visualizer/hooks/use-store";
 import InputComponent, {
   createAlgorithmSelectInput,
@@ -9,41 +16,33 @@ import InputComponent, {
   createTextInput,
   type TextInput,
 } from "~/features/visualizer/inputs";
-import {
-  NON_PK_SCHEMA_TYPES,
-  PK_SCHEMA_TYPES,
-  type NonPrimaryKeyType,
-  type PrimaryKeyType,
-} from "~/features/visualizer/schema-inputs";
-import { useAsyncFn } from "~/hooks/use-async-fn";
 
-type NodeSchemaField =
+type EdgeSchemaField =
   | {
       name: string;
       type: NonPrimaryKeyType;
-      isPrimary?: false;
     }
   | {
       name: string;
       type: PrimaryKeyType;
-      isPrimary: true;
     };
 
-export default function CreateNodeSchemaForm({
+export default function CreateEdgeSchemaForm({
   onSubmit,
 }: {
   onSubmit: () => void;
 }) {
   const { controller, database } = useStore();
-  const { nodeTables } = database.graph;
+  const { edgeTables } = database.graph;
 
   const {
-    run: createNodeSchema,
+    run: createEdgeSchema,
     isLoading,
     getErrorMessage,
-  } = useAsyncFn(controller.db.createNodeSchema.bind(controller.db), {
+  } = useAsyncFn(controller.db.createEdgeSchema.bind(controller.db), {
     onSuccess: (result) => {
-      toast.success("Node schema created successfully!");
+      // TODO: store.setGraphState({ nodes: result.nodes, edges: result.edges, ... });
+      toast.success("Edge schema created successfully!");
       onSubmit();
     },
     onError: (err) => {
@@ -52,18 +51,18 @@ export default function CreateNodeSchemaForm({
   });
 
   const tableNameInput = createTextInput({
-    id: "schema-node-table-name",
+    id: "schema-edge-table-name",
     key: "table_name",
     displayName: "Schema/Table Name",
-    placeholder: "Enter schema/table name (e.g., Person, Product)...",
+    placeholder: "Enter schema/table name (e.g., Directed, ActedIn)...",
     required: true,
     validator: (value) => {
-      const doesTableNameExist = nodeTables.some((s) => s.tableName === value);
+      const doesTableNameExist = edgeTables.some((s) => s.tableName === value);
       if (doesTableNameExist) {
         return {
           success: false,
           message:
-            "A node schema with this name already exists. Please choose a different name.",
+            "An edge schema with this name already exists. Please choose a different name.",
         };
       }
       return { success: true };
@@ -73,18 +72,7 @@ export default function CreateNodeSchemaForm({
   const [tableName, setTableName] = useState(
     createEmptyInputResult(tableNameInput)
   );
-  const [fields, setFields] = useState<NodeSchemaField[]>([
-    {
-      name: "",
-      type: PK_SCHEMA_TYPES[0],
-      isPrimary: true,
-    },
-  ]);
-
-  const primaryKeyCount = useMemo(
-    () => fields.filter((f) => f.isPrimary).length,
-    [fields]
-  );
+  const [fields, setFields] = useState<EdgeSchemaField[]>([]);
 
   const allFieldNamesUnique = useMemo(
     () => new Set(fields.map((f) => f.name.trim())).size === fields.length,
@@ -93,91 +81,42 @@ export default function CreateNodeSchemaForm({
 
   const isReadyToSubmit = useMemo(
     () =>
-      !!tableName.success && // table name is valid
-      fields.every((f) => !!f.name.trim()) && // every key isn't empty
-      primaryKeyCount === 1 && // only one primary key is allowed
-      allFieldNamesUnique, // all names unique
-    [tableName, fields, primaryKeyCount]
+      !!tableName.success &&
+      fields.every((f) => !!f.name.trim()) &&
+      allFieldNamesUnique,
+    [tableName, fields, allFieldNamesUnique]
   );
 
   const addNewField = () => {
-    const newField: NodeSchemaField = {
+    const newField: EdgeSchemaField = {
       name: "",
       type: NON_PK_SCHEMA_TYPES[0],
-      isPrimary: false,
     };
     setFields((prev) => [...prev, newField]);
   };
 
   const deleteField = (index: number) => {
-    setFields((prev) => [...prev.slice(0, index), ...prev.slice(index + 1)]);
+    setFields((prev) => {
+      return [...prev.slice(0, index), ...prev.slice(index + 1)];
+    });
   };
 
-  const updateField = (index: number, updates: Partial<NodeSchemaField>) => {
+  const updateField = (index: number, updates: Partial<EdgeSchemaField>) => {
     setFields((prev) =>
       prev.map((field, i) => (i === index ? { ...field, ...updates } : field))
     );
   };
 
-  const togglePrimaryKey = (index: number) => {
-    setFields((prev) =>
-      prev.map((field, i) => {
-        if (i === index) {
-          return {
-            ...field,
-            isPrimary: true,
-            type: PK_SCHEMA_TYPES.includes(field.type)
-              ? field.type
-              : PK_SCHEMA_TYPES[0],
-          };
-        }
-        return {
-          ...field,
-          isPrimary: false,
-          type: NON_PK_SCHEMA_TYPES.includes(field.type)
-            ? field.type
-            : NON_PK_SCHEMA_TYPES[0],
-        };
-      })
-    );
-  };
-
-  const store = useStore();
   const handleOnSubmit = async () => {
     if (isReadyToSubmit) {
-      const primaryKeyField = fields.find((f) => f.isPrimary);
-      const nonPrimaryFields = fields.filter((f) => !f.isPrimary);
-      let result = await createNodeSchema(
-        tableName.value!,
-        primaryKeyField!.name,
-        primaryKeyField!.type,
-        nonPrimaryFields
-      );
-
-      if (
-        result &&
-        !!result.nodes &&
-        !!result.edges &&
-        !!result.nodeTables &&
-        !!result.edgeTables
-      ) {
-        store.setGraphState({
-          nodes: result.nodes,
-          edges: result.edges,
-          nodeTables: result.nodeTables,
-          edgeTables: result.edgeTables,
-        });
-      }
+      toast.success("Edge schema created (not really, yet!)");
     }
   };
-  const NodeSchemaFormError = () => {
+
+  const SchemaFormError = () => {
     let errorMsg = "";
 
-    if (primaryKeyCount === 0) {
-      errorMsg = "You must specify exactly one primary key.";
-    } else if (primaryKeyCount > 1) {
-      errorMsg = "Only one primary key is allowed.";
-    } else if (!allFieldNamesUnique) {
+    if (!allFieldNamesUnique) {
       errorMsg = "Field names must be unique.";
     }
 
@@ -197,16 +136,14 @@ export default function CreateNodeSchemaForm({
       <div className="space-y-2">
         <p className="small-title">Fields</p>
         {/* Error */}
-        <NodeSchemaFormError />
+        <SchemaFormError />
         {fields.map((field, index) => (
           <SchemaFieldInputs
             key={index}
             field={field}
             onChangeName={(name) => updateField(index, { name })}
             onChangeType={(type) => updateField(index, { type })}
-            onTogglePrimary={() => togglePrimaryKey(index)}
             onDelete={() => deleteField(index)}
-            canDelete={fields.length > 1}
           />
         ))}
 
@@ -237,16 +174,12 @@ function SchemaFieldInputs({
   field,
   onChangeName,
   onChangeType,
-  onTogglePrimary,
   onDelete,
-  canDelete,
 }: {
-  field: NodeSchemaField;
+  field: EdgeSchemaField;
   onChangeName: (name: string | undefined) => void;
   onChangeType: (type: PrimaryKeyType | NonPrimaryKeyType) => void;
-  onTogglePrimary: () => void;
   onDelete: () => void;
-  canDelete: boolean;
 }) {
   // Create stable input definitions that don't change
   const nameInput = useMemo(
@@ -270,11 +203,11 @@ function SchemaFieldInputs({
         key: "property_type",
         displayName: "Property Type",
         source: "static",
-        options: field.isPrimary ? PK_SCHEMA_TYPES : NON_PK_SCHEMA_TYPES,
+        options: NON_PK_SCHEMA_TYPES,
         showLabel: false,
         required: true,
       }),
-    [field.isPrimary]
+    []
   );
 
   const [nameValue, setNameValue] = useState(() =>
@@ -292,17 +225,7 @@ function SchemaFieldInputs({
   }, [field.name, field.type]);
 
   return (
-    <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-2 items-start">
-      <Button
-        type="button"
-        variant={field.isPrimary ? "default" : "ghost"}
-        size="icon"
-        onClick={onTogglePrimary}
-        title={field.isPrimary ? "Primary Key" : "Set as Primary Key"}
-      >
-        <Key className="h-4 w-4" />
-      </Button>
-
+    <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-start">
       <InputComponent
         input={nameInput}
         value={nameValue.value}
@@ -326,7 +249,6 @@ function SchemaFieldInputs({
         variant="ghost"
         size="icon"
         onClick={onDelete}
-        disabled={!canDelete}
         title="Delete Field"
       >
         <X className="h-4 w-4" />

@@ -6,51 +6,22 @@ import InputComponent, {
   createEmptyInputResults,
 } from "~/features/visualizer/inputs";
 import { createSchemaInput } from "~/features/visualizer/schema-inputs";
-import type { NodeSchema } from "~/features/visualizer/types";
+import type { EdgeSchema } from "~/features/visualizer/types";
 import { capitalize } from "~/lib/utils";
 
-export default function CreateNodeDialogForm({
-  selectedNodeSchema,
-  nodeTablesMap,
+export default function CreateEdgeDialogForm({
+  selectedEdgeSchema,
+  edgeTablesMap,
 }: {
-  selectedNodeSchema: string;
-  nodeTablesMap: Map<string, NodeSchema>;
+  selectedEdgeSchema: string;
+  edgeTablesMap: Map<string, EdgeSchema>;
 }) {
-  const { database } = useStore();
-
-  const nodesWithinSameTable = useMemo(
-    () =>
-      database.graph.nodes.filter((t) => t.tableName === selectedNodeSchema),
-    [database.graph.nodes, selectedNodeSchema]
-  );
-
   const inputs = useMemo(() => {
-    const { primaryKey, primaryKeyType, properties } = nodeTablesMap.get(
-      selectedNodeSchema
-    ) as NodeSchema;
+    const { properties } = edgeTablesMap.get(selectedEdgeSchema) as EdgeSchema;
 
-    const primaryKeyInput = createSchemaInput(primaryKeyType, {
-      id: `${selectedNodeSchema}-${primaryKey}-pk`,
-      key: primaryKey,
-      displayName: capitalize(primaryKey),
-      placeholder: `Enter ${primaryKey}...`,
-      validator: (value: unknown) => {
-        const primaryKeyValueExists = nodesWithinSameTable.some(
-          (n) => n._primaryKeyValue === value
-        );
-        if (primaryKeyValueExists) {
-          return {
-            success: false,
-            message: "Node with this primary key value already exist",
-          };
-        }
-        return { success: true };
-      },
-    });
-
-    const nonPrimaryKeyInputs = Object.entries(properties).map(([key, type]) =>
+    const propertyInputs = Object.entries(properties).map(([key, type]) =>
       createSchemaInput(type, {
-        id: `${selectedNodeSchema}-${key}-non-pk`,
+        id: `${selectedEdgeSchema}-${key}`,
         key: key,
         displayName: capitalize(key),
         placeholder: `Enter ${key}...`,
@@ -58,8 +29,8 @@ export default function CreateNodeDialogForm({
       })
     );
 
-    return [primaryKeyInput, ...nonPrimaryKeyInputs];
-  }, [selectedNodeSchema]);
+    return propertyInputs;
+  }, [selectedEdgeSchema]);
 
   const [values, setValues] = useState(createEmptyInputResults(inputs));
 
@@ -74,7 +45,7 @@ export default function CreateNodeDialogForm({
 
   // TODO: Implement handleSubmit
   const handleSubmit = () => {
-    toast.success("Node created (not really, yet!)");
+    toast.success("Edge created (not really, yet!)");
   };
 
   return (

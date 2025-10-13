@@ -8,3 +8,9 @@ export function cn(...inputs: ClassValue[]) {
 export function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+export type NonEmpty<T> = [T, ...T[]];
+
+export function isNonEmpty<T>(arr: T[]): arr is NonEmpty<T> {
+  return arr.length > 0;
+}

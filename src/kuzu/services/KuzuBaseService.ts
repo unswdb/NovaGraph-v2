@@ -430,10 +430,11 @@ export default class KuzuBaseService {
     node1: GraphNode,
     node2: GraphNode,
     edgeTableName: string,
+    weight: number,
     attributes?: Record<string, string | number | boolean>
   ) {
     try {
-      const query = createEdgeQuery(node1, node2, edgeTableName, attributes);
+      const query = createEdgeQuery(node1, node2, edgeTableName, weight, attributes);
       const result = this.executeQuery(query);
       return result;
     } catch (error: any) {

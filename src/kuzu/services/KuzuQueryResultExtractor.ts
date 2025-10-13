@@ -182,7 +182,6 @@ export function parseEdgesResult(result: any): GraphEdge[] {
     return [];
   }
   const objects = result.getAllObjects();
-  // console.warn("Raw edge objects:", objects);
 
   const edges: GraphEdge[] = [];
   for (const obj of objects) {
@@ -248,7 +247,7 @@ export function parseEdgesResult(result: any): GraphEdge[] {
       source: sourceId,
       target: targetId,
       weight: 0,
-      // label: label.toString(),
+      tableName: label.toString(),
       ...(Object.keys(attributes).length > 0 ? { attributes } : {}),
     };
     edges.push(edge);

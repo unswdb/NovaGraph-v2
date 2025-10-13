@@ -1,5 +1,6 @@
-import type { GraphEdge, GraphNode } from "../../../types";
-import AddEdge from "./add-edge";
+import { useStore } from "~/features/visualizer/hooks/use-store";
+import type { EdgeSchema, GraphEdge, GraphNode } from "../../../types";
+import CreateEdge from "./create-edge";
 import EdgeListItem from "./edge-list-item";
 
 export default function EdgesList({
@@ -11,6 +12,8 @@ export default function EdgesList({
   outgoingEdges: [GraphNode, GraphEdge][];
   directed: boolean;
 }) {
+  const { database } = useStore();
+  const { edgeTablesMap } = database.graph;
   return (
     <>
       <div className="space-y-4">
@@ -23,6 +26,9 @@ export default function EdgesList({
                 source={node}
                 target={targetNode}
                 edge={targetEdge}
+                edgeSchema={
+                  edgeTablesMap.get(targetEdge.tableName) as EdgeSchema
+                }
                 directed={directed}
               />
             ))
@@ -34,7 +40,7 @@ export default function EdgesList({
         </div>
       </div>
       {/* Add Edge */}
-      <AddEdge
+      <CreateEdge
         source={node}
         outgoingEdges={outgoingEdges}
         directed={directed}

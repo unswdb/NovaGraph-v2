@@ -60,6 +60,11 @@ export default function GraphRenderer({ className }: { className?: string }) {
     });
   const { zoomToNode } = useZoomControls(cosmographRef);
 
+  // Unpause simulation if nodes/edges changed
+  useEffect(() => {
+    setIsSimulationPaused(false);
+  }, [nodes, edges]);
+
   // Start/pause simulation based on isSimulationPaused state
   useEffect(() => {
     if (isSimulationPaused) {
@@ -73,7 +78,7 @@ export default function GraphRenderer({ className }: { className?: string }) {
   const nodeOutgoingEdgesMap = useMemo(() => {
     const map: Record<string, [GraphNode, GraphEdge][]> = {};
 
-    database.graph.edges.forEach((edge) => {
+    edges.forEach((edge) => {
       // Source → Target
       if (!map[edge.source]) map[edge.source] = [];
       const target = nodesMap.get(edge.target);
@@ -144,6 +149,7 @@ export default function GraphRenderer({ className }: { className?: string }) {
         {/* Node Attributes Form */}
         {!!clickedNode && !!clickedNodeSchema && (
           <NodeMetadata
+            key={clickedNode.id}
             node={clickedNode}
             nodeSchema={clickedNodeSchema}
             outgoingEdges={nodeOutgoingEdgesMap[clickedNode.id] ?? []}

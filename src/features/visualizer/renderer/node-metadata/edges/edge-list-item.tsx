@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
-import type { GraphEdge, GraphNode } from "../../../types";
+import type { EdgeSchema, GraphEdge, GraphNode } from "../../../types";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,8 +23,6 @@ import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import InputComponent, {
   createEmptyInputResults,
-  createNumberInput,
-  createTextInput,
 } from "~/features/visualizer/inputs";
 import { capitalize } from "~/lib/utils";
 import { useMemo, useState } from "react";
@@ -33,40 +31,32 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
+import { createSchemaInput } from "~/features/visualizer/schema-inputs";
 
 export default function EdgeListItem({
   source,
   target,
   edge,
+  edgeSchema,
   directed,
 }: {
   source: GraphNode;
   target: GraphNode;
   edge: GraphEdge;
+  edgeSchema: EdgeSchema;
   directed: boolean;
 }) {
   const inputs = [
-    createNumberInput({
-      id: "edge-weight",
-      key: "weight",
-      displayName: "Weight",
-      placeholder: "Enter weight...",
-      defaultValue: edge.weight ?? 0,
-      min: 0,
-      step: 1,
-    }),
-    edge.attributes
-      ? Object.entries(edge.attributes).map(([key, value]) =>
-          createTextInput({
-            id: `edge-${key}`,
-            key,
-            displayName: capitalize(key),
-            placeholder: `Node ${capitalize(key)}`,
-            defaultValue: String(value),
-            required: false,
-          })
-        )
-      : [],
+    Object.entries(edgeSchema.properties).map(([key, type]) =>
+      createSchemaInput(type, {
+        id: `edge-${key}`,
+        key,
+        displayName: capitalize(key),
+        placeholder: `Enter ${key}...`,
+        defaultValue: edge.attributes?.[key] ?? undefined,
+        required: false,
+      })
+    ),
   ].flat();
 
   const [values, setValues] = useState(createEmptyInputResults(inputs));
@@ -83,7 +73,7 @@ export default function EdgeListItem({
 
   // TODO: Implement handleSubmit
   const handleSubmit = () => {
-    toast.success("Attributes updated (not really, yet!)");
+    toast.success("Edge attributes updated (not really, yet!)");
   };
 
   return (
@@ -96,7 +86,7 @@ export default function EdgeListItem({
             className="pl-2 flex-1 justify-between hover:bg-transparent"
           >
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <span className="truncate">
                   {target._primaryKeyValue} ({edge.weight}){" "}
                 </span>

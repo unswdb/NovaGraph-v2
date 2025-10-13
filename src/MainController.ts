@@ -2,7 +2,10 @@ import kuzuController from "./kuzu/controllers/KuzuController";
 import createModule from "./graph";
 import type { CompositeType } from "./types/KuzuDBTypes";
 import type { GraphNode } from "./features/visualizer/types";
-import type { NonPrimaryKeyType, PrimaryKeyType } from "./features/visualizer/schema-inputs";
+import type {
+  NonPrimaryKeyType,
+  PrimaryKeyType,
+} from "./features/visualizer/schema-inputs";
 
 class MainController {
   // Graph method starts here
@@ -126,10 +129,17 @@ class MainController {
       node1: GraphNode,
       node2: GraphNode,
       edgeTableName: string,
+      weight: number,
       attributes?: Record<string, string | number | boolean>
     ) {
       return Promise.resolve(
-        kuzuController.createEdge(node1, node2, edgeTableName, attributes)
+        kuzuController.createEdge(
+          node1,
+          node2,
+          edgeTableName,
+          weight,
+          attributes
+        )
       );
     },
   };

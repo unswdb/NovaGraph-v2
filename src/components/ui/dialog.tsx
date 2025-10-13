@@ -121,7 +121,7 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn("text-neutral-fore small-body", className)}
+      className={cn("text-typography-secondary small-body", className)}
       {...props}
     />
   );
