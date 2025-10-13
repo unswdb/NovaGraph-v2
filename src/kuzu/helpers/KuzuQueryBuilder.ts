@@ -228,13 +228,20 @@ export function createSchemaQuery(
  */
 export function createNodeQuery(
   tableName: string,
-  properties: Record<string, ValueWithType>
+  properties: Record<string, { value: any; success?: boolean; message?: string }>
 ): string {
   const entries = Object.entries(properties)
-    .map(([key, [type, value]]) => `${key}: ${_serialize(type, value)}`)
+    // Skip empty or undefined values
+    .filter(([, obj]) => obj && obj.value !== undefined && obj.value !== "")
+    .map(([key, obj]) => {
+      const value =
+        typeof obj.value === "string" ? `"${obj.value}"` : obj.value;
+      return `${key}: ${value}`;
+    })
     .join(", ");
-  const q = `CREATE (n:${tableName} {${entries}});`;
-  // console.log('createNodeQuery:', q);
+
+  const q = `CREATE (n:\`${tableName}\` {${entries}});`;
+  console.log("q: " + q);
   return q;
 }
 

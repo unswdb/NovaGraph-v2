@@ -78,7 +78,10 @@ class MainController {
       );
     },
 
-    async createNode(label: string, properties: Record<string, any> = {}) {
+    async createNode(
+      label: string, 
+      properties: Record<string, { value: any; success?: boolean; message?: string }>    
+    ) {
       return Promise.resolve(kuzuController.createNode(label, properties));
     },
 

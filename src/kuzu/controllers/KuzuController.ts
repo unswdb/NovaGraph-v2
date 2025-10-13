@@ -191,7 +191,10 @@ class KuzuController {
     );
   }
 
-  createNode(tableName: string, properties: Record<string, ValueWithType>) {
+  createNode(
+    tableName: string, 
+    properties: Record<string, { value: any; success?: boolean; message?: string }>
+  ) {
     if (!this.service) {
       throw new Error("Kuzu service not initialized");
     }
