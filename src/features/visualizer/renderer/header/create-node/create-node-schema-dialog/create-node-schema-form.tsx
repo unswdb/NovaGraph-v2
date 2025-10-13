@@ -149,8 +149,7 @@ export default function CreateNodeSchemaForm({
     if (isReadyToSubmit) {
       const primaryKeyField = fields.find((f) => f.isPrimary);
       const nonPrimaryFields = fields.filter((f) => !f.isPrimary);
-
-      const result = await createNodeSchema(
+      let result = await createNodeSchema(
         tableName.value!,
         primaryKeyField!.name,
         primaryKeyField!.type,

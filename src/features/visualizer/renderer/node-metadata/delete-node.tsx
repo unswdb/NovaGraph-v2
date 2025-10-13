@@ -27,8 +27,20 @@ export default function DeleteNodeButton({
   const handleDelete = async (node: GraphNode) => {
     await store.controller.db.deleteNode(node);
     let result = await store.controller.db.snapshotGraphState();
-    store.setNodes(result.nodes);
-    store.setEdges(result.edges);
+    if (
+      result &&
+      !!result.nodes &&
+      !!result.edges &&
+      !!result.nodeTables &&
+      !!result.edgeTables
+    ) {
+      store.setGraphState({
+        nodes: result.nodes,
+        edges: result.edges,
+        nodeTables: result.nodeTables,
+        edgeTables: result.edgeTables,
+      });
+    }
     onClose();
   };
 
