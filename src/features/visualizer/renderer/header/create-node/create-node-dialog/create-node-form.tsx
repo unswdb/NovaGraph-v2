@@ -5,9 +5,10 @@ import { useStore } from "~/features/visualizer/hooks/use-store";
 import InputComponent, {
   createEmptyInputResults,
 } from "~/features/visualizer/inputs";
-import { SCHEMA_INPUT_MAP } from "~/features/visualizer/schema-inputs";
+import { createSchemaInput } from "~/features/visualizer/schema-inputs";
 import type { NodeSchema } from "~/features/visualizer/types";
 import { useAsyncFn } from "~/hooks/use-async-fn";
+import { capitalize } from "~/lib/utils";
 
 export default function CreateNodeDialogForm({
   selectedNodeSchema,
@@ -28,12 +29,12 @@ export default function CreateNodeDialogForm({
     const { primaryKey, primaryKeyType, properties } =
       nodeSchemasMap[selectedNodeSchema];
 
-    const primaryKeyInput = SCHEMA_INPUT_MAP[primaryKeyType].build({
+    const primaryKeyInput = createSchemaInput(primaryKeyType, {
       id: `${selectedNodeSchema}-${primaryKey}-pk`,
       key: primaryKey,
-      displayName: primaryKey,
+      displayName: capitalize(primaryKey),
       placeholder: `Enter ${primaryKey}...`,
-      validator: (value) => {
+      validator: (value: unknown) => {
         const primaryKeyValueExists = nodesWithinSameTable.some(
           (n) => n._primaryKeyValue === value
         );
@@ -49,12 +50,13 @@ export default function CreateNodeDialogForm({
 
     // Todo: fix bug
     const nonPrimaryKeyInputs = Object.entries(properties).map(([key, type]) =>
-      SCHEMA_INPUT_MAP[type].build({
+      createSchemaInput(type, {
         id: `${selectedNodeSchema}-${key}-non-pk`,
         key: key,
-        displayName: key,
+        displayName: capitalize(key),
         placeholder: `Enter ${key}...`,
         required: false
+        required: false,
       })
     );
 
