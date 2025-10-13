@@ -144,17 +144,33 @@ export default function CreateNodeSchemaForm({
     );
   };
 
+  const store = useStore();
   const handleOnSubmit = async () => {
     if (isReadyToSubmit) {
       const primaryKeyField = fields.find((f) => f.isPrimary);
       const nonPrimaryFields = fields.filter((f) => !f.isPrimary);
 
-      createNodeSchema(
+      const result = await createNodeSchema(
         tableName.value!,
         primaryKeyField!.name,
         primaryKeyField!.type,
         nonPrimaryFields
       );
+
+      if (
+        result &&
+        !!result.nodes &&
+        !!result.edges &&
+        !!result.nodeTables &&
+        !!result.edgeTables
+      ) {
+        store.setGraphState({
+          nodes: result.nodes,
+          edges: result.edges,
+          nodeTables: result.nodeTables,
+          edgeTables: result.edgeTables,
+        });
+      }
     }
   };
   const NodeSchemaFormError = () => {
