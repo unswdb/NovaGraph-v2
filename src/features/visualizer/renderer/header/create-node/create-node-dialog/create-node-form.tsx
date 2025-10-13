@@ -56,7 +56,6 @@ export default function CreateNodeDialogForm({
         displayName: capitalize(key),
         placeholder: `Enter ${key}...`,
         required: false
-        required: false,
       })
     );
 
