@@ -12,6 +12,13 @@ export const BlobSchemaInput = defineSchemaInput({
   build: (args: PropsForInput<FileInput>) => {
     return createFileInput({
       ...args,
+      validator: (value: File) => {
+        const maxLimit = 4 * 1024; // 4 Kb
+        if (value.size > maxLimit) {
+          return { success: false, message: "File size must not exceed 4 KB" };
+        }
+        return { success: true };
+      },
     });
   },
 });
