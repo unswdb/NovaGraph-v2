@@ -87,15 +87,16 @@ export default function CreateNodeDialogForm({
   });
 
   const handleOnSubmit = async () => {
-    console.log(selectedNodeSchema)
-    console.log(values)
-    console.log(typeof values)
+    // console.log(selectedNodeSchema)
+    // console.log(values)
+    // console.log(typeof values)
 
     let result = await createNode(
       selectedNodeSchema,
       values
     );
 
+    console.log(result)
     if (
       result &&
       !!result.nodes &&
