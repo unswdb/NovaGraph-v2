@@ -86,7 +86,7 @@ export default function AddEdge({
           <X />
         </Button>
         {/* Node picker */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <InputComponent
             input={addEdgeInput}
             value={values[addEdgeInput.key]?.value}

@@ -194,9 +194,11 @@ function AlgorithmSingleSelectInputComponent({
             className="w-full justify-between"
             disabled={input.disabled}
           >
-            {value
-              ? sources.find((source) => source.value === value)?.label
-              : placeholder}
+            <span className="truncate">
+              {value
+                ? sources.find((source) => source.value === value)?.label
+                : placeholder}
+            </span>
             <ChevronsUpDown className="opacity-50" />
           </Button>
         </PopoverTrigger>

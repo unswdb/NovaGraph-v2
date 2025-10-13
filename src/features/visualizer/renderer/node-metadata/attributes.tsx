@@ -38,6 +38,7 @@ export default function AttributesForm({
         key: key,
         displayName: capitalize(key),
         defaultValue: (node.attributes ?? {})[key],
+        required: false,
       })
     ),
   ].flat();
