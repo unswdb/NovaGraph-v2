@@ -8,7 +8,6 @@ import InputComponent, {
 import { SCHEMA_INPUT_MAP } from "~/features/visualizer/schema-inputs";
 import type { NodeSchema } from "~/features/visualizer/types";
 import { useAsyncFn } from "~/hooks/use-async-fn";
-import { capitalize } from "~/lib/utils";
 
 export default function CreateNodeDialogForm({
   selectedNodeSchema,
@@ -32,7 +31,7 @@ export default function CreateNodeDialogForm({
     const primaryKeyInput = SCHEMA_INPUT_MAP[primaryKeyType].build({
       id: `${selectedNodeSchema}-${primaryKey}-pk`,
       key: primaryKey,
-      displayName: capitalize(primaryKey),
+      displayName: primaryKey,
       placeholder: `Enter ${primaryKey}...`,
       validator: (value) => {
         const primaryKeyValueExists = nodesWithinSameTable.some(
@@ -53,7 +52,7 @@ export default function CreateNodeDialogForm({
       SCHEMA_INPUT_MAP[type].build({
         id: `${selectedNodeSchema}-${key}-non-pk`,
         key: key,
-        displayName: capitalize(key),
+        displayName: key,
         placeholder: `Enter ${key}...`,
         required: false
       })

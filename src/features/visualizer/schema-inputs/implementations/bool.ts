@@ -6,8 +6,8 @@ import {
 import { defineSchemaInput } from "../types";
 
 export const BooleanSchemaInput = defineSchemaInput({
-  type: "BOOLEAN" as const,
-  displayName: "BOOLEAN",
+  type: "BOOL" as const,
+  displayName: "BOOL",
   contexts: ["non-primary"],
   build: (args: PropsForInput<SwitchInput>) => {
     return createSwitchInput({
