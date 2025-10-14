@@ -470,3 +470,34 @@ function _serialize(type: CompositeType, value: any): string {
 
   throw new Error(`Unsupported CompositeType: ${JSON.stringify(type)}`);
 }
+
+function _normalizeTimestamp(value: string): string {
+  // Replace "T" with a space if present
+  let v = value.trim().replace("T", " ");
+
+  // If it already includes seconds, leave it as-is
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(v)) return v;
+
+  // If it has only hours and minutes, add seconds
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(v)) return v + ":00";
+
+  // If it includes timezone info, don’t modify the time part
+  if (/[\+\-]\d{2}:?\d{2}$/.test(v)) return v;
+
+  // If input is invalid, return as-is or throw
+  throw new Error(`Unrecognized timestamp format: "${value}". Expected formats like "YYYY-MM-DD hh:mm:ss"`);
+}
+
+function _formatQueryInput(value: any) {
+  const inferredType = typeof value;
+  if (value instanceof Date || (inferredType === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value))) {
+    return `date("${value}")`;
+  } else if (value instanceof Date || (inferredType === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value))) {
+    return `timestamp("${_normalizeTimestamp(value)}")`;
+  } else if (inferredType === "string") {
+    return `"${value}"`;
+  } else if (inferredType === "number") {
+    return value;
+  }
+  throw Error("Unsupported type!")
+}
