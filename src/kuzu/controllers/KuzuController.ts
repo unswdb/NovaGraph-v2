@@ -233,6 +233,21 @@ class KuzuController {
       attributes
     );
   }
+
+  async deleteEdge(
+    node1: GraphNode,
+    node2: GraphNode,
+    edgeTableName: string,
+  ) {
+    if (!this.service) {
+      throw new Error("Kuzu service not initialized");
+    }
+    return this.service.deleteEdge(
+      node1,
+      node2,
+      edgeTableName,
+    );
+  }
   // /**
   //  * Builds a Cypher query to delete a node (and all its relationships) by primary key.
   //  *
