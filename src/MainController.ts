@@ -153,6 +153,22 @@ class MainController {
         )
       );
     },
+
+    async updateEdge(
+      node1: GraphNode,
+      node2: GraphNode,
+      edgeTableName: string,
+      values: Record<string, InputChangeResult<any>>
+    ) {
+      return Promise.resolve(
+        kuzuController.updateEdge(
+          node1,
+          node2,
+          edgeTableName,
+          values
+        )
+      );
+    },
   };
 
   _internal = {

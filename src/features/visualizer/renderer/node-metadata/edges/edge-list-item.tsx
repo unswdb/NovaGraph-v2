@@ -32,6 +32,7 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import { createSchemaInput } from "~/features/visualizer/schema-inputs";
+import { useStore } from "~/features/visualizer/hooks/use-store";
 
 export default function EdgeListItem({
   source,
@@ -72,7 +73,36 @@ export default function EdgeListItem({
   };
 
   // TODO: Implement handleSubmit
-  const handleSubmit = () => {
+  const store = useStore();
+  const handleSubmit = async () => {
+    // console.log("source:", JSON.stringify(source, null, 2));
+    // console.log("target:", JSON.stringify(target, null, 2));
+    // console.log("values:", JSON.stringify(values, null, 2));
+    // console.log("edgeSchema.tableName:", JSON.stringify(edgeSchema.tableName, null, 2));
+    
+    // console.log(
+    //   "result:",
+    //   JSON.stringify(
+    //     result,
+    //     (key, value) => (typeof value === "bigint" ? value.toString() : value),
+    //     2 // ← this should be the third argument to JSON.stringify
+    //   )
+    // );
+    
+    let result = await store.controller.db.updateEdge(source, target, edgeSchema.tableName ,values);
+    if (
+      !!result.nodes &&
+      !!result.edges &&
+      !!result.nodeTables &&
+      !!result.edgeTables
+    ) {
+      store.setGraphState({
+        nodes: result.nodes,
+        edges: result.edges,
+        nodeTables: result.nodeTables,
+        edgeTables: result.edgeTables,
+      });
+    }
     toast.success("Edge attributes updated (not really, yet!)");
   };
 

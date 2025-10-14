@@ -15,7 +15,7 @@ import {
   createEdgeSchemaQuery,
   createEdgeQuery,
   createNodeSchemaQuery,
-  updateNodeQuery,
+  updateEdgeQuery,
 } from "../helpers/KuzuQueryBuilder";
 
 import type { CompositeType, ValueWithType } from "~/types/KuzuDBTypes";
@@ -469,6 +469,22 @@ export default class KuzuBaseService {
     }
   }
 
+  updateEdge(    
+    node1: GraphNode, 
+    node2: GraphNode,
+    edgeTableName: string,
+    values: Record<string, InputChangeResult<any>>
+  ) {
+    const query = updateEdgeQuery(node1, node2, edgeTableName, values);
+    const result = this.executeQuery(query);
+    if (!result.success) {
+      const fq = result.failedQueries?.[0];
+      const rawMsg = fq?.message ?? "Unknown error";
+      console.error("updateEdge Failed query (full):", fq);
+      throw new Error(rawMsg);
+    }
+    return result;
+  }  
   getAllSchemaProperties() {
     const { nodeTables, edgeTables } = this.snapshotGraphState();
     return { nodeTables, edgeTables };
