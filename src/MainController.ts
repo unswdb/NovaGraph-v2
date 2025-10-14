@@ -154,6 +154,20 @@ class MainController {
       );
     },
 
+    async deleteEdge(
+      node1: GraphNode,
+      node2: GraphNode,
+      edgeTableName: string,
+    ) {
+      return Promise.resolve(
+        kuzuController.deleteEdge(
+          node1,
+          node2,
+          edgeTableName,
+        )
+      );
+    },
+
     async updateEdge(
       node1: GraphNode,
       node2: GraphNode,
@@ -170,6 +184,7 @@ class MainController {
       );
     },
   };
+
 
   _internal = {
     /**

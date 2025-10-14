@@ -68,12 +68,26 @@ export default function EdgeListItem({
   );
 
   // TODO: Implement handleDeleteEdge
-  const handleDeleteEdge = (node1: GraphNode, node2: GraphNode) => {
+  const store = useStore();
+  const handleDeleteEdge = async (node1: GraphNode, node2: GraphNode) => {
+    let result = await store.controller.db.deleteEdge(node1, node2, edgeSchema.tableName);
+    if (
+      !!result.nodes &&
+      !!result.edges &&
+      !!result.nodeTables &&
+      !!result.edgeTables
+    ) {
+      store.setGraphState({
+        nodes: result.nodes,
+        edges: result.edges,
+        nodeTables: result.nodeTables,
+        edgeTables: result.edgeTables,
+      });
+    }
     toast.success("Edge deleted (not really, yet!)");
   };
 
   // TODO: Implement handleSubmit
-  const store = useStore();
   const handleSubmit = async () => {
     // console.log("source:", JSON.stringify(source, null, 2));
     // console.log("target:", JSON.stringify(target, null, 2));

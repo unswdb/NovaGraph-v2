@@ -16,7 +16,8 @@ import {
   createEdgeQuery,
   createNodeSchemaQuery,
   updateEdgeQuery,
-  updateNodeQuery
+  updateNodeQuery,
+  deleteEdgeQuery,
 } from "../helpers/KuzuQueryBuilder";
 
 import type { CompositeType, ValueWithType } from "~/types/KuzuDBTypes";
@@ -468,6 +469,22 @@ export default class KuzuBaseService {
         error: `Error create Edge: ${error.message}`,
       };
     }
+  }
+
+  deleteEdge(
+    node1: GraphNode,
+    node2: GraphNode,
+    edgeTableName: string,
+  ) {
+    const query = deleteEdgeQuery(node1, node2, edgeTableName);
+    const result = this.executeQuery(query);
+    if (!result.success) {
+      const fq = result.failedQueries?.[0];
+      const rawMsg = fq?.message ?? "Unknown error";
+      console.error("deleteEdge Failed query (full):", fq);
+      throw new Error(rawMsg);
+    }
+    return result;
   }
 
   updateEdge(    

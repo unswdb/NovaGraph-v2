@@ -48,14 +48,18 @@ export function createEdgeQuery(
 }
 
 export function deleteEdgeQuery(
-  edgeTableName: string,
   node1: GraphNode,
-  node2: GraphNode
+  node2: GraphNode,
+  edgeTableName: string,
 ) {
-  const query = `MATCH (u:\`${node1.tableName}\`)-[f:\`${edgeTableName}\`]->(u1:\`${node2.tableName}\`)
-WHERE u.\`${node1._primaryKey}\` = '${node1._primaryKeyValue}' AND u1.\`${node2._primaryKey}\` = '${node2._primaryKeyValue}'
-DELETE f;
-`;
+  const query = `
+  MATCH (u:${node1.tableName})-[f:${edgeTableName}]->(u1:${node2.tableName})
+  WHERE u.\`${node1._primaryKey}\` = '${node1._primaryKeyValue}' 
+  AND u1.\`${node2._primaryKey}\` = '${node2._primaryKeyValue}'
+  DELETE f;
+  `;
+
+  console.log("query: " + query)
   return query;
 }
 
