@@ -31,6 +31,7 @@ export default function AttributesForm({
       key: nodeSchema.primaryKey,
       displayName: capitalize(nodeSchema.primaryKey),
       defaultValue: node._primaryKeyValue,
+      disabled: true,
     }),
     ...Object.entries(nodeSchema.properties).map(([key, type]) =>
       createSchemaInput(type, {
