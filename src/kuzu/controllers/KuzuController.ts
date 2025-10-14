@@ -5,6 +5,7 @@ import type {
   NonPrimaryKeyType,
   PrimaryKeyType,
 } from "~/features/visualizer/schema-inputs";
+import type { InputChangeResult } from "~/features/visualizer/inputs";
 
 /**
  * This class is used to handle logic related to Kuzu before exposing into the highest API
@@ -261,6 +262,17 @@ class KuzuController {
   //   return this.service.deleteNodeWithoutPrimary(tableName, primaryValue)
   // }
 
+  updateEdge(  
+    node1: GraphNode, 
+    node2: GraphNode,
+    edgeTableName: string,
+    values: Record<string, InputChangeResult<any>>
+  ) {
+    if (!this.service) {
+      throw new Error("Kuzu service not initialized");
+    }
+    return this.service.updateEdge(node1, node2, edgeTableName, values);
+  }
   deleteNode(node: GraphNode) {
     if (!this.service) {
       throw new Error("Kuzu service not initialized");

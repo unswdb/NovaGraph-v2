@@ -43,8 +43,7 @@ export function createEdgeQuery(
     AND u2.\`${node2._primaryKey}\` = "${node2._primaryKeyValue}"
   CREATE (u1)-[:\`${edgeTableName}\` ${propString}]->(u2);
   `;
-
-  console.log("Query: " + query);
+  // console.log("Query: " + query);
   return query;
 }
 
@@ -66,20 +65,21 @@ export function updateEdgeQuery(
   edgeTableName: string,
   values: Record<string, InputChangeResult<any>>
 ) {
-
-  console.log("Here\n")
-
-  for (let obj in values) {
-    console.log(obj)
+  console.log("updateEdgeQuery Here\n")
+  let attriutesMappingString = "";
+  for (const [key, val] of Object.entries(values)) {
+    attriutesMappingString += `, f.\`${key}\` = ${_formatQueryInput(val.value)}`;
   }
 
   let query = `
   MATCH (u0:${node1.tableName})-[f:${edgeTableName}]->(u1:${node2.tableName})
-  WHERE u0.nam\`${node1._primaryKey}\` = \`${node1._primaryKeyValue}\` AND u1.\`${node2._primaryKey}\` = \`${node1._primaryKeyValue}\`
-  SET f.since = 2012
+  WHERE u0.\`${(node1._primaryKey)}\` = ${_formatQueryInput(node1._primaryKeyValue)} 
+  AND u1.\`${node2._primaryKey}\` = ${_formatQueryInput(node2._primaryKeyValue)}
+  SET ${attriutesMappingString.slice(2)}
   RETURN f;
   `
-  // console.log(query)
+  console.log(query)
+  return query
 } 
 
 
@@ -516,13 +516,19 @@ function _normalizeTimestamp(value: string): string {
 function _formatQueryInput(value: any) {
   const inferredType = typeof value;
   if (value instanceof Date || (inferredType === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value))) {
-    return `date("${value}")`;
+    let isoDate = value;
+    if (value && typeof value.toISOString === "function") {
+      isoDate = value.toISOString().split("T")[0];
+    }
+    return `date("${isoDate}")`;
   } else if (value instanceof Date || (inferredType === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value))) {
     return `timestamp("${_normalizeTimestamp(value)}")`;
   } else if (inferredType === "string") {
     return `"${value}"`;
   } else if (inferredType === "number") {
     return value;
+  } else if (inferredType === "boolean") {
+    return value
   }
-  throw Error("Unsupported type!")
+  throw Error("Unsupported type: " + value)
 }

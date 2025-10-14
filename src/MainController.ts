@@ -6,6 +6,7 @@ import type {
   NonPrimaryKeyType,
   PrimaryKeyType,
 } from "./features/visualizer/schema-inputs";
+import type { InputChangeResult } from "./features/visualizer/inputs";
 
 class MainController {
   // Graph method starts here
@@ -139,6 +140,22 @@ class MainController {
           edgeTableName,
           weight,
           attributes
+        )
+      );
+    },
+
+    async updateEdge(
+      node1: GraphNode,
+      node2: GraphNode,
+      edgeTableName: string,
+      values: Record<string, InputChangeResult<any>>
+    ) {
+      return Promise.resolve(
+        kuzuController.updateEdge(
+          node1,
+          node2,
+          edgeTableName,
+          values
         )
       );
     },
