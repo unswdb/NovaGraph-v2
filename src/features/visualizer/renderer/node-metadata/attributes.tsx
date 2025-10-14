@@ -8,6 +8,8 @@ import { Button } from "~/components/ui/button";
 import { toast } from "sonner";
 import { capitalize } from "~/lib/utils";
 import { createSchemaInput } from "../../schema-inputs";
+import { useStore } from "../../hooks/use-store";
+import { useAsyncFn } from "~/hooks/use-async-fn";
 
 export default function AttributesForm({
   node,
@@ -50,9 +52,36 @@ export default function AttributesForm({
     [values]
   );
 
-  // TODO: Implement handleSubmit
-  const handleSubmit = () => {
-    toast.success("Node attributes updated (not really, yet!)");
+  const store = useStore();
+  const {
+    run: updateNode,
+    isLoading,
+    getErrorMessage,
+  } = useAsyncFn(store.controller.db.updateNode.bind(store.controller.db), {
+    onSuccess: (result) => {
+      toast.success("Node attributes updated");
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err));
+    },
+  });
+
+  const handleSubmit = async () => {
+    let result = await updateNode(node, values);
+    if (
+      result &&
+      !!result.nodes &&
+      !!result.edges &&
+      !!result.nodeTables &&
+      !!result.edgeTables
+    ) {
+      store.setGraphState({
+        nodes: result.nodes,
+        edges: result.edges,
+        nodeTables: result.nodeTables,
+        edgeTables: result.edgeTables,
+      });
+    }
   };
 
   return (

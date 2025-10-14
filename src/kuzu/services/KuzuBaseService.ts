@@ -15,6 +15,7 @@ import {
   createEdgeSchemaQuery,
   createEdgeQuery,
   createNodeSchemaQuery,
+  updateNodeQuery,
 } from "../helpers/KuzuQueryBuilder";
 
 import type { CompositeType, ValueWithType } from "~/types/KuzuDBTypes";
@@ -27,6 +28,7 @@ import type {
   NonPrimaryKeyType,
   PrimaryKeyType,
 } from "~/features/visualizer/schema-inputs";
+import type { InputChangeResult } from "~/features/visualizer/inputs";
 
 // type QueryResultSync = import("../../types/kuzu-wasm/sync/query_result");
 
@@ -365,6 +367,25 @@ export default class KuzuBaseService {
         error: `Error creating node: ${error.message}`,
       };
     }
+  }
+
+  updateNode(  
+    node: GraphNode,
+    values: Record<string, InputChangeResult<any>>
+  ) {
+    const query = updateNodeQuery(
+      node,
+      values
+    );
+    const result = this.executeQuery(query);
+    if (!result.success) {
+      const fq = result.failedQueries?.[0];
+      const rawMsg = fq?.message ?? "Unknown error";
+      console.error("updateNode failed query:", fq);
+      let friendlyMsg = rawMsg;
+      throw new Error(friendlyMsg);
+    }
+    return result;
   }
 
   findPrimaryKey(tableName: string) {

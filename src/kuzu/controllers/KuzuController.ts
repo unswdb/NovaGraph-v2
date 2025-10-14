@@ -5,6 +5,7 @@ import type {
   NonPrimaryKeyType,
   PrimaryKeyType,
 } from "~/features/visualizer/schema-inputs";
+import type { InputChangeResult } from "~/features/visualizer/inputs";
 
 /**
  * This class is used to handle logic related to Kuzu before exposing into the highest API
@@ -232,6 +233,16 @@ class KuzuController {
       weight,
       attributes
     );
+  }
+
+  updateNode(  
+    node: GraphNode,
+    values: Record<string, InputChangeResult<any>>
+  ) {
+    if (!this.service) {
+      throw new Error("Kuzu service not initialized");
+    }
+    return this.service.updateNode(node, values)
   }
   // /**
   //  * Builds a Cypher query to delete a node (and all its relationships) by primary key.

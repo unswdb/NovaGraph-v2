@@ -6,6 +6,7 @@ import type {
   NonPrimaryKeyType,
   PrimaryKeyType,
 } from "./features/visualizer/schema-inputs";
+import type { InputChangeResult } from "./features/visualizer/inputs";
 
 class MainController {
   // Graph method starts here
@@ -94,6 +95,13 @@ class MainController {
     // async deleteNodeWithoutPrimary(tableName: string, primaryValue: any) {
     //   return Promise.resolve(kuzuController.deleteNodeWithoutPrimary(tableName, primaryValue));
     // },
+
+    async updateNode(  
+      node: GraphNode,
+      values: Record<string, InputChangeResult<any>>
+    ) {
+      return Promise.resolve(kuzuController.updateNode(node, values));
+    },
 
     async deleteNode(node: GraphNode) {
       return Promise.resolve(kuzuController.deleteNode(node));
