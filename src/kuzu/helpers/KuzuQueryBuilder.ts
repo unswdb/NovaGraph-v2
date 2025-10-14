@@ -15,6 +15,7 @@ import type {
   NonPrimaryKeyType,
   PrimaryKeyType,
 } from "~/features/visualizer/schema-inputs";
+import type { InputChangeResult } from "~/features/visualizer/inputs";
 
 export function createEdgeQuery(
   node1: GraphNode,
@@ -58,6 +59,30 @@ DELETE f;
 `;
   return query;
 }
+
+export function updateEdgeQuery(
+  node1: GraphNode, 
+  node2: GraphNode,
+  edgeTableName: string,
+  values: Record<string, InputChangeResult<any>>
+) {
+
+  console.log("Here\n")
+
+  for (let obj in values) {
+    console.log(obj)
+  }
+
+  let query = `
+  MATCH (u0:${node1.tableName})-[f:${edgeTableName}]->(u1:${node2.tableName})
+  WHERE u0.nam\`${node1._primaryKey}\` = \`${node1._primaryKeyValue}\` AND u1.\`${node2._primaryKey}\` = \`${node1._primaryKeyValue}\`
+  SET f.since = 2012
+  RETURN f;
+  `
+  // console.log(query)
+} 
+
+
 
 export function createEdgeSchemaQuery(
   tableName: string,

@@ -32,6 +32,7 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import { createSchemaInput } from "~/features/visualizer/schema-inputs";
+import { updateEdgeQuery } from "~/kuzu/helpers/KuzuQueryBuilder";
 
 export default function EdgeListItem({
   source,
@@ -73,6 +74,12 @@ export default function EdgeListItem({
 
   // TODO: Implement handleSubmit
   const handleSubmit = () => {
+    console.log("source:", JSON.stringify(source, null, 2));
+    console.log("target:", JSON.stringify(target, null, 2));
+    console.log("values:", JSON.stringify(values, null, 2));
+    console.log("edgeSchema.tableName:", JSON.stringify(edgeSchema.tableName, null, 2));
+    
+    updateEdgeQuery(source, target, edgeSchema.tableName ,values);
     toast.success("Edge attributes updated (not really, yet!)");
   };
 
