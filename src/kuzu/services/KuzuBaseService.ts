@@ -351,7 +351,10 @@ export default class KuzuBaseService {
     return result;
   }
 
-  createNode(tableName: string, properties: Record<string, ValueWithType>) {
+  createNode(
+    tableName: string, 
+    properties: Record<string, { value: any; success?: boolean; message?: string }>
+  ) {
     try {
       // Build the query using the function directly
       const query = createNodeQuery(tableName, properties);

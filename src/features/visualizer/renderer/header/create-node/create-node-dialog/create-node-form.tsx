@@ -7,6 +7,7 @@ import InputComponent, {
 } from "~/features/visualizer/inputs";
 import { createSchemaInput } from "~/features/visualizer/schema-inputs";
 import type { NodeSchema } from "~/features/visualizer/types";
+import { useAsyncFn } from "~/hooks/use-async-fn";
 import { capitalize } from "~/lib/utils";
 
 export default function CreateNodeDialogForm({
@@ -48,13 +49,14 @@ export default function CreateNodeDialogForm({
       },
     });
 
+    // Todo: fix bug
     const nonPrimaryKeyInputs = Object.entries(properties).map(([key, type]) =>
       createSchemaInput(type, {
         id: `${selectedNodeSchema}-${key}-non-pk`,
         key: key,
         displayName: capitalize(key),
         placeholder: `Enter ${key}...`,
-        required: false,
+        required: false
       })
     );
 
@@ -72,9 +74,45 @@ export default function CreateNodeDialogForm({
     [values]
   );
 
-  // TODO: Implement handleSubmit
-  const handleSubmit = () => {
-    toast.success("Node created (not really, yet!)");
+  const store = useStore();
+  const {
+    run: createNode,
+    isLoading,
+    getErrorMessage,
+  } = useAsyncFn(store.controller.db.createNode.bind(store.controller.db), {
+    onSuccess: (result) => {
+      toast.success("Node created successfully!");
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err));
+    },
+  });
+
+  const handleOnSubmit = async () => {
+    // console.log(selectedNodeSchema)
+    // console.log(values)
+    // console.log(typeof values)
+
+    let result = await createNode(
+      selectedNodeSchema,
+      values
+    );
+
+    console.log(result)
+    if (
+      result &&
+      !!result.nodes &&
+      !!result.edges &&
+      !!result.nodeTables &&
+      !!result.edgeTables
+    ) {
+      store.setGraphState({
+        nodes: result.nodes,
+        edges: result.edges,
+        nodeTables: result.nodeTables,
+        edgeTables: result.edgeTables,
+      });
+    }
   };
 
   return (
@@ -97,8 +135,8 @@ export default function CreateNodeDialogForm({
       <div className="ml-auto">
         <Button
           type="submit"
-          onClick={handleSubmit}
-          disabled={!isReadyToSubmit}
+          onClick={handleOnSubmit}
+          disabled={!isReadyToSubmit || isLoading}
           className="flex-1"
         >
           Create

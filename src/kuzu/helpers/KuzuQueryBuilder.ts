@@ -232,13 +232,39 @@ export function createSchemaQuery(
  */
 export function createNodeQuery(
   tableName: string,
-  properties: Record<string, ValueWithType>
+  properties: Record<string, { value: any; success?: boolean; message?: string }>
 ): string {
   const entries = Object.entries(properties)
-    .map(([key, [type, value]]) => `${key}: ${_serialize(type, value)}`)
+    .filter(([, obj]) => obj && obj.value !== undefined && obj.value !== "")
+    .map(([key, obj]) => {
+      let { value } = obj;
+      const inferredType = typeof value;
+
+      // --- Handle DATE ---
+      if (
+        value instanceof Date ||
+        (inferredType === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value))
+      ) {
+        value = `date("${value}")`;
+
+      // --- Handle TIMESTAMP (string with time or Date) ---
+      } else if (
+        value instanceof Date ||
+        (inferredType === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value))
+      ) {
+        value = `timestamp("${_normalizeTimestamp(value)}")`;
+        
+      // --- Handle normal strings ---
+      } else if (inferredType === "string") {
+        value = `"${value}"`;
+      }
+
+      return `${key}: ${value}`;
+    })
     .join(", ");
-  const q = `CREATE (n:${tableName} {${entries}});`;
-  // console.log('createNodeQuery:', q);
+
+  const q = `CREATE (n:\`${tableName}\` {${entries}});`;
+  console.log("q: " + q);
   return q;
 }
 
