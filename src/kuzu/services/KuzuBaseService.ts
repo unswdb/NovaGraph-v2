@@ -16,6 +16,7 @@ import {
   createEdgeQuery,
   createNodeSchemaQuery,
   updateEdgeQuery,
+  updateNodeQuery
 } from "../helpers/KuzuQueryBuilder";
 
 import type { CompositeType, ValueWithType } from "~/types/KuzuDBTypes";
