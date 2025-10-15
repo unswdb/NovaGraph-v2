@@ -6,11 +6,25 @@ import { Tabs, TabsContent } from "~/components/ui/tabs";
 import CodeTabContent from "./code";
 import OutputTabContent from "./output";
 import { useStore } from "../hooks/use-store";
+import ProblemsTabContent from "./problems";
+import { observer } from "mobx-react-lite";
+import { toast } from "sonner";
+import type { ExecuteQueryResult } from "../types";
+import { controller } from "~/MainController";
 
 const DRAWER_HEIGHT = "18rem";
 
-export function CodeOutputDrawer({ className }: { className?: string }) {
-  const { activeAlgorithm, activeResponse } = useStore();
+const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
+  const {
+    code,
+    setCode,
+    problems,
+    setProblems,
+    setGraphState,
+    activeAlgorithm,
+    activeResponse,
+    controller,
+  } = useStore();
 
   // States
   const [tabValue, setTabValue] = useState("code");
@@ -24,6 +38,28 @@ export function CodeOutputDrawer({ className }: { className?: string }) {
       setTabValue("output");
     }
   }, [activeAlgorithm, activeResponse]);
+
+  const onSuccessQuery = (result: ExecuteQueryResult) => {
+    setProblems([]);
+    setGraphState({
+      nodes: result.nodes,
+      edges: result.edges,
+      nodeTables: result.nodeTables,
+      edgeTables: result.edgeTables,
+    });
+    toast.success("Query executed successfully!");
+  };
+
+  const onErrorQuery = (result: ExecuteQueryResult) => {
+    setProblems(result.failedQueries.map((q) => q.message));
+    toast.error("Some queries failed", {
+      action: {
+        label: "See problems",
+        onClick: () => setTabValue("problems"),
+      },
+    });
+    return;
+  };
 
   return (
     <div
@@ -75,7 +111,25 @@ export function CodeOutputDrawer({ className }: { className?: string }) {
             {/* Content for Code */}
             <TabsContent value="code" className="flex flex-col">
               <CodeTabContent
-                enableOutput={!!activeAlgorithm && !!activeResponse}
+                code={code}
+                setCode={setCode}
+                runQuery={controller.db.executeQuery.bind(controller.db)}
+                onSuccessQuery={onSuccessQuery}
+                onErrorQuery={onErrorQuery}
+                tabControls={{
+                  problemsLen: problems.length,
+                  enableOutput: !!activeAlgorithm && !!activeResponse,
+                }}
+              />
+            </TabsContent>
+            {/* TODO: Content for Problems */}
+            <TabsContent value="problems" className="flex flex-col">
+              <ProblemsTabContent
+                problems={problems}
+                tabControls={{
+                  problemsLen: problems.length,
+                  enableOutput: !!activeAlgorithm && !!activeResponse,
+                }}
               />
             </TabsContent>
             {/* Content for Output */}
@@ -83,7 +137,10 @@ export function CodeOutputDrawer({ className }: { className?: string }) {
               <OutputTabContent
                 activeAlgorithm={activeAlgorithm}
                 activeResponse={activeResponse}
-                enableOutput={!!activeAlgorithm && !!activeResponse}
+                tabControls={{
+                  problemsLen: problems.length,
+                  enableOutput: !!activeAlgorithm && !!activeResponse,
+                }}
               />
             </TabsContent>
           </Tabs>
@@ -91,4 +148,6 @@ export function CodeOutputDrawer({ className }: { className?: string }) {
       </div>
     </div>
   );
-}
+});
+
+export default CodeOutputDrawer;

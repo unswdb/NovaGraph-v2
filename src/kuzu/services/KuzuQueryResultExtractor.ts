@@ -306,8 +306,6 @@ export function queryResultColorMapExtraction(result: any) {
             const sourceId = `${entity._src.table}_${entity._src.offset}`;
             const targetId = `${entity._dst.table}_${entity._dst.offset}`;
             colorMap[`${sourceId}-${targetId}`] = 1;
-          } else {
-            console.log("Unrecognized entity type - skipping");
           }
         }
       }

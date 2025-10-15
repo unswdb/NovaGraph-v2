@@ -8,21 +8,21 @@ import ExportDropdownButton from "../export/export-dropdown-button";
 export default function OutputTabContent({
   activeAlgorithm,
   activeResponse,
-  enableOutput = !!activeAlgorithm && !!activeResponse,
+  tabControls,
 }: {
   activeAlgorithm: BaseGraphAlgorithm | null;
   activeResponse: BaseGraphAlgorithmResult | null;
-  enableOutput?: boolean;
+  tabControls: { problemsLen: number; enableOutput: boolean };
 }) {
   return (
     <div className="flex flex-col gap-4 h-full">
-      <div className="h-38 overflow-auto">
+      <div className="flex-1 basis-0 min-h-0 overflow-y-auto">
         {!!activeAlgorithm &&
           !!activeResponse &&
           activeAlgorithm.output(activeResponse)}
       </div>
-      <div className="flex justify-between gap-2 flex-wrap">
-        <CodeOutputTabs enableOutput={enableOutput} />
+      <div className="flex flex-wrap-reverse justify-between gap-2">
+        <CodeOutputTabs {...tabControls} />
         {!!activeResponse && (
           <ExportDropdownButton activeResponse={activeResponse} />
         )}

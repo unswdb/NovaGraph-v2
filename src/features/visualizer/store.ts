@@ -34,6 +34,8 @@ export default class VisualizerStore {
       databases: observable,
       gravity: observable,
       nodeSizeScale: observable,
+      code: observable,
+      problems: observable,
       activeAlgorithm: observable,
       activeResponse: observable,
       initialize: action,
@@ -43,6 +45,8 @@ export default class VisualizerStore {
       addDatabase: action,
       setGravity: action,
       setNodeSizeScale: action,
+      setCode: action,
+      setProblems: action,
       setActiveAlgorithm: action,
       setActiveResponse: action,
     });
@@ -55,6 +59,8 @@ export default class VisualizerStore {
   databases: GraphDatabase[] = []; // List of database users owned
   gravity: Gravity = GRAVITY.ZERO_GRAVITY;
   nodeSizeScale: NodeSizeScale = NODE_SIZE_SCALE.MEDIUM;
+  code: string = "";
+  problems: string[] = [];
   activeAlgorithm: BaseGraphAlgorithm | null = null;
   activeResponse: BaseGraphAlgorithmResult | null = null;
 
@@ -155,6 +161,14 @@ export default class VisualizerStore {
   setNodeSizeScale = (nodeSizeScale: NodeSizeScale) => {
     this.nodeSizeScale = nodeSizeScale;
   };
+
+  setCode = (code: string) => {
+    this.code = code;
+  }
+
+  setProblems = (problems: string[]) => {
+    this.problems = problems;
+  }
 
   setActiveAlgorithm = (activeAlgorithm: BaseGraphAlgorithm) => {
     this.activeAlgorithm = activeAlgorithm;

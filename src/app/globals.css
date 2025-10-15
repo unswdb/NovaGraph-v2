@@ -3,6 +3,42 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+.toaster [data-sonner-toast][data-type] {
+  [data-action] {
+    background: none;
+    color: var(--color-typography-primary);
+    text-decoration: underline;
+    transition: 150ms;
+    &:hover {
+      color: var(--color-primary);
+    }
+  }
+}
+
+.toaster [data-sonner-toast][data-type="error"] {
+  svg {
+    color: var(--color-critical);
+  }
+}
+
+.toaster [data-sonner-toast][data-type="info"] {
+  svg {
+    color: var(--color-info);
+  }
+}
+
+.toaster [data-sonner-toast][data-type="warning"] {
+  svg {
+    color: var(--color-warn);
+  }
+}
+
+.toaster [data-sonner-toast][data-type="success"] {
+  svg {
+    color: var(--color-positive);
+  }
+}
+
 /* TAILWIND THEMES */
 @theme {
   --color-primary: var(--primary);

@@ -34,6 +34,7 @@ import {
   MultiSelectTrigger,
   MultiSelectValue,
 } from "~/components/form/multi-select";
+import { observer } from "mobx-react-lite";
 
 function buildItems(
   input: AlgorithmSelectInput,
@@ -98,39 +99,41 @@ function getInputNoun(input: AlgorithmSelectInput) {
   return "option";
 }
 
-export default function AlgorithmSelectInputComponent({
-  input,
-  value: inputValue,
-  onChange,
-}: InputComponentProps<AlgorithmSelectInput>) {
-  const store = useStore();
+const AlgorithmSelectInputComponent = observer(
+  ({
+    input,
+    value: inputValue,
+    onChange,
+  }: InputComponentProps<AlgorithmSelectInput>) => {
+    const store = useStore();
 
-  const sources = useMemo(() => buildItems(input, store), [input, store]);
+    const sources = useMemo(() => buildItems(input, store), [input, store]);
 
-  if (isSingleSelectInput(input)) {
-    return (
-      <AlgorithmSingleSelectInputComponent
-        input={input}
-        value={inputValue as SingleValues}
-        onChange={onChange}
-        sources={sources}
-      />
-    );
+    if (isSingleSelectInput(input)) {
+      return (
+        <AlgorithmSingleSelectInputComponent
+          input={input}
+          value={inputValue as SingleValues}
+          onChange={onChange}
+          sources={sources}
+        />
+      );
+    }
+
+    if (isMultipleSelectInput(input)) {
+      return (
+        <AlgorithmMultipleSelectInputComponent
+          input={input}
+          value={inputValue as MultipleValues}
+          onChange={onChange}
+          sources={sources}
+        />
+      );
+    }
+
+    return null;
   }
-
-  if (isMultipleSelectInput(input)) {
-    return (
-      <AlgorithmMultipleSelectInputComponent
-        input={input}
-        value={inputValue as MultipleValues}
-        onChange={onChange}
-        sources={sources}
-      />
-    );
-  }
-
-  return null;
-}
+);
 
 function AlgorithmSingleSelectInputComponent({
   input,
@@ -163,7 +166,7 @@ function AlgorithmSingleSelectInputComponent({
       : true;
     const message = required
       ? validator && !!newValue.trim()
-        ? validator.message ?? ""
+        ? (validator.message ?? "")
         : "This field is required."
       : "";
 
@@ -270,7 +273,7 @@ function AlgorithmMultipleSelectInputComponent({
       : true;
     const message = required
       ? validator && newValues.length > 0
-        ? validator.message ?? ""
+        ? (validator.message ?? "")
         : "This field is required."
       : "";
 
@@ -321,3 +324,5 @@ function AlgorithmMultipleSelectInputComponent({
     </>
   );
 }
+
+export default AlgorithmSelectInputComponent;

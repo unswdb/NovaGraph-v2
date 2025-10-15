@@ -21,6 +21,7 @@ import {
   UnfilteredAlgorithmList,
 } from "./algorithm-list";
 import { useStore } from "../../hooks/use-store";
+import { observer } from "mobx-react-lite";
 
 export default function AlgorithmSidebar() {
   return (
@@ -30,7 +31,7 @@ export default function AlgorithmSidebar() {
   );
 }
 
-function AlgorithmSidebarWrapper() {
+const AlgorithmSidebarWrapper = observer(() => {
   const isMobile = useIsMobile();
   const { open, openMobile } = useSidebar();
 
@@ -52,7 +53,7 @@ function AlgorithmSidebarWrapper() {
       <AlgorithmSidebarControls open={isMobile ? openMobile : open} />
     </>
   );
-}
+});
 
 function AlgorithmSidebarContent({
   open,

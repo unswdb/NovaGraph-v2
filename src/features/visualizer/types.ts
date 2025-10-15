@@ -1,3 +1,4 @@
+import type KuzuBaseService from "~/kuzu/services/KuzuBaseService";
 import type {
   NonPrimaryKeyType,
   NonPrimaryKeyValueType,
@@ -58,5 +59,7 @@ export type GraphDatabase = {
     directed: boolean;
   };
 };
+
+export type ExecuteQueryResult = ReturnType<KuzuBaseService["executeQuery"]>;
 
 export { type MainModule as GraphModule } from "~/graph";

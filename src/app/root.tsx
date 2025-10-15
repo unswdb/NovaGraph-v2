@@ -77,7 +77,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </LoadingProvider>
           </TooltipProvider>
         </ThemeProvider>
-        <Toaster />
+        <Toaster position="top-right" />
         <ScrollRestoration />
         <Scripts />
       </body>

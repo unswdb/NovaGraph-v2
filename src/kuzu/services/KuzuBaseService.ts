@@ -69,16 +69,9 @@ export default class KuzuBaseService {
     const failedQueries: ErrorQueryResult[] = [];
     let allSuccess = true;
     let colorMap = {};
-    const resultType = "graph";
+    let resultType = "graph";
 
     let currentResult = this.connection.query(query);
-
-    // Check if the initial query was successful
-    if (!currentResult.isSuccess()) {
-      const errorMessage = currentResult.getErrorMessage();
-      currentResult.close();
-      throw new Error("Failed to execute query - " + errorMessage);
-    }
 
     // Loop through each query result and collect successnesss
     while (currentResult) {
@@ -93,10 +86,7 @@ export default class KuzuBaseService {
       // Check last query result
       if (currentResult.hasNextQueryResult()) {
         currentResult = currentResult.getNextQueryResult();
-        // Check if the next query result is successful
-        if (!currentResult.isSuccess()) {
-          throw new Error("Next query result failed");
-        }
+        continue;
       } else {
         colorMap = queryResultColorMapExtraction(currentResult);
         break;

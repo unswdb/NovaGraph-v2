@@ -1,47 +1,47 @@
-import { useMemo, useState } from "react";
-import { useStore } from "../hooks/use-store";
+import { useMemo } from "react";
 import { Button } from "~/components/ui/button";
 import CodeOutputTabs from "./tabs";
 import CodeEditor from "../../../components/ui/code-editor";
 import CopyButton from "~/components/ui/code-editor/copy-button";
+import type { ExecuteQueryResult } from "../types";
 
 export default function CodeTabContent({
-  enableOutput,
+  code,
+  setCode,
+  runQuery,
+  onSuccessQuery,
+  onErrorQuery,
+  tabControls,
 }: {
-  enableOutput: boolean;
+  code: string;
+  setCode: (s: string) => void;
+  runQuery: (query: string) => Promise<ExecuteQueryResult>;
+  onSuccessQuery: (r: ExecuteQueryResult) => void;
+  onErrorQuery: (r: ExecuteQueryResult) => void;
+  tabControls: { problemsLen: number; enableOutput: boolean };
 }) {
-  // States
-  const [code, setCode] = useState("");
-
-  // Hooks
-  const store = useStore();
-
   // Memoised value
   const isReadyToSubmit = useMemo(() => !!code, [code]);
 
   // Handle query result (error and success state and colorMap)
   const handleRunQuery = async () => {
-    const result = await store.controller.db.executeQuery(code);
-    if (
-      !!result.nodes &&
-      !!result.edges &&
-      !!result.nodeTables &&
-      !!result.edgeTables
-    ) {
-      store.setGraphState({
-        nodes: result.nodes,
-        edges: result.edges,
-        nodeTables: result.nodeTables,
-        edgeTables: result.edgeTables,
-      });
+    const result = await runQuery(code);
+    if (!result.success) {
+      onErrorQuery(result);
+      return;
     }
+    onSuccessQuery(result);
   };
 
   return (
     <div className="flex flex-col gap-4 h-full">
-      <CodeEditor code={code} setCode={setCode} />
-      <div className="flex flex-wrap justify-between gap-2">
-        <CodeOutputTabs enableOutput={enableOutput} />
+      <CodeEditor
+        code={code}
+        setCode={setCode}
+        className="flex-1 basis-0 min-h-0"
+      />
+      <div className="flex flex-wrap-reverse justify-between gap-2">
+        <CodeOutputTabs {...tabControls} />
         <div className="flex items-center gap-2">
           <CopyButton variant="ghost" value={code} />
           <Button

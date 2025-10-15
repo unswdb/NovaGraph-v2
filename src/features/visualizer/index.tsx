@@ -5,9 +5,9 @@ import Header from "./header";
 import AlgorithmSidebar from "./algorithms/sidebar";
 import SettingsSidebar from "./settings";
 import GraphRenderer from "./renderer";
-import { CodeOutputDrawer } from "./drawer";
 import { StoreProvider } from "./hooks/use-store";
 import { Loader } from "lucide-react";
+import CodeOutputDrawer from "./drawer";
 
 const Visualizer = observer(() => {
   const [store] = useState(() => new VisualizerStore());
