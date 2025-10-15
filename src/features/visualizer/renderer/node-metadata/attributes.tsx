@@ -10,6 +10,7 @@ import { capitalize } from "~/lib/utils";
 import { createSchemaInput } from "../../schema-inputs";
 import { useStore } from "../../hooks/use-store";
 import { useAsyncFn } from "~/hooks/use-async-fn";
+import { Loader } from "lucide-react";
 
 export default function AttributesForm({
   node,
@@ -105,10 +106,10 @@ export default function AttributesForm({
         <Button
           type="submit"
           onClick={handleSubmit}
-          disabled={!isReadyToSubmit}
+          disabled={!isReadyToSubmit || isLoading}
           className="flex-1"
         >
-          Update
+          {isLoading ? <Loader className="animate-spin" /> : "Update"}
         </Button>
       </div>
     </>

@@ -309,7 +309,7 @@ export function updateNodeQuery(
   const query = 
   `
     MATCH (n:${node.tableName})
-    WHERE n.${node._primaryKey} = "${node._primaryKeyValue}"
+    WHERE n.${node._primaryKey} = ${_formatQueryInput(node._primaryKeyValue)}
     SET ${attriutesMappingString.slice(2)};
   `;
   return query;

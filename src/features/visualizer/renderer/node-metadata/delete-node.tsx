@@ -22,6 +22,7 @@ export default function DeleteNodeButton({
   node: GraphNode;
   onClose: () => void;
 }) {
+  // Todo:
   const store = useStore();
 
   const handleDelete = async (node: GraphNode) => {

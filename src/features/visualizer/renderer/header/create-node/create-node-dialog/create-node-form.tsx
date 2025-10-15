@@ -1,3 +1,4 @@
+import { Loader } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
@@ -13,9 +14,11 @@ import { capitalize } from "~/lib/utils";
 export default function CreateNodeDialogForm({
   selectedNodeSchema,
   nodeTablesMap,
+  onClose
 }: {
   selectedNodeSchema: string;
   nodeTablesMap: Map<string, NodeSchema>;
+  onClose: () => void;
 }) {
   const { database } = useStore();
 
@@ -82,6 +85,7 @@ export default function CreateNodeDialogForm({
   } = useAsyncFn(store.controller.db.createNode.bind(store.controller.db), {
     onSuccess: (result) => {
       toast.success("Node created successfully!");
+      onClose();
     },
     onError: (err) => {
       toast.error(getErrorMessage(err));
@@ -89,15 +93,10 @@ export default function CreateNodeDialogForm({
   });
 
   const handleOnSubmit = async () => {
-    // console.log(selectedNodeSchema)
-    // console.log(values)
-    // console.log(typeof values)
-
     let result = await createNode(
       selectedNodeSchema,
       values
     );
-
     console.log(result)
     if (
       result &&
@@ -139,7 +138,7 @@ export default function CreateNodeDialogForm({
           disabled={!isReadyToSubmit || isLoading}
           className="flex-1"
         >
-          Create
+          {isLoading ? <Loader className="animate-spin" /> : "Create"}
         </Button>
       </div>
     </>

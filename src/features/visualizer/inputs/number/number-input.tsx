@@ -53,13 +53,13 @@ export default function NumberInputComponent({
 
     const validator = await input.validator?.(newValue);
     const isValid = required
-      ? validator && newValue >= 0
+      ? validator && isFinite(newValue)
         ? validator.success
-        : newValue >= 0
+        : isFinite(newValue)
       : true;
     const message = required
-      ? validator && newValue >= 0
-        ? validator.message ?? ""
+      ? validator && isFinite(newValue)
+        ? (validator.message ?? "")
         : "This field is required."
       : "";
 

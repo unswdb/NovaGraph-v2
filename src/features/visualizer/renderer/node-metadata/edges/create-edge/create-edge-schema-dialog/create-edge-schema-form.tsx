@@ -57,6 +57,20 @@ export default function CreateEdgeSchemaForm({
     placeholder: "Enter schema/table name (e.g., Directed, ActedIn)...",
     required: true,
     validator: (value) => {
+      if (/^[0-9]/.test(value)) {
+        return {
+          success: false,
+          message: "Table name cannot start with a number",
+        };
+      }
+
+      if (!/^[A-Za-z0-9]+$/.test(value)) {
+        return {
+          success: false,
+          message:
+            "Table name can only contain alphanumeric characters (letters and numbers)",
+        };
+      }
       const doesTableNameExist = edgeTables.some((s) => s.tableName === value);
       if (doesTableNameExist) {
         return {

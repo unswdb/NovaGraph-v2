@@ -68,6 +68,7 @@ export default function CreateNodeDialog({
             key={selectedNodeSchema.value}
             selectedNodeSchema={selectedNodeSchema.value}
             nodeTablesMap={nodeTablesMap}
+            onClose={onClose}
           />
         )}
       </DialogContent>

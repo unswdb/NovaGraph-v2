@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
+import { Loader, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import InputComponent, {
   createEmptyInputResults,
@@ -117,7 +117,7 @@ export default function EdgeListItem({
         edgeTables: result.edgeTables,
       });
     }
-    toast.success("Edge attributes updated (not really, yet!)");
+    toast.success("Edge attributes updated");
   };
 
   return (
@@ -176,7 +176,8 @@ export default function EdgeListItem({
               disabled={!isReadyToSubmit}
               className="flex-1"
             >
-              Update
+              ehe
+              {/* {isLoading ? <Loader className="animate-spin" /> : "Update"} */}
             </Button>
           </div>
         </DialogContent>
