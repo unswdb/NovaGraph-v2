@@ -16,6 +16,7 @@ import InputComponent, {
   createTextInput,
   type TextInput,
 } from "~/features/visualizer/inputs";
+import type { GraphNode } from "~/features/visualizer/types";
 
 type EdgeSchemaField =
   | {
@@ -29,8 +30,12 @@ type EdgeSchemaField =
 
 export default function CreateEdgeSchemaForm({
   onSubmit,
+  source,
+  target
 }: {
   onSubmit: () => void;
+  source: GraphNode
+  target: GraphNode
 }) {
   const { controller, database } = useStore();
   const { edgeTables } = database.graph;
@@ -41,7 +46,6 @@ export default function CreateEdgeSchemaForm({
     getErrorMessage,
   } = useAsyncFn(controller.db.createEdgeSchema.bind(controller.db), {
     onSuccess: (result) => {
-      // TODO: store.setGraphState({ nodes: result.nodes, edges: result.edges, ... });
       toast.success("Edge schema created successfully!");
       onSubmit();
     },
@@ -121,9 +125,27 @@ export default function CreateEdgeSchemaForm({
     );
   };
 
+  const store = useStore();
   const handleOnSubmit = async () => {
     if (isReadyToSubmit) {
-      toast.success("Edge schema created (not really, yet!)");
+      if (tableName.value === undefined) {
+        throw Error("Empty or undefined table name")
+      }
+      let result = await createEdgeSchema(tableName.value, [[source.tableName, target.tableName]], fields)
+      if (
+        result &&
+        !!result.nodes &&
+        !!result.edges &&
+        !!result.nodeTables &&
+        !!result.edgeTables
+      ) {
+        store.setGraphState({
+          nodes: result.nodes,
+          edges: result.edges,
+          nodeTables: result.nodeTables,
+          edgeTables: result.edgeTables,
+        });
+      }
     }
   };
 

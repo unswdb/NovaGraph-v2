@@ -58,69 +58,70 @@ export default class KuzuBaseService {
    */
   executeQuery(query: string) {
     if (!this.connection || !query.trim()) {
-      return {
-        success: false,
-        error: "Connection not initialized or empty query",
-      };
+      throw new Error("Connection not initialized or empty query");
     }
-
+  
     // Init variable
     const successQueries = [];
     const failedQueries = [];
     let allSuccess = true;
     let colorMap = {};
     let resultType = "graph";
-
-    try {
-      let currentResult = this.connection.query(query);
-
-      // Loop through each query result and collect successnesss
-      while (currentResult) {
-        const queryResult = processQueryResult(currentResult);
-        if (queryResult.success) {
-          successQueries.push(queryResult);
-        } else {
-          allSuccess = false;
-          failedQueries.push(queryResult);
-        }
-
-        // Check last query result
-        if (currentResult.hasNextQueryResult()) {
-          currentResult = currentResult.getNextQueryResult();
-        } else {
-          colorMap = queryResultColorMapExtraction(currentResult);
-          break;
-        }
-      }
-
-      // Get snapshot set to nodes and edges
-      const { nodes, edges, nodeTables, edgeTables } = snapshotGraphState(
-        this.connection
-      );
-
-      // Gracefully close the query result object
+  
+    let currentResult = this.connection.query(query);
+  
+    // Check if the initial query was successful
+    if (!currentResult.isSuccess()) {
+      let errorMessage = currentResult.getErrorMessage();
       currentResult.close();
-
-      return {
-        successQueries: successQueries,
-        failedQueries: failedQueries,
-        success: allSuccess,
-        message: allSuccess
-          ? `All queries succeeded`
-          : `Some queries failed. Check results for details.`,
-        nodes: nodes,
-        edges: edges,
-        nodeTables,
-        edgeTables,
-        colorMap: colorMap,
-        resultType: resultType,
-      };
-    } catch (err: any) {
-      return {
-        success: false,
-        error: "Internal executeQuery error: " + err.message,
-      };
+      throw new Error("Failed to execute query - " + errorMessage);
     }
+  
+    // Loop through each query result and collect successnesss
+    while (currentResult) {
+      const queryResult = processQueryResult(currentResult);
+      if (queryResult.success) {
+        successQueries.push(queryResult);
+      } else {
+        allSuccess = false;
+        failedQueries.push(queryResult);
+      }
+  
+      // Check last query result
+      if (currentResult.hasNextQueryResult()) {
+        currentResult = currentResult.getNextQueryResult();
+        // Check if the next query result is successful
+        if (!currentResult.isSuccess()) {
+          throw new Error("Next query result failed");
+        }
+      } else {
+        colorMap = queryResultColorMapExtraction(currentResult);
+        break;
+      }
+    }
+  
+    // Get snapshot set to nodes and edges
+    const { nodes, edges, nodeTables, edgeTables } = snapshotGraphState(
+      this.connection
+    );
+  
+    // Gracefully close the query result object
+    currentResult.close();
+  
+    return {
+      successQueries: successQueries,
+      failedQueries: failedQueries,
+      success: allSuccess,
+      message: allSuccess
+        ? `All queries succeeded`
+        : `Some queries failed. Check results for details.`,
+      nodes: nodes,
+      edges: edges,
+      nodeTables,
+      edgeTables,
+      colorMap: colorMap,
+      resultType: resultType,
+    };
   }
 
   // /**
@@ -432,24 +433,26 @@ export default class KuzuBaseService {
   createEdgeSchema(
     tableName: string,
     tablePairs: Array<[string | number, string | number]>,
-    properties?: Record<string, CompositeType>,
-    relationshipType?: "MANY_ONE" | "ONE_MANY"
+    properties: (
+      | { name: string; type: NonPrimaryKeyType }
+      | { name: string; type: PrimaryKeyType }
+    )[],
+    relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE"
   ) {
-    try {
-      const query = createEdgeSchemaQuery(
-        tableName,
-        tablePairs,
-        properties,
-        relationshipType
-      );
-      const result = this.executeQuery(query);
-      return result;
-    } catch (error: any) {
-      return {
-        success: false,
-        error: `Error create Edge Schema: ${error.message}`,
-      };
+    const query = createEdgeSchemaQuery(
+      tableName,
+      tablePairs,
+      properties,
+      relationshipType
+    );
+    const result = this.executeQuery(query);
+    if (!result.success) {
+      const fq = result.failedQueries?.[0];
+      const rawMsg = fq?.message ?? "Unknown error";
+      throw new Error(rawMsg);
     }
+    return result;
+
   }
 
   createEdge(

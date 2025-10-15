@@ -47,6 +47,7 @@ export default function EdgesList({
         source={node}
         outgoingEdges={outgoingEdges}
         directed={directed}
+        onClose={onClose}
       />
     </>
   );

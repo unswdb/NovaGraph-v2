@@ -22,8 +22,6 @@ export default function CodeTabContent({
   // Handle query result (error and success state and colorMap)
   const handleRunQuery = async () => {
     const result = await store.controller.db.executeQuery(code);
-    console.warn("query code - query result");
-    console.log(result);
     if (
       !!result.nodes &&
       !!result.edges &&

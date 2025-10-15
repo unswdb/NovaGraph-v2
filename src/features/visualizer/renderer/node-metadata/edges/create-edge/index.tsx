@@ -15,10 +15,12 @@ export default function CreateEdge({
   source,
   outgoingEdges,
   directed,
+  onClose
 }: {
   source: GraphNode;
   outgoingEdges: [GraphNode, GraphEdge][];
   directed: boolean;
+  onClose: () => void;
 }) {
   const { database } = useStore();
 
@@ -151,6 +153,7 @@ export default function CreateEdge({
               open={dialogStatus.createEdgeSchema}
               setOpen={setCreateEdgeSchemaOpen}
               onSubmit={onSubmitCreateEdgeSchema}
+              onClose={onClose}
             />
           ) : (
             <CreateEdgeDialog
