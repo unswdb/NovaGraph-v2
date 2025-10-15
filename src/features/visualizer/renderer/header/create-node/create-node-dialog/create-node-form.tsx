@@ -52,7 +52,6 @@ export default function CreateNodeDialogForm({
       },
     });
 
-    // Todo: fix bug
     const nonPrimaryKeyInputs = Object.entries(properties).map(([key, type]) =>
       createSchemaInput(type, {
         id: `${selectedNodeSchema}-${key}-non-pk`,

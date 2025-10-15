@@ -33,6 +33,7 @@ import {
 } from "~/components/ui/tooltip";
 import { createSchemaInput } from "~/features/visualizer/schema-inputs";
 import { useStore } from "~/features/visualizer/hooks/use-store";
+import { useAsyncFn } from "~/hooks/use-async-fn";
 
 export default function EdgeListItem({
   source,
@@ -67,11 +68,23 @@ export default function EdgeListItem({
     [values]
   );
 
-  // TODO: Implement handleDeleteEdge
   const store = useStore();
+  const {
+    run: deleteEdge,
+    getErrorMessage,
+  } = useAsyncFn(store.controller.db.deleteEdge.bind(store.controller.db), {
+    onSuccess: (result) => {
+      toast.success("Edge deleted!");
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err));
+    },
+  });
+
   const handleDeleteEdge = async (node1: GraphNode, node2: GraphNode) => {
-    let result = await store.controller.db.deleteEdge(node1, node2, edgeSchema.tableName);
+    let result = await deleteEdge(node1, node2, edgeSchema.tableName);
     if (
+      result &&
       !!result.nodes &&
       !!result.edges &&
       !!result.nodeTables &&
@@ -84,10 +97,20 @@ export default function EdgeListItem({
         edgeTables: result.edgeTables,
       });
     }
-    toast.success("Edge deleted (not really, yet!)");
+    // toast.success("Edge deleted (not really, yet!)");
   };
 
-  // TODO: Implement handleSubmit
+  const {
+    run: updateEdge,
+    isLoading
+  } = useAsyncFn(store.controller.db.updateEdge.bind(store.controller.db), {
+    onSuccess: (result) => {
+      toast.success("Edge attributes updated!");
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err));
+    },
+  });
   const handleSubmit = async () => {
     // console.log("source:", JSON.stringify(source, null, 2));
     // console.log("target:", JSON.stringify(target, null, 2));
@@ -103,8 +126,9 @@ export default function EdgeListItem({
     //   )
     // );
     
-    let result = await store.controller.db.updateEdge(source, target, edgeSchema.tableName ,values);
+    let result = await updateEdge(source, target, edgeSchema.tableName ,values);
     if (
+      result &&
       !!result.nodes &&
       !!result.edges &&
       !!result.nodeTables &&
@@ -117,7 +141,7 @@ export default function EdgeListItem({
         edgeTables: result.edgeTables,
       });
     }
-    toast.success("Edge attributes updated");
+    // toast.success("Edge attributes updated");
   };
 
   return (
@@ -176,8 +200,7 @@ export default function EdgeListItem({
               disabled={!isReadyToSubmit}
               className="flex-1"
             >
-              ehe
-              {/* {isLoading ? <Loader className="animate-spin" /> : "Update"} */}
+              {isLoading ? <Loader className="animate-spin" /> : "Update"}
             </Button>
           </div>
         </DialogContent>
