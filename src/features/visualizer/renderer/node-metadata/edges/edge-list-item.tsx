@@ -41,12 +41,15 @@ export default function EdgeListItem({
   edge,
   edgeSchema,
   directed,
+  onClose
 }: {
   source: GraphNode;
   target: GraphNode;
   edge: GraphEdge;
   edgeSchema: EdgeSchema;
   directed: boolean;
+  onClose: () => void;
+
 }) {
   const inputs = [
     Object.entries(edgeSchema.properties).map(([key, type]) =>
@@ -71,10 +74,12 @@ export default function EdgeListItem({
   const store = useStore();
   const {
     run: deleteEdge,
+    isLoading,
     getErrorMessage,
   } = useAsyncFn(store.controller.db.deleteEdge.bind(store.controller.db), {
     onSuccess: (result) => {
       toast.success("Edge deleted!");
+      onClose();
     },
     onError: (err) => {
       toast.error(getErrorMessage(err));
@@ -102,10 +107,10 @@ export default function EdgeListItem({
 
   const {
     run: updateEdge,
-    isLoading
   } = useAsyncFn(store.controller.db.updateEdge.bind(store.controller.db), {
     onSuccess: (result) => {
       toast.success("Edge attributes updated!");
+      onClose();
     },
     onError: (err) => {
       toast.error(getErrorMessage(err));
