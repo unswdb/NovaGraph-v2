@@ -1,6 +1,9 @@
-import type { ImportOption } from "./types";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import { useState } from "react";
+import { Table as TableIcon } from "lucide-react";
+
+import type { ImportOption } from "./types";
+
 import {
   Table,
   TableBody,
@@ -10,7 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import { Table as TableIcon } from "lucide-react";
 import { Switch } from "~/components/form/switch";
 import { Label } from "~/components/form/label";
 import {

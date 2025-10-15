@@ -1,3 +1,9 @@
+import { Loader, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { useMemo, useState } from "react";
+
+import type { EdgeSchema, GraphEdge, GraphNode } from "../../../types";
+
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
@@ -7,7 +13,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
-import type { EdgeSchema, GraphEdge, GraphNode } from "../../../types";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,13 +24,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
-import { Loader, Trash2 } from "lucide-react";
-import { toast } from "sonner";
 import InputComponent, {
   createEmptyInputResults,
 } from "~/features/visualizer/inputs";
 import { capitalize } from "~/lib/utils";
-import { useMemo, useState } from "react";
 import {
   Tooltip,
   TooltipContent,

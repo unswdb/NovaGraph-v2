@@ -1,6 +1,8 @@
-import { cn } from "~/lib/utils";
-import { useLoading } from "./use-loading";
 import Logo from "../logo";
+
+import { useLoading } from "./use-loading";
+
+import { cn } from "~/lib/utils";
 
 export function Loading({
   className,

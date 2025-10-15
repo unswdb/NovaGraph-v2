@@ -1,16 +1,18 @@
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { Loader } from "lucide-react";
+
 import InputComponent, {
   createAlgorithmSelectInput,
   createEmptyInputResults,
 } from "../../inputs";
 import type { GraphNode, NodeSchema } from "../../types";
-import { Button } from "~/components/ui/button";
-import { toast } from "sonner";
-import { capitalize } from "~/lib/utils";
 import { createSchemaInput } from "../../schema-inputs";
 import { useStore } from "../../hooks/use-store";
+
+import { Button } from "~/components/ui/button";
+import { capitalize } from "~/lib/utils";
 import { useAsyncFn } from "~/hooks/use-async-fn";
-import { Loader } from "lucide-react";
 
 export default function AttributesForm({
   node,

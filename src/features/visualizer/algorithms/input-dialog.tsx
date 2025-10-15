@@ -1,9 +1,14 @@
 import { cloneElement, useMemo, useState } from "react";
+import { toast } from "sonner";
+
 import type { GraphEdge, GraphModule, GraphNode } from "../types";
+import InputComponent, { createEmptyInputResults } from "../inputs";
+
 import type {
   BaseGraphAlgorithm,
   BaseGraphAlgorithmResult,
 } from "./implementations";
+
 import { SidebarMenuButton } from "~/components/ui/sidebar";
 import { cn } from "~/lib/utils";
 import { Separator } from "~/components/ui/separator";
@@ -17,8 +22,6 @@ import {
   DialogTrigger,
 } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
-import InputComponent, { createEmptyInputResults } from "../inputs";
-import { toast } from "sonner";
 import { useLoading } from "~/components/ui/loading";
 
 export default function InputDialog({
@@ -82,8 +85,8 @@ export default function InputDialog({
         throw new Error(
           module && typeof err == "number"
             ? module.what_to_stderr(err)
-            : (String(err) ??
-              "An unexpected error occurred. Please try again later.")
+            : String(err) ??
+              "An unexpected error occurred. Please try again later."
         );
       } finally {
         stopLoading();

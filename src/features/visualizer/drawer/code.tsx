@@ -1,9 +1,12 @@
 import { useMemo } from "react";
-import { Button } from "~/components/ui/button";
-import CodeOutputTabs from "./tabs";
+
 import CodeEditor from "../../../components/ui/code-editor";
-import CopyButton from "~/components/ui/code-editor/copy-button";
 import type { ExecuteQueryResult } from "../types";
+
+import CodeOutputTabs from "./tabs";
+
+import { Button } from "~/components/ui/button";
+import CopyButton from "~/components/ui/code-editor/copy-button";
 
 export default function CodeTabContent({
   code,

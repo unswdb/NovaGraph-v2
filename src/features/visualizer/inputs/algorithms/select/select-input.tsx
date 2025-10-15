@@ -1,3 +1,9 @@
+import { useEffect, useMemo, useState } from "react";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { observer } from "mobx-react-lite";
+
+import type { InputComponentProps } from "../..";
+
 import {
   isMultipleSelectInput,
   isSingleSelectInput,
@@ -7,15 +13,14 @@ import {
   type MultipleValues,
   type SingleValues,
 } from "./types";
+
 import { useStore } from "~/features/visualizer/hooks/use-store";
-import { useEffect, useMemo, useState } from "react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
 import { Button } from "~/components/ui/button";
-import { Check, ChevronsUpDown } from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -25,7 +30,6 @@ import {
   CommandList,
 } from "~/components/ui/command";
 import { cn } from "~/lib/utils";
-import type { InputComponentProps } from "../..";
 import {
   MultiSelect,
   MultiSelectContent,
@@ -34,7 +38,6 @@ import {
   MultiSelectTrigger,
   MultiSelectValue,
 } from "~/components/form/multi-select";
-import { observer } from "mobx-react-lite";
 
 function buildItems(
   input: AlgorithmSelectInput,
@@ -166,7 +169,7 @@ function AlgorithmSingleSelectInputComponent({
       : true;
     const message = required
       ? validator && !!newValue.trim()
-        ? (validator.message ?? "")
+        ? validator.message ?? ""
         : "This field is required."
       : "";
 
@@ -273,7 +276,7 @@ function AlgorithmMultipleSelectInputComponent({
       : true;
     const message = required
       ? validator && newValues.length > 0
-        ? (validator.message ?? "")
+        ? validator.message ?? ""
         : "This field is required."
       : "";
 

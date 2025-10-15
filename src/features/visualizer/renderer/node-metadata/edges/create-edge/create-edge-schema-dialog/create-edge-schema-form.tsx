@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { Button } from "~/components/ui/button";
 import { Key, Loader, Plus, X } from "lucide-react";
 import { toast } from "sonner";
+
+import { Button } from "~/components/ui/button";
 import { useAsyncFn } from "~/hooks/use-async-fn";
 import {
   NON_PK_SCHEMA_TYPES,
@@ -29,13 +30,13 @@ type EdgeSchemaField =
     };
 
 export default function CreateEdgeSchemaForm({
-  onSubmit,
   source,
   target,
+  onSubmit,
 }: {
-  onSubmit: () => void;
   source: GraphNode;
   target: GraphNode;
+  onSubmit: () => void;
 }) {
   const { controller, database, setGraphState } = useStore();
   const { edgeTables } = database.graph;

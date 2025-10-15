@@ -1,3 +1,10 @@
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { Search, X } from "lucide-react";
+
+import type { GraphNode } from "../../types";
+
+import type { Accessor } from ".";
+
 import {
   Select,
   SelectContent,
@@ -5,10 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/form/select";
-import type { GraphNode } from "../../types";
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Button } from "~/components/ui/button";
-import { Search, X } from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -18,7 +22,6 @@ import {
   CommandList,
 } from "~/components/ui/command";
 import { cn } from "~/lib/utils";
-import type { Accessor } from ".";
 import { useIsMobile } from "~/hooks/use-mobile";
 import {
   Sheet,

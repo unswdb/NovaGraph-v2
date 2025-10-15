@@ -1,4 +1,7 @@
 import { useMemo, useState } from "react";
+
+import CreateNodeDialogForm from "./create-node-form";
+
 import {
   Dialog,
   DialogContent,
@@ -10,7 +13,6 @@ import InputComponent, {
   createAlgorithmSelectInput,
   createEmptyInputResult,
 } from "~/features/visualizer/inputs";
-import CreateNodeDialogForm from "./create-node-form";
 import { Separator } from "~/components/ui/separator";
 import { Button } from "~/components/ui/button";
 import type { GraphNode, NodeSchema } from "~/features/visualizer/types";
@@ -47,7 +49,7 @@ export default function CreateNodeDialog({
   const selectedNodeSchema = useMemo(
     () =>
       !!selectedTableName.value
-        ? (nodeTablesMap.get(selectedTableName.value) ?? null)
+        ? nodeTablesMap.get(selectedTableName.value) ?? null
         : null,
     [selectedTableName.value]
   );

@@ -1,11 +1,12 @@
 import { GitBranch, Puzzle, Route, Star, Users, Waypoints } from "lucide-react";
+import type { ElementType } from "react";
+
 import * as TRAVERSAL_CONNECTIVITY from "./traversal-connectivity";
 import * as PATH_REACHABILITY from "./path-reachability";
 import * as CENTRALITY_NODE_IMPORTANCE from "./centrality";
 import * as COMMUNITY_DETECTION from "./community-detection";
 import * as GRAPH_SIMILARITY_MATCHING from "./similarity-matching";
 import { type BaseGraphAlgorithm } from "./types";
-import type { ElementType } from "react";
 
 // Export all algorithms
 const ALL_ALGORITHMS: {
@@ -26,7 +27,9 @@ const ALL_ALGORITHMS: {
   {
     label: "Centrality",
     icon: Star,
-    algorithms: Object.values(CENTRALITY_NODE_IMPORTANCE) as BaseGraphAlgorithm[],
+    algorithms: Object.values(
+      CENTRALITY_NODE_IMPORTANCE
+    ) as BaseGraphAlgorithm[],
   },
   {
     label: "Community Detection",
@@ -36,7 +39,9 @@ const ALL_ALGORITHMS: {
   {
     label: "Graph Similarity & Matching",
     icon: Puzzle,
-    algorithms: Object.values(GRAPH_SIMILARITY_MATCHING) as BaseGraphAlgorithm[],
+    algorithms: Object.values(
+      GRAPH_SIMILARITY_MATCHING
+    ) as BaseGraphAlgorithm[],
   },
 ];
 export default ALL_ALGORITHMS;

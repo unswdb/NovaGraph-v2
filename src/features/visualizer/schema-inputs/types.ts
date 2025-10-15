@@ -5,7 +5,7 @@ export type FieldContextKind = "primary" | "non-primary";
 export interface SchemaInput<
   I extends InputType,
   T extends string = string,
-  C extends readonly FieldContextKind[] = readonly FieldContextKind[]
+  C extends readonly FieldContextKind[] = readonly FieldContextKind[],
 > {
   /** Type/name of the Kuzu type */
   readonly type: T;
@@ -23,7 +23,7 @@ export interface SchemaInput<
 export function defineSchemaInput<
   I extends InputType,
   const T extends string,
-  const C extends readonly FieldContextKind[]
+  const C extends readonly FieldContextKind[],
 >(schemaInput: SchemaInput<I, T, C>): SchemaInput<I, T, C> {
   return schemaInput;
 }

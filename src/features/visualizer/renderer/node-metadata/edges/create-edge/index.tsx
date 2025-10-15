@@ -1,5 +1,9 @@
 import { Plus, X } from "lucide-react";
 import { useMemo, useState } from "react";
+
+import CreateEdgeSchemaDialog from "./create-edge-schema-dialog";
+import CreateEdgeDialog from "./create-edge-dialog";
+
 import { Button } from "~/components/ui/button";
 import InputComponent, {
   createAlgorithmSelectInput,
@@ -7,15 +11,13 @@ import InputComponent, {
 } from "~/features/visualizer/inputs";
 import type { GraphEdge, GraphNode } from "~/features/visualizer/types";
 import { useStore } from "~/features/visualizer/hooks/use-store";
-import CreateEdgeSchemaDialog from "./create-edge-schema-dialog";
 import { isNonEmpty } from "~/lib/utils";
-import CreateEdgeDialog from "./create-edge-dialog";
 
 export default function CreateEdge({
   source,
   outgoingEdges,
   directed,
-  onClose
+  onClose,
 }: {
   source: GraphNode;
   outgoingEdges: [GraphNode, GraphEdge][];

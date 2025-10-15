@@ -1,6 +1,8 @@
-import { cn } from "~/lib/utils";
-import { Separator } from "../separator";
 import { useCallback, useEffect, useMemo, useRef } from "react";
+
+import { Separator } from "../separator";
+
+import { cn } from "~/lib/utils";
 
 export default function CodeEditor({
   code,

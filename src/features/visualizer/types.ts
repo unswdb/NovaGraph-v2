@@ -1,10 +1,11 @@
-import type KuzuBaseService from "~/kuzu/services/KuzuBaseService";
 import type {
   NonPrimaryKeyType,
   NonPrimaryKeyValueType,
   PrimaryKeyType,
   PrimaryKeyValueType,
 } from "./schema-inputs";
+
+import type KuzuBaseService from "~/kuzu/services/KuzuBaseService";
 
 export type GraphNode = {
   id: string; // Unique identifier of the node

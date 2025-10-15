@@ -1,6 +1,7 @@
 import { useCallback, useState, type ReactNode } from "react";
-import { Button } from "../button";
 import { Copy } from "lucide-react";
+
+import { Button } from "../button";
 
 export default function CopyButton({
   value,

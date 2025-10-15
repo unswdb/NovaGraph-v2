@@ -1,4 +1,3 @@
-import { Label } from "~/components/form/label";
 import AlgorithmSelectInputComponent from "./algorithms/select/select-input";
 import { NumberInputComponent } from "./number";
 import type { InputChangeResult, InputType, ValueForInput } from "./types";
@@ -8,6 +7,8 @@ import TextInputComponent from "./text/text-input";
 import { DatetimeLocalInputComponent } from "./date/datetime-local";
 import { DateInputComponent } from "./date";
 import { UUIDInputComponent } from "./uuid";
+
+import { Label } from "~/components/form/label";
 
 export type InputComponentProps<I extends InputType> = {
   input: I;

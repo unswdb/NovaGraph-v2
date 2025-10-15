@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
+
 import type { InputComponentProps } from "../..";
+import { parseISOToDate } from "../util";
+
 import type { DatetimeLocalInput } from "./types";
 import {
   parseDatetimeLocalPartsToDate,
   parseDatetimeLocalPartsToISO,
 } from "./util";
+
 import { Input } from "~/components/form/input";
-import { parseISOToDate } from "../util";
 
 export default function DatetimeLocalInputComponent({
   input,
@@ -67,7 +70,7 @@ export default function DatetimeLocalInputComponent({
       : true;
     const message = required
       ? validator && !!newValue.trim()
-        ? (validator.message ?? "")
+        ? validator.message ?? ""
         : "This field is required."
       : "";
 

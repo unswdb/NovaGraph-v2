@@ -57,7 +57,8 @@ export interface BaseInputType<T> {
   disabled?: boolean; // Whether the input is disabled
   defaultValue?: T; // Default value of the input
   validate?: boolean; // Whether validation is enabled
-  validator?: ( // Custom validator function to run on top of basic validation
+  validator?: (
+    // Custom validator function to run on top of basic validation
     value: T,
     ...props: any[]
   ) => InputResultType | Promise<InputResultType>;

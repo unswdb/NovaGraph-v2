@@ -1,13 +1,15 @@
-import { useStore } from "~/features/visualizer/hooks/use-store";
 import type { EdgeSchema, GraphEdge, GraphNode } from "../../../types";
+
 import CreateEdge from "./create-edge";
 import EdgeListItem from "./edge-list-item";
+
+import { useStore } from "~/features/visualizer/hooks/use-store";
 
 export default function EdgesList({
   node,
   outgoingEdges,
   directed,
-  onClose
+  onClose,
 }: {
   node: GraphNode;
   outgoingEdges: [GraphNode, GraphEdge][];

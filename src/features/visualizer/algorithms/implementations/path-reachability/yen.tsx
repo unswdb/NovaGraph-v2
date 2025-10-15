@@ -1,8 +1,9 @@
+import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
+
 import {
   createAlgorithmSelectInput,
   createNumberInput,
 } from "~/features/visualizer/inputs";
-import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 // Infered from src/wasm/algorithms
 type YenOutputData = {

@@ -1,5 +1,6 @@
-import { createNumberInput } from "~/features/visualizer/inputs";
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
+
+import { createNumberInput } from "~/features/visualizer/inputs";
 
 // Infered from src/wasm/algorithms
 type KCoreOutputData = {

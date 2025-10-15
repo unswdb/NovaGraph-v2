@@ -1,7 +1,10 @@
-import { Switch } from "~/components/form/switch";
-import type { SwitchInput } from "./types";
-import type { InputComponentProps } from "..";
 import { useEffect } from "react";
+
+import type { InputComponentProps } from "..";
+
+import type { SwitchInput } from "./types";
+
+import { Switch } from "~/components/form/switch";
 
 export default function SwitchInputComponent({
   input,

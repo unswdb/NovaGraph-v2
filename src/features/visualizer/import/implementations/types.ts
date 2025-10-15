@@ -1,11 +1,17 @@
 import type { ElementType } from "react";
-import type { InputChangeResult, InputType } from "~/features/visualizer/inputs";
+
+import type {
+  InputChangeResult,
+  InputType,
+} from "~/features/visualizer/inputs";
 
 type ImportHandler = (data: {
   values: Record<string, InputChangeResult<any>>;
 }) => Promise<{ success: boolean; message?: string }>;
 
-type ImportValidator = (data: { values: Record<string, InputChangeResult<any>> }) => {
+type ImportValidator = (data: {
+  values: Record<string, InputChangeResult<any>>;
+}) => {
   success: boolean;
   message?: string;
 };

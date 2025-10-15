@@ -1,4 +1,16 @@
 import { CheckIcon, ChevronsUpDownIcon, XIcon } from "lucide-react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ComponentPropsWithoutRef,
+  type ReactNode,
+} from "react";
+
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import {
@@ -15,17 +27,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type ComponentPropsWithoutRef,
-  type ReactNode,
-} from "react";
 import { Badge } from "~/components/ui/badge";
 
 type MultiSelectContextType = {

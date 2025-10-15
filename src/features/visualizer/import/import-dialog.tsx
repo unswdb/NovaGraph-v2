@@ -1,3 +1,10 @@
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+
+import InputComponent, { createEmptyInputResults } from "../inputs";
+
+import ALL_IMPORTS, { type ImportOption } from "./implementations";
+
 import {
   DialogContent,
   DialogDescription,
@@ -5,12 +12,8 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import ALL_IMPORTS, { type ImportOption } from "./implementations";
-import { useMemo, useState } from "react";
-import InputComponent, { createEmptyInputResults } from "../inputs";
 import { Separator } from "~/components/ui/separator";
 import { Button } from "~/components/ui/button";
-import { toast } from "sonner";
 
 export default function ImportDialog() {
   return (

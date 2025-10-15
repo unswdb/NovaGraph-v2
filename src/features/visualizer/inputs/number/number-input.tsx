@@ -1,7 +1,10 @@
-import { Input } from "~/components/form/input";
-import type { NumberInput } from "./types";
 import { useEffect, useState } from "react";
+
 import type { InputComponentProps } from "..";
+
+import type { NumberInput } from "./types";
+
+import { Input } from "~/components/form/input";
 
 export default function NumberInputComponent({
   input,
@@ -59,7 +62,7 @@ export default function NumberInputComponent({
       : true;
     const message = required
       ? validator && isFinite(newValue)
-        ? (validator.message ?? "")
+        ? validator.message ?? ""
         : "This field is required."
       : "";
 

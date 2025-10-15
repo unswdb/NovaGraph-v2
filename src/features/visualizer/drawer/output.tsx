@@ -1,9 +1,10 @@
-import CodeOutputTabs from "./tabs";
 import type {
   BaseGraphAlgorithm,
   BaseGraphAlgorithmResult,
 } from "../algorithms/implementations";
 import ExportDropdownButton from "../export/export-dropdown-button";
+
+import CodeOutputTabs from "./tabs";
 
 export default function OutputTabContent({
   activeAlgorithm,

@@ -1,5 +1,6 @@
-import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
+
+import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";
 
 // Infered from src/wasm/algorithms
 type BellmanFordAToAllOutputData = {

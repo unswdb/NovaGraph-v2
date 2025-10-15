@@ -1,4 +1,5 @@
 import { action, makeObservable, observable, runInAction } from "mobx";
+
 import {
   isEdgeSchema,
   isNodeSchema,
@@ -19,6 +20,7 @@ import type {
   BaseGraphAlgorithm,
   BaseGraphAlgorithmResult,
 } from "./algorithms/implementations";
+
 import { controller } from "~/MainController";
 
 export type InitializedVisualizerStore = VisualizerStore & {
@@ -164,11 +166,11 @@ export default class VisualizerStore {
 
   setCode = (code: string) => {
     this.code = code;
-  }
+  };
 
   setProblems = (problems: string[]) => {
     this.problems = problems;
-  }
+  };
 
   setActiveAlgorithm = (activeAlgorithm: BaseGraphAlgorithm) => {
     this.activeAlgorithm = activeAlgorithm;

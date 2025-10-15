@@ -4,17 +4,20 @@ import {
   type CosmographRef,
 } from "@cosmograph/react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { observer } from "mobx-react-lite";
+
 import type { GraphEdge, GraphNode } from "../types";
-import { cn } from "~/lib/utils";
+import { useStore } from "../hooks/use-store";
+import type { ColorMap, SizeMap } from "../algorithms/implementations";
+
 import GraphRendererHeader from "./header";
 import GraphRendererFooter from "./footer";
 import { useGraphRendererHelpers } from "./hooks/use-graph-renderer-helpers";
 import { useZoomControls } from "./hooks/use-zoom-controls";
 import NodeMetadata from "./node-metadata";
-import { useStore } from "../hooks/use-store";
 import { MODE } from "./constant";
-import type { ColorMap, SizeMap } from "../algorithms/implementations";
-import { observer } from "mobx-react-lite";
+
+import { cn } from "~/lib/utils";
 
 const INITIAL_ZOOM_LEVEL = 1;
 const SIMULATION_LINK_DISTANCE = 20;

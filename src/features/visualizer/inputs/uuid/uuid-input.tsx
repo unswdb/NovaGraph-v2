@@ -1,9 +1,13 @@
-import { Input } from "~/components/form/input";
-import type { UUIDInput } from "./types";
-import { useEffect, useState } from "react";
-import type { InputComponentProps } from "..";
-import { Button } from "~/components/ui/button";
 import type { UUID } from "crypto";
+
+import { useEffect, useState } from "react";
+
+import type { InputComponentProps } from "..";
+
+import type { UUIDInput } from "./types";
+
+import { Input } from "~/components/form/input";
+import { Button } from "~/components/ui/button";
 
 export default function UUIDInputComponent({
   input,

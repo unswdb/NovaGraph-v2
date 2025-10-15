@@ -1,6 +1,8 @@
 import { FileCode2 } from "lucide-react";
-import type { ExportOption } from "./types";
+
 import { downloadFile } from "../utils";
+
+import type { ExportOption } from "./types";
 
 export const ExportJSON: ExportOption = {
   label: "Export to JSON",

@@ -1,6 +1,8 @@
-import { createNumberInput } from "~/features/visualizer/inputs";
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
+
 import type { CentralityOutputData } from "./types";
+
+import { createNumberInput } from "~/features/visualizer/inputs";
 
 type PageRankOutputData = CentralityOutputData & {
   damping: string;

@@ -1,6 +1,7 @@
 import { Loader } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+
 import { Button } from "~/components/ui/button";
 import { useStore } from "~/features/visualizer/hooks/use-store";
 import InputComponent, {
@@ -16,7 +17,7 @@ export default function CreateEdgeDialogForm({
   target,
   selectedEdgeSchema,
   edgeTablesMap,
-  onClose
+  onClose,
 }: {
   source: GraphNode;
   target: GraphNode;
@@ -24,6 +25,8 @@ export default function CreateEdgeDialogForm({
   edgeTablesMap: Map<string, EdgeSchema>;
   onClose: () => void;
 }) {
+  const { controller, setGraphState } = useStore();
+
   const inputs = useMemo(() => {
     const { properties } = edgeTablesMap.get(selectedEdgeSchema) as EdgeSchema;
 
@@ -51,13 +54,18 @@ export default function CreateEdgeDialogForm({
     [values]
   );
 
-  const store = useStore();
   const {
     run: createEdge,
     isLoading,
     getErrorMessage,
-  } = useAsyncFn(store.controller.db.createEdge.bind(store.controller.db), {
+  } = useAsyncFn(controller.db.createEdge.bind(controller.db), {
     onSuccess: (result) => {
+      setGraphState({
+        nodes: result.nodes,
+        edges: result.edges,
+        nodeTables: result.nodeTables,
+        edgeTables: result.edgeTables,
+      });
       toast.success("Edge schema created successfully!");
       onClose();
     },
@@ -74,21 +82,7 @@ export default function CreateEdgeDialogForm({
     if (edgeSchema === undefined) {
       throw Error(`Edge schema '${selectedEdgeSchema}' not found`);
     }
-    let result = await createEdge(source, target, edgeSchema, values);
-    if (
-      result &&
-      !!result.nodes &&
-      !!result.edges &&
-      !!result.nodeTables &&
-      !!result.edgeTables
-    ) {
-      store.setGraphState({
-        nodes: result.nodes,
-        edges: result.edges,
-        nodeTables: result.nodeTables,
-        edgeTables: result.edgeTables,
-      });
-    }
+    await createEdge(source, target, edgeSchema, values);
   };
 
   return (

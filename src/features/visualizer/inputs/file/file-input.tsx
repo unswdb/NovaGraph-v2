@@ -1,7 +1,10 @@
-import { Input } from "~/components/form/input";
-import type { FileInput } from "./types";
 import { useEffect, useState } from "react";
+
 import type { InputComponentProps } from "..";
+
+import type { FileInput } from "./types";
+
+import { Input } from "~/components/form/input";
 
 export default function FileInputComponent({
   input,

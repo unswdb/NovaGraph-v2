@@ -1,4 +1,5 @@
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
+
 import type { CentralityOutputData } from "./types";
 
 type ClosenessCentralityOutputData = CentralityOutputData;

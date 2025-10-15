@@ -1,6 +1,7 @@
 import { OctagonX } from "lucide-react";
-import CodeOutputTabs from "./tabs";
 import { List, type RowComponentProps } from "react-window";
+
+import CodeOutputTabs from "./tabs";
 
 export default function ProblemsTabContent({
   problems,

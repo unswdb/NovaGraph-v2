@@ -83,8 +83,11 @@ class MainController {
     },
 
     async createNode(
-      label: string, 
-      properties: Record<string, { value: any; success?: boolean; message?: string }>    
+      label: string,
+      properties: Record<
+        string,
+        { value: any; success?: boolean; message?: string }
+      >
     ) {
       return Promise.resolve(kuzuController.createNode(label, properties));
     },
@@ -99,7 +102,7 @@ class MainController {
     //   return Promise.resolve(kuzuController.deleteNodeWithoutPrimary(tableName, primaryValue));
     // },
 
-    async updateNode(  
+    async updateNode(
       node: GraphNode,
       values: Record<string, InputChangeResult<any>>
     ) {
@@ -146,26 +149,17 @@ class MainController {
       attributes?: Record<string, InputChangeResult<any>>
     ) {
       return Promise.resolve(
-        kuzuController.createEdge(
-          node1,
-          node2,
-          edgeTable,
-          attributes
-        )
+        kuzuController.createEdge(node1, node2, edgeTable, attributes)
       );
     },
 
     async deleteEdge(
       node1: GraphNode,
       node2: GraphNode,
-      edgeTableName: string,
+      edgeTableName: string
     ) {
       return Promise.resolve(
-        kuzuController.deleteEdge(
-          node1,
-          node2,
-          edgeTableName,
-        )
+        kuzuController.deleteEdge(node1, node2, edgeTableName)
       );
     },
 
@@ -176,16 +170,10 @@ class MainController {
       values: Record<string, InputChangeResult<any>>
     ) {
       return Promise.resolve(
-        kuzuController.updateEdge(
-          node1,
-          node2,
-          edgeTableName,
-          values
-        )
+        kuzuController.updateEdge(node1, node2, edgeTableName, values)
       );
     },
   };
-
 
   _internal = {
     /**

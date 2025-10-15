@@ -1,5 +1,6 @@
-import type { Route } from "./+types/visualizer";
 import VisualizerPage from "@features/visualizer";
+
+import type { Route } from "./+types/visualizer";
 
 export function meta({}: Route.MetaArgs) {
   return [

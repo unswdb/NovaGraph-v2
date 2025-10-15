@@ -1,4 +1,14 @@
 import { ChevronsLeft, ChevronsRight, Settings } from "lucide-react";
+import { observer } from "mobx-react-lite";
+
+import {
+  GRAVITY,
+  NODE_SIZE_SCALE,
+  type Gravity,
+  type NodeSizeScale,
+} from "./renderer/constant";
+import { useStore } from "./hooks/use-store";
+
 import { Label } from "~/components/form/label";
 import { RadioGroup, RadioGroupItem } from "~/components/form/radio-group";
 import { Separator } from "~/components/ui/separator";
@@ -10,14 +20,6 @@ import {
   useSidebar,
 } from "~/components/ui/sidebar";
 import { useIsMobile } from "~/hooks/use-mobile";
-import {
-  GRAVITY,
-  NODE_SIZE_SCALE,
-  type Gravity,
-  type NodeSizeScale,
-} from "./renderer/constant";
-import { useStore } from "./hooks/use-store";
-import { observer } from "mobx-react-lite";
 
 export default function SettingsSidebar() {
   return (

@@ -1,4 +1,5 @@
 import type { UUID } from "crypto";
+
 import type { BaseInputType } from "../types";
 
 export type UUIDValues = UUID;

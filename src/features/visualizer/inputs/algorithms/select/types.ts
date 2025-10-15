@@ -1,5 +1,6 @@
-import type { GraphEdge, GraphNode } from "~/features/visualizer/types";
 import type { BaseInputType } from "../../types";
+
+import type { GraphEdge, GraphNode } from "~/features/visualizer/types";
 
 type Nodes = { source: "nodes"; blacklist?: GraphNode[] };
 type Edges = { source: "edges"; blacklist?: GraphEdge[] };
