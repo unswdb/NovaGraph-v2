@@ -244,16 +244,12 @@ export default class VisualizerStore {
     const builtEdges: GraphEdge[] = [];
     const edgesMap: Map<[string, string], GraphEdge> = new Map();
 
-    const parseWeight = (w: unknown) =>
-      Number.isFinite(Number(w)) ? Number(w) : 0;
-
     edges.forEach((e) => {
       const source = String(e.source);
       const target = String(e.target);
       const builtEdge = {
         source,
         target,
-        weight: parseWeight(e.weight),
         tableName: String(e.tableName),
         ...(e.attributes ? { attributes: e.attributes } : {}),
       };

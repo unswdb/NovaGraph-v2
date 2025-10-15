@@ -88,11 +88,11 @@ export default function EdgeListItem({
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="truncate">
-                  {target._primaryKeyValue} ({edge.weight}){" "}
+                  {target._primaryKeyValue} {" "}
                 </span>
               </TooltipTrigger>
               <TooltipContent>
-                Label: {target._primaryKeyValue} • Weight: {edge.weight}
+                Label: {target._primaryKeyValue}
               </TooltipContent>
             </Tooltip>
           </Button>
