@@ -246,7 +246,6 @@ export function parseEdgesResult(result: any): GraphEdge[] {
     const edge: GraphEdge = {
       source: sourceId,
       target: targetId,
-      weight: 0,
       tableName: label.toString(),
       ...(Object.keys(attributes).length > 0 ? { attributes } : {}),
     };
