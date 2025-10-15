@@ -86,6 +86,7 @@ export default function NodeMetadata({
               node={node}
               outgoingEdges={outgoingEdges}
               directed={directed}
+              onClose={onClose}
             />
           </CollapsibleContent>
         </Collapsible>

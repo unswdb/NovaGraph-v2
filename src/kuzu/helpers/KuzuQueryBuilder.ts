@@ -61,30 +61,33 @@ DELETE f;
 
 export function createEdgeSchemaQuery(
   tableName: string,
-  tablePairs: Array<[string | number, string | number]>, // Cant use record because of allowing dup
-  properties?: Record<string, CompositeType>,
-  relationshipType?: "MANY_ONE" | "ONE_MANY"
-): string {
+  tablePairs: Array<[string | number, string | number]>,
+  properties: (
+    | { name: string; type: NonPrimaryKeyType }
+    | { name: string; type: PrimaryKeyType }
+  )[],
+  relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE"
+) {
+  const q = (v: string | number) => `\`${String(v)}\``;
+
   // Build the FROM...TO parts
   const pairParts = tablePairs.map(([fromTable, toTable]) => {
-    return `FROM \`${fromTable}\` TO \`${toTable}\``;
+    return `FROM ${q(fromTable)} TO ${q(toTable)}`;
   });
 
   // Build property parts (if any)
   const propParts =
-    properties && Object.keys(properties).length > 0
-      ? Object.entries(properties).map(([name, type]) => `\`${name}\` ${type}`)
+    properties && properties.length > 0
+      ? properties.map(({ name, type }) => `${q(name)} ${String(type)}`)
       : [];
 
   // Add relationshipType at the end (if provided)
   const tailParts = relationshipType ? [relationshipType] : [];
-
   const inner = [...pairParts, ...propParts, ...tailParts].join(", ");
-  const query = `CREATE REL TABLE \`${tableName}\` (${inner});`;
-
-  // console.log("create edge table query:", query);
+  const query = `CREATE REL TABLE ${q(tableName)} (${inner});`;
   return query;
 }
+
 
 /**
  * Generates a Cypher DDL query string for creating a simple node table.

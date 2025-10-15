@@ -15,6 +15,7 @@ export default function CreateEdgeSchemaDialog({
   open,
   setOpen,
   onSubmit,
+  onClose,
 }: {
   source: GraphNode;
   target: GraphNode;
@@ -22,6 +23,7 @@ export default function CreateEdgeSchemaDialog({
   open: boolean;
   setOpen: (b: boolean) => void;
   onSubmit: () => void;
+  onClose: () => void;
 }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -39,7 +41,11 @@ export default function CreateEdgeSchemaDialog({
             type (INT, UINT, FLOAT, DOUBLE)
           </DialogDescription>
         </DialogHeader>
-        <CreateEdgeSchemaForm onSubmit={onSubmit} />
+        <CreateEdgeSchemaForm 
+          onSubmit={onSubmit}
+          source={source}
+          target={target}
+        />
       </DialogContent>
     </Dialog>
   );

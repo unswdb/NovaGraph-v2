@@ -112,8 +112,11 @@ class MainController {
     async createEdgeSchema(
       tableName: string,
       tablePairs: Array<[string | number, string | number]>,
-      properties?: Record<string, CompositeType>,
-      relationshipType?: "MANY_ONE" | "ONE_MANY"
+      properties: (
+        | { name: string; type: NonPrimaryKeyType }
+        | { name: string; type: PrimaryKeyType }
+      )[],
+      relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE"
     ) {
       return Promise.resolve(
         kuzuController.createEdgeSchema(

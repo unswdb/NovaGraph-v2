@@ -407,24 +407,26 @@ export default class KuzuBaseService {
   createEdgeSchema(
     tableName: string,
     tablePairs: Array<[string | number, string | number]>,
-    properties?: Record<string, CompositeType>,
-    relationshipType?: "MANY_ONE" | "ONE_MANY"
+    properties: (
+      | { name: string; type: NonPrimaryKeyType }
+      | { name: string; type: PrimaryKeyType }
+    )[],
+    relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE"
   ) {
-    try {
-      const query = createEdgeSchemaQuery(
-        tableName,
-        tablePairs,
-        properties,
-        relationshipType
-      );
-      const result = this.executeQuery(query);
-      return result;
-    } catch (error: any) {
-      return {
-        success: false,
-        error: `Error create Edge Schema: ${error.message}`,
-      };
+    const query = createEdgeSchemaQuery(
+      tableName,
+      tablePairs,
+      properties,
+      relationshipType
+    );
+    const result = this.executeQuery(query);
+    if (!result.success) {
+      const fq = result.failedQueries?.[0];
+      const rawMsg = fq?.message ?? "Unknown error";
+      throw new Error(rawMsg);
     }
+    return result;
+
   }
 
   createEdge(

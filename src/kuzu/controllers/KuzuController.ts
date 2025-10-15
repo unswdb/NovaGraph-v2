@@ -201,8 +201,11 @@ class KuzuController {
   createEdgeSchema(
     tableName: string,
     tablePairs: Array<[string | number, string | number]>,
-    properties?: Record<string, CompositeType>,
-    relationshipType?: "MANY_ONE" | "ONE_MANY"
+    properties: (
+      | { name: string; type: NonPrimaryKeyType }
+      | { name: string; type: PrimaryKeyType }
+    )[],
+    relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE"
   ) {
     if (!this.service) {
       throw new Error("Kuzu service not initialized");

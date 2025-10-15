@@ -7,10 +7,12 @@ export default function EdgesList({
   node,
   outgoingEdges,
   directed,
+  onClose
 }: {
   node: GraphNode;
   outgoingEdges: [GraphNode, GraphEdge][];
   directed: boolean;
+  onClose: () => void;
 }) {
   const { database } = useStore();
   const { edgeTablesMap } = database.graph;
@@ -44,6 +46,7 @@ export default function EdgesList({
         source={node}
         outgoingEdges={outgoingEdges}
         directed={directed}
+        onClose={onClose}
       />
     </>
   );
