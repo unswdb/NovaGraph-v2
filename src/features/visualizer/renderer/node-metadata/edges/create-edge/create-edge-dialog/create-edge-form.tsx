@@ -1,11 +1,14 @@
+import { Loader } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
+import { useStore } from "~/features/visualizer/hooks/use-store";
 import InputComponent, {
   createEmptyInputResults,
 } from "~/features/visualizer/inputs";
 import { createSchemaInput } from "~/features/visualizer/schema-inputs";
 import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
+import { useAsyncFn } from "~/hooks/use-async-fn";
 import { capitalize } from "~/lib/utils";
 
 export default function CreateEdgeDialogForm({
@@ -46,14 +49,44 @@ export default function CreateEdgeDialogForm({
     [values]
   );
 
-  // TODO: Implement handleSubmit
-  const handleSubmit = () => {
-    console.log({
-      source,
-      target,
-      edgeTable: edgeTablesMap.get(selectedEdgeSchema),
-    });
-    toast.success("Edge created (not really, yet!)");
+  const store = useStore();
+  const {
+    run: createEdge,
+    isLoading,
+    getErrorMessage,
+  } = useAsyncFn(store.controller.db.createEdge.bind(store.controller.db), {
+    onSuccess: (result) => {
+      toast.success("Edge schema created successfully!");
+      // onSubmit();
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err));
+    },
+  });
+
+  const handleSubmit = async () => {
+    if (edgeTablesMap === undefined) {
+      throw Error("Missing edge table when adding edge");
+    }
+    const edgeSchema = edgeTablesMap.get(selectedEdgeSchema);
+    if (edgeSchema === undefined) {
+      throw Error(`Edge schema '${selectedEdgeSchema}' not found`);
+    }
+    let result = await createEdge(source, target, edgeSchema, values);
+    if (
+      result &&
+      !!result.nodes &&
+      !!result.edges &&
+      !!result.nodeTables &&
+      !!result.edgeTables
+    ) {
+      store.setGraphState({
+        nodes: result.nodes,
+        edges: result.edges,
+        nodeTables: result.nodeTables,
+        edgeTables: result.edgeTables,
+      });
+    }
   };
 
   return (
@@ -80,7 +113,7 @@ export default function CreateEdgeDialogForm({
           disabled={!isReadyToSubmit}
           className="flex-1"
         >
-          Create
+          {isLoading ? <Loader className="animate-spin" /> : "Create Edge"}
         </Button>
       </div>
     </>

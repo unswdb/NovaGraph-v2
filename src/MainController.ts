@@ -1,7 +1,7 @@
 import kuzuController from "./kuzu/controllers/KuzuController";
 import createModule from "./graph";
 import type { CompositeType } from "./kuzu/types/KuzuDBTypes";
-import type { GraphNode } from "./features/visualizer/types";
+import type { EdgeSchema, GraphNode } from "./features/visualizer/types";
 import type {
   NonPrimaryKeyType,
   PrimaryKeyType,
@@ -142,16 +142,14 @@ class MainController {
     async createEdge(
       node1: GraphNode,
       node2: GraphNode,
-      edgeTableName: string,
-      weight: number,
-      attributes?: Record<string, string | number | boolean>
+      edgeTable: EdgeSchema,
+      attributes?: Record<string, InputChangeResult<any>>
     ) {
       return Promise.resolve(
         kuzuController.createEdge(
           node1,
           node2,
-          edgeTableName,
-          weight,
+          edgeTable,
           attributes
         )
       );

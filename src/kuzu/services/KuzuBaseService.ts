@@ -18,8 +18,13 @@ import {
   deleteEdgeQuery,
 } from "../helpers/KuzuQueryBuilder";
 
-import type { CompositeType } from "~/kuzu/types/KuzuDBTypes";
-import type { GraphNode } from "~/features/visualizer/types";
+import type { CompositeType, ValueWithType } from "~/kuzu/types/KuzuDBTypes";
+import type {
+  EdgeSchema,
+  GraphEdge,
+  GraphNode,
+  GraphSchema,
+} from "~/features/visualizer/types";
 import type {
   NonPrimaryKeyType,
   PrimaryKeyType,
@@ -220,17 +225,10 @@ export default class KuzuBaseService {
   createEdge(
     node1: GraphNode,
     node2: GraphNode,
-    edgeTableName: string,
-    weight: number,
-    attributes?: Record<string, string | number | boolean>
+    edgeTable: EdgeSchema,
+    attributes?: Record<string, InputChangeResult<any>>
   ) {
-    const query = createEdgeQuery(
-      node1,
-      node2,
-      edgeTableName,
-      weight,
-      attributes
-    );
+    const query = createEdgeQuery(node1, node2, edgeTable, attributes);
     return throwOnFailedQuery(this.executeQuery(query));
   }
 

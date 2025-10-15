@@ -5,7 +5,7 @@
  * Each function returns a Cypher query string that can be executed by any query executor.
  */
 
-import type { GraphNode } from "~/features/visualizer/types";
+import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
 import type {
   CompositeType,
   ScalarType,
@@ -20,30 +20,30 @@ import type { InputChangeResult } from "~/features/visualizer/inputs";
 export function createEdgeQuery(
   node1: GraphNode,
   node2: GraphNode,
-  edgeTableName: string,
-  weight: number,
-  attributes?: Record<string, string | number | boolean>
+  edgeTable: EdgeSchema,
+  attributes?: Record<string, InputChangeResult<any>>
 ) {
-  const allAttributes = { weight, ...(attributes ?? {}) };
-
-  const propString =
-    allAttributes && Object.keys(allAttributes).length > 0
-      ? `{ ${Object.entries(allAttributes)
-          .map(([key, value]) =>
-            typeof value === "string"
-              ? `${key}: "${value}"`
-              : `${key}: ${value}`
-          )
-          .join(", ")} }`
-      : "";
-
+  let attributesMappingString = ""
+  if (attributes !== undefined) {
+    let extractProp = ""; 
+    for (const [key, val] of Object.entries(attributes)) {
+      if (val.value) {
+        extractProp += `\`${key}\`: ${_formatQueryInput(val.value)} , `;
+      }
+    }
+    
+    if (extractProp !== "") {
+      attributesMappingString += "{"
+      attributesMappingString += extractProp
+      attributesMappingString = attributesMappingString.slice(0, -2)
+      attributesMappingString += "}"
+    }
+  }
   const query = `
-  MATCH (u1:\`${node1.tableName}\`), (u2:\`${node2.tableName}\`)
-  WHERE u1.\`${node1._primaryKey}\` = "${node1._primaryKeyValue}"
-    AND u2.\`${node2._primaryKey}\` = "${node2._primaryKeyValue}"
-  CREATE (u1)-[:\`${edgeTableName}\` ${propString}]->(u2);
+  MATCH (u1:\`${node1.tableName}\` { \`${node1._primaryKey}\`: ${_formatQueryInput(node1._primaryKeyValue)} }),
+        (u2:\`${node2.tableName}\` { \`${node2._primaryKey}\`: ${_formatQueryInput(node2._primaryKeyValue)} })
+  CREATE (u1)-[:\`${edgeTable.tableName}\` ${attributesMappingString}]->(u2);
   `;
-  // console.log("Query: " + query);
   return query;
 }
 
@@ -580,7 +580,9 @@ function _formatQueryInput(value: any) {
   } else if (inferredType === "number") {
     return value;
   } else if (inferredType === "boolean") {
-    return value
+    return value;
+  } else if (inferredType === undefined) {
+    throw Error("Undefined!: " + inferredType)
   }
-  throw Error("Unsupported type: " + value)
+  throw Error("Unsupported type at: " + value)
 }

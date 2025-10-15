@@ -1,4 +1,4 @@
-import type { GraphNode } from "~/features/visualizer/types";
+import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
 import KuzuInMemorySync from "../services/KuzuInMemorySync";
 import type { CompositeType, ValueWithType } from "~/kuzu/types/KuzuDBTypes";
 import type {
@@ -228,9 +228,8 @@ class KuzuController {
   createEdge(
     node1: GraphNode,
     node2: GraphNode,
-    edgeTableName: string,
-    weight: number,
-    attributes?: Record<string, string | number | boolean>
+    edgeTable: EdgeSchema,
+    attributes?: Record<string, InputChangeResult<any>>
   ) {
     if (!this.service) {
       throw new Error("Kuzu service not initialized");
@@ -238,8 +237,7 @@ class KuzuController {
     return this.service.createEdge(
       node1,
       node2,
-      edgeTableName,
-      weight,
+      edgeTable,
       attributes
     );
   }
