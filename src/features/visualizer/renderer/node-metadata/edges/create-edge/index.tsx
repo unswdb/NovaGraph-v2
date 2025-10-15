@@ -161,6 +161,7 @@ export default function CreateEdge({
               target={target}
               open={dialogStatus.createEdge}
               setOpen={setCreateEdgeOpen}
+              onClose={onClose}
             />
           ))}
       </>

@@ -15,11 +15,13 @@ export default function CreateEdgeDialog({
   target,
   open,
   setOpen,
+  onClose
 }: {
   source: GraphNode;
   target: GraphNode;
   open: boolean;
   setOpen: (b: boolean) => void;
+  onClose: () => void;
 }) {
   const { database } = useStore();
   const { edgeTables, edgeTablesMap } = database.graph;
@@ -60,6 +62,7 @@ export default function CreateEdgeDialog({
             target={target}
             selectedEdgeSchema={selectedEdgeSchema.value}
             edgeTablesMap={edgeTablesMap}
+            onClose={onClose}
           />
         )}
       </DialogContent>

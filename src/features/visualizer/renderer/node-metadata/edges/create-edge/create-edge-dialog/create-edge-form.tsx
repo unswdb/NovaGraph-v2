@@ -16,11 +16,13 @@ export default function CreateEdgeDialogForm({
   target,
   selectedEdgeSchema,
   edgeTablesMap,
+  onClose
 }: {
   source: GraphNode;
   target: GraphNode;
   selectedEdgeSchema: string;
   edgeTablesMap: Map<string, EdgeSchema>;
+  onClose: () => void;
 }) {
   const inputs = useMemo(() => {
     const { properties } = edgeTablesMap.get(selectedEdgeSchema) as EdgeSchema;
@@ -57,7 +59,7 @@ export default function CreateEdgeDialogForm({
   } = useAsyncFn(store.controller.db.createEdge.bind(store.controller.db), {
     onSuccess: (result) => {
       toast.success("Edge schema created successfully!");
-      // onSubmit();
+      onClose();
     },
     onError: (err) => {
       toast.error(getErrorMessage(err));
