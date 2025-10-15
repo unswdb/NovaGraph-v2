@@ -1,18 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
-import { useStore } from "~/features/visualizer/hooks/use-store";
 import InputComponent, {
   createEmptyInputResults,
 } from "~/features/visualizer/inputs";
 import { createSchemaInput } from "~/features/visualizer/schema-inputs";
-import type { EdgeSchema } from "~/features/visualizer/types";
+import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
 import { capitalize } from "~/lib/utils";
 
 export default function CreateEdgeDialogForm({
+  source,
+  target,
   selectedEdgeSchema,
   edgeTablesMap,
 }: {
+  source: GraphNode;
+  target: GraphNode;
   selectedEdgeSchema: string;
   edgeTablesMap: Map<string, EdgeSchema>;
 }) {
@@ -45,6 +48,11 @@ export default function CreateEdgeDialogForm({
 
   // TODO: Implement handleSubmit
   const handleSubmit = () => {
+    console.log({
+      source,
+      target,
+      edgeTable: edgeTablesMap.get(selectedEdgeSchema),
+    });
     toast.success("Edge created (not really, yet!)");
   };
 

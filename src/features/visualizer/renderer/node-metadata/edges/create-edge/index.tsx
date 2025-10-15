@@ -154,6 +154,8 @@ export default function CreateEdge({
             />
           ) : (
             <CreateEdgeDialog
+              source={source}
+              target={target}
               open={dialogStatus.createEdge}
               setOpen={setCreateEdgeOpen}
             />

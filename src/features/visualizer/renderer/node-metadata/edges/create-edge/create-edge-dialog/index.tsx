@@ -1,20 +1,23 @@
 import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
 import { Separator } from "@radix-ui/react-separator";
 import { useState } from "react";
-import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogHeader } from "~/components/ui/dialog";
 import InputComponent, {
   createAlgorithmSelectInput,
   createEmptyInputResult,
 } from "~/features/visualizer/inputs";
-import type { EdgeSchema } from "~/features/visualizer/types";
 import CreateEdgeDialogForm from "./create-edge-form";
 import { useStore } from "~/features/visualizer/hooks/use-store";
+import type { GraphNode } from "~/features/visualizer/types";
 
 export default function CreateEdgeDialog({
+  source,
+  target,
   open,
   setOpen,
 }: {
+  source: GraphNode;
+  target: GraphNode;
   open: boolean;
   setOpen: (b: boolean) => void;
 }) {
@@ -53,6 +56,8 @@ export default function CreateEdgeDialog({
         {selectedEdgeSchema.value && (
           <CreateEdgeDialogForm
             key={selectedEdgeSchema.value}
+            source={source}
+            target={target}
             selectedEdgeSchema={selectedEdgeSchema.value}
             edgeTablesMap={edgeTablesMap}
           />
