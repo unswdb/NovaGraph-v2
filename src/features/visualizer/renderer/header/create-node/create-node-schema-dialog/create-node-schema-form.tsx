@@ -1,4 +1,5 @@
 import { Key, Loader, Plus, X } from "lucide-react";
+import { observer } from "mobx-react-lite";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
@@ -15,6 +16,7 @@ import {
   type NonPrimaryKeyType,
   type PrimaryKeyType,
 } from "~/features/visualizer/schema-inputs";
+import type { NodeSchema } from "~/features/visualizer/types";
 import { useAsyncFn } from "~/hooks/use-async-fn";
 
 type NodeSchemaField =
@@ -29,211 +31,216 @@ type NodeSchemaField =
       isPrimary: true;
     };
 
-export default function CreateNodeSchemaForm({
-  onSubmit,
-}: {
-  onSubmit: () => void;
-}) {
-  const { controller, database, setGraphState } = useStore();
-  const { nodeTables } = database.graph;
+const CreateNodeSchemaForm = observer(
+  ({
+    nodeTables,
+    onSubmit,
+  }: {
+    nodeTables: NodeSchema[];
+    onSubmit: () => void;
+  }) => {
+    const { controller, setGraphState } = useStore();
 
-  const { run: createNodeSchema, isLoading } = useAsyncFn(
-    controller.db.createNodeSchema.bind(controller.db),
-    {
-      onSuccess: (result) => {
-        setGraphState({
-          nodes: result.nodes,
-          edges: result.edges,
-          nodeTables: result.nodeTables,
-          edgeTables: result.edgeTables,
-        });
-        toast.success("Node schema created successfully!");
-        onSubmit();
-      },
-    }
-  );
-
-  const tableNameInput = createTextInput({
-    id: "schema-node-table-name",
-    key: "table_name",
-    displayName: "Schema/Table Name",
-    placeholder: "Enter schema/table name (e.g., Person, Product)...",
-    required: true,
-    validator: (value) => {
-      if (/^[0-9]/.test(value)) {
-        return {
-          success: false,
-          message: "Table name cannot start with a number",
-        };
+    const { run: createNodeSchema, isLoading } = useAsyncFn(
+      controller.db.createNodeSchema.bind(controller.db),
+      {
+        onSuccess: (result) => {
+          setGraphState({
+            nodes: result.nodes,
+            edges: result.edges,
+            nodeTables: result.nodeTables,
+            edgeTables: result.edgeTables,
+          });
+          toast.success("Node schema created successfully!");
+          onSubmit();
+        },
       }
-
-      if (!/^[A-Za-z0-9]+$/.test(value)) {
-        return {
-          success: false,
-          message:
-            "Table name can only contain alphanumeric characters (letters and numbers)",
-        };
-      }
-      const doesTableNameExist = nodeTables.some((s) => s.tableName === value);
-      if (doesTableNameExist) {
-        return {
-          success: false,
-          message:
-            "A node schema with this name already exists. Please choose a different name.",
-        };
-      }
-      return { success: true };
-    },
-  });
-
-  const [tableName, setTableName] = useState(
-    createEmptyInputResult(tableNameInput)
-  );
-  const [fields, setFields] = useState<NodeSchemaField[]>([
-    {
-      name: "",
-      type: PK_SCHEMA_TYPES[0],
-      isPrimary: true,
-    },
-  ]);
-
-  const primaryKeyCount = useMemo(
-    () => fields.filter((f) => f.isPrimary).length,
-    [fields]
-  );
-
-  const allFieldNamesUnique = useMemo(
-    () => new Set(fields.map((f) => f.name.trim())).size === fields.length,
-    [fields]
-  );
-
-  const isReadyToSubmit = useMemo(
-    () =>
-      !!tableName.success && // table name is valid
-      fields.every((f) => !!f.name.trim()) && // every key isn't empty
-      primaryKeyCount === 1 && // only one primary key is allowed
-      allFieldNamesUnique, // all names unique
-    [tableName, fields, primaryKeyCount]
-  );
-
-  const addNewField = () => {
-    const newField: NodeSchemaField = {
-      name: "",
-      type: NON_PK_SCHEMA_TYPES[0],
-      isPrimary: false,
-    };
-    setFields((prev) => [...prev, newField]);
-  };
-
-  const deleteField = (index: number) => {
-    setFields((prev) => [...prev.slice(0, index), ...prev.slice(index + 1)]);
-  };
-
-  const updateField = (index: number, updates: Partial<NodeSchemaField>) => {
-    setFields((prev) =>
-      prev.map((field, i) => (i === index ? { ...field, ...updates } : field))
     );
-  };
 
-  const togglePrimaryKey = (index: number) => {
-    setFields((prev) =>
-      prev.map((field, i) => {
-        if (i === index) {
+    const tableNameInput = createTextInput({
+      id: "schema-node-table-name",
+      key: "table_name",
+      displayName: "Schema/Table Name",
+      placeholder: "Enter schema/table name (e.g., Person, Product)...",
+      required: true,
+      validator: (value) => {
+        if (/^[0-9]/.test(value)) {
           return {
-            ...field,
-            isPrimary: true,
-            type: PK_SCHEMA_TYPES.includes(field.type)
-              ? field.type
-              : PK_SCHEMA_TYPES[0],
+            success: false,
+            message: "Table name cannot start with a number",
           };
         }
-        return {
-          ...field,
-          isPrimary: false,
-          type: NON_PK_SCHEMA_TYPES.includes(field.type)
-            ? field.type
-            : NON_PK_SCHEMA_TYPES[0],
-        };
-      })
+
+        if (!/^[A-Za-z0-9]+$/.test(value)) {
+          return {
+            success: false,
+            message:
+              "Table name can only contain alphanumeric characters (letters and numbers)",
+          };
+        }
+        const doesTableNameExist = nodeTables.some(
+          (s) => s.tableName === value
+        );
+        if (doesTableNameExist) {
+          return {
+            success: false,
+            message:
+              "A node schema with this name already exists. Please choose a different name.",
+          };
+        }
+        return { success: true };
+      },
+    });
+
+    const [tableName, setTableName] = useState(
+      createEmptyInputResult(tableNameInput)
     );
-  };
+    const [fields, setFields] = useState<NodeSchemaField[]>([
+      {
+        name: "",
+        type: PK_SCHEMA_TYPES[0],
+        isPrimary: true,
+      },
+    ]);
 
-  const handleOnSubmit = async () => {
-    if (isReadyToSubmit) {
-      const primaryKeyField = fields.find((f) => f.isPrimary);
-      const nonPrimaryFields = fields.filter((f) => !f.isPrimary);
-      await createNodeSchema(
-        tableName.value!,
-        primaryKeyField!.name,
-        primaryKeyField!.type,
-        nonPrimaryFields
+    const primaryKeyCount = useMemo(
+      () => fields.filter((f) => f.isPrimary).length,
+      [fields]
+    );
+
+    const allFieldNamesUnique = useMemo(
+      () => new Set(fields.map((f) => f.name.trim())).size === fields.length,
+      [fields]
+    );
+
+    const isReadyToSubmit = useMemo(
+      () =>
+        !!tableName.success && // table name is valid
+        fields.every((f) => !!f.name.trim()) && // every key isn't empty
+        primaryKeyCount === 1 && // only one primary key is allowed
+        allFieldNamesUnique, // all names unique
+      [tableName, fields, primaryKeyCount]
+    );
+
+    const addNewField = () => {
+      const newField: NodeSchemaField = {
+        name: "",
+        type: NON_PK_SCHEMA_TYPES[0],
+        isPrimary: false,
+      };
+      setFields((prev) => [...prev, newField]);
+    };
+
+    const deleteField = (index: number) => {
+      setFields((prev) => [...prev.slice(0, index), ...prev.slice(index + 1)]);
+    };
+
+    const updateField = (index: number, updates: Partial<NodeSchemaField>) => {
+      setFields((prev) =>
+        prev.map((field, i) => (i === index ? { ...field, ...updates } : field))
       );
-    }
-  };
-  const NodeSchemaFormError = () => {
-    let errorMsg = "";
+    };
 
-    if (primaryKeyCount === 0) {
-      errorMsg = "You must specify exactly one primary key.";
-    } else if (primaryKeyCount > 1) {
-      errorMsg = "Only one primary key is allowed.";
-    } else if (!allFieldNamesUnique) {
-      errorMsg = "Field names must be unique.";
-    }
+    const togglePrimaryKey = (index: number) => {
+      setFields((prev) =>
+        prev.map((field, i) => {
+          if (i === index) {
+            return {
+              ...field,
+              isPrimary: true,
+              type: PK_SCHEMA_TYPES.includes(field.type)
+                ? field.type
+                : PK_SCHEMA_TYPES[0],
+            };
+          }
+          return {
+            ...field,
+            isPrimary: false,
+            type: NON_PK_SCHEMA_TYPES.includes(field.type)
+              ? field.type
+              : NON_PK_SCHEMA_TYPES[0],
+          };
+        })
+      );
+    };
 
-    return errorMsg ? (
-      <p className="text-sm text-critical">{errorMsg}</p>
-    ) : null;
-  };
+    const handleOnSubmit = async () => {
+      if (isReadyToSubmit) {
+        const primaryKeyField = fields.find((f) => f.isPrimary);
+        const nonPrimaryFields = fields.filter((f) => !f.isPrimary);
+        await createNodeSchema(
+          tableName.value!,
+          primaryKeyField!.name,
+          primaryKeyField!.type,
+          nonPrimaryFields
+        );
+      }
+    };
+    const NodeSchemaFormError = () => {
+      let errorMsg = "";
 
-  return (
-    <div className="space-y-4">
-      <InputComponent<TextInput>
-        input={tableNameInput}
-        value={tableName.value}
-        onChange={setTableName}
-      />
+      if (primaryKeyCount === 0) {
+        errorMsg = "You must specify exactly one primary key.";
+      } else if (primaryKeyCount > 1) {
+        errorMsg = "Only one primary key is allowed.";
+      } else if (!allFieldNamesUnique) {
+        errorMsg = "Field names must be unique.";
+      }
 
-      <div className="space-y-2">
-        <p className="small-title">Fields</p>
-        {/* Error */}
-        <NodeSchemaFormError />
-        {fields.map((field, index) => (
-          <SchemaFieldInputs
-            key={index}
-            field={field}
-            onChangeName={(name) => updateField(index, { name })}
-            onChangeType={(type) => updateField(index, { type })}
-            onTogglePrimary={() => togglePrimaryKey(index)}
-            onDelete={() => deleteField(index)}
-            canDelete={fields.length > 1}
-          />
-        ))}
+      return errorMsg ? (
+        <p className="text-sm text-critical">{errorMsg}</p>
+      ) : null;
+    };
+
+    return (
+      <div className="space-y-4">
+        <InputComponent<TextInput>
+          input={tableNameInput}
+          value={tableName.value}
+          onChange={setTableName}
+        />
+
+        <div className="space-y-2">
+          <p className="small-title">Fields</p>
+          {/* Error */}
+          <NodeSchemaFormError />
+          {fields.map((field, index) => (
+            <NodeSchemaFieldInputs
+              key={index}
+              field={field}
+              onChangeName={(name) => updateField(index, { name })}
+              onChangeType={(type) => updateField(index, { type })}
+              onTogglePrimary={() => togglePrimaryKey(index)}
+              onDelete={() => deleteField(index)}
+              canDelete={fields.length > 1}
+            />
+          ))}
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={addNewField}
+            className="w-full"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Field
+          </Button>
+        </div>
 
         <Button
           type="button"
-          variant="outline"
-          onClick={addNewField}
+          onClick={handleOnSubmit}
+          disabled={!isReadyToSubmit || isLoading}
           className="w-full"
         >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Field
+          {isLoading ? <Loader className="animate-spin" /> : "Create Schema"}
         </Button>
       </div>
+    );
+  }
+);
 
-      <Button
-        type="button"
-        onClick={handleOnSubmit}
-        disabled={!isReadyToSubmit || isLoading}
-        className="w-full"
-      >
-        {isLoading ? <Loader className="animate-spin" /> : "Create Schema"}
-      </Button>
-    </div>
-  );
-}
-
-function SchemaFieldInputs({
+function NodeSchemaFieldInputs({
   field,
   onChangeName,
   onChangeType,
@@ -334,3 +341,5 @@ function SchemaFieldInputs({
     </div>
   );
 }
+
+export default CreateNodeSchemaForm;

@@ -7,31 +7,23 @@ import InputComponent, {
   createEmptyInputResults,
 } from "~/features/visualizer/inputs";
 import { createSchemaInput } from "~/features/visualizer/schema-inputs";
-import type { NodeSchema } from "~/features/visualizer/types";
+import type { GraphNode, NodeSchema } from "~/features/visualizer/types";
 import { useAsyncFn } from "~/hooks/use-async-fn";
 import { capitalize } from "~/lib/utils";
 
 export default function CreateNodeDialogForm({
+  nodesWithinSameTable,
   selectedNodeSchema,
-  nodeTablesMap,
   onClose,
 }: {
-  selectedNodeSchema: string;
-  nodeTablesMap: Map<string, NodeSchema>;
+  nodesWithinSameTable: GraphNode[];
+  selectedNodeSchema: NodeSchema;
   onClose: () => void;
 }) {
-  const { database, controller, setGraphState } = useStore();
-
-  const nodesWithinSameTable = useMemo(
-    () =>
-      database.graph.nodes.filter((t) => t.tableName === selectedNodeSchema),
-    [database.graph.nodes, selectedNodeSchema]
-  );
+  const { controller, setGraphState } = useStore();
 
   const inputs = useMemo(() => {
-    const { primaryKey, primaryKeyType, properties } = nodeTablesMap.get(
-      selectedNodeSchema
-    ) as NodeSchema;
+    const { primaryKey, primaryKeyType, properties } = selectedNodeSchema;
 
     const primaryKeyInput = createSchemaInput(primaryKeyType, {
       id: `${selectedNodeSchema}-${primaryKey}-pk`,
@@ -93,7 +85,7 @@ export default function CreateNodeDialogForm({
   );
 
   const handleOnSubmit = async () => {
-    await createNode(selectedNodeSchema, values);
+    await createNode(selectedNodeSchema.tableName, values);
   };
 
   return (

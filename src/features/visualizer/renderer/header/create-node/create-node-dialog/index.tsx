@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,23 +13,26 @@ import InputComponent, {
 import CreateNodeDialogForm from "./create-node-form";
 import { Separator } from "~/components/ui/separator";
 import { Button } from "~/components/ui/button";
-import { useStore } from "~/features/visualizer/hooks/use-store";
+import type { GraphNode, NodeSchema } from "~/features/visualizer/types";
 
 export default function CreateNodeDialog({
   open,
   onClose,
+  nodes,
+  nodeTables,
+  nodeTablesMap,
   onCreateSchemaClick,
 }: {
   open: boolean;
   onClose: () => void;
+  nodes: GraphNode[];
+  nodeTables: NodeSchema[];
+  nodeTablesMap: Map<string, NodeSchema>;
   onCreateSchemaClick: () => void;
 }) {
-  const { database } = useStore();
-  const { nodeTables, nodeTablesMap } = database.graph;
-
   const selectNodeSchemaInput = createAlgorithmSelectInput({
-    id: "select-schema",
-    key: "selectedNodeSchema",
+    id: "select-table-name",
+    key: "selectedTableName",
     displayName: "Schema:",
     showLabel: false,
     source: "static",
@@ -37,8 +40,24 @@ export default function CreateNodeDialog({
     defaultValue: nodeTables[0].tableName,
   });
 
-  const [selectedNodeSchema, setSelectedNodeSchema] = useState(
+  const [selectedTableName, setSelectedNodeSchema] = useState(
     createEmptyInputResult(selectNodeSchemaInput)
+  );
+
+  const selectedNodeSchema = useMemo(
+    () =>
+      !!selectedTableName.value
+        ? (nodeTablesMap.get(selectedTableName.value) ?? null)
+        : null,
+    [selectedTableName.value]
+  );
+
+  const nodesWithinSameTable = useMemo(
+    () =>
+      !!selectedTableName.value && !!selectedNodeSchema
+        ? nodes.filter((t) => t.tableName === selectedTableName.value)
+        : [],
+    [nodes, selectedTableName.value, selectedNodeSchema]
   );
 
   return (
@@ -54,7 +73,7 @@ export default function CreateNodeDialog({
           <div className="flex-1">
             <InputComponent
               input={selectNodeSchemaInput}
-              value={selectedNodeSchema.value}
+              value={selectedTableName.value}
               onChange={setSelectedNodeSchema}
             />
           </div>
@@ -63,11 +82,11 @@ export default function CreateNodeDialog({
           </Button>
         </div>
         <Separator />
-        {selectedNodeSchema.value && (
+        {selectedNodeSchema && (
           <CreateNodeDialogForm
-            key={selectedNodeSchema.value}
-            selectedNodeSchema={selectedNodeSchema.value}
-            nodeTablesMap={nodeTablesMap}
+            key={selectedNodeSchema.tableName}
+            selectedNodeSchema={selectedNodeSchema}
+            nodesWithinSameTable={nodesWithinSameTable}
             onClose={onClose}
           />
         )}

@@ -17,6 +17,7 @@ import {
   type NodeSizeScale,
 } from "./renderer/constant";
 import { useStore } from "./hooks/use-store";
+import { observer } from "mobx-react-lite";
 
 export default function SettingsSidebar() {
   return (
@@ -30,7 +31,7 @@ export default function SettingsSidebar() {
   );
 }
 
-function SettingsSidebarWrapper() {
+const SettingsSidebarWrapper = observer(() => {
   const { gravity, setGravity, nodeSizeScale, setNodeSizeScale } = useStore();
 
   const isMobile = useIsMobile();
@@ -50,7 +51,7 @@ function SettingsSidebarWrapper() {
       <SettingsSidebarControls open={isMobile ? openMobile : open} />
     </>
   );
-}
+});
 
 function SettingsSidebarContent({
   open,

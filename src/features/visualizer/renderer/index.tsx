@@ -14,6 +14,7 @@ import NodeMetadata from "./node-metadata";
 import { useStore } from "../hooks/use-store";
 import { MODE } from "./constant";
 import type { ColorMap, SizeMap } from "../algorithms/implementations";
+import { observer } from "mobx-react-lite";
 
 const INITIAL_ZOOM_LEVEL = 1;
 const SIMULATION_LINK_DISTANCE = 20;
@@ -21,7 +22,7 @@ const SIMULATION_SPRING = 0.02;
 const SIMULATION_DECAY = 100000;
 const SIMULATION_REPULSION = 2;
 
-export default function GraphRenderer({ className }: { className?: string }) {
+const GraphRenderer = observer(({ className }: { className?: string }) => {
   const { database, gravity, nodeSizeScale, activeResponse } = useStore();
 
   const { nodes, edges, nodesMap, nodeTables, directed } = database.graph;
@@ -178,7 +179,7 @@ export default function GraphRenderer({ className }: { className?: string }) {
       </div>
     </CosmographProvider>
   );
-}
+});
 
 function GradientOverlay({ position }: { position: "top" | "bottom" }) {
   return (
@@ -193,3 +194,5 @@ function GradientOverlay({ position }: { position: "top" | "bottom" }) {
     />
   );
 }
+
+export default GraphRenderer;

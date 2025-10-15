@@ -1,14 +1,20 @@
 import { Plus } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { useState } from "react";
-import { useStore } from "~/features/visualizer/hooks/use-store";
 import CreateNodeSchemaDialog from "./create-node-schema-dialog";
 import CreateNodeDialog from "./create-node-dialog";
 import { isNonEmpty } from "~/lib/utils";
+import type { GraphNode, NodeSchema } from "~/features/visualizer/types";
 
-export default function CreateNode() {
-  const { database } = useStore();
-
+export default function CreateNode({
+  nodes,
+  nodeTables,
+  nodeTablesMap,
+}: {
+  nodes: GraphNode[];
+  nodeTables: NodeSchema[];
+  nodeTablesMap: Map<string, NodeSchema>;
+}) {
   const [dialogStatus, setDialogStatus] = useState({
     createNode: false,
     createNodeSchema: false,
@@ -32,7 +38,7 @@ export default function CreateNode() {
   };
 
   const setCreateNodeSchemaOpen = (open: boolean) => {
-    if (!isNonEmpty(database.graph.nodeTables)) {
+    if (!isNonEmpty(nodeTables)) {
       setDialogStatus({ createNode: false, createNodeSchema: open });
     } else {
       setDialogStatus({ createNode: !open, createNodeSchema: open });
@@ -40,7 +46,7 @@ export default function CreateNode() {
   };
 
   const openDialog = () => {
-    if (!isNonEmpty(database.graph.nodeTables)) {
+    if (!isNonEmpty(nodeTables)) {
       setDialogStatus({ createNode: false, createNodeSchema: true });
     } else {
       setDialogStatus({ createNode: true, createNodeSchema: false });
@@ -55,11 +61,15 @@ export default function CreateNode() {
       <CreateNodeSchemaDialog
         open={dialogStatus.createNodeSchema}
         setOpen={setCreateNodeSchemaOpen}
+        nodeTables={nodeTables}
         onSubmit={onSubmitCreateNodeSchema}
       />
-      {isNonEmpty(database.graph.nodeTables) && (
+      {isNonEmpty(nodeTables) && (
         <CreateNodeDialog
           open={dialogStatus.createNode}
+          nodes={nodes}
+          nodeTables={nodeTables}
+          nodeTablesMap={nodeTablesMap}
           onClose={onCloseCreateNode}
           onCreateSchemaClick={onCreateSchemaClickCreateNode}
         />
