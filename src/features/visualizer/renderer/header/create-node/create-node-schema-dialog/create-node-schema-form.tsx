@@ -34,13 +34,19 @@ export default function CreateNodeSchemaForm({
 }: {
   onSubmit: () => void;
 }) {
-  const { controller, database } = useStore();
+  const { controller, database, setGraphState } = useStore();
   const { nodeTables } = database.graph;
 
   const { run: createNodeSchema, isLoading } = useAsyncFn(
     controller.db.createNodeSchema.bind(controller.db),
     {
       onSuccess: (result) => {
+        setGraphState({
+          nodes: result.nodes,
+          edges: result.edges,
+          nodeTables: result.nodeTables,
+          edgeTables: result.edgeTables,
+        });
         toast.success("Node schema created successfully!");
         onSubmit();
       },
@@ -152,32 +158,16 @@ export default function CreateNodeSchemaForm({
     );
   };
 
-  const store = useStore();
   const handleOnSubmit = async () => {
     if (isReadyToSubmit) {
       const primaryKeyField = fields.find((f) => f.isPrimary);
       const nonPrimaryFields = fields.filter((f) => !f.isPrimary);
-      let result = await createNodeSchema(
+      await createNodeSchema(
         tableName.value!,
         primaryKeyField!.name,
         primaryKeyField!.type,
         nonPrimaryFields
       );
-
-      if (
-        result &&
-        !!result.nodes &&
-        !!result.edges &&
-        !!result.nodeTables &&
-        !!result.edgeTables
-      ) {
-        store.setGraphState({
-          nodes: result.nodes,
-          edges: result.edges,
-          nodeTables: result.nodeTables,
-          edgeTables: result.edgeTables,
-        });
-      }
     }
   };
   const NodeSchemaFormError = () => {

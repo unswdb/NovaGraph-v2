@@ -50,6 +50,8 @@ export default function EdgeListItem({
   directed: boolean;
   onClose: () => void;
 }) {
+  const { controller, setGraphState } = useStore();
+
   const inputs = [
     Object.entries(edgeSchema.properties).map(([key, type]) =>
       createSchemaInput(type, {
@@ -70,77 +72,43 @@ export default function EdgeListItem({
     [values]
   );
 
-  const store = useStore();
-  const {
-    run: deleteEdge,
-    isLoading,
-    getErrorMessage,
-  } = useAsyncFn(store.controller.db.deleteEdge.bind(store.controller.db), {
-    onSuccess: (result) => {
-      toast.success("Edge deleted!");
-      onClose();
-    },
-  });
+  const { run: deleteEdge, isLoading } = useAsyncFn(
+    controller.db.deleteEdge.bind(controller.db),
+    {
+      onSuccess: (result) => {
+        setGraphState({
+          nodes: result.nodes,
+          edges: result.edges,
+          nodeTables: result.nodeTables,
+          edgeTables: result.edgeTables,
+        });
+        toast.success("Edge deleted successfully!");
+        onClose();
+      },
+    }
+  );
 
   const handleDeleteEdge = async (node1: GraphNode, node2: GraphNode) => {
-    let result = await deleteEdge(node1, node2, edgeSchema.tableName);
-    if (
-      result &&
-      !!result.nodes &&
-      !!result.edges &&
-      !!result.nodeTables &&
-      !!result.edgeTables
-    ) {
-      store.setGraphState({
-        nodes: result.nodes,
-        edges: result.edges,
-        nodeTables: result.nodeTables,
-        edgeTables: result.edgeTables,
-      });
-    }
-    // toast.success("Edge deleted (not really, yet!)");
+    await deleteEdge(node1, node2, edgeSchema.tableName);
   };
 
   const { run: updateEdge } = useAsyncFn(
-    store.controller.db.updateEdge.bind(store.controller.db),
+    controller.db.updateEdge.bind(controller.db),
     {
       onSuccess: (result) => {
+        setGraphState({
+          nodes: result.nodes,
+          edges: result.edges,
+          nodeTables: result.nodeTables,
+          edgeTables: result.edgeTables,
+        });
         toast.success("Edge attributes updated!");
         onClose();
       },
     }
   );
   const handleSubmit = async () => {
-    // console.log("source:", JSON.stringify(source, null, 2));
-    // console.log("target:", JSON.stringify(target, null, 2));
-    // console.log("values:", JSON.stringify(values, null, 2));
-    // console.log("edgeSchema.tableName:", JSON.stringify(edgeSchema.tableName, null, 2));
-
-    // console.log(
-    //   "result:",
-    //   JSON.stringify(
-    //     result,
-    //     (key, value) => (typeof value === "bigint" ? value.toString() : value),
-    //     2 // ← this should be the third argument to JSON.stringify
-    //   )
-    // );
-
-    let result = await updateEdge(source, target, edgeSchema.tableName, values);
-    if (
-      result &&
-      !!result.nodes &&
-      !!result.edges &&
-      !!result.nodeTables &&
-      !!result.edgeTables
-    ) {
-      store.setGraphState({
-        nodes: result.nodes,
-        edges: result.edges,
-        nodeTables: result.nodeTables,
-        edgeTables: result.edgeTables,
-      });
-    }
-    // toast.success("Edge attributes updated");
+    await updateEdge(source, target, edgeSchema.tableName, values);
   };
 
   return (
@@ -154,13 +122,9 @@ export default function EdgeListItem({
           >
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="truncate">
-                  {target._primaryKeyValue} {" "}
-                </span>
+                <span className="truncate">{target._primaryKeyValue} </span>
               </TooltipTrigger>
-              <TooltipContent>
-                Label: {target._primaryKeyValue}
-              </TooltipContent>
+              <TooltipContent>Label: {target._primaryKeyValue}</TooltipContent>
             </Tooltip>
           </Button>
         </DialogTrigger>

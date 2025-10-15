@@ -37,19 +37,24 @@ export default function CreateEdgeSchemaForm({
   source: GraphNode;
   target: GraphNode;
 }) {
-  const { controller, database } = useStore();
+  const { controller, database, setGraphState } = useStore();
   const { edgeTables } = database.graph;
 
-  const {
-    run: createEdgeSchema,
-    isLoading,
-    getErrorMessage,
-  } = useAsyncFn(controller.db.createEdgeSchema.bind(controller.db), {
-    onSuccess: (result) => {
-      toast.success("Edge schema created successfully!");
-      onSubmit();
-    },
-  });
+  const { run: createEdgeSchema, isLoading } = useAsyncFn(
+    controller.db.createEdgeSchema.bind(controller.db),
+    {
+      onSuccess: (result) => {
+        setGraphState({
+          nodes: result.nodes,
+          edges: result.edges,
+          nodeTables: result.nodeTables,
+          edgeTables: result.edgeTables,
+        });
+        toast.success("Edge schema created successfully!");
+        onSubmit();
+      },
+    }
+  );
 
   const tableNameInput = createTextInput({
     id: "schema-edge-table-name",
@@ -122,31 +127,16 @@ export default function CreateEdgeSchemaForm({
     );
   };
 
-  const store = useStore();
   const handleOnSubmit = async () => {
     if (isReadyToSubmit) {
       if (tableName.value === undefined) {
         throw Error("Empty or undefined table name");
       }
-      let result = await createEdgeSchema(
+      await createEdgeSchema(
         tableName.value,
         [[source.tableName, target.tableName]],
         fields
       );
-      if (
-        result &&
-        !!result.nodes &&
-        !!result.edges &&
-        !!result.nodeTables &&
-        !!result.edgeTables
-      ) {
-        store.setGraphState({
-          nodes: result.nodes,
-          edges: result.edges,
-          nodeTables: result.nodeTables,
-          edgeTables: result.edgeTables,
-        });
-      }
     }
   };
 

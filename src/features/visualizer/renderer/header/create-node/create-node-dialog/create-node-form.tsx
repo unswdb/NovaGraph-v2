@@ -76,25 +76,24 @@ export default function CreateNodeDialogForm({
     [values]
   );
 
-  const {
-    run: createNode,
-    isLoading,
-    getErrorMessage,
-  } = useAsyncFn(controller.db.createNode.bind(controller.db), {
-    onSuccess: (result) => {
-      toast.success("Node created successfully!");
-      onClose();
-    },
-  });
+  const { run: createNode, isLoading } = useAsyncFn(
+    controller.db.createNode.bind(controller.db),
+    {
+      onSuccess: (result) => {
+        setGraphState({
+          nodes: result.nodes,
+          edges: result.edges,
+          nodeTables: result.nodeTables,
+          edgeTables: result.edgeTables,
+        });
+        toast.success("Node created successfully!");
+        onClose();
+      },
+    }
+  );
 
   const handleOnSubmit = async () => {
-    const result = await createNode(selectedNodeSchema, values);
-    setGraphState({
-      nodes: result.nodes,
-      edges: result.edges,
-      nodeTables: result.nodeTables,
-      edgeTables: result.edgeTables,
-    });
+    await createNode(selectedNodeSchema, values);
   };
 
   return (

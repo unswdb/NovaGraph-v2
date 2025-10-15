@@ -19,6 +19,8 @@ export default function AttributesForm({
   node: GraphNode;
   nodeSchema: NodeSchema;
 }) {
+  const { controller, setGraphState } = useStore();
+
   const inputs = [
     createAlgorithmSelectInput({
       id: "node-table-name",
@@ -54,32 +56,23 @@ export default function AttributesForm({
     [values]
   );
 
-  const store = useStore();
   const { run: updateNode, isLoading } = useAsyncFn(
-    store.controller.db.updateNode.bind(store.controller.db),
+    controller.db.updateNode.bind(controller.db),
     {
       onSuccess: (result) => {
-        toast.success("Node attributes updated");
+        setGraphState({
+          nodes: result.nodes,
+          edges: result.edges,
+          nodeTables: result.nodeTables,
+          edgeTables: result.edgeTables,
+        });
+        toast.success("Node attributes updated successfully!");
       },
     }
   );
 
   const handleSubmit = async () => {
-    let result = await updateNode(node, values);
-    if (
-      result &&
-      !!result.nodes &&
-      !!result.edges &&
-      !!result.nodeTables &&
-      !!result.edgeTables
-    ) {
-      store.setGraphState({
-        nodes: result.nodes,
-        edges: result.edges,
-        nodeTables: result.nodeTables,
-        edgeTables: result.edgeTables,
-      });
-    }
+    await updateNode(node, values);
   };
 
   return (
