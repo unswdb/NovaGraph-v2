@@ -36,9 +36,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     function handleError(event: ErrorEvent) {
       const msg = String(event?.error?.message ?? event?.message ?? "");
       if (isNoise(msg)) return; // ignore harmless Cosmograph/WebGL/Resize noise
-
       console.error(msg);
-      toast.error("An unexpected error occurred.");
+      toast.error(msg);
     }
 
     function handleRejection(event: PromiseRejectionEvent) {
@@ -49,7 +48,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       if (isNoise(msg)) return;
 
       console.error(msg);
-      toast.error("Something went wrong. Please try again later.");
+      toast.error(msg);
     }
 
     window.addEventListener("error", handleError);

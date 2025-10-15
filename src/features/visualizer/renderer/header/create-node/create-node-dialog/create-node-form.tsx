@@ -14,13 +14,13 @@ import { capitalize } from "~/lib/utils";
 export default function CreateNodeDialogForm({
   selectedNodeSchema,
   nodeTablesMap,
-  onClose
+  onClose,
 }: {
   selectedNodeSchema: string;
   nodeTablesMap: Map<string, NodeSchema>;
   onClose: () => void;
 }) {
-  const { database } = useStore();
+  const { database, controller, setGraphState } = useStore();
 
   const nodesWithinSameTable = useMemo(
     () =>
@@ -58,7 +58,7 @@ export default function CreateNodeDialogForm({
         key: key,
         displayName: capitalize(key),
         placeholder: `Enter ${key}...`,
-        required: false
+        required: false,
       })
     );
 
@@ -76,41 +76,25 @@ export default function CreateNodeDialogForm({
     [values]
   );
 
-  const store = useStore();
   const {
     run: createNode,
     isLoading,
     getErrorMessage,
-  } = useAsyncFn(store.controller.db.createNode.bind(store.controller.db), {
+  } = useAsyncFn(controller.db.createNode.bind(controller.db), {
     onSuccess: (result) => {
       toast.success("Node created successfully!");
       onClose();
     },
-    onError: (err) => {
-      toast.error(getErrorMessage(err));
-    },
   });
 
   const handleOnSubmit = async () => {
-    let result = await createNode(
-      selectedNodeSchema,
-      values
-    );
-    console.log(result)
-    if (
-      result &&
-      !!result.nodes &&
-      !!result.edges &&
-      !!result.nodeTables &&
-      !!result.edgeTables
-    ) {
-      store.setGraphState({
-        nodes: result.nodes,
-        edges: result.edges,
-        nodeTables: result.nodeTables,
-        edgeTables: result.edgeTables,
-      });
-    }
+    const result = await createNode(selectedNodeSchema, values);
+    setGraphState({
+      nodes: result.nodes,
+      edges: result.edges,
+      nodeTables: result.nodeTables,
+      edgeTables: result.edgeTables,
+    });
   };
 
   return (

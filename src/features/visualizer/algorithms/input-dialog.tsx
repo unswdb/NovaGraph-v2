@@ -60,10 +60,9 @@ export default function InputDialog({
 
     // Don't run when there's no nodes
     if (nodes.length === 0) {
-      toast.error(
-        "Cannot run algorithm — no nodes found. Try adding some nodes first."
+      throw new Error(
+        "Cannot run algorithm — no nodes found. Try adding some nodes first"
       );
-      return;
     }
 
     setOpen(false);
@@ -80,13 +79,12 @@ export default function InputDialog({
         setActiveAlgorithm(algorithm);
         setActiveResponse(algorithmResponse);
       } catch (err) {
-        toast.error(
+        throw new Error(
           module && typeof err == "number"
             ? module.what_to_stderr(err)
-            : String(err) ??
-                "An unexpected error occurred. Please try again later."
+            : (String(err) ??
+              "An unexpected error occurred. Please try again later.")
         );
-        console.log(err);
       } finally {
         stopLoading();
       }

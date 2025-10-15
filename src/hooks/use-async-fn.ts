@@ -29,6 +29,7 @@ export function useAsyncFn<TArgs extends any[], TResult>(
         return result;
       } catch (err) {
         options.onError?.(err);
+        throw err;
       } finally {
         setIsLoading(false);
         options.onFinally?.();

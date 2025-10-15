@@ -10,7 +10,7 @@ import type {
   CompositeType,
   ScalarType,
   ValueWithType,
-} from "../../types/KuzuDBTypes";
+} from "../types/KuzuDBTypes";
 import type {
   NonPrimaryKeyType,
   PrimaryKeyType,

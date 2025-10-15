@@ -37,19 +37,15 @@ export default function CreateNodeSchemaForm({
   const { controller, database } = useStore();
   const { nodeTables } = database.graph;
 
-  const {
-    run: createNodeSchema,
-    isLoading,
-    getErrorMessage,
-  } = useAsyncFn(controller.db.createNodeSchema.bind(controller.db), {
-    onSuccess: (result) => {
-      toast.success("Node schema created successfully!");
-      onSubmit();
-    },
-    onError: (err) => {
-      toast.error(getErrorMessage(err));
-    },
-  });
+  const { run: createNodeSchema, isLoading } = useAsyncFn(
+    controller.db.createNodeSchema.bind(controller.db),
+    {
+      onSuccess: (result) => {
+        toast.success("Node schema created successfully!");
+        onSubmit();
+      },
+    }
+  );
 
   const tableNameInput = createTextInput({
     id: "schema-node-table-name",

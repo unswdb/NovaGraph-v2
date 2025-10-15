@@ -31,11 +31,11 @@ type EdgeSchemaField =
 export default function CreateEdgeSchemaForm({
   onSubmit,
   source,
-  target
+  target,
 }: {
   onSubmit: () => void;
-  source: GraphNode
-  target: GraphNode
+  source: GraphNode;
+  target: GraphNode;
 }) {
   const { controller, database } = useStore();
   const { edgeTables } = database.graph;
@@ -48,9 +48,6 @@ export default function CreateEdgeSchemaForm({
     onSuccess: (result) => {
       toast.success("Edge schema created successfully!");
       onSubmit();
-    },
-    onError: (err) => {
-      toast.error(getErrorMessage(err));
     },
   });
 
@@ -129,9 +126,13 @@ export default function CreateEdgeSchemaForm({
   const handleOnSubmit = async () => {
     if (isReadyToSubmit) {
       if (tableName.value === undefined) {
-        throw Error("Empty or undefined table name")
+        throw Error("Empty or undefined table name");
       }
-      let result = await createEdgeSchema(tableName.value, [[source.tableName, target.tableName]], fields)
+      let result = await createEdgeSchema(
+        tableName.value,
+        [[source.tableName, target.tableName]],
+        fields
+      );
       if (
         result &&
         !!result.nodes &&

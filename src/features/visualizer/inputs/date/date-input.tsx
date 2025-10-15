@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DateInput } from "./types";
 import {
   isValidDate,
@@ -68,7 +68,7 @@ export default function DateInputComponent({
       : true;
     const message = required
       ? validator && !!newValue.trim()
-        ? validator.message ?? ""
+        ? (validator.message ?? "")
         : "This field is required."
       : "";
 

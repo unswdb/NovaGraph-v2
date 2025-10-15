@@ -1,12 +1,18 @@
-// type QueryResultSync = import("../../types/kuzu-wasm/sync/query_result");
-
 import type {
   GraphEdge,
   GraphNode,
   GraphSchema,
 } from "~/features/visualizer/types";
 import { getSingleSchemaPropertiesQuery } from "../helpers/KuzuQueryBuilder";
-import type { NonPrimaryKeyType, PrimaryKeyType } from "~/features/visualizer/schema-inputs";
+import type {
+  NonPrimaryKeyType,
+  PrimaryKeyType,
+} from "~/features/visualizer/schema-inputs";
+import type {
+  ErrorQueryResult,
+  SuccessQueryResult,
+} from "./KuzuQueryResultExtractor.types";
+import type QueryResult from "../types/kuzu_wasm_internal/query_result";
 
 /**
  * Helper method to process a single query result (returns a single object)
@@ -14,12 +20,12 @@ import type { NonPrimaryKeyType, PrimaryKeyType } from "~/features/visualizer/sc
  * @param {Object} result - A Kuzu query result object
  * @returns {Object} - Standardized result object
  */
-// export function _processQueryResult(result: QueryResultSync) {
-export function processQueryResult(result: any) {
+export function processQueryResult(
+  result: QueryResult
+): SuccessQueryResult | ErrorQueryResult {
   if (!result.isSuccess()) {
     return {
       success: false,
-      object: null,
       message:
         result.getErrorMessage() || "Query failed - no specified message",
     };
@@ -28,16 +34,14 @@ export function processQueryResult(result: any) {
   try {
     const objects = result.getAllObjects();
     return {
-      success: result.isSuccess(),
+      success: true,
       objects: objects,
-      toString: result.toString(), // remove in production mode
     };
-  } catch (e) {
+  } catch (err) {
     return {
       success: false,
-      object: null,
-      error:
-        "Error processing query result. Error: " + result.getErrorMessage(),
+      message:
+        result.getErrorMessage() || "Query failed - no specified message",
     };
   }
 }
@@ -69,12 +73,11 @@ export function parseSingleTableResult(
     return null;
   }
   if (!result.isSuccess()) {
-    throw Error("parseSingleTableResult has error input result")
+    throw Error("parseSingleTableResult has error input result");
   }
   const objects = result.getAllObjects();
   if (!objects) return null;
 
-  
   let tableProps = {
     primaryKey: "",
     primaryKeyType: "NULL" as PrimaryKeyType,

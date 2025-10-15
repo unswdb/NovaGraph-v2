@@ -1,6 +1,6 @@
 import type { GraphNode } from "~/features/visualizer/types";
 import KuzuInMemorySync from "../services/KuzuInMemorySync";
-import type { CompositeType, ValueWithType } from "~/types/KuzuDBTypes";
+import type { CompositeType, ValueWithType } from "~/kuzu/types/KuzuDBTypes";
 import type {
   NonPrimaryKeyType,
   PrimaryKeyType,
@@ -193,8 +193,11 @@ class KuzuController {
   }
 
   createNode(
-    tableName: string, 
-    properties: Record<string, { value: any; success?: boolean; message?: string }>
+    tableName: string,
+    properties: Record<
+      string,
+      { value: any; success?: boolean; message?: string }
+    >
   ) {
     if (!this.service) {
       throw new Error("Kuzu service not initialized");
@@ -241,29 +244,18 @@ class KuzuController {
     );
   }
 
-  updateNode(  
-    node: GraphNode,
-    values: Record<string, InputChangeResult<any>>
-  ) {
+  updateNode(node: GraphNode, values: Record<string, InputChangeResult<any>>) {
     if (!this.service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.updateNode(node, values)
+    return this.service.updateNode(node, values);
   }
 
-  async deleteEdge(
-    node1: GraphNode,
-    node2: GraphNode,
-    edgeTableName: string,
-  ) {
+  async deleteEdge(node1: GraphNode, node2: GraphNode, edgeTableName: string) {
     if (!this.service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.deleteEdge(
-      node1,
-      node2,
-      edgeTableName,
-    );
+    return this.service.deleteEdge(node1, node2, edgeTableName);
   }
   // /**
   //  * Builds a Cypher query to delete a node (and all its relationships) by primary key.
@@ -293,8 +285,8 @@ class KuzuController {
   //   return this.service.deleteNodeWithoutPrimary(tableName, primaryValue)
   // }
 
-  updateEdge(  
-    node1: GraphNode, 
+  updateEdge(
+    node1: GraphNode,
     node2: GraphNode,
     edgeTableName: string,
     values: Record<string, InputChangeResult<any>>

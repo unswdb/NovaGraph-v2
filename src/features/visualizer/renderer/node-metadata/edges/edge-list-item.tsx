@@ -41,7 +41,7 @@ export default function EdgeListItem({
   edge,
   edgeSchema,
   directed,
-  onClose
+  onClose,
 }: {
   source: GraphNode;
   target: GraphNode;
@@ -49,7 +49,6 @@ export default function EdgeListItem({
   edgeSchema: EdgeSchema;
   directed: boolean;
   onClose: () => void;
-
 }) {
   const inputs = [
     Object.entries(edgeSchema.properties).map(([key, type]) =>
@@ -81,9 +80,6 @@ export default function EdgeListItem({
       toast.success("Edge deleted!");
       onClose();
     },
-    onError: (err) => {
-      toast.error(getErrorMessage(err));
-    },
   });
 
   const handleDeleteEdge = async (node1: GraphNode, node2: GraphNode) => {
@@ -105,23 +101,21 @@ export default function EdgeListItem({
     // toast.success("Edge deleted (not really, yet!)");
   };
 
-  const {
-    run: updateEdge,
-  } = useAsyncFn(store.controller.db.updateEdge.bind(store.controller.db), {
-    onSuccess: (result) => {
-      toast.success("Edge attributes updated!");
-      onClose();
-    },
-    onError: (err) => {
-      toast.error(getErrorMessage(err));
-    },
-  });
+  const { run: updateEdge } = useAsyncFn(
+    store.controller.db.updateEdge.bind(store.controller.db),
+    {
+      onSuccess: (result) => {
+        toast.success("Edge attributes updated!");
+        onClose();
+      },
+    }
+  );
   const handleSubmit = async () => {
     // console.log("source:", JSON.stringify(source, null, 2));
     // console.log("target:", JSON.stringify(target, null, 2));
     // console.log("values:", JSON.stringify(values, null, 2));
     // console.log("edgeSchema.tableName:", JSON.stringify(edgeSchema.tableName, null, 2));
-    
+
     // console.log(
     //   "result:",
     //   JSON.stringify(
@@ -130,8 +124,8 @@ export default function EdgeListItem({
     //     2 // ← this should be the third argument to JSON.stringify
     //   )
     // );
-    
-    let result = await updateEdge(source, target, edgeSchema.tableName ,values);
+
+    let result = await updateEdge(source, target, edgeSchema.tableName, values);
     if (
       result &&
       !!result.nodes &&

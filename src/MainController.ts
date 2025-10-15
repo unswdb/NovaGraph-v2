@@ -1,6 +1,6 @@
 import kuzuController from "./kuzu/controllers/KuzuController";
 import createModule from "./graph";
-import type { CompositeType } from "./types/KuzuDBTypes";
+import type { CompositeType } from "./kuzu/types/KuzuDBTypes";
 import type { GraphNode } from "./features/visualizer/types";
 import type {
   NonPrimaryKeyType,

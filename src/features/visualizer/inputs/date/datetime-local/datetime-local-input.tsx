@@ -6,7 +6,7 @@ import {
   parseDatetimeLocalPartsToISO,
 } from "./util";
 import { Input } from "~/components/form/input";
-import { isValidDate, parseISOToDate } from "../util";
+import { parseISOToDate } from "../util";
 
 export default function DatetimeLocalInputComponent({
   input,
@@ -67,7 +67,7 @@ export default function DatetimeLocalInputComponent({
       : true;
     const message = required
       ? validator && !!newValue.trim()
-        ? validator.message ?? ""
+        ? (validator.message ?? "")
         : "This field is required."
       : "";
 

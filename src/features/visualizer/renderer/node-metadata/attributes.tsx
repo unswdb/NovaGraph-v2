@@ -55,18 +55,14 @@ export default function AttributesForm({
   );
 
   const store = useStore();
-  const {
-    run: updateNode,
-    isLoading,
-    getErrorMessage,
-  } = useAsyncFn(store.controller.db.updateNode.bind(store.controller.db), {
-    onSuccess: (result) => {
-      toast.success("Node attributes updated");
-    },
-    onError: (err) => {
-      toast.error(getErrorMessage(err));
-    },
-  });
+  const { run: updateNode, isLoading } = useAsyncFn(
+    store.controller.db.updateNode.bind(store.controller.db),
+    {
+      onSuccess: (result) => {
+        toast.success("Node attributes updated");
+      },
+    }
+  );
 
   const handleSubmit = async () => {
     let result = await updateNode(node, values);

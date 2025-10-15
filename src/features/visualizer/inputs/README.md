@@ -118,7 +118,9 @@ export { default as TextInputComponent } from "./text-input";
 
 To make the input component available throughout the visualizer, you need to register it in two places:
 
-#### a. Add to `INPUT_COMPONENTS`
+#### a. Register Inputs to `index.tsx`
+
+##### 1. Add Input to `INPUT_COMPONENTS`
 
 Add the new input component to the INPUT_COMPONENTS array in `inputs/index.tsx`:
 
@@ -132,6 +134,14 @@ export const INPUT_COMPONENTS = {
   number: NumberInput,
   date: DateInput,
 };
+```
+
+##### 2. Expose The Input From `index.tsx`
+
+At the end of the `index.tsx` file, export the create input function and its type:
+
+```ts
+export { createTextInput, type TextInput } from "./text";
 ```
 
 #### b. Register Types in `inputs/types.ts`
