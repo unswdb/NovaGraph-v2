@@ -89,11 +89,11 @@ const GraphRenderer = observer(({ className }: { className?: string }) => {
       if (!!target) map[edge.source].push([target, edge]);
 
       // If undirected, also add Target → Source
-      if (!directed) {
-        if (!map[edge.target]) map[edge.target] = [];
-        const source = nodesMap.get(edge.source);
-        if (!!source) map[edge.target].push([source, edge]);
-      }
+      // if (!directed) {
+      //   if (!map[edge.target]) map[edge.target] = [];
+      //   const source = nodesMap.get(edge.source);
+      //   if (!!source) map[edge.target].push([source, edge]);
+      // }
     });
 
     return map;

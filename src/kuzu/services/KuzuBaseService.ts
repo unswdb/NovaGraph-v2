@@ -197,6 +197,7 @@ export default class KuzuBaseService {
   createEdgeSchema(
     tableName: string,
     tablePairs: Array<[string | number, string | number]>,
+    directed: boolean,
     properties: (
       | { name: string; type: NonPrimaryKeyType }
       | { name: string; type: PrimaryKeyType }
@@ -206,6 +207,7 @@ export default class KuzuBaseService {
     const query = createEdgeSchemaQuery(
       tableName,
       tablePairs,
+      directed,
       properties,
       relationshipType
     );
@@ -215,15 +217,16 @@ export default class KuzuBaseService {
   createEdge(
     node1: GraphNode,
     node2: GraphNode,
+    directed: boolean,
     edgeTable: EdgeSchema,
     attributes?: Record<string, InputChangeResult<any>>
   ) {
-    const query = createEdgeQuery(node1, node2, edgeTable, attributes);
+    const query = createEdgeQuery(node1, node2, directed, edgeTable, attributes);
     return throwOnFailedQuery(this.executeQuery(query));
   }
 
-  deleteEdge(node1: GraphNode, node2: GraphNode, edgeTableName: string) {
-    const query = deleteEdgeQuery(node1, node2, edgeTableName);
+  deleteEdge(node1: GraphNode, node2: GraphNode, directed: boolean, edgeTableName: string) {
+    const query = deleteEdgeQuery(node1, node2, directed, edgeTableName);
     return throwOnFailedQuery(this.executeQuery(query));
   }
 

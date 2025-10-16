@@ -208,6 +208,7 @@ class KuzuController {
   createEdgeSchema(
     tableName: string,
     tablePairs: Array<[string | number, string | number]>,
+    directed: boolean,
     properties: (
       | { name: string; type: NonPrimaryKeyType }
       | { name: string; type: PrimaryKeyType }
@@ -220,6 +221,7 @@ class KuzuController {
     return this.service.createEdgeSchema(
       tableName,
       tablePairs,
+      directed,
       properties,
       relationshipType
     );
@@ -228,6 +230,7 @@ class KuzuController {
   createEdge(
     node1: GraphNode,
     node2: GraphNode,
+    directed: boolean,
     edgeTable: EdgeSchema,
     attributes?: Record<string, InputChangeResult<any>>
   ) {
@@ -237,6 +240,7 @@ class KuzuController {
     return this.service.createEdge(
       node1,
       node2,
+      directed,
       edgeTable,
       attributes
     );
@@ -249,11 +253,11 @@ class KuzuController {
     return this.service.updateNode(node, values);
   }
 
-  async deleteEdge(node1: GraphNode, node2: GraphNode, edgeTableName: string) {
+  async deleteEdge(node1: GraphNode, node2: GraphNode, directed: boolean, edgeTableName: string) {
     if (!this.service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.deleteEdge(node1, node2, edgeTableName);
+    return this.service.deleteEdge(node1, node2, directed, edgeTableName);
   }
   // /**
   //  * Builds a Cypher query to delete a node (and all its relationships) by primary key.

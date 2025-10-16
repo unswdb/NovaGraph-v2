@@ -147,6 +147,7 @@ export default function CreateEdge({
           </Button>
         </div>
         {status.edgeSelected &&
+          // Todo: filter edge table of the current node
           (!isNonEmpty(database.graph.edgeTables) ? (
             <CreateEdgeSchemaDialog
               source={source}

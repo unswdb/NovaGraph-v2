@@ -33,6 +33,17 @@ export default function CodeTabContent({
       onErrorQuery(result);
       return;
     }
+    console.log(
+      "code result:",
+      JSON.stringify(
+        result,
+        (key, value) =>
+          typeof value === "bigint"
+            ? value.toString()
+            : value,
+        2
+      )
+    );
     onSuccessQuery(result);
   };
 

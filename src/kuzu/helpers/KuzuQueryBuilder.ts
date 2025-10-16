@@ -20,6 +20,7 @@ import type { InputChangeResult } from "~/features/visualizer/inputs";
 export function createEdgeQuery(
   node1: GraphNode,
   node2: GraphNode,
+  directed: boolean,
   edgeTable: EdgeSchema,
   attributes?: Record<string, InputChangeResult<any>>
 ) {
@@ -39,28 +40,97 @@ export function createEdgeQuery(
       attributesMappingString += "}"
     }
   }
-  const query = `
-  MATCH (u1:\`${node1.tableName}\` { \`${node1._primaryKey}\`: ${_formatQueryInput(node1._primaryKeyValue)} }),
-        (u2:\`${node2.tableName}\` { \`${node2._primaryKey}\`: ${_formatQueryInput(node2._primaryKeyValue)} })
-  CREATE (u1)-[:\`${edgeTable.tableName}\` ${attributesMappingString}]->(u2);
-  `;
-  return query;
+
+  if (directed) {
+    return  `
+    MATCH (u1:\`${node1.tableName}\` { \`${node1._primaryKey}\`: ${_formatQueryInput(node1._primaryKeyValue)} }),
+          (u2:\`${node2.tableName}\` { \`${node2._primaryKey}\`: ${_formatQueryInput(node2._primaryKeyValue)} })
+    CREATE (u1)-[:\`${edgeTable.tableName}\` ${attributesMappingString}]->(u2);
+    `;
+  } else {
+    return `
+    MATCH (u1:\`${node1.tableName}\` { \`${node1._primaryKey}\`: ${_formatQueryInput(node1._primaryKeyValue)} }),
+          (u2:\`${node2.tableName}\` { \`${node2._primaryKey}\`: ${_formatQueryInput(node2._primaryKeyValue)} })
+    CREATE (u1)-[:\`${edgeTable.tableName}\` ${attributesMappingString}]->(u2);
+
+    MATCH (u2:\`${node2.tableName}\` { \`${node2._primaryKey}\`: ${_formatQueryInput(node2._primaryKeyValue)} }),
+          (u1:\`${node1.tableName}\` { \`${node1._primaryKey}\`: ${_formatQueryInput(node1._primaryKeyValue)} })
+    CREATE (u2)-[:\`${edgeTable.tableName}\` ${attributesMappingString}]->(u1);
+    `;
+  }
 }
 
 export function deleteEdgeQuery(
   node1: GraphNode,
   node2: GraphNode,
+  directed: boolean,
   edgeTableName: string,
 ) {
-  const query = `
-  MATCH (u:${node1.tableName})-[f:${edgeTableName}]->(u1:${node2.tableName})
-  WHERE u.\`${node1._primaryKey}\` = '${node1._primaryKeyValue}' 
-  AND u1.\`${node2._primaryKey}\` = '${node2._primaryKeyValue}'
-  DELETE f;
-  `;
+  // Todo: test
+  if (directed) {
+    console.log(`
+      MATCH (u:${node1.tableName})-[f:${edgeTableName}]->(u1:${node2.tableName})
+      WHERE u.\`${node1._primaryKey}\` = '${node1._primaryKeyValue}' 
+      AND u1.\`${node2._primaryKey}\` = '${node2._primaryKeyValue}'
+      DELETE f;
+      `)
 
-  console.log("query: " + query)
-  return query;
+    return `
+    MATCH (u:${node1.tableName})-[f:${edgeTableName}]->(u1:${node2.tableName})
+    WHERE u.\`${node1._primaryKey}\` = '${node1._primaryKeyValue}' 
+    AND u1.\`${node2._primaryKey}\` = '${node2._primaryKeyValue}'
+    DELETE f;
+    `;
+  } else {
+    if (node1.tableName === node2.tableName) {
+      console.log(`
+      MATCH (u:${node1.tableName})-[f:${edgeTableName}]->(u1:${node2.tableName})
+      WHERE u.\`${node1._primaryKey}\` = '${node1._primaryKeyValue}' 
+      AND u1.\`${node2._primaryKey}\` = '${node2._primaryKeyValue}'
+      DELETE f;
+      `)
+      
+      return `
+      MATCH (u:${node1.tableName})-[f:${edgeTableName}]->(u1:${node2.tableName})
+      WHERE u.\`${node1._primaryKey}\` = '${node1._primaryKeyValue}' 
+      AND u1.\`${node2._primaryKey}\` = '${node2._primaryKeyValue}'
+      DELETE f;
+      `;
+    } else {
+      console.log(`
+      MATCH (u:${node1.tableName})-[f:${edgeTableName}]->(u1:${node2.tableName})
+      WHERE u.\`${node1._primaryKey}\` = '${node1._primaryKeyValue}' 
+      AND u1.\`${node2._primaryKey}\` = '${node2._primaryKeyValue}'
+      DELETE f;
+
+
+      MATCH (u1:${node1.tableName})-[f:${edgeTableName}]->(u:${node2.tableName})
+      WHERE u.\`${node1._primaryKey}\` = '${node1._primaryKeyValue}' 
+      AND u1.\`${node2._primaryKey}\` = '${node2._primaryKeyValue}'
+      DELETE f;
+    `)
+
+      return `
+      MATCH (u:${node1.tableName})-[f:${edgeTableName}]->(u1:${node2.tableName})
+      WHERE u.\`${node1._primaryKey}\` = '${node1._primaryKeyValue}' 
+      AND u1.\`${node2._primaryKey}\` = '${node2._primaryKeyValue}'
+      DELETE f;
+
+
+      MATCH (u1:${node1.tableName})-[f:${edgeTableName}]->(u:${node2.tableName})
+      WHERE u.\`${node1._primaryKey}\` = '${node1._primaryKeyValue}' 
+      AND u1.\`${node2._primaryKey}\` = '${node2._primaryKeyValue}'
+      DELETE f;
+    `;
+    }
+  }
+  // let query = `
+  // MATCH (u:${node1.tableName})-[f:${edgeTableName}]->(u1:${node2.tableName})
+  // WHERE u.\`${node1._primaryKey}\` = '${node1._primaryKeyValue}' 
+  // AND u1.\`${node2._primaryKey}\` = '${node2._primaryKeyValue}'
+  // DELETE f;
+  // `;
+
 }
 
 export function updateEdgeQuery(
@@ -69,14 +139,14 @@ export function updateEdgeQuery(
   edgeTableName: string,
   values: Record<string, InputChangeResult<any>>
 ) {
-  console.log("updateEdgeQuery Here\n")
   let attriutesMappingString = "";
   for (const [key, val] of Object.entries(values)) {
     attriutesMappingString += `, f.\`${key}\` = ${_formatQueryInput(val.value)}`;
   }
 
+  // Todo: update
   let query = `
-  MATCH (u0:${node1.tableName})-[f:${edgeTableName}]->(u1:${node2.tableName})
+  MATCH (u0:${node1.tableName})-[f:${edgeTableName}]-(u1:${node2.tableName})
   WHERE u0.\`${(node1._primaryKey)}\` = ${_formatQueryInput(node1._primaryKeyValue)} 
   AND u1.\`${node2._primaryKey}\` = ${_formatQueryInput(node2._primaryKeyValue)}
   SET ${attriutesMappingString.slice(2)}
@@ -91,6 +161,7 @@ export function updateEdgeQuery(
 export function createEdgeSchemaQuery(
   tableName: string,
   tablePairs: Array<[string | number, string | number]>,
+  directed: boolean,
   properties: (
     | { name: string; type: NonPrimaryKeyType }
     | { name: string; type: PrimaryKeyType }
@@ -101,7 +172,15 @@ export function createEdgeSchemaQuery(
 
   // Build the FROM...TO parts
   const pairParts = tablePairs.map(([fromTable, toTable]) => {
-    return `FROM ${q(fromTable)} TO ${q(toTable)}`;
+    if (directed) {
+      return `FROM ${q(fromTable)} TO ${q(toTable)}`;
+    } else {
+      if (fromTable === toTable) {
+        return `FROM ${q(fromTable)} TO ${q(toTable)}`;
+      } else {
+        return `FROM ${q(fromTable)} TO ${q(toTable)}, FROM ${q(toTable)} TO ${q(fromTable)}`;
+      }
+    }
   });
 
   // Build property parts (if any)
@@ -114,6 +193,7 @@ export function createEdgeSchemaQuery(
   const tailParts = relationshipType ? [relationshipType] : [];
   const inner = [...pairParts, ...propParts, ...tailParts].join(", ");
   const query = `CREATE REL TABLE ${q(tableName)} (${inner});`;
+  console.log("createEdgeSchemaQuery: " + query)
   return query;
 }
 

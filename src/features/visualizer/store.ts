@@ -100,7 +100,7 @@ export default class VisualizerStore {
             nodeTablesMap,
             edgeTables,
             edgeTablesMap,
-            directed: true, // TODO: Distinguish between directed/non-directed in Kuzu
+            directed: false, // TODO: Distinguish between directed/non-directed in Kuzu
           },
         },
       ];

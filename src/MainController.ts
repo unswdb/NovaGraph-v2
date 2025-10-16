@@ -126,6 +126,7 @@ class MainController {
     async createEdgeSchema(
       tableName: string,
       tablePairs: Array<[string | number, string | number]>,
+      directed: boolean,
       properties: (
         | { name: string; type: NonPrimaryKeyType }
         | { name: string; type: PrimaryKeyType }
@@ -136,6 +137,7 @@ class MainController {
         kuzuController.createEdgeSchema(
           tableName,
           tablePairs,
+          directed,
           properties,
           relationshipType
         )
@@ -145,21 +147,23 @@ class MainController {
     async createEdge(
       node1: GraphNode,
       node2: GraphNode,
+      directed: boolean,
       edgeTable: EdgeSchema,
       attributes?: Record<string, InputChangeResult<any>>
     ) {
       return Promise.resolve(
-        kuzuController.createEdge(node1, node2, edgeTable, attributes)
+        kuzuController.createEdge(node1, node2, directed, edgeTable, attributes)
       );
     },
 
     async deleteEdge(
       node1: GraphNode,
       node2: GraphNode,
+      directed: boolean,
       edgeTableName: string
     ) {
       return Promise.resolve(
-        kuzuController.deleteEdge(node1, node2, edgeTableName)
+        kuzuController.deleteEdge(node1, node2, directed, edgeTableName)
       );
     },
 
