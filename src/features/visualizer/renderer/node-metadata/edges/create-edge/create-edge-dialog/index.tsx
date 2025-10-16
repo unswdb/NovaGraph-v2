@@ -15,12 +15,14 @@ import type { GraphNode } from "~/features/visualizer/types";
 export default function CreateEdgeDialog({
   source,
   target,
+  directed,
   open,
   setOpen,
   onClose,
 }: {
   source: GraphNode;
   target: GraphNode;
+  directed: boolean;
   open: boolean;
   setOpen: (b: boolean) => void;
   onClose: () => void;
@@ -62,6 +64,7 @@ export default function CreateEdgeDialog({
             key={selectedEdgeSchema.value}
             source={source}
             target={target}
+            directed={directed}
             selectedEdgeSchema={selectedEdgeSchema.value}
             edgeTablesMap={edgeTablesMap}
             onClose={onClose}

@@ -15,12 +15,14 @@ import { capitalize } from "~/lib/utils";
 export default function CreateEdgeDialogForm({
   source,
   target,
+  directed,
   selectedEdgeSchema,
   edgeTablesMap,
   onClose,
 }: {
   source: GraphNode;
   target: GraphNode;
+  directed: boolean;
   selectedEdgeSchema: string;
   edgeTablesMap: Map<string, EdgeSchema>;
   onClose: () => void;
