@@ -55,6 +55,12 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
 
   const onErrorQuery = (result: ExecuteQueryResult) => {
     setProblems(result.failedQueries.map((q) => q.message));
+    setGraphState({
+      nodes: result.nodes,
+      edges: result.edges,
+      nodeTables: result.nodeTables,
+      edgeTables: result.edgeTables,
+    });
     toast.error("Some queries failed", {
       action: {
         label: "See problems",
