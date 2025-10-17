@@ -4,4 +4,5 @@ export default [
   index("routes/visualizer.tsx"),
   // route("/user", "routes/user.tsx"), // Basic route
   // route("/user/:id", "routes/user.$id.tsx"), // Dynamic route
+  route("*", "routes/$.tsx"), // Catch-all route for Chrome DevTools and other unmatched paths
 ] satisfies RouteConfig;
