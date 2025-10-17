@@ -1,18 +1,9 @@
 import { Loader, Trash2 } from "lucide-react";
-import { toast } from "sonner";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import type { EdgeSchema, GraphEdge, GraphNode } from "../../../types";
 
-import { Button } from "~/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "~/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,18 +15,27 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
-import InputComponent, {
-  createEmptyInputResults,
-} from "~/features/visualizer/inputs";
-import { capitalize } from "~/lib/utils";
+import { Button } from "~/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "~/components/ui/dialog";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
-import { createSchemaInput } from "~/features/visualizer/schema-inputs";
 import { useStore } from "~/features/visualizer/hooks/use-store";
+import InputComponent, {
+  createEmptyInputResults,
+} from "~/features/visualizer/inputs";
+import { createSchemaInput } from "~/features/visualizer/schema-inputs";
 import { useAsyncFn } from "~/hooks/use-async-fn";
+import { capitalize } from "~/lib/utils";
 
 export default function EdgeListItem({
   source,

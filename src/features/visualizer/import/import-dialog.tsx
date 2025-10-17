@@ -5,15 +5,15 @@ import InputComponent, { createEmptyInputResults } from "../inputs";
 
 import ALL_IMPORTS, { type ImportOption } from "./implementations";
 
+import { Button } from "~/components/ui/button";
 import {
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Separator } from "~/components/ui/separator";
-import { Button } from "~/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
 export default function ImportDialog() {
   return (

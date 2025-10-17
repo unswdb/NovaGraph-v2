@@ -4,7 +4,6 @@ import type {
   PrimaryKeyType,
   PrimaryKeyValueType,
 } from "./schema-inputs";
-
 import type KuzuBaseService from "~/kuzu/services/KuzuBaseService";
 
 export type GraphNode = {

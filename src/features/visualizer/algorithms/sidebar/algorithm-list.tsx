@@ -1,14 +1,20 @@
 import { ChevronDown } from "lucide-react";
 import { useMemo } from "react";
 
+import ALL_ALGORITHMS from "../implementations";
+import InputDialog from "../input-dialog";
+
 import type { GraphEdge, GraphModule, GraphNode } from "../../types";
 import type {
   BaseGraphAlgorithm,
   BaseGraphAlgorithmResult,
 } from "../implementations";
-import ALL_ALGORITHMS from "../implementations";
-import InputDialog from "../input-dialog";
 
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "~/components/ui/collapsible";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -16,11 +22,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from "~/components/ui/sidebar";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "~/components/ui/collapsible";
 import {
   Tooltip,
   TooltipContent,

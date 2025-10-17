@@ -7,9 +7,9 @@ import {
   type ComponentProps,
 } from "react";
 
-import type { GraphDatabase } from "../types";
-
 import ImportDialog from "./import-dialog";
+
+import type { GraphDatabase } from "../types";
 
 import { Button } from "~/components/ui/button";
 import {
@@ -20,12 +20,12 @@ import {
   CommandItem,
   CommandList,
 } from "~/components/ui/command";
+import { Dialog, DialogTrigger } from "~/components/ui/dialog";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
-import { Dialog, DialogTrigger } from "~/components/ui/dialog";
 import { cn } from "~/lib/utils";
 
 export default function ImportDropdown({

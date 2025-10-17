@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Search, X } from "lucide-react";
-
-import type { GraphNode } from "../../types";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
 import type { Accessor } from ".";
+import type { GraphNode } from "../../types";
 
+import { Input } from "~/components/form/input";
 import {
   Select,
   SelectContent,
@@ -21,8 +21,6 @@ import {
   CommandItem,
   CommandList,
 } from "~/components/ui/command";
-import { cn } from "~/lib/utils";
-import { useIsMobile } from "~/hooks/use-mobile";
 import {
   Sheet,
   SheetContent,
@@ -31,7 +29,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "~/components/ui/sheet";
-import { Input } from "~/components/form/input";
+import { useIsMobile } from "~/hooks/use-mobile";
+import { cn } from "~/lib/utils";
 
 export default function GraphRendererSearch({
   nodes,

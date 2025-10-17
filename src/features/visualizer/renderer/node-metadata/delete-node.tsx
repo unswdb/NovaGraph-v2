@@ -1,10 +1,10 @@
-import { toast } from "sonner";
 import { Loader, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
-import type { GraphNode } from "../../types";
 import { useStore } from "../../hooks/use-store";
 
-import { Button } from "~/components/ui/button";
+import type { GraphNode } from "../../types";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
+import { Button } from "~/components/ui/button";
 import { useAsyncFn } from "~/hooks/use-async-fn";
 
 export default function DeleteNodeButton({

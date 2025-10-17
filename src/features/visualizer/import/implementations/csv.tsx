@@ -1,11 +1,13 @@
-import SyntaxHighlighterPkg from "react-syntax-highlighter";
-import { useState } from "react";
 import { Table as TableIcon } from "lucide-react";
+import { useState } from "react";
+import SyntaxHighlighterPkg from "react-syntax-highlighter";
 
 const { Light: SyntaxHighlighter } = SyntaxHighlighterPkg as any;
 
 import type { ImportOption } from "./types";
 
+import { Label } from "~/components/form/label";
+import { Switch } from "~/components/form/switch";
 import {
   Table,
   TableBody,
@@ -15,8 +17,6 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import { Switch } from "~/components/form/switch";
-import { Label } from "~/components/form/label";
 import {
   createFileInput,
   createSwitchInput,
@@ -65,7 +65,7 @@ const validateNodes = async (file: File | undefined) => {
     }
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: "Unable to read file content. Please try again.",
@@ -109,7 +109,7 @@ const validateEdges = async (file: File | undefined) => {
     }
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: "Unable to read file content. Please try again. ",
@@ -162,7 +162,7 @@ export const ImportCSV: ImportOption = {
       defaultValue: false,
     }),
   ],
-  handler: async ({ values }: { values: Record<string, CSVInputType> }) => {
+  handler: async (_: { values: Record<string, CSVInputType> }) => {
     return {
       success: true,
       message: "Successfully imported graph from CSV files!",

@@ -1,14 +1,14 @@
+import { Loader } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useEffect, useMemo, useState } from "react";
-import { Loader } from "lucide-react";
 
-import VisualizerStore from "./store";
-import Header from "./header";
 import AlgorithmSidebar from "./algorithms/sidebar";
-import SettingsSidebar from "./settings";
-import GraphRenderer from "./renderer";
-import { StoreProvider } from "./hooks/use-store";
 import CodeOutputDrawer from "./drawer";
+import Header from "./header";
+import { StoreProvider } from "./hooks/use-store";
+import GraphRenderer from "./renderer";
+import SettingsSidebar from "./settings";
+import VisualizerStore from "./store";
 
 const Visualizer = observer(() => {
   const [store] = useState(() => new VisualizerStore());

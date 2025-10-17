@@ -1,8 +1,9 @@
-import type { CosmographRef } from "@cosmograph/react";
 import { useCallback } from "react";
 
-import type { GraphEdge, GraphNode } from "../../types";
 import { useStore } from "../../hooks/use-store";
+
+import type { GraphEdge, GraphNode } from "../../types";
+import type { CosmographRef } from "@cosmograph/react";
 
 const ZOOM_DURATION = 500;
 const SMALLEST_ZOOM_LEVEL = 0.1;

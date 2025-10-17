@@ -1,5 +1,7 @@
 import CreateEdgeSchemaForm from "./create-edge-schema-form";
 
+import type { GraphNode } from "~/features/visualizer/types";
+
 import {
   Dialog,
   DialogContent,
@@ -7,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
-import type { GraphNode } from "~/features/visualizer/types";
 
 export default function CreateEdgeSchemaDialog({
   source,
@@ -16,7 +17,6 @@ export default function CreateEdgeSchemaDialog({
   open,
   setOpen,
   onSubmit,
-  onClose,
 }: {
   source: GraphNode;
   target: GraphNode;
@@ -24,7 +24,6 @@ export default function CreateEdgeSchemaDialog({
   open: boolean;
   setOpen: (b: boolean) => void;
   onSubmit: () => void;
-  onClose: () => void;
 }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>

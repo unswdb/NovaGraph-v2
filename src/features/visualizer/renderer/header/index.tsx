@@ -1,11 +1,12 @@
 import { observer } from "mobx-react-lite";
 
-import type { GraphNode } from "../../types";
-import ImportDropdown from "../../import/import-dropdown";
 import { useStore } from "../../hooks/use-store";
+import ImportDropdown from "../../import/import-dropdown";
 
-import GraphRendererSearch from "./search";
 import CreateNode from "./create-node";
+import GraphRendererSearch from "./search";
+
+import type { GraphNode } from "../../types";
 
 export type Accessor = { label: string; accessor: (n: GraphNode) => string };
 

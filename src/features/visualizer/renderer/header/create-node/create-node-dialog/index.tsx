@@ -2,6 +2,9 @@ import { useMemo, useState } from "react";
 
 import CreateNodeDialogForm from "./create-node-form";
 
+import type { GraphNode, NodeSchema } from "~/features/visualizer/types";
+
+import { Button } from "~/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,13 +12,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
+import { Separator } from "~/components/ui/separator";
 import InputComponent, {
   createAlgorithmSelectInput,
   createEmptyInputResult,
 } from "~/features/visualizer/inputs";
-import { Separator } from "~/components/ui/separator";
-import { Button } from "~/components/ui/button";
-import type { GraphNode, NodeSchema } from "~/features/visualizer/types";
 
 export default function CreateNodeDialog({
   open,

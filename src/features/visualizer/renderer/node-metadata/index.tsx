@@ -1,18 +1,12 @@
 import { ChevronDown, ChevronRight, X } from "lucide-react";
 import { useState } from "react";
 
+import AttributesForm from "./attributes";
+import DeleteNodeButton from "./delete-node";
+import EdgesList from "./edges";
+
 import type { GraphEdge, GraphNode, NodeSchema } from "../../types";
 
-import AttributesForm from "./attributes";
-import EdgesList from "./edges";
-import DeleteNodeButton from "./delete-node";
-
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "~/components/ui/collapsible";
-import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -23,6 +17,12 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "~/components/ui/collapsible";
+import { cn } from "~/lib/utils";
 
 export default function NodeMetadata({
   node,

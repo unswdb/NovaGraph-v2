@@ -1,5 +1,4 @@
 import type { ElementType } from "react";
-
 import type {
   InputChangeResult,
   InputType,

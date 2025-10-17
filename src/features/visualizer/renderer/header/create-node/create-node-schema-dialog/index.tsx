@@ -1,5 +1,7 @@
 import CreateNodeSchemaForm from "./create-node-schema-form";
 
+import type { NodeSchema } from "~/features/visualizer/types";
+
 import {
   Dialog,
   DialogContent,
@@ -7,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
-import type { NodeSchema } from "~/features/visualizer/types";
 
 export default function CreateNodeSchemaDialog({
   open,

@@ -1,5 +1,5 @@
-import { useCallback, useState, type ReactNode } from "react";
 import { Copy } from "lucide-react";
+import { useState, type ReactNode } from "react";
 
 import { Button } from "../button";
 
@@ -14,13 +14,9 @@ export default function CopyButton({
 
   const handleOnCopy = async () => {
     if (value) {
-      try {
-        await navigator.clipboard.writeText(value);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
-      } catch (error) {
-        console.error("Failed to copy text: ", error);
-      }
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
     }
   };
 

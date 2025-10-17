@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 
 import CodeEditor from "../../../components/ui/code-editor";
-import type { ExecuteQueryResult } from "../types";
 
 import CodeOutputTabs from "./tabs";
+
+import type { ExecuteQueryResult } from "../types";
 
 import { Button } from "~/components/ui/button";
 import CopyButton from "~/components/ui/code-editor/copy-button";

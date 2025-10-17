@@ -1,7 +1,6 @@
-import type { ReactNode } from "react";
-
-import type { GraphModule } from "../../types";
 import type { InputType } from "../../inputs";
+import type { GraphModule } from "../../types";
+import type { ReactNode } from "react";
 
 type NodeId = string;
 type EdgeId = string; // Format: "fromNodeId-toNodeId"

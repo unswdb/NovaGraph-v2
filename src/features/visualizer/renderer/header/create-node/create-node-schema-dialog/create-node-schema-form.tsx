@@ -3,6 +3,8 @@ import { observer } from "mobx-react-lite";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import type { NodeSchema } from "~/features/visualizer/types";
+
 import { Button } from "~/components/ui/button";
 import { useStore } from "~/features/visualizer/hooks/use-store";
 import InputComponent, {
@@ -17,7 +19,6 @@ import {
   type NonPrimaryKeyType,
   type PrimaryKeyType,
 } from "~/features/visualizer/schema-inputs";
-import type { NodeSchema } from "~/features/visualizer/types";
 import { useAsyncFn } from "~/hooks/use-async-fn";
 
 type NodeSchemaField =

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   isRouteErrorResponse,
   Links,
@@ -6,20 +7,18 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-
-import type { Route } from "./+types/root";
+import { toast } from "sonner";
 
 import "./globals.css";
 import isNoise from "./errors";
 
-import { ThemeProvider } from "~/hooks/use-theme";
-import { TooltipProvider } from "~/components/ui/tooltip";
-import { Toaster } from "~/components/ui/sonner";
-import { LoadingProvider } from "~/components/ui/loading/loading-context";
-import { Loading } from "~/components/ui/loading";
+import type { Route } from "./+types/root";
 
-import { toast } from "sonner";
-import { useEffect } from "react";
+import { Loading } from "~/components/ui/loading";
+import { LoadingProvider } from "~/components/ui/loading/loading-context";
+import { Toaster } from "~/components/ui/sonner";
+import { TooltipProvider } from "~/components/ui/tooltip";
+import { ThemeProvider } from "~/hooks/use-theme";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -39,7 +38,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
     function handleError(event: ErrorEvent) {
       const msg = String(event?.error?.message ?? event?.message ?? "");
       if (isNoise(msg)) return; // ignore harmless Cosmograph/WebGL/Resize noise
-      console.error(msg);
       toast.error(msg);
     }
 
@@ -50,7 +48,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
           : String(event.reason?.message ?? "");
       if (isNoise(msg)) return;
 
-      console.error(msg);
       toast.error(msg);
     }
 

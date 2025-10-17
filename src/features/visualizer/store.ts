@@ -1,6 +1,12 @@
 import { action, makeObservable, observable, runInAction } from "mobx";
 
 import {
+  GRAVITY,
+  NODE_SIZE_SCALE,
+  type Gravity,
+  type NodeSizeScale,
+} from "./renderer/constant";
+import {
   isEdgeSchema,
   isNodeSchema,
   type EdgeSchema,
@@ -10,12 +16,7 @@ import {
   type GraphNode,
   type NodeSchema,
 } from "./types";
-import {
-  GRAVITY,
-  NODE_SIZE_SCALE,
-  type Gravity,
-  type NodeSizeScale,
-} from "./renderer/constant";
+
 import type {
   BaseGraphAlgorithm,
   BaseGraphAlgorithmResult,

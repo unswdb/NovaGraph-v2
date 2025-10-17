@@ -3,19 +3,20 @@ import {
   CosmographProvider,
   type CosmographRef,
 } from "@cosmograph/react";
-import { useEffect, useMemo, useRef, useState } from "react";
 import { observer } from "mobx-react-lite";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { GraphEdge, GraphNode } from "../types";
 import { useStore } from "../hooks/use-store";
-import type { ColorMap, SizeMap } from "../algorithms/implementations";
 
-import GraphRendererHeader from "./header";
+import { MODE } from "./constant";
 import GraphRendererFooter from "./footer";
+import GraphRendererHeader from "./header";
 import { useGraphRendererHelpers } from "./hooks/use-graph-renderer-helpers";
 import { useZoomControls } from "./hooks/use-zoom-controls";
 import NodeMetadata from "./node-metadata";
-import { MODE } from "./constant";
+
+import type { ColorMap, SizeMap } from "../algorithms/implementations";
+import type { GraphEdge, GraphNode } from "../types";
 
 import { cn } from "~/lib/utils";
 

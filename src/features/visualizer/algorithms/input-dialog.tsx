@@ -1,17 +1,14 @@
 import { cloneElement, useMemo, useState } from "react";
-import { toast } from "sonner";
 
-import type { GraphEdge, GraphModule, GraphNode } from "../types";
 import InputComponent, { createEmptyInputResults } from "../inputs";
 
+import type { GraphEdge, GraphModule, GraphNode } from "../types";
 import type {
   BaseGraphAlgorithm,
   BaseGraphAlgorithmResult,
 } from "./implementations";
 
-import { SidebarMenuButton } from "~/components/ui/sidebar";
-import { cn } from "~/lib/utils";
-import { Separator } from "~/components/ui/separator";
+import { Button } from "~/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -21,8 +18,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
-import { Button } from "~/components/ui/button";
 import { useLoading } from "~/components/ui/loading";
+import { Separator } from "~/components/ui/separator";
+import { SidebarMenuButton } from "~/components/ui/sidebar";
+import { cn } from "~/lib/utils";
 
 export default function InputDialog({
   module,

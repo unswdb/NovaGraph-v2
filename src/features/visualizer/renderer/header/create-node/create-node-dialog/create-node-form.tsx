@@ -2,13 +2,14 @@ import { Loader } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import type { GraphNode, NodeSchema } from "~/features/visualizer/types";
+
 import { Button } from "~/components/ui/button";
 import { useStore } from "~/features/visualizer/hooks/use-store";
 import InputComponent, {
   createEmptyInputResults,
 } from "~/features/visualizer/inputs";
 import { createSchemaInput } from "~/features/visualizer/schema-inputs";
-import type { GraphNode, NodeSchema } from "~/features/visualizer/types";
 import { useAsyncFn } from "~/hooks/use-async-fn";
 import { capitalize } from "~/lib/utils";
 

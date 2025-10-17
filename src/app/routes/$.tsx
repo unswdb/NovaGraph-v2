@@ -1,4 +1,5 @@
 import { data } from "react-router";
+
 import type { Route } from "./+types/$";
 
 export async function loader(_: Route.LoaderArgs) {

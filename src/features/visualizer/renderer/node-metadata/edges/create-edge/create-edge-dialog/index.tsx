@@ -4,13 +4,14 @@ import { useState } from "react";
 
 import CreateEdgeDialogForm from "./create-edge-form";
 
+import type { GraphNode } from "~/features/visualizer/types";
+
 import { Dialog, DialogContent, DialogHeader } from "~/components/ui/dialog";
+import { useStore } from "~/features/visualizer/hooks/use-store";
 import InputComponent, {
   createAlgorithmSelectInput,
   createEmptyInputResult,
 } from "~/features/visualizer/inputs";
-import { useStore } from "~/features/visualizer/hooks/use-store";
-import type { GraphNode } from "~/features/visualizer/types";
 
 export default function CreateEdgeDialog({
   source,

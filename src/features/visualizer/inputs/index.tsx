@@ -1,12 +1,13 @@
 import AlgorithmSelectInputComponent from "./algorithms/select/select-input";
-import { NumberInputComponent } from "./number";
-import type { InputChangeResult, InputType, ValueForInput } from "./types";
+import { DateInputComponent } from "./date";
+import { DatetimeLocalInputComponent } from "./date/datetime-local";
 import { FileInputComponent } from "./file";
+import { NumberInputComponent } from "./number";
 import { SwitchInputComponent } from "./switch";
 import TextInputComponent from "./text/text-input";
-import { DatetimeLocalInputComponent } from "./date/datetime-local";
-import { DateInputComponent } from "./date";
 import { UUIDInputComponent } from "./uuid";
+
+import type { InputChangeResult, InputType, ValueForInput } from "./types";
 
 import { Label } from "~/components/form/label";
 
@@ -35,7 +36,6 @@ export default function InputComponent<T extends InputType>({
   const InputComponent = INPUT_COMPONENTS[input.type];
 
   if (!InputComponent) {
-    console.warn(`Unknown input type: ${input.type}`);
     return null;
   }
 

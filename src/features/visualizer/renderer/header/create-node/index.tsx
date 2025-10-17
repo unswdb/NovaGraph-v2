@@ -1,12 +1,13 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
 
-import CreateNodeSchemaDialog from "./create-node-schema-dialog";
 import CreateNodeDialog from "./create-node-dialog";
+import CreateNodeSchemaDialog from "./create-node-schema-dialog";
+
+import type { GraphNode, NodeSchema } from "~/features/visualizer/types";
 
 import { Button } from "~/components/ui/button";
 import { isNonEmpty } from "~/lib/utils";
-import type { GraphNode, NodeSchema } from "~/features/visualizer/types";
 
 export default function CreateNode({
   nodes,

@@ -1,7 +1,7 @@
-import type { EdgeSchema, GraphEdge, GraphNode } from "../../../types";
-
 import CreateEdge from "./create-edge";
 import EdgeListItem from "./edge-list-item";
+
+import type { EdgeSchema, GraphEdge, GraphNode } from "../../../types";
 
 import { useStore } from "~/features/visualizer/hooks/use-store";
 

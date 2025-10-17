@@ -1,10 +1,8 @@
-import type { UUID } from "crypto";
-
 import { useEffect, useState } from "react";
 
 import type { InputComponentProps } from "..";
-
 import type { UUIDInput } from "./types";
+import type { UUID } from "crypto";
 
 import { Input } from "~/components/form/input";
 import { Button } from "~/components/ui/button";

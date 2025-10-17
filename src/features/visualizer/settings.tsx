@@ -1,13 +1,13 @@
 import { ChevronsLeft, ChevronsRight, Settings } from "lucide-react";
 import { observer } from "mobx-react-lite";
 
+import { useStore } from "./hooks/use-store";
 import {
   GRAVITY,
   NODE_SIZE_SCALE,
   type Gravity,
   type NodeSizeScale,
 } from "./renderer/constant";
-import { useStore } from "./hooks/use-store";
 
 import { Label } from "~/components/form/label";
 import { RadioGroup, RadioGroupItem } from "~/components/form/radio-group";

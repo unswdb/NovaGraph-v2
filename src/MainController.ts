@@ -1,12 +1,13 @@
-import kuzuController from "./kuzu/controllers/KuzuController";
 import createModule from "./graph";
-import type { CompositeType } from "./kuzu/types/KuzuDBTypes";
-import type { EdgeSchema, GraphNode } from "./features/visualizer/types";
+import kuzuController from "./kuzu/controllers/KuzuController";
+
+import type { InputChangeResult } from "./features/visualizer/inputs";
 import type {
   NonPrimaryKeyType,
   PrimaryKeyType,
 } from "./features/visualizer/schema-inputs";
-import type { InputChangeResult } from "./features/visualizer/inputs";
+import type { EdgeSchema, GraphNode } from "./features/visualizer/types";
+import type { CompositeType } from "./kuzu/types/KuzuDBTypes";
 
 class MainController {
   // Graph method starts here
@@ -17,7 +18,6 @@ class MainController {
       try {
         this.wasmGraphModule = await createModule();
       } catch (err) {
-        console.error("Failed to load WASM module", err);
         throw err;
       }
     }
@@ -25,11 +25,7 @@ class MainController {
   }
 
   // Kuzu db initialization
-  async initKuzu(
-    type: string = "inmemory",
-    mode: string = "sync",
-    options: any = {}
-  ) {
+  async initKuzu(type: string = "inmemory", mode: string = "sync") {
     return kuzuController.initialize(type, mode);
   }
 

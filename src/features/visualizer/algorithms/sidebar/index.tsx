@@ -1,18 +1,19 @@
 import { ChevronsLeft, ChevronsRight, Search, Waypoints } from "lucide-react";
-import { useState } from "react";
 import { observer } from "mobx-react-lite";
+import { useState } from "react";
 
+import { useStore } from "../../hooks/use-store";
 import {
   type BaseGraphAlgorithm,
   type BaseGraphAlgorithmResult,
 } from "../implementations";
-import type { GraphEdge, GraphModule, GraphNode } from "../../types";
-import { useStore } from "../../hooks/use-store";
 
 import {
   FilteredAlgorithmList,
   UnfilteredAlgorithmList,
 } from "./algorithm-list";
+
+import type { GraphEdge, GraphModule, GraphNode } from "../../types";
 
 import { Input } from "~/components/form/input";
 import { Separator } from "~/components/ui/separator";

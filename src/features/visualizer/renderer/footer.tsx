@@ -1,5 +1,3 @@
-import type { CosmographRef } from "@cosmograph/react";
-import type { Dispatch, RefObject, SetStateAction } from "react";
 import {
   Pause,
   Play,
@@ -10,9 +8,11 @@ import {
   ZoomOut,
 } from "lucide-react";
 
-import type { GraphEdge, GraphNode } from "../types";
-
 import { useZoomControls } from "./hooks/use-zoom-controls";
+
+import type { GraphEdge, GraphNode } from "../types";
+import type { CosmographRef } from "@cosmograph/react";
+import type { Dispatch, RefObject, SetStateAction } from "react";
 
 import { Button } from "~/components/ui/button";
 import {

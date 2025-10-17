@@ -1,19 +1,19 @@
-import { useEffect, useState } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { observer } from "mobx-react-lite";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { useStore } from "../hooks/use-store";
-import type { ExecuteQueryResult } from "../types";
 
 import CodeTabContent from "./code";
 import OutputTabContent from "./output";
 import ProblemsTabContent from "./problems";
 
-import { cn } from "~/lib/utils";
+import type { ExecuteQueryResult } from "../types";
+
 import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent } from "~/components/ui/tabs";
-import { controller } from "~/MainController";
+import { cn } from "~/lib/utils";
 
 const DRAWER_HEIGHT = "18rem";
 

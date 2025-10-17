@@ -1,8 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { observer } from "mobx-react-lite";
-
-import type { InputComponentProps } from "../..";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   isMultipleSelectInput,
@@ -14,12 +12,16 @@ import {
   type SingleValues,
 } from "./types";
 
-import { useStore } from "~/features/visualizer/hooks/use-store";
+import type { InputComponentProps } from "../..";
+
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "~/components/ui/popover";
+  MultiSelect,
+  MultiSelectContent,
+  MultiSelectGroup,
+  MultiSelectItem,
+  MultiSelectTrigger,
+  MultiSelectValue,
+} from "~/components/form/multi-select";
 import { Button } from "~/components/ui/button";
 import {
   Command,
@@ -29,15 +31,13 @@ import {
   CommandItem,
   CommandList,
 } from "~/components/ui/command";
-import { cn } from "~/lib/utils";
 import {
-  MultiSelect,
-  MultiSelectContent,
-  MultiSelectGroup,
-  MultiSelectItem,
-  MultiSelectTrigger,
-  MultiSelectValue,
-} from "~/components/form/multi-select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
+import { useStore } from "~/features/visualizer/hooks/use-store";
+import { cn } from "~/lib/utils";
 
 function buildItems(
   input: AlgorithmSelectInput,

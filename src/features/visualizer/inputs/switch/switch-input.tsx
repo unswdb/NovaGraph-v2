@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 
 import type { InputComponentProps } from "..";
-
 import type { SwitchInput } from "./types";
 
 import { Switch } from "~/components/form/switch";

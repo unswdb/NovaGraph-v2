@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 
 import type { InputComponentProps } from "..";
-
 import type { NumberInput } from "./types";
 
 import { Input } from "~/components/form/input";

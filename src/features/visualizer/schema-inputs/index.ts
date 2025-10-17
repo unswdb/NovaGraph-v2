@@ -1,7 +1,7 @@
-import type { BaseInputType, PropsForInput } from "../inputs/types";
-
 import * as SCHEMA_RAW_INPUTS from "./implementations";
+
 import type { FieldContextKind, SchemaInput } from "./types";
+import type { BaseInputType, PropsForInput } from "../inputs/types";
 
 const SCHEMA_INPUTS = Object.values(SCHEMA_RAW_INPUTS);
 
