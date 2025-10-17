@@ -73,7 +73,9 @@ export function parseSingleTableResult(
     return null;
   }
   if (!result.isSuccess()) {
-    throw Error("parseSingleTableResult has error input result");
+    throw new Error(
+      'parseSingleTableResult encounters an error'
+    );
   }
   const objects = result.getAllObjects();
   if (!objects) return null;
@@ -91,6 +93,31 @@ export function parseSingleTableResult(
     } else {
       tableProps.properties[obj.name] = obj.type as NonPrimaryKeyType;
     }
+  }
+
+  return tableProps;
+}
+
+export function parseTableConnection(
+  result: any
+): { sourceTableName: string; targetTableName: PrimaryKeyType } | null {
+  if (!result || typeof result.getAllObjects !== "function") {
+    return null;
+  }
+  if (!result.isSuccess()) {
+    throw new Error('parseTableConnection encounters an error');
+  }
+  const objects = result.getAllObjects();
+  if (!objects) return null;
+
+  let tableProps = {
+    sourceTableName: "",
+    targetTableName: "NULL" as PrimaryKeyType,
+  };
+
+  for (const obj of objects) {
+    tableProps.sourceTableName = obj["source table name"];
+    tableProps.targetTableName = obj["destination table name"];
   }
 
   return tableProps;

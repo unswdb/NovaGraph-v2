@@ -220,6 +220,8 @@ export default class VisualizerStore {
         primaryKey: String(t.primaryKey),
         primaryKeyType: t.primaryKeyType,
         properties: t.properties,
+        sourceTableName: String(t.sourceTableName),
+        targetTableName: String(t.targetTableName),
       };
 
       if (isEdgeSchema(newTable)) {

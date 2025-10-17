@@ -1,13 +1,16 @@
 import {
   isEdgeSchema,
   isNodeSchema,
+  type BaseGraphSchema,
   type EdgeSchema,
   type GraphEdge,
   type GraphNode,
+  type GraphSchema,
   type NodeSchema,
 } from "~/features/visualizer/types";
 import {
   getAllSchemaPropertiesQuery,
+  getEdgeSchemaConnectionQuery,
   getSingleSchemaPropertiesQuery,
 } from "../helpers/KuzuQueryBuilder";
 import {
@@ -15,6 +18,7 @@ import {
   parseEdgesResult,
   parseTablesResult,
   parseSingleTableResult,
+  parseTableConnection,
 } from "./KuzuQueryResultExtractor";
 
 // type ConnectionSync = import("../../types/kuzu-wasm/sync/connection");
@@ -46,12 +50,28 @@ export function snapshotGraphState(connection: any): {
       getSingleSchemaPropertiesQuery(table.tableName)
     );
     const tableWithProps = parseSingleTableResult(tableWithPropsResult);
+
     if (tableWithProps) {
       const newTable = { ...table, ...tableWithProps };
-      if (isEdgeSchema(newTable)) {
-        edgeTables.push(newTable);
-      } else if (isNodeSchema(newTable)) {
-        nodeTables.push(newTable);
+
+      if (newTable.tableType === "REL") {
+        const edgeSchemaConnectionResult = connection.query(
+          getEdgeSchemaConnectionQuery(newTable.tableName)
+        );
+        console.log(edgeSchemaConnectionResult, newTable.tableName, tablesResult);
+        const edgeSchemaConnection = parseTableConnection(
+          edgeSchemaConnectionResult
+        );
+        if (edgeSchemaConnection) {
+          const edgeTable: EdgeSchema = {
+            ...newTable,
+            tableType: "REL",
+            ...edgeSchemaConnection,
+          };
+          edgeTables.push(edgeTable);
+        }
+      } else if (newTable.tableType === "NODE") {
+        nodeTables.push({ ...newTable, tableType: "NODE" });
       }
     }
   }

@@ -16,16 +16,15 @@ export default function CreateEdgeDialogForm({
   source,
   target,
   selectedEdgeSchema,
-  edgeTablesMap,
   onClose,
 }: {
   source: GraphNode;
   target: GraphNode;
   selectedEdgeSchema: string;
-  edgeTablesMap: Map<string, EdgeSchema>;
   onClose: () => void;
 }) {
-  const { controller, setGraphState } = useStore();
+  const { database, controller, setGraphState } = useStore();
+  const { edgeTablesMap } = database.graph;
 
   const inputs = useMemo(() => {
     const { properties } = edgeTablesMap.get(selectedEdgeSchema) as EdgeSchema;
