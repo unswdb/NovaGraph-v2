@@ -1,6 +1,8 @@
-import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
+import SyntaxHighlighterPkg from "react-syntax-highlighter";
 import { useState } from "react";
 import { Table as TableIcon } from "lucide-react";
+
+const { Light: SyntaxHighlighter } = SyntaxHighlighterPkg as any;
 
 import type { ImportOption } from "./types";
 
