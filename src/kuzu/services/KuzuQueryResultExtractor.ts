@@ -24,26 +24,17 @@ export function processQueryResult(
   result: QueryResult
 ): SuccessQueryResult | ErrorQueryResult {
   if (!result.isSuccess()) {
-    return {
-      success: false,
-      message:
-        result.getErrorMessage() || "Query failed - no specified message",
-    };
+    throw Error("processQueryResult: " + result.getErrorMessage() )
   }
 
-  try {
     const objects = result.getAllObjects();
+    const rows = result.getAllRows();
     return {
       success: true,
       objects: objects,
+      rows: rows
     };
-  } catch (err) {
-    return {
-      success: false,
-      message:
-        result.getErrorMessage() || "Query failed - no specified message",
-    };
-  }
+
 }
 
 export function parseTablesResult(
