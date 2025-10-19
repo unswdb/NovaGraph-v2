@@ -49,7 +49,8 @@ function BFS(props: GraphAlgorithmResult<BFSOutputData>) {
       {/* Statistics */}
       <p className="text-sm text-typography-secondary">
         Source: <b className="text-typography-primary">{source}</b> • Nodes
-        Found: <b className="text-typography-primary">{nodesFound}</b>
+        Found: <b className="text-typography-primary">{nodesFound}</b> • Layers:{" "}
+        <b className="text-typography-primary">{layers.length}</b>
       </p>
 
       {/* Layers */}
@@ -66,7 +67,7 @@ function BFS(props: GraphAlgorithmResult<BFSOutputData>) {
             </span>
           </div>
           {/* Rows */}
-          <div className="h-80">
+          <div className="max-h-80 overflow-y-auto">
             <List
               rowComponent={BFSLayerRowComponent}
               rowCount={layers.length}
@@ -92,10 +93,10 @@ function BFSLayerRowComponent({
       <span className="font-semibold px-3 py-1.5">{layer.index}</span>
       {/* Nodes */}
       <span className="col-span-2 flex flex-wrap gap-1 font-semibold px-3 py-1.5">
-        {layer.layer.map((i, layer) => (
+        {layer.layer.map((layer, i) => (
           <span
             key={`${index}-${i}-${layer}`}
-            className="bg-primary-low px-3 py-1.5 rounded-md"
+            className="px-3 py-1.5 rounded-md bg-primary-low"
           >
             {layer}
           </span>
