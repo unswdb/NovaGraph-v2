@@ -39,9 +39,10 @@ function WCC(props: GraphAlgorithmResult<WCCOutputData>) {
         ✓ Weakly Connected Components (WCC) completed successfully
       </p>
 
+      {/* Components */}
       <div className="space-y-3 pt-3 border-t border-t-border">
         <h3 className="font-semibold">Components</h3>
-        <div className="max-h-80 overflow-y-auto [&>div]:mb-2">
+        <div className="max-h-80 overflow-y-auto">
           <List
             rowComponent={WCCRowComponent}
             rowCount={components.length}

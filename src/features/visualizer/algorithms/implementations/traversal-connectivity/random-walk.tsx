@@ -93,7 +93,7 @@ function RandomWalk(props: GraphAlgorithmResult<RandomWalkOutputData>) {
         </b>
       </p>
 
-      {/* Layers */}
+      {/* Paths */}
       <div className="space-y-3 border-t border-t-border pt-3 isolate">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold">Traversal Path</h3>
@@ -116,7 +116,7 @@ function RandomWalk(props: GraphAlgorithmResult<RandomWalkOutputData>) {
               <span className="font-semibold text-sm px-3 py-1.5">Weight</span>
             )}
           </div>
-          {/* Path */}
+          {/* Row Path */}
           <div className="max-h-80 overflow-y-auto">
             <List
               rowComponent={RandomWalkPathRowComponent}

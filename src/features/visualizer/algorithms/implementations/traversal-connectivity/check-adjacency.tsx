@@ -44,7 +44,7 @@ function CheckAdjacency(props: GraphAlgorithmResult<CheckAdjacencyOutputData>) {
         ✓ Check Adjacency completed successfully
       </p>
 
-      <div className="space-y-3">
+      <div className="space-y-3 pt-3 border-t border-t-border">
         <h3 className="font-semibold">Query Details</h3>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="flex justify-between">
