@@ -305,8 +305,7 @@ export function parseEdgesResult(result: any): GraphEdge[] {
 // export function queryResultColorMapExtraction(result: QueryResultSync) {
 export function queryResultColorMapExtraction(result: any) {
   if (!result || typeof result.getAllObjects !== "function") {
-    console.warn("Invalid result object - missing getAllObjects method");
-    return { nodes: [], edges: [] };
+    return {};
   }
 
   const colorMap: ColorMap = {};
@@ -340,9 +339,7 @@ export function queryResultColorMapExtraction(result: any) {
       }
     }
   } catch (err: any) {
-    return {
-      error: "Internal queryResultExtraction error: " + err.message,
-    };
+    return {};
   }
   return colorMap;
 }
