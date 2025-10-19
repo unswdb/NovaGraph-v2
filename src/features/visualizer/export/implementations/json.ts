@@ -10,7 +10,10 @@ export const ExportJSON: ExportOption = {
   icon: FileCode2,
   mimeType: "application/json",
   export: (data: Record<string, any>) => {
-    const json = JSON.stringify(data, null, 2);
+    // Handle BigInt serialization for query results
+    const json = JSON.stringify(data, (key, value) =>
+      typeof value === 'bigint' ? value.toString() : value
+    , 2);
     downloadFile(json, "data.json", "application/json");
   },
 };
