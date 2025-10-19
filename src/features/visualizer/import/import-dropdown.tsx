@@ -136,7 +136,7 @@ function ImportListSelector({
           </CommandGroup>
         </CommandList>
       </Command>
-      <ImportDialog />
+      <ImportDialog onClose={() => setDialogOpen(false)} />
     </Dialog>
   );
 }

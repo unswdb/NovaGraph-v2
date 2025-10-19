@@ -14,8 +14,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Separator } from "~/components/ui/separator";
 import { Button } from "~/components/ui/button";
+import { useAsyncFn } from "~/hooks/use-async-fn";
+import { Loader } from "lucide-react";
 
-export default function ImportDialog() {
+export default function ImportDialog({ onClose }: { onClose: () => void }) {
   return (
     <DialogContent className="flex flex-col gap-2 max-h-[80vh] !max-w-[min(100%,calc(80vw))]">
       <DialogHeader>
@@ -69,18 +71,21 @@ function ImportContent({ option }: { option: ImportOption }) {
     [inputResults]
   );
 
+  const {
+    run: importFile,
+    isLoading,
+    getErrorMessage,
+  } = useAsyncFn(option.handler.bind(option), {
+    onSuccess: (result) => {
+      toast.success(result.message);
+    },
+    onError: (err) => {
+      setError(getErrorMessage(err));
+    },
+  });
+
   const handleOnSubmit = async () => {
-    toast("Creating graph...");
-
-    const { success, message } = await option.handler({ values: inputResults });
-    if (!success) {
-      return setError(
-        message ??
-          "There's something wrong with creating the graph. Please try again."
-      );
-    }
-
-    toast(message);
+    await importFile({ values: inputResults });
   };
 
   return (
@@ -141,9 +146,9 @@ function ImportContent({ option }: { option: ImportOption }) {
           <Button
             type="submit"
             onClick={handleOnSubmit}
-            disabled={!isReadyToSubmit}
+            disabled={!isReadyToSubmit || isLoading}
           >
-            Create Graph
+            {isLoading ? <Loader className="animate-spin" /> : "Create Graph"}
           </Button>
           {!!error && <p className="text-critical">{error}</p>}
         </TabsContent>

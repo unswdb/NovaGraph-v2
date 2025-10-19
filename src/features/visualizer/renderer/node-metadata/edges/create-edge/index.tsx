@@ -169,7 +169,6 @@ const CreateEdge = observer(
                 open={dialogStatus.createEdgeSchema}
                 setOpen={setCreateEdgeSchemaOpen}
                 onSubmit={onSubmitCreateEdgeSchema}
-                onClose={onClose}
               />
             ) : (
               <CreateEdgeDialog
