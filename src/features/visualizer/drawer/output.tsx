@@ -17,11 +17,11 @@ import { DialogTitle } from "@radix-ui/react-dialog";
 export default function OutputTabContent({
   activeAlgorithm,
   activeResponse,
-  tabControls,
+  enableOutput,
 }: {
   activeAlgorithm: BaseGraphAlgorithm | null;
   activeResponse: VisualizationResponse | null;
-  tabControls: { problemsLen: number; enableOutput: boolean };
+  enableOutput: boolean;
 }) {
   const [isFullScreen, setIsFullScreen] = useState(false);
 
@@ -50,7 +50,10 @@ export default function OutputTabContent({
       return activeAlgorithm.title + " Result";
     }
     if (isQueryVisualizationResult(activeResponse)) {
-      return "Query Result";
+      const queryLength =
+        activeResponse.queryData.successQueries.length +
+        activeResponse.queryData.failedQueries.length;
+      return `Query Results (${queryLength} ${queryLength === 1 ? "query" : "queries"} processed)`;
     }
     return "Output";
   }, [activeAlgorithm, activeResponse]);
@@ -62,23 +65,25 @@ export default function OutputTabContent({
           {outputContent}
         </div>
         <div className="flex flex-wrap-reverse justify-between gap-2">
-          <CodeOutputTabs {...tabControls} />
+          <CodeOutputTabs enableOutput={enableOutput} />
           {!!activeResponse && (
-            <>
+            <div className="flex items-center gap-2">
               <Button variant="ghost" onClick={() => setIsFullScreen(true)}>
                 <Maximize2 /> Full Screen
               </Button>
               <ExportDropdownButton activeResponse={activeResponse} />
-            </>
+            </div>
           )}
         </div>
       </div>
 
       <Dialog open={isFullScreen} onOpenChange={setIsFullScreen}>
-        <DialogHeader>
-          <DialogTitle>{dialogTitle}</DialogTitle>
-        </DialogHeader>
-        <DialogContent>{outputContent}</DialogContent>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-semibold">{dialogTitle}</DialogTitle>
+          </DialogHeader>
+          {outputContent}
+        </DialogContent>
       </Dialog>
     </>
   );

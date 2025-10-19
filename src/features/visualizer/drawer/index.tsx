@@ -9,12 +9,10 @@ import { convertQueryToVisualizationResult } from "../queries";
 
 import CodeTabContent from "./code";
 import OutputTabContent from "./output";
-import ProblemsTabContent from "./problems";
 
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent } from "~/components/ui/tabs";
-import { controller } from "~/MainController";
 
 const DRAWER_HEIGHT = "18rem";
 
@@ -35,14 +33,18 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
   const [tabValue, setTabValue] = useState("code");
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Default to open when algorithm / response internal value
-  // is changed
+  // Default to open when response internal value is changed
   useEffect(() => {
-    if (!!activeAlgorithm && !!activeResponse) {
+    if (!!activeResponse) {
       setIsExpanded(true);
       setTabValue("output");
     }
-  }, [activeAlgorithm, activeResponse]);
+  }, [activeResponse]);
+
+  const onQuery = (result: ExecuteQueryResult) => {
+    const visualizationResult = convertQueryToVisualizationResult(result);
+    setActiveResponse(visualizationResult);
+  };
 
   const onSuccessQuery = (result: ExecuteQueryResult) => {
     setProblems([]);
@@ -52,19 +54,7 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
       nodeTables: result.nodeTables,
       edgeTables: result.edgeTables,
     });
-
-    // Convert query result to visualization result format
-    // This will highlight the matched nodes and edges in the visualization
-    // and provide data for display in the output tab
-    if (result.colorMap && Object.keys(result.colorMap).length > 0) {
-      const visualizationResult = convertQueryToVisualizationResult(result);
-      setActiveResponse(visualizationResult);
-
-      // Auto-open the drawer and switch to output tab to show query results
-      setIsExpanded(true);
-      setTabValue("output");
-    }
-
+    onQuery(result);
     toast.success("Query executed successfully!");
   };
 
@@ -76,13 +66,13 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
       nodeTables: result.nodeTables,
       edgeTables: result.edgeTables,
     });
+    onQuery(result);
     toast.error("Some queries failed", {
       action: {
         label: "See problems",
         onClick: () => setTabValue("problems"),
       },
     });
-    return;
   };
 
   return (
@@ -140,20 +130,7 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
                 runQuery={controller.db.executeQuery.bind(controller.db)}
                 onSuccessQuery={onSuccessQuery}
                 onErrorQuery={onErrorQuery}
-                tabControls={{
-                  problemsLen: problems.length,
-                  enableOutput: !!activeResponse,
-                }}
-              />
-            </TabsContent>
-            {/* TODO: Content for Problems */}
-            <TabsContent value="problems" className="flex flex-col">
-              <ProblemsTabContent
-                problems={problems}
-                tabControls={{
-                  problemsLen: problems.length,
-                  enableOutput: !!activeResponse,
-                }}
+                enableOutput={!!activeResponse}
               />
             </TabsContent>
             {/* Content for Output */}
@@ -161,10 +138,7 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
               <OutputTabContent
                 activeAlgorithm={activeAlgorithm}
                 activeResponse={activeResponse}
-                tabControls={{
-                  problemsLen: problems.length,
-                  enableOutput: !!activeResponse,
-                }}
+                enableOutput={!!activeResponse}
               />
             </TabsContent>
           </Tabs>

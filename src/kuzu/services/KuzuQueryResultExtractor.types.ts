@@ -1,6 +1,6 @@
 export type SuccessQueryResult = {
   success: true;
-  objects: any[];
+  objects: Record<string, any>[];
 };
 
 export type ErrorQueryResult = {

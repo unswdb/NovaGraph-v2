@@ -1,5 +1,5 @@
 import type { ExecuteQueryResult } from "../types";
-import type { ColorMap, SizeMap } from "../algorithms/implementations";
+import type { ColorMap } from "../algorithms/implementations";
 
 import type { QueryVisualizationResult } from "./types";
 import { MODE } from "../renderer/constant";
@@ -9,7 +9,7 @@ import { MODE } from "../renderer/constant";
  * that can be used with activeResponse for visualization.
  *
  * @param queryResult - The full query result from executeQuery
- * @returns QueryVisualizationResult with colorMap, sizeMap, mode and queryData
+ * @returns QueryVisualizationResult with colorMap, mode and queryData
  *
  * @example
  * const result = await executeQuery("MATCH (n:Person)-[r:KNOWS]->(m) RETURN n, r, m");
@@ -19,7 +19,7 @@ import { MODE } from "../renderer/constant";
 export function convertQueryToVisualizationResult(
   queryResult: ExecuteQueryResult
 ): QueryVisualizationResult {
-  const colorMap: ColorMap = queryResult.colorMap ?? {};
+  const colorMap: ColorMap = queryResult.colorMap || {};
   return {
     type: "query",
     colorMap,
