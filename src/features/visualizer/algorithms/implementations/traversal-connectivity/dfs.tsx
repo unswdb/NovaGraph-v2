@@ -60,16 +60,16 @@ function DFS(props: GraphAlgorithmResult<DFSOutputData>) {
           {/* Header Row */}
           <div className="grid grid-cols-3 bg-tabdock">
             <span className="font-semibold text-sm px-3 py-1.5">
-              Layer Index
+              Subtree Index
             </span>
             <span className="col-span-2 font-semibold text-sm px-3 py-1.5">
-              Nodes in Layer
+              Nodes in Subtree
             </span>
           </div>
           {/* Rows */}
           <div className="max-h-80 overflow-y-auto">
             <List
-              rowComponent={DFSLayerRowComponent}
+              rowComponent={DFSSubtreeRowComponent}
               rowCount={subtrees.length}
               rowHeight={rowHeight}
               rowProps={{ subtrees }}
@@ -81,7 +81,7 @@ function DFS(props: GraphAlgorithmResult<DFSOutputData>) {
   );
 }
 
-function DFSLayerRowComponent({
+function DFSSubtreeRowComponent({
   index,
   style,
   subtrees,
