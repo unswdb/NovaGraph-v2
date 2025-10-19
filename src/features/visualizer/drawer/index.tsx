@@ -14,6 +14,7 @@ import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent } from "~/components/ui/tabs";
 import { controller } from "~/MainController";
+import { convertQueryToVisualizationResult } from "../queries";
 
 const DRAWER_HEIGHT = "18rem";
 
@@ -26,6 +27,7 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
     setGraphState,
     activeAlgorithm,
     activeResponse,
+    setActiveResponse,
     controller,
   } = useStore();
 
@@ -50,6 +52,19 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
       nodeTables: result.nodeTables,
       edgeTables: result.edgeTables,
     });
+    
+    // Convert query result to visualization result format
+    // This will highlight the matched nodes and edges in the visualization
+    // and provide data for display in the output tab
+    if (result.colorMap && Object.keys(result.colorMap).length > 0) {
+      const visualizationResult = convertQueryToVisualizationResult(result);
+      setActiveResponse(visualizationResult);
+      
+      // Auto-open the drawer and switch to output tab to show query results
+      setIsExpanded(true);
+      setTabValue("output");
+    }
+    
     toast.success("Query executed successfully!");
   };
 
@@ -127,7 +142,7 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
                 onErrorQuery={onErrorQuery}
                 tabControls={{
                   problemsLen: problems.length,
-                  enableOutput: !!activeAlgorithm && !!activeResponse,
+                  enableOutput: !!activeResponse,
                 }}
               />
             </TabsContent>
@@ -137,7 +152,7 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
                 problems={problems}
                 tabControls={{
                   problemsLen: problems.length,
-                  enableOutput: !!activeAlgorithm && !!activeResponse,
+                  enableOutput: !!activeResponse,
                 }}
               />
             </TabsContent>
@@ -148,7 +163,7 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
                 activeResponse={activeResponse}
                 tabControls={{
                   problemsLen: problems.length,
-                  enableOutput: !!activeAlgorithm && !!activeResponse,
+                  enableOutput: !!activeResponse,
                 }}
               />
             </TabsContent>

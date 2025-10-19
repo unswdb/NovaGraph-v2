@@ -20,8 +20,12 @@ import type {
   BaseGraphAlgorithm,
   BaseGraphAlgorithmResult,
 } from "./algorithms/implementations";
+import type { QueryVisualizationResult } from "./queries";
 
 import { controller } from "~/MainController";
+
+// Union type for activeResponse - can be either algorithm or query result
+export type VisualizationResponse = BaseGraphAlgorithmResult | QueryVisualizationResult;
 
 export type InitializedVisualizerStore = VisualizerStore & {
   wasmModule: NonNullable<VisualizerStore["wasmModule"]>;
@@ -64,7 +68,7 @@ export default class VisualizerStore {
   code: string = "";
   problems: string[] = [];
   activeAlgorithm: BaseGraphAlgorithm | null = null;
-  activeResponse: BaseGraphAlgorithmResult | null = null;
+  activeResponse: VisualizationResponse | null = null; // Can be algorithm or query result
 
   // ACTIONS
   initialize = async () => {
@@ -176,7 +180,7 @@ export default class VisualizerStore {
     this.activeAlgorithm = activeAlgorithm;
   };
 
-  setActiveResponse = (activeResponse: BaseGraphAlgorithmResult) => {
+  setActiveResponse = (activeResponse: VisualizationResponse) => {
     this.activeResponse = activeResponse;
   };
 
