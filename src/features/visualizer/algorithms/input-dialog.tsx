@@ -85,8 +85,8 @@ export default function InputDialog({
         throw new Error(
           module && typeof err == "number"
             ? module.what_to_stderr(err)
-            : String(err) ??
-              "An unexpected error occurred. Please try again later."
+            : (String(err) ??
+              "An unexpected error occurred. Please try again later.")
         );
       } finally {
         stopLoading();

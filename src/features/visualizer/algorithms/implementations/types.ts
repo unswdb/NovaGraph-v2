@@ -32,7 +32,10 @@ export interface BaseGraphAlgorithm {
   title: string;
   description: string;
   inputs: InputType[];
-  wasmFunction: (module: GraphModule | null, args: any[]) => any;
+  wasmFunction: (
+    module: GraphModule | null,
+    args: any[]
+  ) => BaseGraphAlgorithmResult;
   output: (props: BaseGraphAlgorithmResult) => ReactNode;
 }
 
@@ -51,7 +54,10 @@ export interface GraphAlgorithm<TData = unknown> {
   inputs: InputType[];
 
   /** Function to execute the algorithm (calls igraph implementation) */
-  wasmFunction: (module: GraphModule | null, args: any[]) => any;
+  wasmFunction: (
+    module: GraphModule | null,
+    args: any[]
+  ) => GraphAlgorithmResult<TData>;
 
   /** Component to render the output in the output drawer */
   output: (props: GraphAlgorithmResult<TData>) => ReactNode;
@@ -62,8 +68,15 @@ export function createGraphAlgorithm<TData>(config: {
   title: string;
   description: string;
   inputs: InputType[];
-  wasmFunction: (module: GraphModule | null, args: any[]) => any;
+  wasmFunction: (
+    module: GraphModule | null,
+    args: any[]
+  ) => Omit<GraphAlgorithmResult<TData>, "type">;
   output: (props: GraphAlgorithmResult<TData>) => ReactNode;
 }): GraphAlgorithm<TData> {
-  return config;
+  const algorithmWasmFn = (module: GraphModule | null, args: any[]) => {
+    const res = config.wasmFunction(module, args);
+    return { ...res, type: "algorithm" } as const;
+  };
+  return { ...config, wasmFunction: algorithmWasmFn };
 }

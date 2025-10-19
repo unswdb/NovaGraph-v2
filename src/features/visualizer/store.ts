@@ -35,7 +35,6 @@ export default class VisualizerStore {
       gravity: observable,
       nodeSizeScale: observable,
       code: observable,
-      problems: observable,
       activeAlgorithm: observable,
       activeResponse: observable,
       initialize: action,
@@ -46,7 +45,6 @@ export default class VisualizerStore {
       setGravity: action,
       setNodeSizeScale: action,
       setCode: action,
-      setProblems: action,
       setActiveAlgorithm: action,
       setActiveResponse: action,
     });
@@ -60,7 +58,6 @@ export default class VisualizerStore {
   gravity: Gravity = GRAVITY.ZERO_GRAVITY;
   nodeSizeScale: NodeSizeScale = NODE_SIZE_SCALE.MEDIUM;
   code: string = "";
-  problems: string[] = [];
   activeAlgorithm: BaseGraphAlgorithm | null = null;
   activeResponse: VisualizationResponse | null = null; // Can be algorithm or query result
 
@@ -164,10 +161,6 @@ export default class VisualizerStore {
 
   setCode = (code: string) => {
     this.code = code;
-  };
-
-  setProblems = (problems: string[]) => {
-    this.problems = problems;
   };
 
   setActiveAlgorithm = (activeAlgorithm: BaseGraphAlgorithm) => {

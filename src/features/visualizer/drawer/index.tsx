@@ -20,8 +20,6 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
   const {
     code,
     setCode,
-    problems,
-    setProblems,
     setGraphState,
     activeAlgorithm,
     activeResponse,
@@ -39,7 +37,7 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
       setIsExpanded(true);
       setTabValue("output");
     }
-  }, [activeResponse]);
+  }, [activeResponse, activeAlgorithm]);
 
   const onQuery = (result: ExecuteQueryResult) => {
     const visualizationResult = convertQueryToVisualizationResult(result);
@@ -47,7 +45,6 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
   };
 
   const onSuccessQuery = (result: ExecuteQueryResult) => {
-    setProblems([]);
     setGraphState({
       nodes: result.nodes,
       edges: result.edges,
@@ -59,7 +56,6 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
   };
 
   const onErrorQuery = (result: ExecuteQueryResult) => {
-    setProblems(result.failedQueries.map((q) => q.message));
     setGraphState({
       nodes: result.nodes,
       edges: result.edges,
