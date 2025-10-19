@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+
 import type { ExecuteQueryResult } from "../types";
 import type { ColorMap, SizeMap } from "../algorithms/implementations";
 
@@ -25,4 +26,3 @@ export interface QueryOutputProps {
  * Query output component type
  */
 export type QueryOutputComponent = (props: QueryOutputProps) => ReactNode;
-

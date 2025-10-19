@@ -25,7 +25,9 @@ import type { QueryVisualizationResult } from "./queries";
 import { controller } from "~/MainController";
 
 // Union type for activeResponse - can be either algorithm or query result
-export type VisualizationResponse = BaseGraphAlgorithmResult | QueryVisualizationResult;
+export type VisualizationResponse =
+  | BaseGraphAlgorithmResult
+  | QueryVisualizationResult;
 
 export type InitializedVisualizerStore = VisualizerStore & {
   wasmModule: NonNullable<VisualizerStore["wasmModule"]>;

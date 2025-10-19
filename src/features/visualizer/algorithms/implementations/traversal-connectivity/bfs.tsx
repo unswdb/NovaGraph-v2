@@ -29,6 +29,15 @@ export const bfs = createGraphAlgorithm<BFSOutputData>({
 });
 
 function BFS(props: GraphAlgorithmResult<BFSOutputData>) {
+  props.data = {
+    source: "A",
+    nodesFound: 5,
+    layers: [
+      { layer: ["A"], index: 0 },
+      { layer: ["B", "C"], index: 1 },
+      { layer: ["D", "E"], index: 2 },
+    ],
+  };
   const { source, nodesFound, layers } = props.data;
   return <p>BFS output: {JSON.stringify(props.data, null, 2)}</p>;
 }

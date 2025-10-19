@@ -11,9 +11,11 @@ export const ExportJSON: ExportOption = {
   mimeType: "application/json",
   export: (data: Record<string, any>) => {
     // Handle BigInt serialization for query results
-    const json = JSON.stringify(data, (key, value) =>
-      typeof value === 'bigint' ? value.toString() : value
-    , 2);
+    const json = JSON.stringify(
+      data,
+      (key, value) => (typeof value === "bigint" ? value.toString() : value),
+      2
+    );
     downloadFile(json, "data.json", "application/json");
   },
 };
