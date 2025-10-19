@@ -31,18 +31,7 @@ export const checkAdjacency = createGraphAlgorithm<CheckAdjacencyOutputData>({
     }),
   ],
   wasmFunction: (module, [arg1, arg2]) => {
-    // if (module) return module.vertices_are_adjacent(arg1, arg2);
-    return {
-      colorMap: { "0": 1, "4": 1, "0-4": 1 },
-      mode: 2,
-      data: {
-        algorithm: "Check Adjacency",
-        source: "A",
-        target: "E",
-        adjacent: false,
-        weight: 6,
-      },
-    };
+    if (module) return module.vertices_are_adjacent(arg1, arg2);
   },
   output: (props) => <CheckAdjacency {...props} />,
 });

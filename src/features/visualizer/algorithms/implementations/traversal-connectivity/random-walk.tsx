@@ -62,7 +62,7 @@ function RandomWalk(props: GraphAlgorithmResult<RandomWalkOutputData>) {
     props.data;
 
   const rowHeight = useDynamicRowHeight({
-    defaultRowHeight: 48,
+    defaultRowHeight: 36,
   });
 
   const showWeightsInput = createSwitchInput({
