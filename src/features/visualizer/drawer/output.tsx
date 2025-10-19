@@ -1,18 +1,20 @@
+import { useMemo, useState } from "react";
+import { Maximize2 } from "lucide-react";
+import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
+
 import type { BaseGraphAlgorithm } from "../algorithms/implementations";
 import { QueryOutput } from "../queries";
 import ExportDropdownButton from "../export/export-dropdown-button";
-
-import CodeOutputTabs from "./tabs";
-import { useMemo, useState } from "react";
 import {
   isAlgorithmVisualizationResult,
   isQueryVisualizationResult,
   type VisualizationResponse,
 } from "../types";
-import { Maximize2 } from "lucide-react";
+
+import CodeOutputTabs from "./tabs";
+
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogHeader } from "~/components/ui/dialog";
-import { DialogTitle } from "@radix-ui/react-dialog";
 
 export default function OutputTabContent({
   activeAlgorithm,
@@ -53,7 +55,9 @@ export default function OutputTabContent({
       const queryLength =
         activeResponse.queryData.successQueries.length +
         activeResponse.queryData.failedQueries.length;
-      return `Query Results (${queryLength} ${queryLength === 1 ? "query" : "queries"} processed)`;
+      return `Query Results (${queryLength} ${
+        queryLength === 1 ? "query" : "queries"
+      } processed)`;
     }
     return "Output";
   }, [activeAlgorithm, activeResponse]);
@@ -69,7 +73,7 @@ export default function OutputTabContent({
           {!!activeResponse && (
             <div className="flex items-center gap-2">
               <Button variant="ghost" onClick={() => setIsFullScreen(true)}>
-                <Maximize2 /> Full Screen
+                <Maximize2 /> Fullscreen
               </Button>
               <ExportDropdownButton activeResponse={activeResponse} />
             </div>
@@ -81,6 +85,9 @@ export default function OutputTabContent({
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="font-semibold">{dialogTitle}</DialogTitle>
+            <DialogDescription className="hidden">
+              Shows the full results from your latest run
+            </DialogDescription>
           </DialogHeader>
           {outputContent}
         </DialogContent>

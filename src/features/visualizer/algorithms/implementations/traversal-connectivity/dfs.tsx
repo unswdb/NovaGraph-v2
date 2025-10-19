@@ -3,6 +3,7 @@ import {
   useDynamicRowHeight,
   type RowComponentProps,
 } from "react-window";
+
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";
@@ -90,7 +91,11 @@ function DFSSubtreeRowComponent({
 }>) {
   const subtree = subtrees[index];
   return (
-    <div className="grid grid-cols-3 not-odd:bg-neutral-low/50" style={style}>
+    <div
+      key={index}
+      className="grid grid-cols-3 not-odd:bg-neutral-low/50"
+      style={style}
+    >
       {/* Layer Index */}
       <span className="font-semibold px-3 py-1.5">{subtree.num}</span>
       {/* Nodes */}

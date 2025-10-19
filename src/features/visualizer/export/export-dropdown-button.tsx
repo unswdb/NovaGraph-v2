@@ -1,6 +1,6 @@
 import { ChevronDown, Download } from "lucide-react";
 
-import type { VisualizationResponse } from "../store";
+import type { VisualizationResponse } from "../types";
 
 import ALL_EXPORTS from "./implementations";
 

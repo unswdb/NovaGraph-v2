@@ -1,4 +1,10 @@
 import { useState } from "react";
+import {
+  List,
+  useDynamicRowHeight,
+  type RowComponentProps,
+} from "react-window";
+
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 import InputComponent, {
@@ -7,11 +13,6 @@ import InputComponent, {
   createNumberInput,
   createSwitchInput,
 } from "~/features/visualizer/inputs";
-import {
-  List,
-  useDynamicRowHeight,
-  type RowComponentProps,
-} from "react-window";
 
 // Infered from src/wasm/algorithms
 type RandomWalkOutputData = {
@@ -142,6 +143,7 @@ function RandomWalkPathRowComponent({
   const path = paths[index];
   return (
     <div
+      key={index}
       className="grid grid-flow-col auto-cols-fr not-odd:bg-neutral-low/50"
       style={style}
     >

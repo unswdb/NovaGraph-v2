@@ -1,6 +1,7 @@
 import { Loader, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useMemo, useState } from "react";
+import { observer } from "mobx-react-lite";
 
 import type { EdgeSchema, GraphEdge, GraphNode } from "../../../types";
 
@@ -36,7 +37,6 @@ import {
 import { createSchemaInput } from "~/features/visualizer/schema-inputs";
 import { useStore } from "~/features/visualizer/hooks/use-store";
 import { useAsyncFn } from "~/hooks/use-async-fn";
-import { observer } from "mobx-react-lite";
 
 const EdgeListItem = observer(
   ({

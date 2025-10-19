@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Key, Loader, Plus, X } from "lucide-react";
 import { toast } from "sonner";
+import { observer } from "mobx-react-lite";
 
 import { Button } from "~/components/ui/button";
 import { useAsyncFn } from "~/hooks/use-async-fn";
@@ -18,7 +19,6 @@ import InputComponent, {
   type TextInput,
 } from "~/features/visualizer/inputs";
 import type { GraphNode } from "~/features/visualizer/types";
-import { observer } from "mobx-react-lite";
 
 type EdgeSchemaField =
   | {

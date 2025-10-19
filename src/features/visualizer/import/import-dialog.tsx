@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { Loader } from "lucide-react";
 
 import InputComponent, { createEmptyInputResults } from "../inputs";
 
@@ -15,7 +16,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Separator } from "~/components/ui/separator";
 import { Button } from "~/components/ui/button";
 import { useAsyncFn } from "~/hooks/use-async-fn";
-import { Loader } from "lucide-react";
 
 export default function ImportDialog({ onClose }: { onClose: () => void }) {
   return (
