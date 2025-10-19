@@ -16,6 +16,7 @@ export type SizeMap = {
 };
 
 export interface BaseGraphAlgorithmResult {
+  type: "algorithm";
   colorMap: ColorMap;
   sizeMap?: SizeMap;
   mode: number;

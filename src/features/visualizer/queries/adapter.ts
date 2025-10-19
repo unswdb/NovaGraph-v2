@@ -2,6 +2,7 @@ import type { ExecuteQueryResult } from "../types";
 import type { ColorMap, SizeMap } from "../algorithms/implementations";
 
 import type { QueryVisualizationResult } from "./types";
+import { MODE } from "../renderer/constant";
 
 /**
  * Converts a Kuzu query result to a visualization result format
@@ -18,27 +19,11 @@ import type { QueryVisualizationResult } from "./types";
 export function convertQueryToVisualizationResult(
   queryResult: ExecuteQueryResult
 ): QueryVisualizationResult {
-  const colorMap: ColorMap = queryResult.colorMap || {};
-
-  // Create sizeMap for matched nodes to make them larger and more visible
-  const sizeMap: SizeMap = {};
-
-  // Iterate through colorMap to find matched nodes (not edges)
-  for (const key in colorMap) {
-    // Check if it's a node (format: "table_offset") not an edge (format: "source-target")
-    if (!key.includes("-")) {
-      // Make matched nodes 2.5x larger for better visibility
-      sizeMap[key] = 20; // Highlighted node size (default is 7)
-    }
-  }
-
-  // MODE.COLOR_SHADE_DEFAULT = 2
-  // This mode uses gradient colors for highlighted nodes
+  const colorMap: ColorMap = queryResult.colorMap ?? {};
   return {
     type: "query",
     colorMap,
-    sizeMap,
-    mode: 2, // COLOR_SHADE_DEFAULT mode
+    mode: MODE.COLOR_SHADE_DEFAULT,
     queryData: queryResult, // Include the original query data for display
   };
 }

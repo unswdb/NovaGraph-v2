@@ -9,6 +9,7 @@ import {
   type GraphModule,
   type GraphNode,
   type NodeSchema,
+  type VisualizationResponse,
 } from "./types";
 import {
   GRAVITY,
@@ -16,18 +17,9 @@ import {
   type Gravity,
   type NodeSizeScale,
 } from "./renderer/constant";
-import type {
-  BaseGraphAlgorithm,
-  BaseGraphAlgorithmResult,
-} from "./algorithms/implementations";
-import type { QueryVisualizationResult } from "./queries";
+import type { BaseGraphAlgorithm } from "./algorithms/implementations";
 
 import { controller } from "~/MainController";
-
-// Union type for activeResponse - can be either algorithm or query result
-export type VisualizationResponse =
-  | BaseGraphAlgorithmResult
-  | QueryVisualizationResult;
 
 export type InitializedVisualizerStore = VisualizerStore & {
   wasmModule: NonNullable<VisualizerStore["wasmModule"]>;

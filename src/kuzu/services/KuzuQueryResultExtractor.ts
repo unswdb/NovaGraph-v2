@@ -13,6 +13,10 @@ import type {
   SuccessQueryResult,
 } from "./KuzuQueryResultExtractor.types";
 import type QueryResult from "../types/kuzu_wasm_internal/query_result";
+import type {
+  ColorMap,
+  SizeMap,
+} from "~/features/visualizer/algorithms/implementations";
 
 /**
  * Helper method to process a single query result (returns a single object)
@@ -73,9 +77,7 @@ export function parseSingleTableResult(
     return null;
   }
   if (!result.isSuccess()) {
-    throw new Error(
-      'parseSingleTableResult encounters an error'
-    );
+    throw new Error("parseSingleTableResult encounters an error");
   }
   const objects = result.getAllObjects();
   if (!objects) return null;
@@ -105,7 +107,7 @@ export function parseTableConnection(
     return null;
   }
   if (!result.isSuccess()) {
-    throw new Error('parseTableConnection encounters an error');
+    throw new Error("parseTableConnection encounters an error");
   }
   const objects = result.getAllObjects();
   if (!objects) return null;
@@ -307,7 +309,7 @@ export function queryResultColorMapExtraction(result: any) {
     return { nodes: [], edges: [] };
   }
 
-  const colorMap: any = {};
+  const colorMap: ColorMap = {};
   // console.warn("Processing query result for color mapping");
   try {
     const objects = result.getAllObjects();

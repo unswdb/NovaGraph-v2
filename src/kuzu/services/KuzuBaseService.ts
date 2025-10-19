@@ -18,13 +18,8 @@ import {
   deleteEdgeQuery,
 } from "../helpers/KuzuQueryBuilder";
 
-import type { CompositeType, ValueWithType } from "~/kuzu/types/KuzuDBTypes";
-import type {
-  EdgeSchema,
-  GraphEdge,
-  GraphNode,
-  GraphSchema,
-} from "~/features/visualizer/types";
+import type { CompositeType } from "~/kuzu/types/KuzuDBTypes";
+import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
 import type {
   NonPrimaryKeyType,
   PrimaryKeyType,
@@ -112,7 +107,7 @@ export default class KuzuBaseService {
       edges: edges,
       nodeTables,
       edgeTables,
-      colorMap: colorMap,
+      colorMap,
       resultType: resultType,
     };
   }

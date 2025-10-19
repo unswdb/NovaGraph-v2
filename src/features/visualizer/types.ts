@@ -1,3 +1,5 @@
+import type { BaseGraphAlgorithmResult } from "./algorithms/implementations";
+import type { QueryVisualizationResult } from "./queries";
 import type {
   NonPrimaryKeyType,
   NonPrimaryKeyValueType,
@@ -71,5 +73,20 @@ export type GraphDatabase = {
 };
 
 export type ExecuteQueryResult = ReturnType<KuzuBaseService["executeQuery"]>;
+export type VisualizationResponse =
+  | BaseGraphAlgorithmResult
+  | QueryVisualizationResult;
+
+export function isQueryVisualizationResult(
+  response: VisualizationResponse
+): response is QueryVisualizationResult {
+  return response.type === "query";
+}
+
+export function isAlgorithmVisualizationResult(
+  response: VisualizationResponse
+): response is BaseGraphAlgorithmResult {
+  return response.type === "algorithm";
+}
 
 export { type MainModule as GraphModule } from "~/graph";
