@@ -148,10 +148,12 @@ function RandomWalkPathRowComponent({
       style={style}
     >
       <span className="font-semibold px-3 py-1.5">{path.step}</span>
-      <span className="font-semibold px-3 py-1.5">{path.from}</span>
-      <span className="font-semibold px-3 py-1.5">{path.to}</span>
+      <span className="font-semibold px-3 py-1.5 truncate">{path.from}</span>
+      <span className="font-semibold px-3 py-1.5 truncate">{path.to}</span>
       {showWeight && (
-        <span className="font-semibold px-3 py-1.5">{path.weight}</span>
+        <span className="font-semibold px-3 py-1.5">
+          {path.weight?.toFixed(2)}
+        </span>
       )}
     </div>
   );

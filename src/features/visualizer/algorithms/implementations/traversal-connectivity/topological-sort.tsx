@@ -43,7 +43,7 @@ function TopologicalSort(
         <h3 className="font-semibold">Topological Order</h3>
         <div className="border border-border border-collapse rounded-md overflow-hidden">
           {/* Header Row */}
-          <div className="grid grid-cols-3 bg-tabdock">
+          <div className="grid grid-cols-2 bg-tabdock">
             <span className="font-semibold text-sm px-3 py-1.5">Order</span>
             <span className="col-span-2 font-semibold text-sm px-3 py-1.5">
               Node
@@ -72,11 +72,11 @@ function TopologicalOrderRowComponent({
   return (
     <div
       key={index}
-      className="grid grid-cols-3 not-odd:bg-neutral-low/50"
+      className="grid grid-cols-2 not-odd:bg-neutral-low/50"
       style={style}
     >
       <span className="font-semibold px-3 py-1.5">{index + 1}</span>
-      <span className="font-semibold px-3 py-1.5">{order.node}</span>
+      <span className="font-semibold px-3 py-1.5 truncate">{order.node}</span>
     </div>
   );
 }
