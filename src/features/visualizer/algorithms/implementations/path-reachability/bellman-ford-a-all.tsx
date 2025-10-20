@@ -57,7 +57,7 @@ function BellmanFordAToAll(
     id: "bellman-ford-show-weights",
     key: "show_weights",
     displayName: "Show Weights",
-    defaultValue: false,
+    defaultValue: weighted ?? false,
     disabled: !weighted,
     showLabel: false,
   });
@@ -80,7 +80,7 @@ function BellmanFordAToAll(
       {/* Paths */}
       <div className="space-y-3 border-t border-t-border pt-3 isolate">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold">Traversal Path</h3>
+          <h3 className="font-semibold">Traversal Paths</h3>
           <div className="flex gap-2">
             <span className="text-sm">Show Weight:</span>
             <InputComponent
@@ -90,8 +90,6 @@ function BellmanFordAToAll(
             />
           </div>
         </div>
-
-        {/* Row Path */}
         <div className="max-h-80 overflow-y-auto border border-border rounded-md">
           <List
             rowComponent={BFSingleSourcePathRowComponent}

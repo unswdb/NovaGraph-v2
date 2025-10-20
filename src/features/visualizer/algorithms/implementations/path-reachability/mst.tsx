@@ -49,7 +49,7 @@ function MinimalSpanningTree(
     id: "mst-show-weights",
     key: "show_weights",
     displayName: "Show Weights",
-    defaultValue: false,
+    defaultValue: weighted ?? false,
     disabled: !weighted,
     showLabel: false,
   });

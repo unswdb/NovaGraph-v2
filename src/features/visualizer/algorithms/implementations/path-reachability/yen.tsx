@@ -1,8 +1,17 @@
+import {
+  List,
+  useDynamicRowHeight,
+  type RowComponentProps,
+} from "react-window";
+import { useState } from "react";
+
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
-import {
+import InputComponent, {
   createAlgorithmSelectInput,
+  createEmptyInputResult,
   createNumberInput,
+  createSwitchInput,
 } from "~/features/visualizer/inputs";
 
 // Infered from src/wasm/algorithms
@@ -47,12 +56,172 @@ export const yen = createGraphAlgorithm<YenOutputData>({
     }),
   ],
   wasmFunction: (module, [arg1, arg2, arg3]) => {
-    if (module) return module.yens_algorithm(arg1, arg2, arg3);
+    // if (module) return module.yens_algorithm(arg1, arg2, arg3);
+    return {
+      colorMap: {
+        "0": 1,
+        "3": 1, // source/target
+        "1": 0.5,
+        "2": 0.5, // path nodes
+        "0-1": 1,
+        "1-3": 1,
+        "0-2": 1,
+        "2-3": 1, // all path edges
+      },
+      mode: 2,
+      data: {
+        algorithm: "Yen's k Shortest Paths",
+        source: "NodeA",
+        target: "NodeD",
+        k: 3,
+        weighted: true,
+        paths: [
+          {
+            num: 1,
+            weight: 8,
+            path: ["NodeA", "NodeB", "NodeD"],
+          },
+          {
+            num: 2,
+            weight: 12,
+            path: ["NodeA", "NodeC", "NodeD"],
+          },
+        ],
+      },
+    };
   },
   output: (props) => <Yen {...props} />,
 });
 
 function Yen(props: GraphAlgorithmResult<YenOutputData>) {
   const { source, target, k, weighted, paths } = props.data;
-  return <p>Yen output: {JSON.stringify(props.data, null, 2)}</p>;
+
+  const rowHeight = useDynamicRowHeight({
+    defaultRowHeight: 48,
+  });
+
+  const showWeightsInput = createSwitchInput({
+    id: "mst-show-weights",
+    key: "show_weights",
+    displayName: "Show Weights",
+    defaultValue: weighted ?? false,
+    disabled: !weighted,
+    showLabel: false,
+  });
+
+  const [showWeight, setShowWeight] = useState(
+    createEmptyInputResult(showWeightsInput)
+  );
+
+  return (
+    <div className="space-y-4">
+      <p className="font-medium text-sm text-positive">
+        ✓ Yen's K Shortest Path completed successfully
+      </p>
+
+      {/* Statistics */}
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="flex justify-between gap-2">
+          <span className="text-typography-secondary">Source:</span>
+          <span className="text-typography-primary font-medium">{source}</span>
+        </div>
+        <div className="flex justify-between gap-2">
+          <span className="text-typography-secondary">Target</span>
+          <span className="text-typography-primary font-medium">{target}</span>
+        </div>
+        <div className="flex justify-between gap-2 col-span-2">
+          <span className="text-typography-secondary">
+            Number of Paths (K):
+          </span>
+          <span className="text-typography-primary font-medium">{k}</span>
+        </div>
+      </div>
+
+      {/* Paths */}
+      <div className="space-y-3 border-t border-t-border pt-3 isolate">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold">Shortest Paths</h3>
+          <div className="flex gap-2">
+            <span className="text-sm">Show Weight:</span>
+            <InputComponent
+              input={showWeightsInput}
+              value={showWeight.value}
+              onChange={setShowWeight}
+            />
+          </div>
+        </div>
+        <div className="max-h-80 overflow-y-auto border border-border rounded-md">
+          <List
+            rowComponent={YenPathRowComponent}
+            rowCount={paths.length + 1} // Top header row
+            rowHeight={rowHeight}
+            rowProps={{ showWeight: showWeight.value ?? false, paths }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function YenPathRowComponent({
+  index,
+  style,
+  showWeight,
+  paths,
+}: RowComponentProps<{
+  showWeight: boolean;
+  paths: YenOutputData["paths"];
+}>) {
+  // Top header row
+  if (index === 0) {
+    return (
+      <div
+        style={style}
+        className={`bg-tabdock min-w-0 grid grid-flow-col ${
+          showWeight ? "grid-cols-4" : "grid-cols-3"
+        }`}
+      >
+        <span className="font-semibold text-sm px-3 py-1.5">Rank</span>
+        <span className="font-semibold text-sm px-3 py-1.5">Hops</span>
+        {showWeight && (
+          <span className="font-semibold text-sm px-3 py-1.5">Weight</span>
+        )}
+        <span className="font-semibold text-sm px-3 py-1.5">Path</span>
+      </div>
+    );
+  }
+
+  const path = paths[index - 1];
+
+  return (
+    <div
+      style={style}
+      className={`grid grid-flow-col ${
+        showWeight ? "grid-cols-4" : "grid-cols-3"
+      } not-odd:bg-neutral-low/50`}
+    >
+      <span className="font-semibold px-3 py-1.5">{path.num}</span>
+      <span className="font-semibold px-3 py-1.5">{path.path.length}</span>
+
+      {showWeight && (
+        <span className="font-semibold px-3 py-1.5">
+          {path.weight !== undefined ? path.weight.toFixed(2) : "—"}
+        </span>
+      )}
+
+      {/* Nodes */}
+      <span
+        className={`flex gap-1 overflow-x-auto font-semibold px-3 py-1.5 ${
+          showWeight && "col-span-2"
+        }`}
+      >
+        {path.path.map((p, i) => (
+          <div key={`${index}-${i}-${p}`} className="flex items-center">
+            <span className="px-3 py-1.5 rounded-md bg-primary-low">{p}</span>
+            {i < path.path.length - 1 && <span>→</span>}
+          </div>
+        ))}
+      </span>
+    </div>
+  );
 }

@@ -56,7 +56,7 @@ function DFS(props: GraphAlgorithmResult<DFSOutputData>) {
 
       {/* Subtrees */}
       <div className="space-y-3 border-t border-t-border pt-3 isolate">
-        <h3 className="font-semibold">Traversal Layers</h3>
+        <h3 className="font-semibold">Subtrees</h3>
         <div className="max-h-80 overflow-y-auto border border-border rounded-md">
           <List
             rowComponent={DFSSubtreeRowComponent}
