@@ -82,7 +82,7 @@ export default function OutputTabContent({
       </div>
 
       <Dialog open={isFullScreen} onOpenChange={setIsFullScreen}>
-        <DialogContent>
+        <DialogContent className="flex flex-col">
           <DialogHeader>
             <DialogTitle className="font-semibold">{dialogTitle}</DialogTitle>
             <DialogDescription className="hidden">
