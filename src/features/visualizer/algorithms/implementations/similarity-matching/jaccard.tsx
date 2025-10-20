@@ -1,5 +1,4 @@
 import { Grid, type CellComponentProps } from "react-window";
-
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";
@@ -56,19 +55,19 @@ function Jaccard(props: GraphAlgorithmResult<JaccardSimilarityOutputData>) {
 
       {/* Statistics */}
       <div className="grid grid-cols-2 gap-2 text-sm">
-        <div className="flex justify-between">
+        <div className="flex justify-between gap-2">
           <span className="text-typography-secondary">Source:</span>
           <span className="text-typography-primary font-medium">
             {maxSimilarity.node1}
           </span>
         </div>
-        <div className="flex justify-between">
+        <div className="flex justify-between gap-2">
           <span className="text-typography-secondary">Target:</span>
           <span className="text-typography-primary font-medium">
             {maxSimilarity.node2}
           </span>
         </div>
-        <div className="col-span-2">
+        <div className="flex justify-between gap-2 col-span-2">
           <span className="text-typography-secondary">Max Similarity:</span>
           <span className="text-typography-primary font-medium">
             {maxSimilarity.similarity}
@@ -78,7 +77,7 @@ function Jaccard(props: GraphAlgorithmResult<JaccardSimilarityOutputData>) {
 
       <div className="space-y-3 border-t border-t-border pt-3 isolate">
         <h3 className="font-semibold">Similarity Matrix</h3>
-        <div className="max-h-80 overflow-auto relative">
+        <div className="max-h-80 overflow-auto">
           <Grid
             cellComponent={JaccardSimilarityCellComponent}
             columnCount={nodes.length + 1} // for left header col

@@ -47,13 +47,13 @@ function CheckAdjacency(props: GraphAlgorithmResult<CheckAdjacencyOutputData>) {
       <div className="space-y-3 pt-3 border-t border-t-border">
         <h3 className="font-semibold">Query Details</h3>
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="flex justify-between">
+          <div className="flex justify-between gap-2">
             <span className="text-typography-secondary">Source:</span>
             <span className="text-typography-primary font-medium">
               {source}
             </span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between gap-2">
             <span className="text-typography-secondary">Target:</span>
             <span className="text-typography-primary font-medium">
               {target}
