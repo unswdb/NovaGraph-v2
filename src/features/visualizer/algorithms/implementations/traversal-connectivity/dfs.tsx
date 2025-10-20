@@ -48,11 +48,24 @@ function DFS(props: GraphAlgorithmResult<DFSOutputData>) {
       </p>
 
       {/* Statistics */}
-      <p className="text-sm text-typography-secondary">
-        Source: <b className="text-typography-primary">{source}</b> • Nodes
-        Found: <b className="text-typography-primary">{nodesFound}</b> •
-        Subtrees: <b className="text-typography-primary">{subtrees.length}</b>
-      </p>
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="flex justify-between gap-2">
+          <span className="text-typography-secondary">Source:</span>
+          <span className="text-typography-primary font-medium">{source}</span>
+        </div>
+        <div className="flex justify-between gap-2">
+          <span className="text-typography-secondary">Nodes Found:</span>
+          <span className="text-typography-primary font-medium">
+            {nodesFound}
+          </span>
+        </div>
+        <div className="flex justify-between gap-2 col-span-2">
+          <span className="text-typography-secondary">Number of Subtrees:</span>
+          <span className="text-typography-primary font-medium">
+            {subtrees.length}
+          </span>
+        </div>
+      </div>
 
       {/* Subtrees */}
       <div className="space-y-3 border-t border-t-border pt-3 isolate">

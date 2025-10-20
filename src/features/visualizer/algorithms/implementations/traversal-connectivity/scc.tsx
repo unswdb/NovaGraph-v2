@@ -71,7 +71,7 @@ function SCCRowComponent({
       >
         <CollapsibleTrigger className="px-3 py-1.5 w-full flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <p>Component {index + 1}</p>
+            <p className="text-sm font-semibold">Component {index + 1}</p>
             <span className="px-3 py-1.5 rounded-md text-xs bg-primary-low text-primary">
               {component.length} nodes
             </span>

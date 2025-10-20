@@ -74,13 +74,24 @@ function RandomWalk(props: GraphAlgorithmResult<RandomWalkOutputData>) {
       </p>
 
       {/* Statistics */}
-      <p className="text-sm text-typography-secondary">
-        Source: <b className="text-typography-primary">{source}</b> • Steps:{" "}
-        <b className="text-typography-primary">{steps}</b> • Max Frequency Node:{" "}
-        <b className="text-typography-primary">
-          {maxFrequencyNode} ({maxFrequency} times visited)
-        </b>
-      </p>
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="flex justify-between gap-2">
+          <span className="text-typography-secondary">Source:</span>
+          <span className="text-typography-primary font-medium">{source}</span>
+        </div>
+        <div className="flex justify-between gap-2">
+          <span className="text-typography-secondary">Number of Steps:</span>
+          <span className="text-typography-primary font-medium">{steps}</span>
+        </div>
+        <div className="flex justify-between gap-2 col-span-2">
+          <span className="text-typography-secondary">
+            Node With Max Frequency:
+          </span>
+          <span className="text-typography-primary font-medium">
+            {maxFrequencyNode} ({maxFrequency} times visited)
+          </span>
+        </div>
+      </div>
 
       {/* Step By Step */}
       <div className="space-y-3 border-t border-t-border pt-3 isolate">

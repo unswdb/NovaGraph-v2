@@ -91,6 +91,7 @@ function CheckAdjacency(props: GraphAlgorithmResult<CheckAdjacencyOutputData>) {
         </div>
       </div>
 
+      {/* What this means */}
       <div className="space-y-3 pt-3 border-t border-t-border">
         <h3 className="font-semibold">What this means</h3>
         <p className="text-typography-secondary text-sm">

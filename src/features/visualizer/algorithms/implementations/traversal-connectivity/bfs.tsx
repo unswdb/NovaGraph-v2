@@ -48,11 +48,24 @@ function BFS(props: GraphAlgorithmResult<BFSOutputData>) {
       </p>
 
       {/* Statistics */}
-      <p className="text-sm text-typography-secondary">
-        Source: <b className="text-typography-primary">{source}</b> • Nodes
-        Found: <b className="text-typography-primary">{nodesFound}</b> • Layers:{" "}
-        <b className="text-typography-primary">{layers.length}</b>
-      </p>
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="flex justify-between gap-2">
+          <span className="text-typography-secondary">Source:</span>
+          <span className="text-typography-primary font-medium">{source}</span>
+        </div>
+        <div className="flex justify-between gap-2">
+          <span className="text-typography-secondary">Nodes Found:</span>
+          <span className="text-typography-primary font-medium">
+            {nodesFound}
+          </span>
+        </div>
+        <div className="flex justify-between gap-2 col-span-2">
+          <span className="text-typography-secondary">Number of Layers:</span>
+          <span className="text-typography-primary font-medium">
+            {layers.length}
+          </span>
+        </div>
+      </div>
 
       {/* Layers */}
       <div className="space-y-3 border-t border-t-border pt-3 isolate">
