@@ -1,3 +1,9 @@
+import {
+  List,
+  useDynamicRowHeight,
+  type RowComponentProps,
+} from "react-window";
+
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 // Infered from src/wasm/algorithms
@@ -24,6 +30,104 @@ export const graphDiameter = createGraphAlgorithm<GraphDiameterOutputData>({
 });
 
 function GraphDiameter(props: GraphAlgorithmResult<GraphDiameterOutputData>) {
-  const { source, target, weighted, diameter, path } = props.data;
-  return <p>Graph Diameter output: {JSON.stringify(props.data, null, 2)}</p>;
+  const { source, target, diameter, path } = props.data;
+
+  const rowHeight = useDynamicRowHeight({
+    defaultRowHeight: 48,
+  });
+
+  const cumulative = path.reduce<number[]>((acc, step, i) => {
+    const prev = acc[i - 1] ?? 0;
+    acc.push(prev + (step.weight ?? 1));
+    return acc;
+  }, []);
+
+  return (
+    <div className="space-y-4">
+      <p className="font-medium text-sm text-positive">
+        ✓ Graph Diameter completed successfully
+      </p>
+
+      {/* Statistics */}
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="flex justify-between gap-2">
+          <span className="text-typography-secondary">Source:</span>
+          <span className="text-typography-primary font-medium">{source}</span>
+        </div>
+        <div className="flex justify-between gap-2">
+          <span className="text-typography-secondary">Target:</span>
+          <span className="text-typography-primary font-medium">{target}</span>
+        </div>
+
+        <div className="flex justify-between gap-2 col-span-2">
+          <span className="text-typography-secondary">
+            Diameter/Total Weight:
+          </span>
+          <span className="text-typography-primary font-medium">
+            {diameter}
+          </span>
+        </div>
+      </div>
+
+      {/* Step By Step */}
+      <div className="space-y-3 border-t border-t-border pt-3 isolate">
+        <h3 className="font-semibold">Step By Step</h3>
+        <div className="max-h-80 overflow-y-auto">
+          <List
+            rowComponent={GraphDiameterPathRowComponent}
+            rowCount={path.length}
+            rowHeight={rowHeight}
+            rowProps={{ cumulative, path }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GraphDiameterPathRowComponent({
+  index,
+  style,
+  cumulative,
+  path: paths,
+}: RowComponentProps<{
+  cumulative: number[];
+  path: GraphDiameterOutputData["path"];
+}>) {
+  const path = paths[index];
+  return (
+    <div key={index} style={style}>
+      <div className="border border-border rounded-md px-4 py-3 space-y-1 mb-2">
+        <div className="grid grid-cols-[36px_1fr_auto] gap-4">
+          {/* Step number */}
+          <p className="text-sm font-semibold">{index + 1}</p>
+
+          {/* Source to Target */}
+          <div className="min-w-0 overflow-hidden">
+            <div className="flex items-center gap-2 h-full">
+              <span className="max-w-1/2 px-3 py-1.5 rounded-md bg-primary-low text-sm truncate whitespace-nowrap">
+                {path.from}
+              </span>
+              <span className="shrink-0">→</span>
+              <span className="max-w-1/2 px-3 py-1.5 rounded-md bg-primary-low text-sm truncate whitespace-nowrap">
+                {path.to}
+              </span>
+            </div>
+          </div>
+
+          {/* Weight */}
+          <div className="text-right">
+            <p className="font-semibold">+{path.weight ?? 1}</p>
+            <p className="text-xs text-typography-secondary">Step weight</p>
+          </div>
+        </div>
+
+        {/* Cumulative */}
+        <p className="text-xs text-typography-secondary">
+          Cumulative: {cumulative[index - 1] ?? 0} + {path.weight ?? 1} ={" "}
+          <b>{cumulative[index]}</b>
+        </p>
+      </div>
+    </div>
+  );
 }
