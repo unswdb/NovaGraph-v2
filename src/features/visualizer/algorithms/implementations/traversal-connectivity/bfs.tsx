@@ -38,7 +38,7 @@ function BFS(props: GraphAlgorithmResult<BFSOutputData>) {
   const { source, nodesFound, layers } = props.data;
 
   const rowHeight = useDynamicRowHeight({
-    defaultRowHeight: 50,
+    defaultRowHeight: 48,
   });
 
   return (
@@ -57,25 +57,14 @@ function BFS(props: GraphAlgorithmResult<BFSOutputData>) {
       {/* Layers */}
       <div className="space-y-3 border-t border-t-border pt-3 isolate">
         <h3 className="font-semibold">Traversal Layers</h3>
-        <div className="border border-border border-collapse rounded-md overflow-hidden">
-          {/* Header Row */}
-          <div className="grid grid-cols-3 bg-tabdock">
-            <span className="font-semibold text-sm px-3 py-1.5">
-              Layer Index
-            </span>
-            <span className="col-span-2 font-semibold text-sm px-3 py-1.5">
-              Nodes in Layer
-            </span>
-          </div>
-          {/* Rows */}
-          <div className="max-h-80 overflow-y-auto">
-            <List
-              rowComponent={BFSLayerRowComponent}
-              rowCount={layers.length}
-              rowHeight={rowHeight}
-              rowProps={{ layers }}
-            />
-          </div>
+        {/* Rows */}
+        <div className="max-h-80 overflow-y-auto border border-border rounded-md">
+          <List
+            rowComponent={BFSLayerRowComponent}
+            rowCount={layers.length + 1} // Top header row
+            rowHeight={rowHeight}
+            rowProps={{ layers }}
+          />
         </div>
       </div>
     </div>
@@ -87,7 +76,19 @@ function BFSLayerRowComponent({
   style,
   layers,
 }: RowComponentProps<{ layers: BFSOutputData["layers"] }>) {
-  const layer = layers[index];
+  // Top header row
+  if (index === 0) {
+    return (
+      <div key={index} className="grid grid-cols-3 bg-tabdock" style={style}>
+        <span className="font-semibold text-sm px-3 py-1.5">Layer Index</span>
+        <span className="col-span-2 font-semibold text-sm px-3 py-1.5">
+          Nodes in Layer
+        </span>
+      </div>
+    );
+  }
+
+  const layer = layers[index - 1];
   return (
     <div
       key={index}

@@ -1,4 +1,5 @@
 import { Grid, type CellComponentProps } from "react-window";
+
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";

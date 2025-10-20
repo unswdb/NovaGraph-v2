@@ -1,11 +1,12 @@
-import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
-
-import { createNumberInput } from "~/features/visualizer/inputs";
 import {
   List,
   useDynamicRowHeight,
   type RowComponentProps,
 } from "react-window";
+
+import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
+
+import { createNumberInput } from "~/features/visualizer/inputs";
 
 // Infered from src/wasm/algorithms
 type MissingEdgePredictionOutputData = {
@@ -53,7 +54,7 @@ function MissingEdgePrediction(
   const { predictedEdges } = props.data;
 
   const rowHeight = useDynamicRowHeight({
-    defaultRowHeight: 50,
+    defaultRowHeight: 36,
   });
 
   return (
@@ -71,25 +72,13 @@ function MissingEdgePrediction(
       {/* Predicted Edges */}
       <div className="space-y-3 border-t border-t-border pt-3 isolate">
         <h3 className="font-semibold">Predicted Edges</h3>
-        <div className="border border-border border-collapse rounded-md overflow-hidden">
-          {/* Header Row */}
-          <div className="grid grid-cols-4 bg-tabdock">
-            <span className="font-semibold text-sm px-3 py-1.5">No.</span>
-            <span className="font-semibold text-sm px-3 py-1.5">Source</span>
-            <span className="font-semibold text-sm px-3 py-1.5">Target</span>
-            <span className="font-semibold text-sm px-3 py-1.5">
-              Probability
-            </span>
-          </div>
-          {/* Rows */}
-          <div className="max-h-80 overflow-y-auto">
-            <List
-              rowComponent={MissingEdgePredictionRowComponent}
-              rowCount={predictedEdges.length}
-              rowHeight={rowHeight}
-              rowProps={{ predictedEdges }}
-            />
-          </div>
+        <div className="max-h-80 overflow-y-auto border border-border rounded-md">
+          <List
+            rowComponent={MissingEdgePredictionRowComponent}
+            rowCount={predictedEdges.length + 1} // Top header row
+            rowHeight={rowHeight}
+            rowProps={{ predictedEdges }}
+          />
         </div>
       </div>
     </div>
@@ -103,14 +92,26 @@ function MissingEdgePredictionRowComponent({
 }: RowComponentProps<{
   predictedEdges: MissingEdgePredictionOutputData["predictedEdges"];
 }>) {
-  const predictedEdge = predictedEdges[index];
+  // Top header row
+  if (index === 0) {
+    return (
+      <div key={index} className="grid grid-cols-4 bg-tabdock" style={style}>
+        <span className="font-semibold text-sm px-3 py-1.5">No.</span>
+        <span className="font-semibold text-sm px-3 py-1.5">Source</span>
+        <span className="font-semibold text-sm px-3 py-1.5">Target</span>
+        <span className="font-semibold text-sm px-3 py-1.5">Probability</span>
+      </div>
+    );
+  }
+
+  const predictedEdge = predictedEdges[index - 1];
   return (
     <div
       key={index}
       className="grid grid-cols-4 not-odd:bg-neutral-low/50"
       style={style}
     >
-      <span className="px-3 py-1.5 truncate">{index + 1}</span>
+      <span className="px-3 py-1.5 truncate">{index}</span>
       <span className="px-3 py-1.5 truncate">{predictedEdge.from}</span>
       <span className="px-3 py-1.5 truncate">{predictedEdge.to}</span>
       <span className="px-3 py-1.5 truncate">{predictedEdge.probability}</span>

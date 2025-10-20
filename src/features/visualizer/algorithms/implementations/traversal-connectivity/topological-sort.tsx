@@ -1,4 +1,5 @@
 import { List, type RowComponentProps } from "react-window";
+
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 // Infered from src/wasm/algorithms
@@ -41,22 +42,13 @@ function TopologicalSort(
       {/* Topological Order */}
       <div className="space-y-3 pt-3 border-t border-t-border">
         <h3 className="font-semibold">Topological Order</h3>
-        <div className="border border-border border-collapse rounded-md overflow-hidden">
-          {/* Header Row */}
-          <div className="grid grid-cols-2 bg-tabdock">
-            <span className="font-semibold text-sm px-3 py-1.5">Order</span>
-            <span className="col-span-2 font-semibold text-sm px-3 py-1.5">
-              Node
-            </span>
-          </div>
-          <div className="max-h-80 overflow-y-auto">
-            <List
-              rowComponent={TopologicalOrderRowComponent}
-              rowCount={order.length}
-              rowHeight={36}
-              rowProps={{ order }}
-            />
-          </div>
+        <div className="max-h-80 overflow-y-auto border border-border rounded-md">
+          <List
+            rowComponent={TopologicalOrderRowComponent}
+            rowCount={order.length + 1} // Top header row
+            rowHeight={36}
+            rowProps={{ order }}
+          />
         </div>
       </div>
     </div>
@@ -68,15 +60,25 @@ function TopologicalOrderRowComponent({
   style,
   order: orders,
 }: RowComponentProps<{ order: TopologicalSortOutputData["order"] }>) {
-  const order = orders[index];
+  // Top header row
+  if (index === 0) {
+    return (
+      <div key={index} className="grid grid-cols-2 bg-tabdock" style={style}>
+        <span className="font-semibold text-sm px-3 py-1.5">Order</span>
+        <span className="font-semibold text-sm px-3 py-1.5">Node</span>
+      </div>
+    );
+  }
+
+  const order = orders[index - 1];
   return (
     <div
       key={index}
       className="grid grid-cols-2 not-odd:bg-neutral-low/50"
       style={style}
     >
-      <span className="font-semibold px-3 py-1.5">{index + 1}</span>
-      <span className="font-semibold px-3 py-1.5 truncate">{order.node}</span>
+      <span className="px-3 py-1.5">{index}</span>
+      <span className="px-3 py-1.5 truncate">{order.node}</span>
     </div>
   );
 }

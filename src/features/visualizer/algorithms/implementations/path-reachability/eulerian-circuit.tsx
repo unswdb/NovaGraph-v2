@@ -5,6 +5,7 @@ type EulerianCircuitOutputData = {
   path: {
     from: string;
     to: string;
+    weight?: number;
   }[]; // consecutive steps
 };
 

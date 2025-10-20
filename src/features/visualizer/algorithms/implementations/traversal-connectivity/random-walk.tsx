@@ -106,25 +106,13 @@ function RandomWalk(props: GraphAlgorithmResult<RandomWalkOutputData>) {
             />
           </div>
         </div>
-        <div className="border border-border border-collapse rounded-md overflow-hidden">
-          {/* Header Row */}
-          <div className="bg-tabdock grid grid-flow-col auto-cols-fr">
-            <span className="font-semibold text-sm px-3 py-1.5">Step</span>
-            <span className="font-semibold text-sm px-3 py-1.5">From</span>
-            <span className="font-semibold text-sm px-3 py-1.5">To</span>
-            {showWeight.value && (
-              <span className="font-semibold text-sm px-3 py-1.5">Weight</span>
-            )}
-          </div>
-          {/* Row Path */}
-          <div className="max-h-80 overflow-y-auto">
-            <List
-              rowComponent={RandomWalkPathRowComponent}
-              rowCount={path.length}
-              rowHeight={rowHeight}
-              rowProps={{ showWeight: showWeight.value ?? false, paths: path }}
-            />
-          </div>
+        <div className="max-h-80 overflow-y-auto border border-border rounded-md">
+          <List
+            rowComponent={RandomWalkPathRowComponent}
+            rowCount={path.length + 1} // Top header row
+            rowHeight={rowHeight}
+            rowProps={{ showWeight: showWeight.value ?? false, paths: path }}
+          />
         </div>
       </div>
     </div>
@@ -140,20 +128,36 @@ function RandomWalkPathRowComponent({
   showWeight: boolean;
   paths: RandomWalkOutputData["path"];
 }>) {
-  const path = paths[index];
+  // Top header row
+  if (index === 0) {
+    return (
+      <div
+        key={index}
+        className="bg-tabdock grid grid-flow-col auto-cols-fr"
+        style={style}
+      >
+        <span className="font-semibold text-sm px-3 py-1.5">Step</span>
+        <span className="font-semibold text-sm px-3 py-1.5">From</span>
+        <span className="font-semibold text-sm px-3 py-1.5">To</span>
+        {showWeight && (
+          <span className="font-semibold text-sm px-3 py-1.5">Weight</span>
+        )}
+      </div>
+    );
+  }
+
+  const path = paths[index - 1];
   return (
     <div
       key={index}
       className="grid grid-flow-col auto-cols-fr not-odd:bg-neutral-low/50"
       style={style}
     >
-      <span className="font-semibold px-3 py-1.5">{path.step}</span>
-      <span className="font-semibold px-3 py-1.5 truncate">{path.from}</span>
-      <span className="font-semibold px-3 py-1.5 truncate">{path.to}</span>
+      <span className="px-3 py-1.5">{path.step}</span>
+      <span className="px-3 py-1.5 truncate">{path.from}</span>
+      <span className="px-3 py-1.5 truncate">{path.to}</span>
       {showWeight && (
-        <span className="font-semibold px-3 py-1.5">
-          {path.weight?.toFixed(2)}
-        </span>
+        <span className="px-3 py-1.5">{path.weight?.toFixed(2)}</span>
       )}
     </div>
   );

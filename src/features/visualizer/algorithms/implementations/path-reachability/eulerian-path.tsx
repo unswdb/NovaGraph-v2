@@ -7,6 +7,7 @@ type EulerianPathOutputData = {
   path: {
     from: string;
     to: string;
+    weight?: number;
   }[]; // consecutive steps
 };
 

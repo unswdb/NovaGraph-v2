@@ -3,13 +3,15 @@ import {
   useDynamicRowHeight,
   type RowComponentProps,
 } from "react-window";
+import { ChevronRight } from "lucide-react";
+
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
+
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
-import { ChevronRight } from "lucide-react";
 
 // Infered from src/wasm/algorithms
 type WCCOutputData = {

@@ -57,25 +57,13 @@ function DFS(props: GraphAlgorithmResult<DFSOutputData>) {
       {/* Subtrees */}
       <div className="space-y-3 border-t border-t-border pt-3 isolate">
         <h3 className="font-semibold">Traversal Layers</h3>
-        <div className="border border-border border-collapse rounded-md overflow-hidden">
-          {/* Header Row */}
-          <div className="grid grid-cols-3 bg-tabdock">
-            <span className="font-semibold text-sm px-3 py-1.5">
-              Subtree Index
-            </span>
-            <span className="col-span-2 font-semibold text-sm px-3 py-1.5">
-              Nodes in Subtree
-            </span>
-          </div>
-          {/* Rows */}
-          <div className="max-h-80 overflow-y-auto">
-            <List
-              rowComponent={DFSSubtreeRowComponent}
-              rowCount={subtrees.length}
-              rowHeight={rowHeight}
-              rowProps={{ subtrees }}
-            />
-          </div>
+        <div className="max-h-80 overflow-y-auto border border-border rounded-md">
+          <List
+            rowComponent={DFSSubtreeRowComponent}
+            rowCount={subtrees.length + 1} // Top header row
+            rowHeight={rowHeight}
+            rowProps={{ subtrees }}
+          />
         </div>
       </div>
     </div>
@@ -89,7 +77,19 @@ function DFSSubtreeRowComponent({
 }: RowComponentProps<{
   subtrees: DFSOutputData["subtrees"];
 }>) {
-  const subtree = subtrees[index];
+  // Top header row
+  if (index === 0) {
+    return (
+      <div key={index} className="grid grid-cols-3 bg-tabdock" style={style}>
+        <span className="font-semibold text-sm px-3 py-1.5">Subtree Index</span>
+        <span className="col-span-2 font-semibold text-sm px-3 py-1.5">
+          Nodes in Subtree
+        </span>
+      </div>
+    );
+  }
+
+  const subtree = subtrees[index - 1];
   return (
     <div
       key={index}
@@ -99,7 +99,7 @@ function DFSSubtreeRowComponent({
       {/* Layer Index */}
       <span className="font-semibold px-3 py-1.5">{subtree.num}</span>
       {/* Nodes */}
-      <span className="col-span-2 flex flex-wrap gap-1 font-semibold px-3 py-1.5">
+      <span className="col-span-2 flex gap-1 overflow-x-auto font-semibold px-3 py-1.5">
         {subtree.tree.map((tree, i) => (
           <div key={`${index}-${i}-${tree}`} className="py-1.5">
             <span className="px-3 py-1.5 rounded-md bg-primary-low">

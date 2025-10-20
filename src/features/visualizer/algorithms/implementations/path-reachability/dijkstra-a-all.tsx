@@ -6,7 +6,7 @@ import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";
 type DijkstraAToAllOutputData = {
   source: string;
   weighted: boolean;
-  paths: { from: string; to: string; weight?: number }[];
+  paths: { target: string; path: string[]; weight?: number }[];
 };
 
 export const dijkstraAToAll = createGraphAlgorithm<DijkstraAToAllOutputData>({
