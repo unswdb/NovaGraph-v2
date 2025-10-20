@@ -7,6 +7,7 @@ import CodeOutputTabs from "./tabs";
 
 import { Button } from "~/components/ui/button";
 import CopyButton from "~/components/ui/code-editor/copy-button";
+import { KuzuToIgraphParsing } from "~/kuzu/IGraphAdapter/IGraphAdapter";
 
 export default function CodeTabContent({
   code,
