@@ -81,7 +81,7 @@ function BellmanFordAToB(
         <div className="flex justify-between gap-2 col-span-2">
           <span className="text-typography-secondary">Total Weight:</span>
           <span className="text-typography-primary font-medium">
-            {totalWeight}
+            {totalWeight ?? cumulative[path.length - 1]}
           </span>
         </div>
       </div>

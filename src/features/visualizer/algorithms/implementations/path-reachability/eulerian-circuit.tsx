@@ -55,7 +55,7 @@ function EulerianCircuit(
 
       {/* Step By Step */}
       <div className="space-y-3 border-t border-t-border pt-3 isolate">
-        <h3 className="font-semibold">Step By Step</h3>
+        <h3 className="font-semibold">Traversal Path</h3>
         <div className="max-h-80 overflow-y-auto">
           <List
             rowComponent={EulerianCircuitRowComponent}

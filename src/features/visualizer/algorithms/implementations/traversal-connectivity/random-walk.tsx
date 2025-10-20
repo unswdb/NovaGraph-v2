@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   List,
   useDynamicRowHeight,
@@ -7,11 +6,9 @@ import {
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
-import InputComponent, {
+import {
   createAlgorithmSelectInput,
-  createEmptyInputResult,
   createNumberInput,
-  createSwitchInput,
 } from "~/features/visualizer/inputs";
 
 // Infered from src/wasm/algorithms
@@ -58,25 +55,17 @@ export const randomWalk = createGraphAlgorithm<RandomWalkOutputData>({
 });
 
 function RandomWalk(props: GraphAlgorithmResult<RandomWalkOutputData>) {
-  const { source, steps, weighted, maxFrequencyNode, maxFrequency, path } =
-    props.data;
+  const { source, steps, maxFrequencyNode, maxFrequency, path } = props.data;
 
   const rowHeight = useDynamicRowHeight({
     defaultRowHeight: 36,
   });
 
-  const showWeightsInput = createSwitchInput({
-    id: "random-walk-show-weights",
-    key: "show_weights",
-    displayName: "Show Weights",
-    defaultValue: false,
-    disabled: !weighted,
-    showLabel: false,
-  });
-
-  const [showWeight, setShowWeight] = useState(
-    createEmptyInputResult(showWeightsInput)
-  );
+  const cumulative = path.reduce<number[]>((acc, step, i) => {
+    const prev = acc[i - 1] ?? 0;
+    acc.push(prev + (step.weight ?? 1));
+    return acc;
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -93,25 +82,15 @@ function RandomWalk(props: GraphAlgorithmResult<RandomWalkOutputData>) {
         </b>
       </p>
 
-      {/* Paths */}
+      {/* Step By Step */}
       <div className="space-y-3 border-t border-t-border pt-3 isolate">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold">Traversal Path</h3>
-          <div className="flex gap-2">
-            <span className="text-sm">Show Weight:</span>
-            <InputComponent
-              input={showWeightsInput}
-              value={showWeight.value}
-              onChange={setShowWeight}
-            />
-          </div>
-        </div>
-        <div className="max-h-80 overflow-y-auto border border-border rounded-md">
+        <h3 className="font-semibold">Traversal Path</h3>
+        <div className="max-h-80 overflow-y-auto">
           <List
             rowComponent={RandomWalkPathRowComponent}
-            rowCount={path.length + 1} // Top header row
+            rowCount={path.length}
             rowHeight={rowHeight}
-            rowProps={{ showWeight: showWeight.value ?? false, paths: path }}
+            rowProps={{ cumulative, path }}
           />
         </div>
       </div>
@@ -122,43 +101,46 @@ function RandomWalk(props: GraphAlgorithmResult<RandomWalkOutputData>) {
 function RandomWalkPathRowComponent({
   index,
   style,
-  showWeight,
-  paths,
+  cumulative,
+  path: paths,
 }: RowComponentProps<{
-  showWeight: boolean;
-  paths: RandomWalkOutputData["path"];
+  cumulative: number[];
+  path: RandomWalkOutputData["path"];
 }>) {
-  // Top header row
-  if (index === 0) {
-    return (
-      <div
-        key={index}
-        className="bg-tabdock grid grid-flow-col auto-cols-fr"
-        style={style}
-      >
-        <span className="font-semibold text-sm px-3 py-1.5">Step</span>
-        <span className="font-semibold text-sm px-3 py-1.5">From</span>
-        <span className="font-semibold text-sm px-3 py-1.5">To</span>
-        {showWeight && (
-          <span className="font-semibold text-sm px-3 py-1.5">Weight</span>
-        )}
-      </div>
-    );
-  }
-
-  const path = paths[index - 1];
+  const path = paths[index];
   return (
-    <div
-      key={index}
-      className="grid grid-flow-col auto-cols-fr not-odd:bg-neutral-low/50"
-      style={style}
-    >
-      <span className="px-3 py-1.5">{path.step}</span>
-      <span className="px-3 py-1.5 truncate">{path.from}</span>
-      <span className="px-3 py-1.5 truncate">{path.to}</span>
-      {showWeight && (
-        <span className="px-3 py-1.5">{path.weight?.toFixed(2)}</span>
-      )}
+    <div key={index} style={style}>
+      <div className="border border-border rounded-md px-4 py-3 space-y-1 mb-2">
+        <div className="grid grid-cols-[36px_1fr_auto] gap-4">
+          {/* Step number */}
+          <p className="text-sm font-semibold">{path.step}</p>
+
+          {/* Source to Target */}
+          <div className="min-w-0 overflow-hidden">
+            <div className="flex items-center gap-2 h-full">
+              <span className="max-w-1/2 px-3 py-1.5 rounded-md bg-primary-low text-sm truncate whitespace-nowrap">
+                {path.from}
+              </span>
+              <span className="shrink-0">→</span>
+              <span className="max-w-1/2 px-3 py-1.5 rounded-md bg-primary-low text-sm truncate whitespace-nowrap">
+                {path.to}
+              </span>
+            </div>
+          </div>
+
+          {/* Weight */}
+          <div className="text-right">
+            <p className="font-semibold">+{path.weight ?? 1}</p>
+            <p className="text-xs text-typography-secondary">Step weight</p>
+          </div>
+        </div>
+
+        {/* Cumulative */}
+        <p className="text-xs text-typography-secondary">
+          Cumulative: {cumulative[index - 1] ?? 0} + {path.weight ?? 1} ={" "}
+          <b>{cumulative[index]}</b>
+        </p>
+      </div>
     </div>
   );
 }

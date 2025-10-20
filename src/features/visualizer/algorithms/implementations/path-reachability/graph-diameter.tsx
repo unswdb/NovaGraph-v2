@@ -64,7 +64,7 @@ function GraphDiameter(props: GraphAlgorithmResult<GraphDiameterOutputData>) {
             Diameter/Total Weight:
           </span>
           <span className="text-typography-primary font-medium">
-            {diameter}
+            {diameter ?? cumulative[path.length - 1]}
           </span>
         </div>
       </div>
