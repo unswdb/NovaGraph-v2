@@ -54,7 +54,7 @@ function BellmanFordAToAll(
   });
 
   const showWeightsInput = createSwitchInput({
-    id: "random-walk-show-weights",
+    id: "bellman-ford-show-weights",
     key: "show_weights",
     displayName: "Show Weights",
     defaultValue: false,
