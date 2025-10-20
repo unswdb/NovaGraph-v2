@@ -1,6 +1,7 @@
 import type { IGraphInput } from "./IGraphAdapter.types";
 import type { GraphEdge } from "~/features/visualizer/types";
 
+// Todo: wire this into the main controller interface, link each algorithm in
 /**
  * Convert Kuzu input into Igraph input
  */
@@ -73,5 +74,5 @@ export function KuzuToIgraphParsing(
     );
   }
   const nodes = nodesAssigned;
-  return { nodes, src, dst, directed, weight }; // Todo: test this
+  return { nodes, src, dst, directed, weight };
 }
