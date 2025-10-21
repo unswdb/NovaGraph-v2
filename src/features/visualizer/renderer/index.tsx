@@ -126,8 +126,8 @@ const GraphRenderer = observer(({ className }: { className?: string }) => {
           ref={cosmographRef}
           onClick={selectNode}
           initialZoomLevel={INITIAL_ZOOM_LEVEL}
-          nodeSize={(_, id) => getNodeSize(id)}
-          nodeColor={(_, id) => getNodeColor(id)}
+          nodeSize={(node) => getNodeSize(node.id)}
+          nodeColor={(node) => getNodeColor(node.id)}
           nodeGreyoutOpacity={0.1}
           nodeLabelAccessor={(node) => String(node._primaryKeyValue)}
           nodeSizeScale={nodeSizeScale}

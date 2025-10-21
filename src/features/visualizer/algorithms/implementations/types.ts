@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
-import type { GraphModule } from "../../types";
 import type { InputType } from "../../inputs";
+import type VisualizerStore from "../../store";
 
 type NodeId = string;
 type EdgeId = string; // Format: "fromNodeId-toNodeId"
@@ -27,25 +27,41 @@ export interface GraphAlgorithmResult<TData = unknown>
   data: TData;
 }
 
-type BivariantHandler<T> = {
-  bivarianceHack(props: T): ReactNode;
-}["bivarianceHack"];
-
 // Type-erased base algorithm for generic lists
-export interface BaseGraphAlgorithm<TResult = BaseGraphAlgorithmResult> {
+export interface BaseGraphAlgorithm {
   title: string;
   description: string;
   inputs: InputType[];
-  wasmFunction: (module: GraphModule | null, args: any[]) => TResult;
-  output: BivariantHandler<TResult>;
+  wasmFunction: (
+    controller: VisualizerStore["controller"],
+    args: any[]
+  ) => Promise<BaseGraphAlgorithmResult>;
+  output: (props: BaseGraphAlgorithmResult) => ReactNode;
 }
 
 /** TData describes the format/structure of the output in addition from
  * colorMap, sizeMap, etc. Please refer to wasm/algorithms/ to inspect
  * the correct structure for your algorithm
  */
-export interface GraphAlgorithm<TData = unknown>
-  extends BaseGraphAlgorithm<GraphAlgorithmResult<TData>> {}
+export interface GraphAlgorithm<TData = unknown> {
+  /** Title of the algorithm (displayed in the sidebar) */
+  title: string;
+
+  /** Description of the algorithm (explains how it works) */
+  description: string;
+
+  /** Inputs required to run the algorithm (based on visualizer/inputs) */
+  inputs: InputType[];
+
+  /** Function to execute the algorithm (calls igraph implementation) */
+  wasmFunction: (
+    controller: VisualizerStore["controller"],
+    args: any[]
+  ) => Promise<BaseGraphAlgorithmResult>;
+
+  /** Component to render the output in the output drawer */
+  output: (props: GraphAlgorithmResult<TData>) => ReactNode;
+}
 
 // Helper function for better type inference
 export function createGraphAlgorithm<TData>(config: {
@@ -53,13 +69,16 @@ export function createGraphAlgorithm<TData>(config: {
   description: string;
   inputs: InputType[];
   wasmFunction: (
-    module: GraphModule | null,
+    controller: VisualizerStore["controller"],
     args: any[]
-  ) => Omit<GraphAlgorithmResult<TData>, "type">;
+  ) => Promise<GraphAlgorithmResult<TData>>;
   output: (props: GraphAlgorithmResult<TData>) => ReactNode;
 }): GraphAlgorithm<TData> {
-  const algorithmWasmFn = (module: GraphModule | null, args: any[]) => {
-    const res = config.wasmFunction(module, args);
+  const algorithmWasmFn = async (
+    controller: VisualizerStore["controller"],
+    args: any[]
+  ) => {
+    const res = await config.wasmFunction(controller, args);
     return { ...res, type: "algorithm" } as const;
   };
   return { ...config, wasmFunction: algorithmWasmFn };
