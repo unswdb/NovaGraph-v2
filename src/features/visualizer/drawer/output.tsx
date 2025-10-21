@@ -36,9 +36,6 @@ export default function OutputTabContent({
       );
     }
     if (!!activeAlgorithm && isAlgorithmVisualizationResult(activeResponse)) {
-      console.log("weeee")
-      console.log(activeResponse)
-
       return activeAlgorithm.output(activeResponse);
     }
     if (isQueryVisualizationResult(activeResponse)) {

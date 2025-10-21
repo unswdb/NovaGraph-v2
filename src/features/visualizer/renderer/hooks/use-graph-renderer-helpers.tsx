@@ -46,8 +46,8 @@ export const useGraphRendererHelpers = ({
             return value > 0
               ? GRADIENT_COLOR(1).hex()
               : value < 0
-                ? CRITICAL_COLOR
-                : NEUTRAL_COLOR;
+              ? CRITICAL_COLOR
+              : NEUTRAL_COLOR;
           case MODE.COLOR_SHADE_DEFAULT:
             return isNaN(value) ? DISABLED_COLOR : GRADIENT_COLOR(value).hex();
           case MODE.COLOR_SHADE_ERROR:
