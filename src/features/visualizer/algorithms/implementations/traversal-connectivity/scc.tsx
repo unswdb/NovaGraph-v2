@@ -53,6 +53,48 @@ function SCC(props: GraphAlgorithmResult<SCCOutputData>) {
           />
         </div>
       </div>
+
+      {/* What this means */}
+      <div className="space-y-3 pt-3 border-t border-t-border">
+        <h3 className="font-semibold">What this means</h3>
+        <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
+          <li>
+            Strongly Connected Components (SCCs) partition a{" "}
+            <span className="font-medium">directed</span> graph into groups
+            where every node can reach every other node by following edge
+            directions.
+          </li>
+          <li>
+            This is useful for understanding{" "}
+            <span className="font-medium">
+              cyclic structure, mutual reachability, and module/grouping
+            </span>{" "}
+            in directed networks (e.g., dependency cycles, bidirectional link
+            clusters).
+          </li>
+          <li>
+            We found <span className="font-medium">{components.length}</span>{" "}
+            component{components.length !== 1 ? "s" : ""}. Each listed
+            “Component” shows all nodes that are mutually reachable.
+          </li>
+          <li>
+            Nodes in the <span className="font-medium">same component</span> can
+            reach each other (both directions). Nodes in{" "}
+            <span className="font-medium">different components</span> do not
+            have mutual reachability.
+          </li>
+          <li>
+            Collapsing each SCC into a single super-node yields a{" "}
+            <span className="font-medium">DAG (acyclic)</span>, which can be
+            analyzed or topologically ordered.
+          </li>
+          <li>
+            In an <span className="font-medium">undirected</span> graph, SCCs
+            coincide with connected components; single-node SCCs indicate nodes
+            with no cycle-reachable peers.
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }

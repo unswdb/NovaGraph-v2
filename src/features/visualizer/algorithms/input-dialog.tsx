@@ -1,5 +1,4 @@
 import { cloneElement, useMemo, useState } from "react";
-import { toast } from "sonner";
 
 import type { GraphEdge, GraphModule, GraphNode } from "../types";
 import InputComponent, { createEmptyInputResults } from "../inputs";

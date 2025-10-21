@@ -56,39 +56,7 @@ export const yen = createGraphAlgorithm<YenOutputData>({
     }),
   ],
   wasmFunction: (module, [arg1, arg2, arg3]) => {
-    // if (module) return module.yens_algorithm(arg1, arg2, arg3);
-    return {
-      colorMap: {
-        "0": 1,
-        "3": 1, // source/target
-        "1": 0.5,
-        "2": 0.5, // path nodes
-        "0-1": 1,
-        "1-3": 1,
-        "0-2": 1,
-        "2-3": 1, // all path edges
-      },
-      mode: 2,
-      data: {
-        algorithm: "Yen's k Shortest Paths",
-        source: "NodeA",
-        target: "NodeD",
-        k: 3,
-        weighted: true,
-        paths: [
-          {
-            num: 1,
-            weight: 8,
-            path: ["NodeA", "NodeB", "NodeD"],
-          },
-          {
-            num: 2,
-            weight: 12,
-            path: ["NodeA", "NodeC", "NodeD"],
-          },
-        ],
-      },
-    };
+    if (module) return module.yens_algorithm(arg1, arg2, arg3);
   },
   output: (props) => <Yen {...props} />,
 });
@@ -158,6 +126,51 @@ function Yen(props: GraphAlgorithmResult<YenOutputData>) {
             rowProps={{ showWeight: showWeight.value ?? false, paths }}
           />
         </div>
+      </div>
+
+      {/* What this means */}
+      <div className="space-y-3 pt-3 border-t border-t-border">
+        <h3 className="font-semibold">What this means</h3>
+        <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
+          <li>
+            Yen’s algorithm lists the{" "}
+            <span className="font-medium">K loopless shortest paths</span> from
+            <span className="font-medium"> {source}</span> to{" "}
+            <span className="font-medium">{target}</span>, ordered from lowest
+            total weight to higher.
+          </li>
+          <li>
+            “Loopless” means{" "}
+            <span className="font-medium">no repeated nodes</span> within a
+            single path; different paths may share segments.
+          </li>
+          <li>
+            Yen's algorithm assumes{" "}
+            <span className="font-medium">non-negative weights</span>.
+          </li>
+          <li>
+            Each row shows the path’s <span className="font-medium">rank</span>,{" "}
+            <span className="font-medium">hop count</span>,{" "}
+            <span className="font-medium">total weight</span> (toggled), and the{" "}
+            <span className="font-medium">node sequence</span>.
+          </li>
+          <li>
+            <span className="font-medium">K = 1</span> matches the standard
+            single shortest path (e.g., Dijkstra’s output on non-negative
+            weights).
+          </li>
+          <li>
+            Useful when you need{" "}
+            <span className="font-medium">alternatives</span> for routing or
+            resilience planning (e.g., if the best path is congested or
+            unavailable).
+          </li>
+          <li>
+            If weights are hidden or the graph is unweighted, paths are ranked
+            by <span className="font-medium">hops</span> (each edge treated as
+            cost 1).
+          </li>
+        </ul>
       </div>
     </div>
   );

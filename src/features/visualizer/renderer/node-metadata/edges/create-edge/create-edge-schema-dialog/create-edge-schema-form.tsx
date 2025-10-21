@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Key, Loader, Plus, X } from "lucide-react";
+import { Loader, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { observer } from "mobx-react-lite";
 
@@ -7,7 +7,6 @@ import { Button } from "~/components/ui/button";
 import { useAsyncFn } from "~/hooks/use-async-fn";
 import {
   NON_PK_SCHEMA_TYPES,
-  PK_SCHEMA_TYPES,
   type NonPrimaryKeyType,
   type PrimaryKeyType,
 } from "~/features/visualizer/schema-inputs";

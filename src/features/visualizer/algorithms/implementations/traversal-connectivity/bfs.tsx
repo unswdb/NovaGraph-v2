@@ -80,6 +80,36 @@ function BFS(props: GraphAlgorithmResult<BFSOutputData>) {
           />
         </div>
       </div>
+
+      {/* What this means */}
+      <div className="space-y-3 pt-3 border-t border-t-border">
+        <h3 className="font-semibold">What this means</h3>
+        <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
+          <li>
+            Breadth-First Search (BFS) explores the graph layer by layer,
+            starting from <span className="font-medium">{source}</span>,
+            visiting all nearby nodes before moving farther away.
+          </li>
+          <li>
+            It’s commonly used to find the{" "}
+            <span className="font-medium">shortest path (in hops)</span> between
+            nodes in an unweighted graph or to discover connected components.
+          </li>
+          <li>
+            <span className="font-medium">{nodesFound}</span> nodes were
+            reachable from the source and grouped into{" "}
+            <span className="font-medium">{layers.length}</span> layers.
+          </li>
+          <li>
+            Each layer represents nodes that are the same distance from the
+            source. Layer 0 is the source itself; later layers are farther away.
+          </li>
+          <li>
+            If some nodes don’t appear in any layer, they’re not reachable from{" "}
+            <span className="font-medium">{source}</span>.
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }

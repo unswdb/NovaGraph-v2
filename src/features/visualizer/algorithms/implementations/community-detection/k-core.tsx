@@ -83,16 +83,25 @@ function KCore(props: GraphAlgorithmResult<KCoreOutputData>) {
         <h3 className="font-semibold">What this means</h3>
         <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
           <li>
-            These {cores.length} nodes form a {k}-core
-          </li>
-          <li>Each node has at least {k} neighbors within this group</li>
-          <li>
-            This forms a triangle subgraph where every node has exactly {k}{" "}
-            neighbors within the group
+            A <span className="font-medium">{k}-core</span> is the maximal set
+            of nodes where every node has degree{" "}
+            <span className="font-medium">≥ {k}</span>{" "}
+            <em>within the induced subgraph</em>.
           </li>
           <li>
-            Since max_coreness = {max_coreness}, the graph likely contains a{" "}
-            {max_coreness}-core as well
+            The {cores.length} nodes listed form the{" "}
+            <span className="font-medium">{k}-core</span>; removing any node
+            would violate the degree threshold for someone in the set.
+          </li>
+          <li>
+            <span className="font-medium">Max coreness = {max_coreness}</span>{" "}
+            means the graph contains a non-empty{" "}
+            <span className="font-medium">{max_coreness}-core</span>; higher
+            coreness suggests a denser, more central nucleus.
+          </li>
+          <li>
+            Use cases: peeling dense layers, identifying robust “core” regions,
+            and seeding community/centrality analyses.
           </li>
         </ul>
       </div>
