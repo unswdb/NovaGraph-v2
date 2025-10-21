@@ -59,7 +59,7 @@ export default function InputDialog({
   );
 
   const handleSubmit = async () => {
-    if (!module) return;
+    // if (!module) return;
 
     // Don't run when there's no nodes
     if (nodes.length === 0) {
@@ -72,13 +72,16 @@ export default function InputDialog({
     setInputResults(createEmptyInputResults(algorithm.inputs));
     startLoading("Running Algorithm...");
 
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
         const args = algorithm.inputs.map(
           (input) => inputResults[input.key].value
         );
 
-        const algorithmResponse = algorithm.wasmFunction(controller, args);
+        const algorithmResponse = await algorithm.wasmFunction(
+          controller,
+          args
+        )
         setActiveAlgorithm(algorithm);
         setActiveResponse(algorithmResponse);
       } catch (err) {

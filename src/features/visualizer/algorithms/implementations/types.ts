@@ -35,7 +35,7 @@ export interface BaseGraphAlgorithm {
   wasmFunction: (
     controller: VisualizerStore["controller"],
     args: any[]
-  ) => BaseGraphAlgorithmResult;
+  ) => Promise<BaseGraphAlgorithmResult>;
   output: (props: BaseGraphAlgorithmResult) => ReactNode;
 }
 
@@ -57,7 +57,7 @@ export interface GraphAlgorithm<TData = unknown> {
   wasmFunction: (
     controller: VisualizerStore["controller"],
     args: any[]
-  ) => GraphAlgorithmResult<TData>;
+  ) => Promise<BaseGraphAlgorithmResult>;
 
   /** Component to render the output in the output drawer */
   output: (props: GraphAlgorithmResult<TData>) => ReactNode;
@@ -71,14 +71,14 @@ export function createGraphAlgorithm<TData>(config: {
   wasmFunction: (
     controller: VisualizerStore["controller"],
     args: any[]
-  ) => Omit<GraphAlgorithmResult<TData>, "type">;
+  ) => Promise<GraphAlgorithmResult<TData>>;
   output: (props: GraphAlgorithmResult<TData>) => ReactNode;
 }): GraphAlgorithm<TData> {
-  const algorithmWasmFn = (
+  const algorithmWasmFn = async (
     controller: VisualizerStore["controller"],
     args: any[]
   ) => {
-    const res = config.wasmFunction(controller, args);
+    const res = await config.wasmFunction(controller, args);
     return { ...res, type: "algorithm" } as const;
   };
   return { ...config, wasmFunction: algorithmWasmFn };

@@ -67,7 +67,7 @@ export default class VisualizerStore {
     await this.controller.initKuzu();
 
     // Initialize WASM module
-    this.wasmModule = await this.controller.getGraphModule();
+    this.wasmModule = await this.controller.initIGraph();
 
     // Define initial graph structure
     const graph = await this.controller.db.snapshotGraphState();
