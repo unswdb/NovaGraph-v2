@@ -78,7 +78,7 @@ val what_to_stderr(intptr_t ptr)
     return val(error->what());
 }
 
-val create_graph_from_kuzu_to_igraph(
+void create_graph_from_kuzu_to_igraph(
     igraph_integer_t nodes,
     val src_js,            // Int32Array
     val dst_js,            // Int32Array
@@ -133,9 +133,7 @@ val create_graph_from_kuzu_to_igraph(
             VECTOR(globalWeights)[i] = w;
         }
         igraph_cattribute_EAN_setv(&globalGraph, "weight", &globalWeights);
-    } // else: no-op; BFS ignores weights
-
-    return bfs(0);
+    } 
 }
 // val bfs_on_graph(igraph_t* graph, igraph_integer_t src)
 // {
