@@ -2,6 +2,7 @@ import { cloneElement, useMemo, useState } from "react";
 
 import type { GraphEdge, GraphNode } from "../types";
 import InputComponent, { createEmptyInputResults } from "../inputs";
+import type VisualizerStore from "../store";
 
 import type {
   BaseGraphAlgorithm,
@@ -22,7 +23,6 @@ import {
 } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
 import { useLoading } from "~/components/ui/loading";
-import type VisualizerStore from "../store";
 
 export default function InputDialog({
   controller,
@@ -81,7 +81,7 @@ export default function InputDialog({
         const algorithmResponse = await algorithm.wasmFunction(
           controller,
           args
-        )
+        );
         setActiveAlgorithm(algorithm);
         setActiveResponse(algorithmResponse);
       } catch (err) {

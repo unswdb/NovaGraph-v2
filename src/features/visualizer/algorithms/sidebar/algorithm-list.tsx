@@ -8,6 +8,7 @@ import type {
 } from "../implementations";
 import ALL_ALGORITHMS from "../implementations";
 import InputDialog from "../input-dialog";
+import type VisualizerStore from "../../store";
 
 import {
   SidebarGroup,
@@ -27,7 +28,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
-import type VisualizerStore from "../../store";
 
 export function UnfilteredAlgorithmList({
   controller,

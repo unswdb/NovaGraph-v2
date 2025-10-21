@@ -10,7 +10,7 @@ export const nodeStrengthCentrality =
     description:
       "Measures the sum of the weights of the edges connected to a node.",
     inputs: [],
-    wasmFunction: (module, _) => {
+    wasmFunction: async (controller, _) => {
       //   if (module) return module.strength_centrality();
     },
     output: (props) => <NodeStrengthCentrality {...props} />,

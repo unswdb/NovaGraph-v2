@@ -38,7 +38,7 @@ export const bellmanFordAToAll =
         required: true,
       }),
     ],
-    wasmFunction: (module, [args]) => {
+    wasmFunction: async (controller, [args]) => {
       //   if (module) return module.bellman_ford_source_to_all(args);
     },
     output: (props) => <BellmanFordAToAll {...props} />,

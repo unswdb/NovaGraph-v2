@@ -10,7 +10,7 @@ export const closenessCentrality =
     description:
       "Measures the average shortest path between a node and all other nodes.",
     inputs: [],
-    wasmFunction: (module, _) => {
+    wasmFunction: async (controller, _) => {
       //   if (module) return module.closeness_centrality();
     },
     output: (props) => <ClosenessCentrality {...props} />,

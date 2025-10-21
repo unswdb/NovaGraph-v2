@@ -28,7 +28,7 @@ export const dfs = createGraphAlgorithm<DFSOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: (module, [args]) => {
+  wasmFunction: async (controller, [args]) => {
     // if (module) return module.dfs(args);
   },
   output: (props) => <DFS {...props} />,

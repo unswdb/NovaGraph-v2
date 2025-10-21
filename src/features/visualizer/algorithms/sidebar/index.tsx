@@ -8,6 +8,7 @@ import {
 } from "../implementations";
 import type { GraphEdge, GraphNode } from "../../types";
 import { useStore } from "../../hooks/use-store";
+import type VisualizerStore from "../../store";
 
 import {
   FilteredAlgorithmList,
@@ -25,7 +26,6 @@ import {
 } from "~/components/ui/sidebar";
 import { useIsMobile } from "~/hooks/use-mobile";
 import { cn } from "~/lib/utils";
-import type VisualizerStore from "../../store";
 
 export default function AlgorithmSidebar() {
   return (

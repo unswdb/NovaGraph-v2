@@ -15,7 +15,7 @@ export const topologicalSort = createGraphAlgorithm<TopologicalSortOutputData>({
   description:
     "Orders nodes in a directed acyclic graph (DAG) such that all edges go from earlier to later nodes",
   inputs: [],
-  wasmFunction: (module, _) => {
+  wasmFunction: async (controller, _) => {
     // if (module) return module.topological_sort();
   },
   output: (props) => <TopologicalSort {...props} />,

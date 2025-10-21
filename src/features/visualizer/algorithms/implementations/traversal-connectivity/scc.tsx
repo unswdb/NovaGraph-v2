@@ -22,7 +22,7 @@ export const scc = createGraphAlgorithm<SCCOutputData>({
   title: "Strongly Connected (SCC)",
   description: "Finds the strongly connected components in a graph.",
   inputs: [],
-  wasmFunction: (module, _) => {
+  wasmFunction: async (controller, _) => {
     // if (module) return module.strongly_connected_components();
   },
   output: (props) => <SCC {...props} />,

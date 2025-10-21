@@ -25,7 +25,7 @@ export const leiden = createGraphAlgorithm<LeidenOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: (module, [arg1]) => {
+  wasmFunction: async (controller, [arg1]) => {
     // if (module) return module.leiden(arg1);
   },
   output: (props) => <Leiden {...props} />,

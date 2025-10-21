@@ -10,7 +10,7 @@ export const harmonicCentrality =
     description:
       "Measures the average harmonic mean of the shortest paths between a node to all other nodes.",
     inputs: [],
-    wasmFunction: (module, _) => {
+    wasmFunction: async (controller, _) => {
       //   if (module) return module.harmonic_centrality();
     },
     output: (props) => <HarmonicCentrality {...props} />,

@@ -29,25 +29,12 @@ export const bfs = createGraphAlgorithm<BFSOutputData>({
     }),
   ],
   wasmFunction: async (controller, [args]) => {
-    // if (module) return module.bfs(args);
-    /**
-     *      sourceID: string,
-            nodesNumber: number,
-            edges: GraphEdge[],
-            directed: boolean,
-     * 
-     */
-    let result = await controller.algorithms.BFS(args, false);
-    console.log(result)
-    return result
+    return await controller.algorithms.BFS(args);
   },
   output: (props) => <BFS {...props} />,
 });
 
 function BFS(props: GraphAlgorithmResult<BFSOutputData>) {
-  console.log("props: ")
-  console.log(props)
-
   const { source, nodesFound, layers } = props.data;
 
   const rowHeight = useDynamicRowHeight({

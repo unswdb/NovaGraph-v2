@@ -10,7 +10,7 @@ export const betweennessCentrality =
     description:
       "Count how often a node lies on shortest paths between others.",
     inputs: [],
-    wasmFunction: (module, _) => {
+    wasmFunction: async (controller, _) => {
       //   if (module) return module.betweenness_centrality();
     },
     output: (props) => <BetweennessCentrality {...props} />,

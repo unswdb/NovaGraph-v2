@@ -19,8 +19,8 @@ const Visualizer = observer(() => {
   }, []);
 
   const isInitialized = useMemo(
-    () => !!store.wasmModule && !!store.database,
-    [store, store.wasmModule, store.database]
+    () => !!store.database,
+    [store, store.database]
   );
 
   if (!isInitialized) {

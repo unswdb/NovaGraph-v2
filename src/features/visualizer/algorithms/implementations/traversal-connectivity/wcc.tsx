@@ -22,7 +22,7 @@ export const wcc = createGraphAlgorithm<WCCOutputData>({
   title: "Weakly Connected (WCC)",
   description: "Finds the weakly connected components in a graph.",
   inputs: [],
-  wasmFunction: (module, _) => {
+  wasmFunction: async (controller, _) => {
     // if (module) return module.weakly_connected_components();
   },
   output: (props) => <WCC {...props} />,
