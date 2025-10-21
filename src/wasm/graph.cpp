@@ -9,7 +9,7 @@ igraph_t globalGraph;
 igraph_vector_t globalWeights;
 
 // The first graph to be rendered on the screen
-val initGraph(void)
+val initRandomGraph(void)
 {
     igraph_set_attribute_table(&igraph_cattribute_table);
 
@@ -78,12 +78,187 @@ val what_to_stderr(intptr_t ptr)
     return val(error->what());
 }
 
+val create_graph_from_kuzu_to_igraph(
+    igraph_integer_t nodes,
+    val src_js,            // Int32Array
+    val dst_js,            // Int32Array
+    igraph_bool_t directed,
+    val weight_js          // Float64Array or undefined
+) {
+    igraph_set_attribute_table(&igraph_cattribute_table);
+
+    static bool graph_initialized = false;
+    static bool weights_initialized = false;
+
+    if (graph_initialized) {
+        igraph_destroy(&globalGraph);
+        graph_initialized = false;
+    }
+
+    igraph_error_t rc = igraph_empty(&globalGraph, nodes, directed ? IGRAPH_DIRECTED : IGRAPH_UNDIRECTED);
+    if (rc != IGRAPH_SUCCESS) {
+        throw std::runtime_error(std::string("igraph_empty failed: ") + igraph_strerror(rc));
+    }
+    graph_initialized = true;
+
+    const int edge_count = src_js["length"].as<int>();
+    for (int i = 0; i < edge_count; i++) {
+        const igraph_integer_t s = src_js[i].as<int>();
+        const igraph_integer_t t = dst_js[i].as<int>();
+        rc = igraph_add_edge(&globalGraph, s, t);
+        if (rc != IGRAPH_SUCCESS) {
+            igraph_destroy(&globalGraph);
+            graph_initialized = false;
+            throw std::runtime_error(std::string("igraph_add_edge failed: ") + igraph_strerror(rc));
+        }
+    }
+
+    if (weights_initialized) {
+        igraph_vector_destroy(&globalWeights);
+        weights_initialized = false;
+    }
+
+    if (!weight_js.isUndefined() && !weight_js.isNull()) {
+        const int weight_count = weight_js["length"].as<int>();
+        rc = igraph_vector_init(&globalWeights, edge_count);
+        if (rc != IGRAPH_SUCCESS) {
+            igraph_destroy(&globalGraph);
+            graph_initialized = false;
+            throw std::runtime_error(std::string("igraph_vector_init failed: ") + igraph_strerror(rc));
+        }
+        weights_initialized = true;
+
+        for (int i = 0; i < edge_count; i++) {
+            double w = (i < weight_count) ? weight_js[i].as<double>() : 0.0;
+            VECTOR(globalWeights)[i] = w;
+        }
+        igraph_cattribute_EAN_setv(&globalGraph, "weight", &globalWeights);
+    } // else: no-op; BFS ignores weights
+
+    return bfs(0);
+}
+// val bfs_on_graph(igraph_t* graph, igraph_integer_t src)
+// {
+//     IGraphVectorInt order, layers;
+//     int N, nodes_remaining, orderLength;
+
+//     igraph_bfs_simple(graph, src, IGRAPH_OUT, order.vec(), layers.vec(), NULL);
+
+//     val result = val::object();
+//     val colorMap = val::object();
+//     val data = val::object();
+//     data.set("algorithm", "Breadth-First Search");
+
+//     data.set("source", igraph_get_name(src));
+
+//     N = igraph_vcount(graph);
+//     nodes_remaining = N;
+//     bool new_iteration = true;
+//     orderLength = order.size();
+//     igraph_integer_t current_layer = 0;
+//     int nodes_found = 0;
+
+//     val layersArray = val::array();
+//     std::unordered_map<int, int> fm;
+
+//     val layerArray = val::array();
+//     int layer_index;
+//     for (igraph_integer_t i = 0; i < orderLength; ++i)
+//     {
+//         if (new_iteration)
+//         {
+//             layerArray = val::array();
+//             layer_index = 0;
+//             new_iteration = false;
+//         }
+
+//         int nodeId = order.at(i);
+//         layerArray.set(layer_index++, igraph_get_name(nodeId));
+//         fm[nodeId] = nodes_remaining;
+//         nodes_found++;
+
+//         int layer = layers.at(current_layer + 1);
+//         if (i + 1 == layer || i + 1 == orderLength)
+//         {
+//             val l = val::object();
+//             l.set("layer", layerArray);
+//             l.set("index", current_layer);
+//             layersArray.set(current_layer++, l);
+
+//             nodes_remaining = N - i - 1;
+//             new_iteration = true;
+//         }
+//     }
+//     frequenciesToColorMap(fm, colorMap);
+//     result.set("colorMap", colorMap);
+//     result.set("mode", MODE_COLOR_SHADE_ERROR);
+
+//     data.set("nodesFound", nodes_found);
+//     data.set("layers", layersArray);
+//     result.set("data", data);
+//     return result;
+// }
+
+// val create_graph_from_kuzu_to_igraph(
+//     igraph_integer_t nodes,
+//     val src_js,            // Int32Array
+//     val dst_js,            // Int32Array
+//     igraph_bool_t directed,
+//     val weight_js          // Float64Array or undefined
+// ) {
+//     // Set up attribute table
+//     igraph_set_attribute_table(&igraph_cattribute_table);
+    
+//     // Create local graph
+//     igraph_t localGraph;
+//     igraph_vector_t localWeights;
+    
+//     // Initialize local structures
+//     igraph_empty(&localGraph, nodes, directed ? IGRAPH_DIRECTED : IGRAPH_UNDIRECTED);
+//     igraph_vector_init(&localWeights, 0);
+    
+//     // Get the edge arrays from JavaScript
+//     int edge_count = src_js["length"].as<int>();
+    
+//     // Add edges
+//     for (int i = 0; i < edge_count; i++) {
+//         int src_id = src_js[i].as<int>();
+//         int dst_id = dst_js[i].as<int>();
+//         igraph_add_edge(&localGraph, src_id, dst_id);
+//     }
+    
+//     // Set edge weights if provided
+//     if (!weight_js.isUndefined() && !weight_js.isNull()) {
+//         int weight_count = weight_js["length"].as<int>();
+//         igraph_vector_resize(&localWeights, edge_count);
+        
+//         // Copy weights from JavaScript array
+//         for (int i = 0; i < weight_count && i < edge_count; i++) {
+//             double weight = weight_js[i].as<double>();
+//             VECTOR(localWeights)[i] = weight;
+//         }
+        
+//         // Set the weight attribute on edges
+//         igraph_cattribute_EAN_setv(&localGraph, "weight", &localWeights);
+//     }
+    
+//     // Run BFS algorithm starting from node 0
+//     val bfsResult = bfs_on_graph(&localGraph, 0);
+    
+//     // Clean up local resources
+//     igraph_destroy(&localGraph);
+//     igraph_vector_destroy(&localWeights);
+    
+//     return bfsResult;
+// }
+
+
 EMSCRIPTEN_BINDINGS(graph)
 {
     register_vector<uint8_t>("VectorUint8");
 
     // Expose the functions
-    function("initGraph", &initGraph);
+    function("initRandomGraph", &initRandomGraph);
     function("test", &test);
     function("what_to_stderr", &what_to_stderr);
 
@@ -124,6 +299,8 @@ EMSCRIPTEN_BINDINGS(graph)
     function("eulerian_circuit", &eulerian_circuit);
     function("missing_edge_prediction_default_values", &missing_edge_prediction_default_values);
     function("missing_edge_prediction", &missing_edge_prediction);
+
+    function("create_graph_from_kuzu_to_igraph", &create_graph_from_kuzu_to_igraph);
 }
 
 // emcc demo.cpp -O3 -s WASM=1 -s -sEXPORTED_FUNCTIONS=_sum,_subtract --no-entry -o demo.wasm
