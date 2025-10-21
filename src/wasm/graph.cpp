@@ -101,17 +101,64 @@ void create_graph_from_kuzu_to_igraph(
     }
     graph_initialized = true;
 
+    // Optimize add edge - start
     const int edge_count = src_js["length"].as<int>();
+
+    // Validate that source and destination arrays have the same length
+    const int dst_count = dst_js["length"].as<int>();
+    if (edge_count != dst_count) {
+        igraph_destroy(&globalGraph);
+        graph_initialized = false;
+        throw std::runtime_error("Source and destination arrays must have the same length");
+    }
+    
+    // Initialize edge vector for batch addition - USE igraph_vector_int_t
+    igraph_vector_int_t edge_vector;
+    rc = igraph_vector_int_init(&edge_vector, 0);
+    if (rc != IGRAPH_SUCCESS) {
+        igraph_destroy(&globalGraph);
+        graph_initialized = false;
+        throw std::runtime_error(std::string("igraph_vector_int_init failed: ") + igraph_strerror(rc));
+    }
+    
+    // Reserve space for all edges (2 * number of edges)
+    rc = igraph_vector_int_reserve(&edge_vector, 2 * edge_count);
+    if (rc != IGRAPH_SUCCESS) {
+        igraph_vector_int_destroy(&edge_vector);
+        igraph_destroy(&globalGraph);
+        graph_initialized = false;
+        throw std::runtime_error(std::string("igraph_vector_int_reserve failed: ") + igraph_strerror(rc));
+    }
+    
+    // Populate the edge vector with source and destination pairs
     for (int i = 0; i < edge_count; i++) {
         const igraph_integer_t s = src_js[i].as<int>();
         const igraph_integer_t t = dst_js[i].as<int>();
-        rc = igraph_add_edge(&globalGraph, s, t);
-        if (rc != IGRAPH_SUCCESS) {
+        
+        // Add bounds checking
+        if (s < 0 || s >= nodes || t < 0 || t >= nodes) {
+            igraph_vector_int_destroy(&edge_vector);
             igraph_destroy(&globalGraph);
             graph_initialized = false;
-            throw std::runtime_error(std::string("igraph_add_edge failed: ") + igraph_strerror(rc));
+            throw std::runtime_error("Vertex index out of bounds");
         }
+        
+        igraph_vector_int_push_back(&edge_vector, s);
+        igraph_vector_int_push_back(&edge_vector, t);
     }
+    
+    // Add all edges to the graph in batch
+    rc = igraph_add_edges(&globalGraph, &edge_vector, 0);
+    if (rc != IGRAPH_SUCCESS) {
+        igraph_vector_int_destroy(&edge_vector);
+        igraph_destroy(&globalGraph);
+        graph_initialized = false;
+        throw std::runtime_error(std::string("igraph_add_edges failed: ") + igraph_strerror(rc));
+    }
+    
+    // Clean up the edge vector
+    igraph_vector_int_destroy(&edge_vector);
+    // Optimize add edge - end
 
     if (weights_initialized) {
         igraph_vector_destroy(&globalWeights);
