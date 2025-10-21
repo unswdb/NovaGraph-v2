@@ -42,8 +42,8 @@ export const missingEdgePrediction =
         required: true,
       }),
     ],
-    wasmFunction: (module, [arg1, arg2]) => {
-      if (module) return module.missing_edge_prediction(arg1, arg2);
+    wasmFunction: async (controller, [arg1, arg2]) => {
+      //   if (module) return module.missing_edge_prediction(arg1, arg2);
     },
     output: (props) => <MissingEdgePrediction {...props} />,
   });
@@ -80,50 +80,6 @@ function MissingEdgePrediction(
             rowProps={{ predictedEdges }}
           />
         </div>
-      </div>
-
-      {/* What this means */}
-      <div className="space-y-3 pt-3 border-t border-t-border">
-        <h3 className="font-semibold">What this means</h3>
-        <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
-          <li>
-            This fits a{" "}
-            <span className="font-medium">Hierarchical Random Graph (HRG)</span>{" "}
-            model to the graph and estimates which pairs of nodes are most
-            likely to have a <span className="font-medium">missing edge</span>.
-          </li>
-          <li>
-            Each suggested edge <span className="font-medium">from → to</span>{" "}
-            comes with a probability (e.g., <i>73.200%</i>) that reflects how
-            well that edge would fit the learned hierarchical community
-            structure.
-          </li>
-          <li>
-            Higher probabilities indicate{" "}
-            <span className="font-medium">stronger model support</span> for the
-            edge existing, but they are{" "}
-            <span className="font-medium">not guarantees</span>, treat them as
-            ranked hypotheses to verify.
-          </li>
-          <li>
-            The predictions are influenced by{" "}
-            <span className="font-medium">community/group structure</span>{" "}
-            captured by the HRG; nodes placed close together in the hierarchy
-            are more likely to connect.
-          </li>
-          <li>
-            Parameter: <span className="font-medium">Sample Size</span> controls
-            accuracy by drawing more HRG samples (more stable estimates,
-            slower). <span className="font-medium">Number of Bins</span>{" "}
-            controls probability precision (finer bins = more granular
-            probabilities).
-          </li>
-          <li>
-            Practical use: prioritize reviewing/validating the top-scoring pairs
-            (e.g., domain knowledge, data audits, experiments) and consider
-            adding them as candidate edges in downstream analyses.
-          </li>
-        </ul>
       </div>
     </div>
   );

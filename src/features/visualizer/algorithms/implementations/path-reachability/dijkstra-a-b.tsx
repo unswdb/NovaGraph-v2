@@ -36,8 +36,8 @@ export const dijkstraAToB = createGraphAlgorithm<DijkstraAToBOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: (module, [arg1, arg2]) => {
-    if (module) return module.dijkstra_source_to_target(arg1, arg2);
+  wasmFunction: async (controller, [arg1, arg2]) => {
+    // if (module) return module.dijkstra_source_to_target(arg1, arg2);
   },
   output: (props) => <DijkstraAToB {...props} />,
 });
@@ -90,37 +90,6 @@ function DijkstraAToB(props: GraphAlgorithmResult<DijkstraAToBOutputData>) {
             rowProps={{ cumulative, path }}
           />
         </div>
-      </div>
-
-      {/* What this means */}
-      <div className="space-y-3 pt-3 border-t border-t-border">
-        <h3 className="font-semibold">What this means</h3>
-        <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
-          <li>
-            Dijkstra computes the{" "}
-            <span className="font-medium">minimum-weight path</span> from{" "}
-            <span className="font-medium">{source}</span> to{" "}
-            <span className="font-medium">{target}</span> assuming{" "}
-            <span className="font-medium">no negative edges</span>. With
-            negative edges, use Bellman-Ford.
-          </li>
-          <li>
-            The “Step by Step” list shows each traversed edge and the{" "}
-            <span className="font-medium">cumulative cost</span> after that
-            step.
-          </li>
-          <li>
-            <span className="font-medium">Total Weight</span> is the minimal
-            cost for reaching the target via the shown path.
-          </li>
-          <li>
-            Minimal weight ≠ minimal hops. Dijkstra optimizes sum of weights.
-          </li>
-          <li>
-            If no path is shown, the target is{" "}
-            <span className="font-medium">unreachable</span> from the source.
-          </li>
-        </ul>
       </div>
     </div>
   );

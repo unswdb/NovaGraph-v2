@@ -41,8 +41,8 @@ export const bellmanFordAToB = createGraphAlgorithm<BellmanFordAToBOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: (module, [arg1, arg2]) => {
-    if (module) return module.bellman_ford_source_to_target(arg1, arg2);
+  wasmFunction: async (controller, [arg1, arg2]) => {
+    // if (module) return module.bellman_ford_source_to_target(arg1, arg2);
   },
   output: (props) => <BellmanFordAToB {...props} />,
 });
@@ -97,38 +97,6 @@ function BellmanFordAToB(
             rowProps={{ cumulative, path }}
           />
         </div>
-      </div>
-
-      {/* What this means */}
-      <div className="space-y-3 pt-3 border-t border-t-border">
-        <h3 className="font-semibold">What this means</h3>
-        <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
-          <li>
-            Bellman-Ford finds the{" "}
-            <span className="font-medium">minimum-weight path</span> from{" "}
-            <span className="font-medium">{source}</span> to{" "}
-            <span className="font-medium">{target}</span>, supporting{" "}
-            <span className="font-medium">negative edge weights</span>.
-          </li>
-          <li>
-            The “Step by Step” list shows the exact edge sequence and the{" "}
-            <span className="font-medium">running total</span> of path cost.
-          </li>
-          <li>
-            The reported <span className="font-medium">Total Weight</span> is
-            the final minimum cost for reaching the target.
-          </li>
-          <li>
-            Shortest means{" "}
-            <span className="font-medium">lowest total weight</span>, not fewest
-            hops.
-          </li>
-          <li>
-            If a <span className="font-medium">negative-weight cycle</span> is
-            on any route to the target, a true shortest path doesn’t exist.
-            (This result assumes none were detected for the nodes shown)
-          </li>
-        </ul>
       </div>
     </div>
   );

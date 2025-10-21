@@ -6,7 +6,6 @@ import {
   type EdgeSchema,
   type GraphDatabase,
   type GraphEdge,
-  type GraphModule,
   type GraphNode,
   type NodeSchema,
   type VisualizationResponse,
@@ -22,7 +21,6 @@ import type { BaseGraphAlgorithm } from "./algorithms/implementations";
 import { controller } from "~/MainController";
 
 export type InitializedVisualizerStore = VisualizerStore & {
-  wasmModule: NonNullable<VisualizerStore["wasmModule"]>;
   database: NonNullable<VisualizerStore["database"]>;
 };
 
@@ -52,7 +50,6 @@ export default class VisualizerStore {
 
   // OBSERVABLES
   controller = controller;
-  wasmModule: GraphModule | null = null;
   database: GraphDatabase | null = null; // Currently active database
   databases: GraphDatabase[] = []; // List of database users owned
   gravity: Gravity = GRAVITY.ZERO_GRAVITY;
@@ -65,9 +62,6 @@ export default class VisualizerStore {
   initialize = async () => {
     // Initialize Kuzu controller
     await this.controller.initKuzu();
-
-    // Initialize WASM module
-    this.wasmModule = await this.controller.getGraphModule();
 
     // Define initial graph structure
     const graph = await this.controller.db.snapshotGraphState();
@@ -173,8 +167,8 @@ export default class VisualizerStore {
 
   // UTILITIES FUNCTION
   protected checkInitialization(): asserts this is InitializedVisualizerStore {
-    if (!this.wasmModule && !this.database) {
-      throw new Error("WASM module is not initialized");
+    if (!this.database) {
+      throw new Error("Database is not initialized");
     }
   }
 

@@ -32,8 +32,8 @@ export const dijkstraAToAll = createGraphAlgorithm<DijkstraAToAllOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: (module, [args]) => {
-    if (module) return module.dijkstra_source_to_all(args);
+  wasmFunction: async (controller, [args]) => {
+    // if (module) return module.dijkstra_source_to_all(args);
   },
   output: (props) => <DijkstraAToAll {...props} />,
 });
@@ -90,37 +90,6 @@ function DijkstraAToAll(props: GraphAlgorithmResult<DijkstraAToAllOutputData>) {
             rowProps={{ showWeight: showWeight.value ?? false, paths }}
           />
         </div>
-      </div>
-
-      {/* What this means */}
-      <div className="space-y-3 pt-3 border-t border-t-border">
-        <h3 className="font-semibold">What this means</h3>
-        <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
-          <li>
-            Dijkstra computes the{" "}
-            <span className="font-medium">minimum-weight path</span> from{" "}
-            <span className="font-medium">{source}</span> to{" "}
-            <span className="font-medium">every reachable node</span>, assuming{" "}
-            <span className="font-medium">no negative edges</span>. With
-            negative edges, use Bellman-Ford.
-          </li>
-          <li>
-            Each row shows a target, its{" "}
-            <span className="font-medium">hop count</span>, optional
-            <span className="font-medium"> total weight</span>, and the{" "}
-            <span className="font-medium">actual shortest-path sequence</span>.
-          </li>
-          <li>
-            “Shortest” refers to{" "}
-            <span className="font-medium">lowest total weight</span>, not
-            necessarily the fewest hops.
-          </li>
-          <li>
-            If a node doesn’t appear, it’s{" "}
-            <span className="font-medium">unreachable</span> from the source
-            under current edge directions/weights.
-          </li>
-        </ul>
       </div>
     </div>
   );

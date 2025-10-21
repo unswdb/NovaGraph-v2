@@ -23,8 +23,8 @@ export const graphDiameter = createGraphAlgorithm<GraphDiameterOutputData>({
   title: "Graph Diameter",
   description: "Calculates the longest shortest path between any two nodes.",
   inputs: [],
-  wasmFunction: (module, _) => {
-    if (module) return module.diameter();
+  wasmFunction: async (controller, _) => {
+    // if (module) return module.diameter();
   },
   output: (props) => <GraphDiameter {...props} />,
 });
@@ -80,40 +80,6 @@ function GraphDiameter(props: GraphAlgorithmResult<GraphDiameterOutputData>) {
             rowProps={{ cumulative, path }}
           />
         </div>
-      </div>
-
-      {/* What this means */}
-      <div className="space-y-3 pt-3 border-t border-t-border">
-        <h3 className="font-semibold">What this means</h3>
-        <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
-          <li>
-            The graph diameter is the length of the{" "}
-            <span className="font-medium">longest shortest path</span> between
-            any two nodes.
-          </li>
-          <li>
-            The pair shown (<span className="font-medium">{source}</span> →{" "}
-            <span className="font-medium">{target}</span>) achieves this
-            diameter, with the listed{" "}
-            <span className="font-medium">shortest-path sequence</span>.
-          </li>
-          <li>
-            The reported value (<span className="font-medium">{diameter}</span>{" "}
-            or total cumulative weight) is the{" "}
-            <span className="font-medium">distance</span> of that path.
-          </li>
-          <li>
-            Interpretation: a larger diameter suggests{" "}
-            <span className="font-medium">sparser or more elongated</span>{" "}
-            connectivity; a smaller one indicates a more{" "}
-            <span className="font-medium">compact</span> network.
-          </li>
-          <li>
-            In weighted graphs, diameter reflects{" "}
-            <span className="font-medium">cost/delay</span>; in unweighted
-            graphs, it counts <span className="font-medium">hops</span>.
-          </li>
-        </ul>
       </div>
     </div>
   );

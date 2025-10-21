@@ -40,8 +40,8 @@ export const jaccardSimilarity =
         },
       }),
     ],
-    wasmFunction: (module, [args]) => {
-      if (module) return module.jaccard_similarity(args);
+    wasmFunction: async (controller, [args]) => {
+      //   if (module) return module.jaccard_similarity(args);
     },
     output: (props) => <Jaccard {...props} />,
   });
@@ -76,7 +76,6 @@ function Jaccard(props: GraphAlgorithmResult<JaccardSimilarityOutputData>) {
         </div>
       </div>
 
-      {/* Similarity Matrix */}
       <div className="space-y-3 border-t border-t-border pt-3 isolate">
         <h3 className="font-semibold">Similarity Matrix</h3>
         <div className="max-h-80 overflow-auto">
@@ -89,49 +88,6 @@ function Jaccard(props: GraphAlgorithmResult<JaccardSimilarityOutputData>) {
             cellProps={{ nodes, similarityMatrix }}
           />
         </div>
-      </div>
-
-      {/* What this means */}
-      <div className="space-y-3 pt-3 border-t border-t-border">
-        <h3 className="font-semibold">What this means</h3>
-        <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
-          <li>
-            Jaccard similarity measures how similar two nodes’ neighborhoods
-            are:
-            <span className="font-medium"> |N(u) ∩ N(v)| / |N(u) ∪ N(v)|</span>.
-            (Here, <span className="font-medium">N(x)</span> is the set of
-            neighbors)
-          </li>
-          <li>
-            It’s useful for <span className="font-medium">link prediction</span>
-            , <span className="font-medium">community detection</span>, and{" "}
-            <span className="font-medium">recommendation</span>, indicating how
-            much context two nodes share.
-          </li>
-          <li>
-            We computed pairwise similarities for{" "}
-            <span className="font-medium">{nodes.length}</span> nodes. The
-            highest-scoring pair is{" "}
-            <span className="font-medium">{maxSimilarity.node1}</span> ↔{" "}
-            <span className="font-medium">{maxSimilarity.node2}</span> with{" "}
-            <span className="font-medium">
-              {maxSimilarity.similarity.toFixed(2)}
-            </span>
-            .
-          </li>
-          <li>
-            The matrix is <span className="font-medium">symmetric</span>; larger
-            values (closer to 1.00) mean stronger neighborhood overlap. Diagonal
-            cells compare a node with itself and are typically{" "}
-            <span className="font-medium">1.00</span>.
-          </li>
-          <li>
-            Interpretation: <span className="font-medium">1.00</span> ⇒
-            identical neighbor sets; <span className="font-medium">0.00</span> ⇒
-            no shared neighbors. Very high-degree pairs may score lower even if
-            they share many neighbors (ratio effect).
-          </li>
-        </ul>
       </div>
     </div>
   );

@@ -35,7 +35,7 @@ export interface GraphAlgorithm<TData = unknown> {
   inputs: InputType[];
 
   /** Function to execute the algorithm (calls igraph implementation) */
-  wasmFunction: (module: GraphModule | null, args: any[]) => any;
+  wasmFunction: (controller: VisualizerStore["controller"], args: any[]) => any;
 
   /** Component to render the output in the output drawer */
   output: (props: GraphAlgorithmResult<TData>) => ReactNode;
@@ -58,8 +58,8 @@ export const bfs = createGraphAlgorithm<BFSOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: (module, [args]) => {
-    if (module) return module.bfs(args);
+  wasmFunction: (controller, [args]) => {
+    return await controller.algorithms.BFS(args);
   },
   output: (props) => <BFS {...props} />,
 });

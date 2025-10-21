@@ -20,8 +20,8 @@ export const eulerianCircuit = createGraphAlgorithm<EulerianCircuitOutputData>({
   description:
     "Finds a path that visits every edge exactly once and returns to the starting node.",
   inputs: [],
-  wasmFunction: (module, _) => {
-    if (module) return module.eulerian_circuit();
+  wasmFunction: async (controller, _) => {
+    // if (module) return module.eulerian_circuit();
   },
   output: (props) => <EulerianCircuit {...props} />,
 });
@@ -64,34 +64,6 @@ function EulerianCircuit(
             rowProps={{ cumulative, path }}
           />
         </div>
-      </div>
-
-      {/* What this means */}
-      <div className="space-y-3 pt-3 border-t border-t-border">
-        <h3 className="font-semibold">What this means</h3>
-        <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
-          <li>
-            An Eulerian circuit is a closed walk that{" "}
-            <span className="font-medium">uses every edge exactly once</span>{" "}
-            and returns to the start.
-          </li>
-          <li>
-            The list shows the exact edge sequence of that circuit and the{" "}
-            <span className="font-medium">running total</span> of weights (or
-            steps).
-          </li>
-          <li>
-            Existence implies the graph meets Eulerian conditions (e.g., in
-            undirected graphs,{" "}
-            <span className="font-medium">all vertices have even degree</span>{" "}
-            and the graph is connected on edges).
-          </li>
-          <li>
-            Practical use: this is an{" "}
-            <span className="font-medium">edge-covering tour</span>, useful in
-            routing/inspection problems where every link must be traversed once.
-          </li>
-        </ul>
       </div>
     </div>
   );

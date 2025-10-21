@@ -8,6 +8,7 @@ import {
 } from "../implementations";
 import type { GraphEdge, GraphModule, GraphNode } from "../../types";
 import { useStore } from "../../hooks/use-store";
+import type VisualizerStore from "../../store";
 
 import {
   FilteredAlgorithmList,
