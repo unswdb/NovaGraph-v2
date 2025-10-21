@@ -12,7 +12,7 @@ export const eigenvectorCentrality =
     description: "Measures the influence of a node in a network.",
     inputs: [],
     wasmFunction: (module, _) => {
-      if (module) return module.eigenvector_centrality();
+      //   if (module) return module.eigenvector_centrality();
     },
     output: (props) => <EigenvectorCentrality {...props} />,
   });

@@ -10,7 +10,7 @@ export const degreeCentrality =
     description: "Measures the number of edges connected to a node.",
     inputs: [],
     wasmFunction: (module, _) => {
-      if (module) return module.degree_centrality();
+      //   if (module) return module.degree_centrality();
     },
     output: (props) => <DegreeCentrality {...props} />,
   });

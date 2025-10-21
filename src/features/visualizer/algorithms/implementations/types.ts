@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
-import type { GraphModule } from "../../types";
 import type { InputType } from "../../inputs";
+import type VisualizerStore from "../../store";
 
 type NodeId = string;
 type EdgeId = string; // Format: "fromNodeId-toNodeId"
@@ -33,7 +33,7 @@ export interface BaseGraphAlgorithm {
   description: string;
   inputs: InputType[];
   wasmFunction: (
-    module: GraphModule | null,
+    controller: VisualizerStore["controller"],
     args: any[]
   ) => BaseGraphAlgorithmResult;
   output: (props: BaseGraphAlgorithmResult) => ReactNode;
@@ -55,7 +55,7 @@ export interface GraphAlgorithm<TData = unknown> {
 
   /** Function to execute the algorithm (calls igraph implementation) */
   wasmFunction: (
-    module: GraphModule | null,
+    controller: VisualizerStore["controller"],
     args: any[]
   ) => GraphAlgorithmResult<TData>;
 
@@ -69,13 +69,16 @@ export function createGraphAlgorithm<TData>(config: {
   description: string;
   inputs: InputType[];
   wasmFunction: (
-    module: GraphModule | null,
+    controller: VisualizerStore["controller"],
     args: any[]
   ) => Omit<GraphAlgorithmResult<TData>, "type">;
   output: (props: GraphAlgorithmResult<TData>) => ReactNode;
 }): GraphAlgorithm<TData> {
-  const algorithmWasmFn = (module: GraphModule | null, args: any[]) => {
-    const res = config.wasmFunction(module, args);
+  const algorithmWasmFn = (
+    controller: VisualizerStore["controller"],
+    args: any[]
+  ) => {
+    const res = config.wasmFunction(controller, args);
     return { ...res, type: "algorithm" } as const;
   };
   return { ...config, wasmFunction: algorithmWasmFn };

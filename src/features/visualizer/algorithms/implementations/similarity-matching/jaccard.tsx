@@ -41,7 +41,7 @@ export const jaccardSimilarity =
       }),
     ],
     wasmFunction: (module, [args]) => {
-      if (module) return module.jaccard_similarity(args);
+      //   if (module) return module.jaccard_similarity(args);
     },
     output: (props) => <Jaccard {...props} />,
   });

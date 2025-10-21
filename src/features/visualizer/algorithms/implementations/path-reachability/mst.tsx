@@ -31,7 +31,7 @@ export const mst = createGraphAlgorithm<MinimalSpanningTreeOutputData>({
     "Finds the subset of edges that connects all nodes in the graph with the minimum possible total edge weight.",
   inputs: [],
   wasmFunction: (module, _) => {
-    if (module) return module.min_spanning_tree();
+    // if (module) return module.min_spanning_tree();
   },
   output: (props) => <MinimalSpanningTree {...props} />,
 });

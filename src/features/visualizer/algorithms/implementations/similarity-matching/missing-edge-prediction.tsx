@@ -43,7 +43,7 @@ export const missingEdgePrediction =
       }),
     ],
     wasmFunction: (module, [arg1, arg2]) => {
-      if (module) return module.missing_edge_prediction(arg1, arg2);
+      //   if (module) return module.missing_edge_prediction(arg1, arg2);
     },
     output: (props) => <MissingEdgePrediction {...props} />,
   });

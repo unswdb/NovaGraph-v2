@@ -24,7 +24,7 @@ export const graphDiameter = createGraphAlgorithm<GraphDiameterOutputData>({
   description: "Calculates the longest shortest path between any two nodes.",
   inputs: [],
   wasmFunction: (module, _) => {
-    if (module) return module.diameter();
+    // if (module) return module.diameter();
   },
   output: (props) => <GraphDiameter {...props} />,
 });

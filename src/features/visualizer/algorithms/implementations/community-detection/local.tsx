@@ -17,7 +17,7 @@ export const localClusteringCoefficient =
       "Measures the number of triangles that pass through a node. Any nodes with a clustering coefficient of 0 are not part of any triangles.",
     inputs: [],
     wasmFunction: (module, _) => {
-      if (module) return module.local_clustering_coefficient();
+      //   if (module) return module.local_clustering_coefficient();
     },
     output: (props) => <LocalClusteringCoefficient {...props} />,
   });

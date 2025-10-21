@@ -16,7 +16,7 @@ export const triangleCount = createGraphAlgorithm<TriangleCountOutputData>({
     "Counts the number of triangles (groups of 3 connected nodes) in a graph.",
   inputs: [],
   wasmFunction: (module, _) => {
-    if (module) return module.triangle_count();
+    // if (module) return module.triangle_count();
   },
   output: (props) => <TriangleCount {...props} />,
 });

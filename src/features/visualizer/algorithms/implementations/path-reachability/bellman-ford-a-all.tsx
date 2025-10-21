@@ -39,7 +39,7 @@ export const bellmanFordAToAll =
       }),
     ],
     wasmFunction: (module, [args]) => {
-      if (module) return module.bellman_ford_source_to_all(args);
+      //   if (module) return module.bellman_ford_source_to_all(args);
     },
     output: (props) => <BellmanFordAToAll {...props} />,
   });

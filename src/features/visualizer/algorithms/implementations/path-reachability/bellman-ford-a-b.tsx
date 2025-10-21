@@ -42,7 +42,7 @@ export const bellmanFordAToB = createGraphAlgorithm<BellmanFordAToBOutputData>({
     }),
   ],
   wasmFunction: (module, [arg1, arg2]) => {
-    if (module) return module.bellman_ford_source_to_target(arg1, arg2);
+    // if (module) return module.bellman_ford_source_to_target(arg1, arg2);
   },
   output: (props) => <BellmanFordAToB {...props} />,
 });

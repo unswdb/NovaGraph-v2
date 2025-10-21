@@ -57,38 +57,6 @@ export const yen = createGraphAlgorithm<YenOutputData>({
   ],
   wasmFunction: (module, [arg1, arg2, arg3]) => {
     // if (module) return module.yens_algorithm(arg1, arg2, arg3);
-    return {
-      colorMap: {
-        "0": 1,
-        "3": 1, // source/target
-        "1": 0.5,
-        "2": 0.5, // path nodes
-        "0-1": 1,
-        "1-3": 1,
-        "0-2": 1,
-        "2-3": 1, // all path edges
-      },
-      mode: 2,
-      data: {
-        algorithm: "Yen's k Shortest Paths",
-        source: "NodeA",
-        target: "NodeD",
-        k: 3,
-        weighted: true,
-        paths: [
-          {
-            num: 1,
-            weight: 8,
-            path: ["NodeA", "NodeB", "NodeD"],
-          },
-          {
-            num: 2,
-            weight: 12,
-            path: ["NodeA", "NodeC", "NodeD"],
-          },
-        ],
-      },
-    };
   },
   output: (props) => <Yen {...props} />,
 });

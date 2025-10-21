@@ -21,7 +21,7 @@ export const eulerianCircuit = createGraphAlgorithm<EulerianCircuitOutputData>({
     "Finds a path that visits every edge exactly once and returns to the starting node.",
   inputs: [],
   wasmFunction: (module, _) => {
-    if (module) return module.eulerian_circuit();
+    // if (module) return module.eulerian_circuit();
   },
   output: (props) => <EulerianCircuit {...props} />,
 });

@@ -37,7 +37,7 @@ export const dijkstraAToB = createGraphAlgorithm<DijkstraAToBOutputData>({
     }),
   ],
   wasmFunction: (module, [arg1, arg2]) => {
-    if (module) return module.dijkstra_source_to_target(arg1, arg2);
+    // if (module) return module.dijkstra_source_to_target(arg1, arg2);
   },
   output: (props) => <DijkstraAToB {...props} />,
 });

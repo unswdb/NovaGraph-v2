@@ -24,7 +24,7 @@ export const pageRank = createGraphAlgorithm<PageRankOutputData>({
     }),
   ],
   wasmFunction: (module, [arg1]) => {
-    if (module) return module.pagerank(arg1);
+    // if (module) return module.pagerank(arg1);
   },
   output: (props) => <PageRank {...props} />,
 });

@@ -49,7 +49,7 @@ export const randomWalk = createGraphAlgorithm<RandomWalkOutputData>({
     }),
   ],
   wasmFunction: (module, [arg1, arg2]) => {
-    if (module) return module.random_walk(arg1, arg2);
+    // if (module) return module.random_walk(arg1, arg2);
   },
   output: (props) => <RandomWalk {...props} />,
 });

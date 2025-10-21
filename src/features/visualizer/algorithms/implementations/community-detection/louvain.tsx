@@ -25,7 +25,7 @@ export const louvain = createGraphAlgorithm<LouvainOutputData>({
     }),
   ],
   wasmFunction: (module, [arg1]) => {
-    if (module) return module.louvain(arg1);
+    // if (module) return module.louvain(arg1);
   },
   output: (props) => <Louvain {...props} />,
 });

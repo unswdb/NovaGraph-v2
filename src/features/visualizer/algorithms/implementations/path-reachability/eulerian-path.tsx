@@ -22,7 +22,7 @@ export const eulerianPath = createGraphAlgorithm<EulerianPathOutputData>({
   description: "Finds a path that visits every edge exactly once.",
   inputs: [],
   wasmFunction: (module, _) => {
-    if (module) return module.eulerian_path();
+    // if (module) return module.eulerian_path();
   },
   output: (props) => <EulerianPath {...props} />,
 });

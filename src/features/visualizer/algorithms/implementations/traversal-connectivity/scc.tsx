@@ -23,7 +23,7 @@ export const scc = createGraphAlgorithm<SCCOutputData>({
   description: "Finds the strongly connected components in a graph.",
   inputs: [],
   wasmFunction: (module, _) => {
-    if (module) return module.strongly_connected_components();
+    // if (module) return module.strongly_connected_components();
   },
   output: (props) => <SCC {...props} />,
 });

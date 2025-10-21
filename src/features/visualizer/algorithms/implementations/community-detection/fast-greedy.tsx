@@ -25,23 +25,6 @@ export const fastGreedy = createGraphAlgorithm<FastGreedyOutputData>({
   inputs: [],
   wasmFunction: (module, _) => {
     // if (module) return module.fast_greedy();
-    return {
-      colorMap: {
-        "0": 0, // community assignments
-        "1": 0,
-        "2": 1,
-        "3": 1,
-      },
-      mode: 2,
-      data: {
-        algorithm: "Fast-Greedy Community Detection",
-        modularity: 0.39, // maximum modularity achieved
-        communities: [
-          ["NodeA", "NodeB"],
-          ["NodeC", "NodeD"],
-        ],
-      },
-    };
   },
   output: (props) => <FastGreedy {...props} />,
 });
