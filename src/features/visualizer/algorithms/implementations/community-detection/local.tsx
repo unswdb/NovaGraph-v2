@@ -3,6 +3,7 @@ import {
   useDynamicRowHeight,
   type RowComponentProps,
 } from "react-window";
+
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 // Infered from src/wasm/algorithms
