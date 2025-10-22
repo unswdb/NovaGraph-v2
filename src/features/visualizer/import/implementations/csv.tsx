@@ -65,7 +65,7 @@ const validateNodes = async (file: File | undefined) => {
     }
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: "Unable to read file content. Please try again.",
@@ -109,7 +109,7 @@ const validateEdges = async (file: File | undefined) => {
     }
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: "Unable to read file content. Please try again. ",

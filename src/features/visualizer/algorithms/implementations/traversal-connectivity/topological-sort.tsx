@@ -51,6 +51,36 @@ function TopologicalSort(
           />
         </div>
       </div>
+
+      {/* What this means */}
+      <div className="space-y-3 pt-3 border-t border-t-border">
+        <h3 className="font-semibold">What this means</h3>
+        <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
+          <li>
+            Topological sort orders a{" "}
+            <span className="font-medium">directed acyclic graph (DAG)</span> so
+            every edge goes from an earlier node to a later node.
+          </li>
+          <li>
+            It’s useful for{" "}
+            <span className="font-medium">dependency planning</span> (e.g.,
+            tasks before tasks),
+            <span className="font-medium"> build/compile pipelines</span>, and
+            reasoning about causality in DAGs.
+          </li>
+          <li>
+            Earlier nodes can be considered{" "}
+            <span className="font-medium">prerequisites</span> for nodes that
+            appear after them; later nodes depend (directly or indirectly) on
+            earlier ones.
+          </li>
+          <li>
+            We produced an order of{" "}
+            <span className="font-medium">{order.length}</span> nodes.
+            Processing nodes in this sequence respects all prerequisites.
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }

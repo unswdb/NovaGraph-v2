@@ -53,6 +53,43 @@ function WCC(props: GraphAlgorithmResult<WCCOutputData>) {
           />
         </div>
       </div>
+
+      {/* What this means */}
+      <div className="space-y-3 pt-3 border-t border-t-border">
+        <h3 className="font-semibold">What this means</h3>
+        <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
+          <li>
+            Weakly Connected Components (WCCs) partition an{" "}
+            <span className="font-medium">undirected</span> graph into groups
+            that are connected.
+          </li>
+          <li>
+            This is useful for understanding{" "}
+            <span className="font-medium">coarse connectivity</span>,
+            discovering islands of nodes that belong together.
+          </li>
+          <li>
+            We found <span className="font-medium">{components.length}</span>{" "}
+            component{components.length !== 1 ? "s" : ""}. Each listed
+            “Component” contains nodes that are mutually reachable.
+          </li>
+          <li>
+            Nodes in the <span className="font-medium">same component</span>{" "}
+            share at least one undirected path between them; nodes in{" "}
+            <span className="font-medium">different components</span> do not.
+          </li>
+          <li>
+            Relationship to SCC:{" "}
+            <span className="font-medium">SCCs are finer</span> than WCCs. Each
+            SCC lies entirely inside a single WCC; a WCC may contain multiple
+            SCCs.
+          </li>
+          <li>
+            In an <span className="font-medium">undirected</span> graph, WCCs
+            are exactly the usual connected components.
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }

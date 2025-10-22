@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { InputComponentProps } from "..";
 
 import type { DateInput } from "./types";
 import {
-  isValidDate,
   parseDatePartsToDate,
   parseDatePartsToISO,
   parseISOToDate,
