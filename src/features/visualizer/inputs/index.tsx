@@ -35,7 +35,6 @@ export default function InputComponent<T extends InputType>({
   const InputComponent = INPUT_COMPONENTS[input.type];
 
   if (!InputComponent) {
-    console.warn(`Unknown input type: ${input.type}`);
     return null;
   }
 

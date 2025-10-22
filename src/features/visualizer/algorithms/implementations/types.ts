@@ -27,41 +27,25 @@ export interface GraphAlgorithmResult<TData = unknown>
   data: TData;
 }
 
+type BivariantHandler<T> = {
+  bivarianceHack(props: T): ReactNode;
+}["bivarianceHack"];
+
 // Type-erased base algorithm for generic lists
-export interface BaseGraphAlgorithm {
+export interface BaseGraphAlgorithm<TResult = BaseGraphAlgorithmResult> {
   title: string;
   description: string;
   inputs: InputType[];
-  wasmFunction: (
-    controller: VisualizerStore["controller"],
-    args: any[]
-  ) => Promise<BaseGraphAlgorithmResult>;
-  output: (props: BaseGraphAlgorithmResult) => ReactNode;
+  wasmFunction: (module: GraphModule | null, args: any[]) => TResult;
+  output: BivariantHandler<TResult>;
 }
 
 /** TData describes the format/structure of the output in addition from
  * colorMap, sizeMap, etc. Please refer to wasm/algorithms/ to inspect
  * the correct structure for your algorithm
  */
-export interface GraphAlgorithm<TData = unknown> {
-  /** Title of the algorithm (displayed in the sidebar) */
-  title: string;
-
-  /** Description of the algorithm (explains how it works) */
-  description: string;
-
-  /** Inputs required to run the algorithm (based on visualizer/inputs) */
-  inputs: InputType[];
-
-  /** Function to execute the algorithm (calls igraph implementation) */
-  wasmFunction: (
-    controller: VisualizerStore["controller"],
-    args: any[]
-  ) => Promise<BaseGraphAlgorithmResult>;
-
-  /** Component to render the output in the output drawer */
-  output: (props: GraphAlgorithmResult<TData>) => ReactNode;
-}
+export interface GraphAlgorithm<TData = unknown>
+  extends BaseGraphAlgorithm<GraphAlgorithmResult<TData>> {}
 
 // Helper function for better type inference
 export function createGraphAlgorithm<TData>(config: {
