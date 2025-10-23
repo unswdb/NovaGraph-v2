@@ -24,7 +24,7 @@ class MainController {
   }
 
   // Kuzu db initialization
-  async initKuzu(
+  async _initKuzu(
     type: string = "inmemory",
     mode: string = "sync",
     options: any = {}
@@ -32,13 +32,13 @@ class MainController {
     return kuzuController.initialize(type, mode);
   }
 
-  async initIgraph() {
+  async _initIgraph() {
     return await this._IgraphController?.initIgraph();
   }
 
   async initSystem() {
-    await this.initKuzu();
-    await this.initIgraph();
+    await this._initKuzu();
+    await this._initIgraph();
   }
 
   getAlgorithm() {
@@ -48,29 +48,6 @@ class MainController {
     }
     return this._IgraphController;
   }
-
-  // // Graph method starts here
-  // private wasmGraphModule: any = null;
-  // async getGraphModule() {
-  //   if (!this.wasmGraphModule) {
-  //     try {
-  //       this.wasmGraphModule = await createModule();
-  //     } catch (err) {
-  //       console.error("Failed to load WASM module", err);
-  //       throw err;
-  //     }
-  //   }
-  //   return this.wasmGraphModule;
-  // }
-  // // Graph initialization
-  // async initGraph() {
-  //   const mod = await this.getGraphModule();
-  //   const graph = mod.initGraph();
-  //   return graph;
-  // }
-
-
-
 
   // Database operations namespace
   db = {
@@ -129,17 +106,7 @@ class MainController {
     ) {
       return Promise.resolve(kuzuController.createNode(label, properties));
     },
-
-    // async deleteNodeWithPrimary(tableName: string,
-    //   primaryKey: string,
-    //   primaryValue: any) {
-    //   return Promise.resolve(kuzuController.deleteNode(tableName, primaryKey, primaryValue));
-    // },
-
-    // async deleteNodeWithoutPrimary(tableName: string, primaryValue: any) {
-    //   return Promise.resolve(kuzuController.deleteNodeWithoutPrimary(tableName, primaryValue));
-    // },
-
+    
     async updateNode(
       node: GraphNode,
       values: Record<string, InputChangeResult<any>>

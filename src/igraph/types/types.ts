@@ -1,4 +1,3 @@
-// TODO: lint
 export type IgraphInput = {
   nodes: number; // nodes number
   src: Int32Array; // length = E
