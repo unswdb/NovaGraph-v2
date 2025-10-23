@@ -88,5 +88,3 @@ export function isAlgorithmVisualizationResult(
 ): response is BaseGraphAlgorithmResult {
   return response.type === "algorithm";
 }
-
-export { type MainModule as GraphModule } from "~/graph";

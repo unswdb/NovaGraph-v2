@@ -6,7 +6,6 @@ import {
   type EdgeSchema,
   type GraphDatabase,
   type GraphEdge,
-  type GraphModule,
   type GraphNode,
   type NodeSchema,
   type VisualizationResponse,
