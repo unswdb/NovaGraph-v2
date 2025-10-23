@@ -1,0 +1,51 @@
+// src/igraph/algorithms/IgraphDijkstra.ts
+import type { IgraphInput } from "./types/types";
+
+export type DijkstraAToBResult = {
+  colorMap: Record<string, number>;
+  mode: number;
+  data: DijkstraAToBOutputData;
+};
+
+export type DijkstraAToBOutputData = {
+  source: string;
+  target: string;
+  weighted: boolean;
+  path: { from: string; to: string; weight?: number }[];
+  totalWeight?: number;
+};
+
+async function _runIgraphAlgo(
+  igraphMod: any,
+  input: IgraphInput,
+  start: string,
+  end: string
+) {
+  return await igraphMod.dijkstra_a_to_b(
+    input.nodes,
+    input.src,
+    input.dst,
+    start,
+    end
+  );
+}
+
+function _parseResult(
+  IgraphToKuzu: Map<number, string>,
+  algorithmResult: any
+): DijkstraAToBResult {
+  // Mapping logic similar to BFS
+  // ...
+  return { mode: 0, colorMap: {}, data: mappedData };
+}
+
+export async function igraphDijkstraAToB(
+  igraphMod: any,
+  input: IgraphInput,
+  IgraphToKuzu: Map<number, string>,
+  start: string,
+  end: string
+): Promise<DijkstraAToBResult> {
+  const wasmResult = await _runIgraphAlgo(igraphMod, input, start, end);
+  return _parseResult(IgraphToKuzu, wasmResult);
+}

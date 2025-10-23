@@ -1,5 +1,6 @@
+import type { KuzuToIgraphParseResult } from "../types/types";
+
 import type { GraphEdge } from "~/features/visualizer/types";
-import type { IgraphInput, KuzuToIgraphParseResult } from "../types/types";
 
 /**
  * Convert Kuzu input into Igraph input
@@ -7,15 +8,15 @@ import type { IgraphInput, KuzuToIgraphParseResult } from "../types/types";
 export function KuzuToIgraphParsing(
   nodesNumber: number,
   edges: GraphEdge[],
-  directed: boolean,
+  directed: boolean
 ): KuzuToIgraphParseResult {
   if (nodesNumber > 0x80000000) {
     throw new Error(
       "Vertex ID exceeds 32-bit signed range expected by igraph 32 bit (WASM)."
     );
   }
-  let KuzuToIgraph = new  Map<string, number>(); 
-  let IgraphToKuzu =  new Map<number, string>();
+  let KuzuToIgraph = new Map<string, number>();
+  let IgraphToKuzu = new Map<number, string>();
 
   const E = edges.length;
 
@@ -74,9 +75,9 @@ export function KuzuToIgraphParsing(
     );
   }
   const nodes = nodesAssigned;
-  return { 
-    IgraphInput: { nodes, src, dst, directed, weight }, 
-    KuzuToIgraphMap: KuzuToIgraph, 
-    IgraphToKuzuMap: IgraphToKuzu 
+  return {
+    IgraphInput: { nodes, src, dst, directed, weight },
+    KuzuToIgraphMap: KuzuToIgraph,
+    IgraphToKuzuMap: IgraphToKuzu,
   };
 }

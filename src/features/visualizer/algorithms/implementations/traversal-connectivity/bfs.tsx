@@ -32,7 +32,6 @@ export const bfs = createGraphAlgorithm<BFSData>({
     const result = await algorithm.bfs(args);
     
     // Result already has correct structure from IgraphBFS
-    console.log(result);
     return {
       ...result,
       type: "algorithm" as const,
