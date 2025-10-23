@@ -1,7 +1,11 @@
+import Logo from "~/components/ui/logo";
+import Header from "./header";
+
 const Home = () => {
   return (
-    <main className="flex items-center justify-center h-screen w-screen">
-      <h1 className="text-primary">Hello World!</h1>
+    <main className="relative bg-black h-[120vh]">
+      {/* Headline */}
+      <Header />
     </main>
   );
 };

@@ -67,7 +67,7 @@ export default function QueryOutput({ data }: { data: ExecuteQueryResult }) {
               key={index}
               className="bg-critical/10 border border-critical/20 rounded-md p-3"
             >
-              <p className="text-xs text-critical">{query.message}</p>
+              <p className="small-body text-critical">{query.message}</p>
             </div>
           ))}
         </div>
