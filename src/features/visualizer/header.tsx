@@ -12,7 +12,7 @@ export default function Header() {
       {/* Logo + App Name */}
       <div className="flex items-center gap-2">
         <Logo alt="NovaGraph" className="w-6 h-6 text-primary" />
-        <span className="medium-title hidden sm:block">NovaGraph</span>
+        <span className="text-lg font-medium hidden sm:block">NovaGraph</span>
       </div>
       <div className="flex items-center gap-2">
         {/* Light/Dark Mode Toggle */}

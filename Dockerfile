@@ -1,9 +1,17 @@
 # -------- WASM Dependencies Build Stage --------
 FROM node:22-slim AS wasm-deps
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential cmake git python3 curl bash ca-certificates flex bison \
+# Install system dependencies for building C++ and WASM
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
+    git \
+    python3 \
+    curl \
+    bash \
+    ca-certificates \
+    flex \
+    bison \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Emscripten
@@ -47,16 +55,16 @@ RUN npm install -g typescript
 
 # Link against cached libs
 RUN em++ wasm/*.cpp wasm/algorithms/*.cpp wasm/generators/*.cpp -o graph.js \
--s WASM=1 \
--I./wasm -I./wasm/igraph/build/include -I./wasm/igraph/include -I./kuzu \
--I./wasm/rapidjson/include \
--s EXPORT_ES6=1 -s MODULARIZE=1 -s ENVIRONMENT='web' \
--s EXPORT_NAME='createModule' -s LINKABLE=1 -s FORCE_FILESYSTEM=1 \
--s WASMFS=1 -s EXPORTED_RUNTIME_METHODS=['FS'] -s ALLOW_MEMORY_GROWTH=1 \
--lembind --no-entry -O3 \
-/src/wasm/igraph/build/src/libigraph.a \
-/src/wasm/pugixml/build/libpugixml.a \
---emit-tsd graph.d.ts
+    -s WASM=1 \
+    -I./wasm -I./wasm/igraph/build/include -I./wasm/igraph/include -I./kuzu \
+    -I./wasm/rapidjson/include \
+    -s EXPORT_ES6=1 -s MODULARIZE=1 -s ENVIRONMENT='web' \
+    -s EXPORT_NAME='createModule' -s LINKABLE=1 -s FORCE_FILESYSTEM=1 \
+    -s WASMFS=1 -s EXPORTED_RUNTIME_METHODS=['FS'] -s ALLOW_MEMORY_GROWTH=1 \
+    -lembind --no-entry -O3 \
+    /src/wasm/igraph/build/src/libigraph.a \
+    /src/wasm/pugixml/build/libpugixml.a \
+    --emit-tsd graph.d.ts
 
 
 # -------- Remaining Stages (same as your original) --------
