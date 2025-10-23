@@ -1,5 +1,6 @@
 import { ArrowRight, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router";
+
 import { Button } from "~/components/ui/button";
 import Logo from "~/components/ui/logo";
 import { useIsMobile } from "~/hooks/use-mobile";
