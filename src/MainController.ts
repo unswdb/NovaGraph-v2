@@ -11,13 +11,42 @@ import { IgraphController } from "./igraph/IgraphController";
 
 class MainController {
   private _IgraphController: undefined | IgraphController;
-
   constructor() {
+    console.log("Constructor for Main Controller!")
     this._IgraphController = new IgraphController(this.db.snapshotGraphState, this.db.getGraphDirection);
+    if (this._IgraphController === undefined) {
+      console.log("uh oh something aint right")
+    }
   }
 
   async getGraphModule() {
     return this._IgraphController?.getIgraphModule();
+  }
+
+  // Kuzu db initialization
+  async initKuzu(
+    type: string = "inmemory",
+    mode: string = "sync",
+    options: any = {}
+  ) {
+    return kuzuController.initialize(type, mode);
+  }
+
+  async initIgraph() {
+    return await this._IgraphController?.initIgraph();
+  }
+
+  async initSystem() {
+    await this.initKuzu();
+    await this.initIgraph();
+  }
+
+  getAlgorithm() {
+    console.log("getAlgorithm should be here")
+    if (this._IgraphController === undefined) {
+      throw Error("IgraphController is undefinned");
+    }
+    return this._IgraphController;
   }
 
   // // Graph method starts here
@@ -41,16 +70,6 @@ class MainController {
   // }
 
 
-
-
-  // Kuzu db initialization
-  async initKuzu(
-    type: string = "inmemory",
-    mode: string = "sync",
-    options: any = {}
-  ) {
-    return kuzuController.initialize(type, mode);
-  }
 
 
   // Database operations namespace
@@ -217,9 +236,7 @@ class MainController {
     },
   };
 
-  async getAlgorithm() {
-    return this._IgraphController;
-  }
+
 }
 
 // Singleton instance

@@ -61,7 +61,7 @@ export default class VisualizerStore {
   // ACTIONS
   initialize = async () => {
     // Initialize Kuzu controller
-    await this.controller.initKuzu();
+    await this.controller.initSystem();
 
     // Define initial graph structure
     const graph = await this.controller.db.snapshotGraphState();

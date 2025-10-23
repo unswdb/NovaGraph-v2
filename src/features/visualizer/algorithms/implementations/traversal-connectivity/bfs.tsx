@@ -5,15 +5,9 @@ import {
 } from "react-window";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
-
 import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";
 
-// Infered from src/wasm/algorithms
-type BFSOutputData = {
-  source: string;
-  nodesFound: number;
-  layers: { layer: string[]; index: number }[];
-};
+import type { BFSOutputData } from "~/igraph/algorithms/PathFinding/IgraphBFS";
 
 export const bfs = createGraphAlgorithm<BFSOutputData>({
   title: "Breadth-First Search",
@@ -28,7 +22,22 @@ export const bfs = createGraphAlgorithm<BFSOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: async (controller, [args]) => {},
+  wasmFunction: async (controller, [args]) => {
+    const algorithm = controller.getAlgorithm();
+    if (algorithm === undefined) {
+      throw new Error("Algorithm controller not initialized");
+    }
+    
+    // Direct call - no optional chaining, proper error handling
+    const result = await algorithm.bfs();
+    
+    // Result already has correct structure from IgraphBFS
+    return {
+      ...result,
+      type: "algorithm" as const,
+    };
+  },
+
   output: (props) => <BFS {...props} />,
 });
 
