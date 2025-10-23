@@ -10,7 +10,7 @@ export const useStore = () => {
   if (!store) {
     throw new Error("useStore must be used within a StoreProvider");
   }
-  if (!store.wasmModule || !store.database) {
+  if (!store.database) {
     throw new Error("useStore must be used after store is initialized");
   }
   return store as InitializedVisualizerStore;
