@@ -1,7 +1,8 @@
 import { cloneElement, useMemo, useState } from "react";
 
-import type { GraphEdge, GraphModule, GraphNode } from "../types";
+import type { GraphEdge, GraphNode } from "../types";
 import InputComponent, { createEmptyInputResults } from "../inputs";
+import type VisualizerStore from "../store";
 
 import type {
   BaseGraphAlgorithm,
@@ -24,7 +25,7 @@ import { Button } from "~/components/ui/button";
 import { useLoading } from "~/components/ui/loading";
 
 export default function InputDialog({
-  module,
+  controller,
   algorithm,
   nodes,
   edges,
@@ -34,7 +35,7 @@ export default function InputDialog({
   className,
   ...props
 }: React.ComponentProps<"button"> & {
-  module: GraphModule | null;
+  controller: VisualizerStore["controller"];
   algorithm: BaseGraphAlgorithm;
   nodes: GraphNode[];
   edges: GraphEdge[];
@@ -71,21 +72,21 @@ export default function InputDialog({
     setInputResults(createEmptyInputResults(algorithm.inputs));
     startLoading("Running Algorithm...");
 
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
         const args = algorithm.inputs.map(
           (input) => inputResults[input.key].value
         );
 
-        const algorithmResponse = algorithm.wasmFunction(module, args);
+        const algorithmResponse = await algorithm.wasmFunction(
+          controller,
+          args
+        );
         setActiveAlgorithm(algorithm);
         setActiveResponse(algorithmResponse);
       } catch (err) {
         throw new Error(
-          module && typeof err == "number"
-            ? module.what_to_stderr(err)
-            : String(err) ??
-              "An unexpected error occurred. Please try again later."
+          String(err) ?? "An unexpected error occurred. Please try again later."
         );
       } finally {
         stopLoading();

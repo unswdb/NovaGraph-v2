@@ -28,9 +28,7 @@ export const bfs = createGraphAlgorithm<BFSOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: (module, [args]) => {
-    if (module) return module.bfs(args);
-  },
+  wasmFunction: async (controller, [args]) => {},
   output: (props) => <BFS {...props} />,
 });
 

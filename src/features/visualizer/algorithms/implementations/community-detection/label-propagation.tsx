@@ -24,8 +24,8 @@ export const labelPropagation =
     description:
       "Assigns nodes to communities based on their labels. Results may vary between runs due to the randomness of the algorithm.",
     inputs: [],
-    wasmFunction: (module, _) => {
-      if (module) return module.label_propagation();
+    wasmFunction: async (controller, _) => {
+      //   if (module) return module.label_propagation();
     },
     output: (props) => <LabelPropagation {...props} />,
   });

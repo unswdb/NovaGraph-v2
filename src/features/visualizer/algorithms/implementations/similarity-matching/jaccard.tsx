@@ -40,8 +40,8 @@ export const jaccardSimilarity =
         },
       }),
     ],
-    wasmFunction: (module, [args]) => {
-      if (module) return module.jaccard_similarity(args);
+    wasmFunction: async (controller, [args]) => {
+      //   if (module) return module.jaccard_similarity(args);
     },
     output: (props) => <Jaccard {...props} />,
   });

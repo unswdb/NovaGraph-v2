@@ -55,8 +55,8 @@ export const yen = createGraphAlgorithm<YenOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: (module, [arg1, arg2, arg3]) => {
-    if (module) return module.yens_algorithm(arg1, arg2, arg3);
+  wasmFunction: async (controller, [arg1, arg2, arg3]) => {
+    // if (module) return module.yens_algorithm(arg1, arg2, arg3);
   },
   output: (props) => <Yen {...props} />,
 });

@@ -27,8 +27,8 @@ export const kCore = createGraphAlgorithm<KCoreOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: (module, [arg1]) => {
-    if (module) return module.k_core(arg1);
+  wasmFunction: async (controller, [arg1]) => {
+    // if (module) return module.k_core(arg1);
   },
   output: (props) => <KCore {...props} />,
 });

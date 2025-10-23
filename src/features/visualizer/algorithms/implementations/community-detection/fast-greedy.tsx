@@ -23,8 +23,8 @@ export const fastGreedy = createGraphAlgorithm<FastGreedyOutputData>({
   title: "Fast Greedy Algorithm",
   description: "Builds communities by greedily optimizing modularity.",
   inputs: [],
-  wasmFunction: (module, _) => {
-    if (module) return module.fast_greedy();
+  wasmFunction: async (controller, _) => {
+    // if (module) return module.fast_greedy();
   },
   output: (props) => <FastGreedy {...props} />,
 });

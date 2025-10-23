@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
-import type { GraphModule } from "../../types";
 import type { InputType } from "../../inputs";
+import type VisualizerStore from "../../store";
 
 type NodeId = string;
 type EdgeId = string; // Format: "fromNodeId-toNodeId"
@@ -36,7 +36,10 @@ export interface BaseGraphAlgorithm<TResult = BaseGraphAlgorithmResult> {
   title: string;
   description: string;
   inputs: InputType[];
-  wasmFunction: (module: GraphModule | null, args: any[]) => TResult;
+  wasmFunction: (
+    controller: VisualizerStore["controller"],
+    args: any[]
+  ) => Promise<TResult>;
   output: BivariantHandler<TResult>;
 }
 
@@ -53,13 +56,16 @@ export function createGraphAlgorithm<TData>(config: {
   description: string;
   inputs: InputType[];
   wasmFunction: (
-    module: GraphModule | null,
+    controller: VisualizerStore["controller"],
     args: any[]
-  ) => Omit<GraphAlgorithmResult<TData>, "type">;
+  ) => Promise<Omit<GraphAlgorithmResult<TData>, "type">>;
   output: (props: GraphAlgorithmResult<TData>) => ReactNode;
 }): GraphAlgorithm<TData> {
-  const algorithmWasmFn = (module: GraphModule | null, args: any[]) => {
-    const res = config.wasmFunction(module, args);
+  const algorithmWasmFn = async (
+    controller: VisualizerStore["controller"],
+    args: any[]
+  ) => {
+    const res = await config.wasmFunction(controller, args);
     return { ...res, type: "algorithm" } as const;
   };
   return { ...config, wasmFunction: algorithmWasmFn };

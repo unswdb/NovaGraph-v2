@@ -32,8 +32,8 @@ export const dijkstraAToAll = createGraphAlgorithm<DijkstraAToAllOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: (module, [args]) => {
-    if (module) return module.dijkstra_source_to_all(args);
+  wasmFunction: async (controller, [args]) => {
+    // if (module) return module.dijkstra_source_to_all(args);
   },
   output: (props) => <DijkstraAToAll {...props} />,
 });
