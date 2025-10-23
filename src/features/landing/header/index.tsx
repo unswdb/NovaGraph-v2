@@ -1,5 +1,11 @@
+<<<<<<< HEAD
 import Navbar from "./navbar";
 import TextBlurCopy from "../text-blur-reveal";
+=======
+import TextBlurCopy from "../text-blur-copy";
+>>>>>>> chore: lint
+
+import Navbar from "./navbar";
 
 export default function Header() {
   return (

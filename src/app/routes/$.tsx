@@ -1,6 +1,7 @@
 import { data, useNavigate } from "react-router";
 
 import type { Route } from "./+types/$";
+
 import { Button } from "~/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
