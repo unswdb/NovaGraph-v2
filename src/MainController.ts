@@ -10,30 +10,25 @@ import type { InputChangeResult } from "./features/visualizer/inputs";
 import { IgraphController } from "./igraph/IgraphController";
 
 class MainController {
+  // Private sector
   private _IgraphController: undefined | IgraphController;
+  private async _initKuzu() {
+    return kuzuController.initialize("inmemory", "sync", {});
+  }
+  private async _initIgraph() {
+    return await this._IgraphController?.initIgraph();
+  }
+
+  // Public sector
   constructor() {
-    console.log("Constructor for Main Controller!")
-    this._IgraphController = new IgraphController(this.db.snapshotGraphState, this.db.getGraphDirection);
-    if (this._IgraphController === undefined) {
-      console.log("uh oh something aint right")
-    }
+    this._IgraphController = new IgraphController(
+      this.db.snapshotGraphState,
+      this.db.getGraphDirection
+    );
   }
 
   async getGraphModule() {
     return this._IgraphController?.getIgraphModule();
-  }
-
-  // Kuzu db initialization
-  async _initKuzu(
-    type: string = "inmemory",
-    mode: string = "sync",
-    options: any = {}
-  ) {
-    return kuzuController.initialize(type, mode);
-  }
-
-  async _initIgraph() {
-    return await this._IgraphController?.initIgraph();
   }
 
   async initSystem() {
@@ -42,7 +37,7 @@ class MainController {
   }
 
   getAlgorithm() {
-    console.log("getAlgorithm should be here")
+    console.log("getAlgorithm should be here");
     if (this._IgraphController === undefined) {
       throw Error("IgraphController is undefinned");
     }
@@ -51,7 +46,6 @@ class MainController {
 
   // Database operations namespace
   db = {
-
     getGraphDirection() {
       // Todo: fix this later once implement graph direction
       return false;
@@ -106,7 +100,7 @@ class MainController {
     ) {
       return Promise.resolve(kuzuController.createNode(label, properties));
     },
-    
+
     async updateNode(
       node: GraphNode,
       values: Record<string, InputChangeResult<any>>
@@ -202,8 +196,6 @@ class MainController {
       return Promise.resolve(kuzuController.getAllSchemaProperties());
     },
   };
-
-
 }
 
 // Singleton instance
