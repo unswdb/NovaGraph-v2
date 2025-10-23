@@ -1,7 +1,7 @@
 import createModule from "../graph"
 import { KuzuToIgraphParsing } from "./utils/KuzuToIgraphConverter";
 import type { KuzuToIgraphParseResult } from "./types/types";
-import { igraphBFS } from "./algorithms/PathFinding/IgraphBFS";
+import { igraphBFS, type BFSResult } from "./algorithms/PathFinding/IgraphBFS";
 
 export class IgraphController {
     private _wasmGraphModule: any = undefined;
@@ -36,22 +36,32 @@ export class IgraphController {
 
     // Centralized data preparation - only called when needed
     private async _prepareGraphData(): Promise<KuzuToIgraphParseResult> {
+        // JS call
         const kuzuData = await this._getKuzuData();
         const direction = this._getDirection();
-        return KuzuToIgraphParsing(kuzuData.nodes.length, kuzuData.edges, direction);
-    }
+        const parseResult =  KuzuToIgraphParsing(kuzuData.nodes.length, kuzuData.edges, direction);
+        const igraphInput = parseResult.IgraphInput;
+
+        // Wasm call
+        await this._wasmGraphModule.cleanupGraph()
+        await this._wasmGraphModule.create_graph_from_kuzu_to_igraph(
+          igraphInput.nodes,
+          igraphInput.src,
+          igraphInput.dst,
+          igraphInput.directed,
+          igraphInput.weight
+        );
+
+        return parseResult;
+      }
 
     // ==========================================
     // TRAVERSAL & CONNECTIVITY ALGORITHMS
     // ==========================================
     
-    async bfs() {
+    async bfs(kuzuSourceID: string): Promise<BFSResult> {
         const graphData = await this._prepareGraphData();
-        return igraphBFS(
-            this._wasmGraphModule,
-            graphData.IgraphInput,
-            graphData.IgraphToKuzuMap
-        );
+        return await igraphBFS(this._wasmGraphModule, graphData, kuzuSourceID);
     }
 
     async dfs() {

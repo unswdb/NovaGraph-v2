@@ -1,29 +1,24 @@
-import type { IgraphInput } from "../../types/types";
+import type { KuzuToIgraphParseResult } from "../../types/types";
 
 // Consistent return type that matches GraphAlgorithmResult structure
-export type BFSResult = {
-    colorMap: Record<string, number>;
-    mode: number;
-    data: BFSOutputData;
-};
-
-export type BFSOutputData = {
+export type BFSData = {
+    algorithm: string
     source: string;
     nodesFound: number;
     layers: { layer: string[]; index: number }[];
 };
 
+export type BFSResult = {
+    colorMap: Record<string, number>;
+    mode: number;
+    data: BFSData;
+};
+
 async function _runIgraphAlgo(
     igraphMod: any,
-    KuzuToIgraphParsingResult: IgraphInput
+    igraphSourceID: number
 ) {
-    return await igraphMod.create_graph_from_kuzu_to_igraph(
-        KuzuToIgraphParsingResult.nodes,
-        KuzuToIgraphParsingResult.src,
-        KuzuToIgraphParsingResult.dst,
-        KuzuToIgraphParsingResult.directed,
-        KuzuToIgraphParsingResult.weight
-    );
+    return await igraphMod.bfs(igraphSourceID); 
 }
 
 function _parseResult(
@@ -45,7 +40,7 @@ function _parseResult(
     const rawData = hasWrapper ? algorithmResult.data : algorithmResult;
 
     // Map the data back to Kuzu IDs
-    const mappedData: BFSOutputData = {
+    const mappedData: BFSData = {
         ...rawData,
         source: mapIdBack(rawData.source),
         layers: Array.isArray(rawData.layers)
@@ -74,9 +69,31 @@ function _parseResult(
 
 export async function igraphBFS(
     igraphMod: any,
-    KuzuToIgraphParsingResult: IgraphInput,
-    IgraphToKuzu: Map<number, string>,
+    graphData: KuzuToIgraphParseResult,
+    kuzuSourceID: string
 ): Promise<BFSResult> {
-    const wasmResult = await _runIgraphAlgo(igraphMod, KuzuToIgraphParsingResult);
-    return _parseResult(IgraphToKuzu, wasmResult);
+    let igraphID: number | undefined = graphData.KuzuToIgraphMap.get(kuzuSourceID); 
+
+if (igraphID === undefined) {
+    console.warn("choosen source is either isolated or error in parsing")
+    return {
+        mode: 3,
+        colorMap: {
+            [kuzuSourceID]: 1
+        },
+        data: {
+            algorithm: "Breadth-First Search",
+            source: kuzuSourceID,
+            nodesFound: 1,
+            layers: [
+                {
+                    layer: [kuzuSourceID], 
+                    index: 0
+                }
+            ]
+        }
+    }
+    }
+    const wasmResult = await _runIgraphAlgo(igraphMod, igraphID);
+    return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
 }
