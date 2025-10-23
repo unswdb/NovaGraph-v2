@@ -30,7 +30,7 @@ export const mst = createGraphAlgorithm<MinimalSpanningTreeOutputData>({
   description:
     "Finds the subset of edges that connects all nodes in the graph with the minimum possible total edge weight.",
   inputs: [],
-  wasmFunction: (controller, _) => {
+  wasmFunction: async (controller, _) => {
     // if (module) return module.min_spanning_tree();
   },
   output: (props) => <MinimalSpanningTree {...props} />,
@@ -111,6 +111,48 @@ function MinimalSpanningTree(
             rowProps={{ showWeight: showWeight.value ?? false, edges }}
           />
         </div>
+      </div>
+
+      {/* What this means */}
+      <div className="space-y-3 pt-3 border-t border-t-border">
+        <h3 className="font-semibold">What this means</h3>
+        <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
+          <li>
+            The Minimum Spanning Tree connects{" "}
+            <span className="font-medium">all reachable nodes</span> with
+            <span className="font-medium"> no cycles</span> and the{" "}
+            <span className="font-medium">smallest possible total weight</span>{" "}
+            (for weighted graphs).
+          </li>
+          <li>
+            MST is defined for <span className="font-medium">undirected</span>{" "}
+            graphs.
+          </li>
+          <li>
+            The list shows the exact set of edges chosen. With weights shown,
+            the
+            <span className="font-medium"> Total Weight</span> is the sum over
+            these edges; when hidden/unweighted, each edge counts as cost{" "}
+            <span className="font-medium">1</span>.
+          </li>
+          <li>
+            In a connected undirected graph with <i>V</i> nodes, an MST has{" "}
+            <span className="font-medium">V − 1 edges</span>. If fewer edges
+            appear, the graph is{" "}
+            <span className="font-medium">disconnected</span>.
+          </li>
+          <li>
+            There can be{" "}
+            <span className="font-medium">multiple valid MSTs</span> if
+            different edge sets have the same total weight.
+          </li>
+          <li>
+            MSTs are useful for{" "}
+            <span className="font-medium">backbone design</span> (networks,
+            roads, wiring) and for removing redundancy while keeping the graph
+            connected.
+          </li>
+        </ul>
       </div>
     </div>
   );

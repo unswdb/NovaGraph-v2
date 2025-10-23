@@ -59,7 +59,7 @@ export default function InputDialog({
   );
 
   const handleSubmit = async () => {
-    // if (!module) return;
+    if (!controller) return;
 
     // Don't run when there's no nodes
     if (nodes.length === 0) {

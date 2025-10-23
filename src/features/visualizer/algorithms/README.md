@@ -19,29 +19,6 @@ To create a new algorithm option:
 
 Inside the file, define the algorithm based on the `GraphAlgorithm<TData>` interface located in `implementations/types.ts`. Below is the definition of the interface:
 
-```ts
-/** TData describes the format/structure of the output in addition from
- * colorMap, sizeMap, etc. Please refer to wasm/algorithms/ to inspect
- * the correct structure for your algorithm
- */
-export interface GraphAlgorithm<TData = unknown> {
-  /** Title of the algorithm (displayed in the sidebar) */
-  title: string;
-
-  /** Description of the algorithm (explains how it works) */
-  description: string;
-
-  /** Inputs required to run the algorithm (based on visualizer/inputs) */
-  inputs: InputType[];
-
-  /** Function to execute the algorithm (calls igraph implementation) */
-  wasmFunction: (controller: VisualizerStore["controller"], args: any[]) => any;
-
-  /** Component to render the output in the output drawer */
-  output: (props: GraphAlgorithmResult<TData>) => ReactNode;
-}
-```
-
 Example implementation:
 
 ```ts
