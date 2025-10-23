@@ -7,22 +7,41 @@ import type {
   PrimaryKeyType,
 } from "./features/visualizer/schema-inputs";
 import type { InputChangeResult } from "./features/visualizer/inputs";
+import { IgraphController } from "./igraph/IgraphController";
 
 class MainController {
-  // Graph method starts here
-  private wasmGraphModule: any = null;
+  private _IgraphController: undefined | IgraphController;
+
+  constructor() {
+    this._IgraphController = new IgraphController(this.db.snapshotGraphState, this.db.getGraphDirection);
+  }
 
   async getGraphModule() {
-    if (!this.wasmGraphModule) {
-      try {
-        this.wasmGraphModule = await createModule();
-      } catch (err) {
-        console.error("Failed to load WASM module", err);
-        throw err;
-      }
-    }
-    return this.wasmGraphModule;
+    return this._IgraphController?.getIgraphModule();
   }
+
+  // // Graph method starts here
+  // private wasmGraphModule: any = null;
+  // async getGraphModule() {
+  //   if (!this.wasmGraphModule) {
+  //     try {
+  //       this.wasmGraphModule = await createModule();
+  //     } catch (err) {
+  //       console.error("Failed to load WASM module", err);
+  //       throw err;
+  //     }
+  //   }
+  //   return this.wasmGraphModule;
+  // }
+  // // Graph initialization
+  // async initGraph() {
+  //   const mod = await this.getGraphModule();
+  //   const graph = mod.initGraph();
+  //   return graph;
+  // }
+
+
+
 
   // Kuzu db initialization
   async initKuzu(
@@ -33,15 +52,15 @@ class MainController {
     return kuzuController.initialize(type, mode);
   }
 
-  // Graph initialization
-  async initGraph() {
-    const mod = await this.getGraphModule();
-    const graph = mod.initGraph();
-    return graph;
-  }
 
   // Database operations namespace
   db = {
+
+    getGraphDirection() {
+      // Todo: fix this later once implement graph direction
+      return false;
+    },
+
     async createNodeSchema(
       tableName: string,
       primaryKey: string,
@@ -198,7 +217,9 @@ class MainController {
     },
   };
 
-  algorithms = {};
+  async getAlgorithm() {
+    return this._IgraphController;
+  }
 }
 
 // Singleton instance
