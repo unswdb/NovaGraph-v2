@@ -3,6 +3,10 @@ import createModule from "../graph";
 import { KuzuToIgraphParsing } from "./utils/KuzuToIgraphConverter";
 import type { KuzuToIgraphParseResult } from "./types/types";
 import { igraphBFS, type BFSResult } from "./algorithms/PathFinding/IgraphBFS";
+import {
+  igraphDijkstraAToB,
+  type DijkstraAToBResult,
+} from "./algorithms/PathFinding/IgraphDijkstraAtoB";
 
 import type {
   EdgeSchema,
@@ -87,9 +91,14 @@ export class IgraphController {
   // PATH & REACHABILITY ALGORITHMS
   // ==========================================
 
-  async dijkstraAToB(start: string, end: string) {
+  async dijkstraAToB(start: string, end: string): Promise<DijkstraAToBResult> {
     const graphData = await this._prepareGraphData();
-    throw new Error("Dijkstra A to B not implemented yet");
+    return await igraphDijkstraAToB(
+      this._wasmGraphModule,
+      graphData,
+      start,
+      end
+    );
   }
 
   async dijkstraAToAll(start: string) {

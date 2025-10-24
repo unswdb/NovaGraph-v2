@@ -1,5 +1,5 @@
 // src/igraph/algorithms/IgraphDijkstra.ts
-import type { IgraphInput } from "./types/types";
+import type { IgraphInput } from "../../types/types";
 
 export type DijkstraAToBResult = {
   colorMap: Record<string, number>;

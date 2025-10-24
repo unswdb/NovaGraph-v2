@@ -7,15 +7,7 @@ import {
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";
-
-// Infered from src/wasm/algorithms
-type DijkstraAToBOutputData = {
-  source: string;
-  target: string;
-  weighted: boolean;
-  path: { from: string; to: string; weight?: number }[];
-  totalWeight?: number;
-};
+import type { DijkstraAToBOutputData } from "~/igraph/algorithms/PathFinding/IgraphDijkstraAtoB";
 
 export const dijkstraAToB = createGraphAlgorithm<DijkstraAToBOutputData>({
   title: "Dijkstra (A to B)",
@@ -37,7 +29,15 @@ export const dijkstraAToB = createGraphAlgorithm<DijkstraAToBOutputData>({
     }),
   ],
   wasmFunction: async (controller, [arg1, arg2]) => {
-    // if (module) return module.dijkstra_source_to_target(arg1, arg2);
+    const algorithm = controller.getAlgorithm();
+    if (algorithm === undefined) {
+      throw new Error("Algorithm controller not initialized");
+    }
+    const result = await algorithm.dijkstraAToB(arg1, arg2);
+    return {
+      ...result,
+      type: "algorithm" as const,
+    };
   },
   output: (props) => <DijkstraAToB {...props} />,
 });
