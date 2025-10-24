@@ -1,39 +1,12 @@
-import { ArrowRight, Menu } from "lucide-react";
-import { useNavigate } from "react-router";
-
-import GlowBorderCard from "../../glow-border-card";
-import { LS_KEY } from "../..";
+import { ArrowRight } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
 import Logo from "~/components/ui/logo";
-import { useIsMobile } from "~/hooks/use-mobile";
+import GlowBorderCard from "~/features/landing/glow-border-card";
+import useNavigateApp from "~/features/landing/use-navigate-app";
 
-export default function Navbar() {
-  const isMobile = useIsMobile();
-  return isMobile ? <MobileNavbar /> : <DesktopNavbar />;
-}
-
-function MobileNavbar() {
-  const navigate = useNavigate();
-
-  return (
-    <div className="relative flex items-center justify-between px-14 py-4">
-      <Logo alt="NovaGraph" className="size-6 text-primary" />
-
-      <Button variant="ghost" size="icon">
-        <Menu />
-      </Button>
-    </div>
-  );
-}
-
-function DesktopNavbar() {
-  const navigate = useNavigate();
-
-  const handleOnClick = () => {
-    localStorage.setItem(LS_KEY, "app");
-    navigate("/app");
-  };
+export default function DesktopNavbar() {
+  const { navigateToApp } = useNavigateApp();
 
   return (
     <div className="relative flex items-center justify-between px-14 py-4">
@@ -88,7 +61,7 @@ function DesktopNavbar() {
           </GlowBorderCard>
         </nav>
       </div>
-      <Button onClick={handleOnClick}>
+      <Button onClick={navigateToApp}>
         Get Started <ArrowRight className="size-4" />
       </Button>
     </div>

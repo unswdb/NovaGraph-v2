@@ -147,9 +147,7 @@ export default function ScrollCarousel() {
       <div className="absolute top-[10%] left-0 right-0 text-center space-y-2">
         <TextBlurCopy>
           <h1 className="text-2xl font-medium">How does it work?</h1>
-          <p className="text-white/50">
-            From data to discovery in four simple steps
-          </p>
+          <p className="text-white/50">From data to discovery in four steps</p>
         </TextBlurCopy>
       </div>
 

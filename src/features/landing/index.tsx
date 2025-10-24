@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-import Logo from "~/components/ui/logo";
-import Header from "./header";
-=======
 import { gsap } from "gsap";
 import SplitText from "gsap/SplitText";
 import ScrollTrigger from "gsap/ScrollTrigger";
@@ -18,11 +14,10 @@ import HowItWorks from "./sections/how-it-works";
 import CTA from "./sections/cta";
 import Footer from "./sections/footer";
 import ScrollUp from "./scroll-up";
+import { LS_KEY } from "./use-navigate-app";
 
 // TODO: Assets to preload
 const ASSETS = ["unsw.svg", "page.jpg"];
-
-export const LS_KEY = "novagraph.landingPreference";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -31,6 +26,8 @@ export default function Home() {
   useEffect(() => {
     const start = performance.now();
 
+    // Initiates network request to fetch and stores
+    // in the cache
     const preloadImage = (src: string) =>
       new Promise<void>((resolve) => {
         const img = new Image();
@@ -79,15 +76,10 @@ export default function Home() {
       </div>
     );
   }
->>>>>>> chore: lint
-
-const Home = () => {
   return (
     <main className="relative bg-black h-[120vh]">
       {/* Headline */}
       <Header />
     </main>
   );
-};
-
-export default Home;
+}
