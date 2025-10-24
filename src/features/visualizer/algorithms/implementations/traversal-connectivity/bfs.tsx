@@ -5,9 +5,12 @@ import {
 } from "react-window";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
-import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";
 
-import type { BFSData, BFSResult } from "~/igraph/algorithms/PathFinding/IgraphBFS";
+import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";
+import type {
+  BFSData,
+  BFSResult,
+} from "~/igraph/algorithms/PathFinding/IgraphBFS";
 
 export const bfs = createGraphAlgorithm<BFSData>({
   title: "Breadth-First Search",
@@ -27,10 +30,10 @@ export const bfs = createGraphAlgorithm<BFSData>({
     if (algorithm === undefined) {
       throw new Error("Algorithm controller not initialized");
     }
-    
+
     // Direct call - no optional chaining, proper error handling
     const result = await algorithm.bfs(args);
-    
+
     // Result already has correct structure from IgraphBFS
     return {
       ...result,

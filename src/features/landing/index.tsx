@@ -76,10 +76,21 @@ export default function Home() {
       </div>
     );
   }
+
   return (
-    <main className="relative bg-black h-[120vh]">
-      {/* Headline */}
+    <main className="relative bg-black text-white">
+      <NetworkBackground />
       <Header />
+      <SeparatorOnScroll />
+      <Teams />
+      <SeparatorOnScroll />
+      <ScrollCarousel />
+      <SeparatorOnScroll />
+      <HowItWorks />
+      <SeparatorOnScroll />
+      <CTA />
+      <Footer />
+      <ScrollUp />
     </main>
   );
 }

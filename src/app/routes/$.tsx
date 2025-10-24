@@ -1,9 +1,9 @@
 import { data, useNavigate } from "react-router";
+import { ArrowLeft } from "lucide-react";
 
 import type { Route } from "./+types/$";
 
 import { Button } from "~/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 
 export async function loader(_: Route.LoaderArgs) {
   return data("Not Found", { status: 404 });
