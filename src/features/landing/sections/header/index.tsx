@@ -1,21 +1,15 @@
-import { useNavigate } from "react-router";
 import { ArrowRight } from "lucide-react";
 
 import TextBlurCopy from "../../text-blur-copy";
 import FadeUpCopy from "../../fade-up-copy";
-import { LS_KEY } from "../..";
+import useNavigateApp from "../../use-navigate-app";
 
 import Navbar from "./navbar";
 
 import { Button } from "~/components/ui/button";
 
 export default function Header() {
-  const navigate = useNavigate();
-
-  const handleOnClick = () => {
-    localStorage.setItem(LS_KEY, "app");
-    navigate("/app");
-  };
+  const { navigateToApp } = useNavigateApp();
 
   return (
     <section id="home" className="relative">
@@ -44,7 +38,7 @@ export default function Header() {
             <Button
               className="relative before:bg-primary before:w-full before:h-full before:blur-2xl before:absolute before:opacity-50"
               size="lg"
-              onClick={handleOnClick}
+              onClick={navigateToApp}
             >
               Go to NovaGraph <ArrowRight />
             </Button>
@@ -52,7 +46,11 @@ export default function Header() {
         </div>
         <FadeUpCopy>
           <div className="w-4/5 mx-auto flex justify-center items-center bg-black p-4 rounded-md border border-white/15 animate-glow">
-            <img src="/page.jpg" className="aspect-auto" />
+            <img
+              alt="NovaGraph Preview"
+              src="page.jpg"
+              className="aspect-auto"
+            />
           </div>
         </FadeUpCopy>
       </div>

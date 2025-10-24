@@ -1,20 +1,14 @@
 import { ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router";
 
 import TextBlurCopy from "../text-blur-copy";
 import FadeUpCopy from "../fade-up-copy";
-import { LS_KEY } from "..";
+import useNavigateApp from "../use-navigate-app";
 
 import { Button } from "~/components/ui/button";
 import Logo from "~/components/ui/logo";
 
 export default function CTA() {
-  const navigate = useNavigate();
-
-  const handleOnClick = () => {
-    localStorage.setItem(LS_KEY, "app");
-    navigate("/app");
-  };
+  const { navigateToApp } = useNavigateApp();
 
   return (
     <section
@@ -42,7 +36,7 @@ export default function CTA() {
           <Button
             className="relative before:bg-primary before:w-full before:h-full before:blur-2xl before:absolute before:opacity-50"
             size="lg"
-            onClick={handleOnClick}
+            onClick={navigateToApp}
           >
             Go to NovaGraph <ArrowRight />
           </Button>
