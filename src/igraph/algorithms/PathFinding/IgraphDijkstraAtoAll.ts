@@ -1,4 +1,5 @@
 import type { KuzuToIgraphParseResult } from "../../types/types";
+import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
 
 // Infered from src/wasm/algorithms/path-finding.cpp lines 63-132
 export type DijkstraAToAllOutputData = {
@@ -25,11 +26,7 @@ function _parseResult(
   IgraphToKuzu: Map<number, string>,
   algorithmResult: any
 ): DijkstraAToAllResult {
-  const mapIdBack = (id: string | number): string => {
-    const num = typeof id === "string" ? parseInt(id, 10) : id;
-    const mapped = IgraphToKuzu.get(num);
-    return mapped ?? String(id);
-  };
+  const mapIdBack = createMapIdBack(IgraphToKuzu);
 
   const { data, mode, colorMap = {} } = algorithmResult;
 
@@ -39,20 +36,9 @@ function _parseResult(
     weight: pathObj.weight,
   }));
 
-  const mappedColorMap = Object.fromEntries(
-    Object.entries(colorMap).map(([k, v]) =>
-      k.includes("-")
-        ? (() => {
-            const [fromId, toId] = k.split("-");
-            return [`${mapIdBack(fromId)}-${mapIdBack(toId)}`, v as number];
-          })()
-        : [mapIdBack(k), v as number]
-    )
-  ) as Record<string, number>;
-
   return {
     mode,
-    colorMap: mappedColorMap,
+    colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
       algorithm: data.algorithm ?? "Dijkstra Single Source",
       source: mapIdBack(data.source),
