@@ -4,10 +4,20 @@ import type {
   InputChangeResult,
   InputType,
 } from "~/features/visualizer/inputs";
+import type { GraphNode, GraphEdge, NodeSchema, EdgeSchema } from "../../types";
 
 type ImportHandler = (data: {
   values: Record<string, InputChangeResult<any>>;
-}) => Promise<{ success: boolean; message?: string }>;
+}) => Promise<{ 
+  success: boolean; 
+  message?: string;
+  data?: {
+    nodes: GraphNode[];
+    edges: GraphEdge[];
+    nodeTables: NodeSchema[];
+    edgeTables: EdgeSchema[];
+  };
+}>;
 
 type ImportValidator = (data: {
   values: Record<string, InputChangeResult<any>>;

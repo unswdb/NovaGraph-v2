@@ -43,24 +43,27 @@ const validateNodes = async (file: File | undefined) => {
       };
     }
 
-    // Check header
+    // Check header - now supports multiple columns
     const header = lines[0].trim();
-    if (header !== "node") {
+    const columns = header.split(",").map(col => col.trim());
+    
+    if (columns.length === 0) {
       return {
         success: false,
-        message: "Nodes file must have 'node' as the header (first line)",
+        message: "Nodes file must have at least one column in the header",
       };
     }
 
-    // Check if every line has exactly one node
+    // Check if every line has the same number of columns as header
+    const expectedColumns = columns.length;
     const isValid = lines
       .slice(1)
-      .every((line) => line.split(",").length === 1);
+      .every((line) => line.split(",").length === expectedColumns);
 
     if (!isValid) {
       return {
         success: false,
-        message: "Every lines should have exactly one node",
+        message: `Every line should have exactly ${expectedColumns} column(s) to match the header`,
       };
     }
 
@@ -125,7 +128,7 @@ export const ImportCSV: ImportOption = {
   icon: TableIcon,
   title: "Import CSV Files",
   description:
-    "Upload your graph data by selecting two CSV files: one for nodes and one for edges. Each node must be listed in nodes.csv with a single column header 'node'. Each edge must be defined in edges.csv with headers 'source,target' or 'source,target,weight'.",
+    "Upload your graph data by selecting two CSV files: one for nodes and one for edges. The node table name will be taken from the filename (without .csv). The first column in nodes.csv will be the primary key, and all columns will be imported as node properties. Edges.csv should have source and target columns (matching the node primary key), with optional weight column.",
   previewTitle: "CSV Format Preview",
   previewDescription: "Expected format for nodes.csv and edges.csv files",
   preview: CSVPreview,
@@ -162,11 +165,192 @@ export const ImportCSV: ImportOption = {
       defaultValue: false,
     }),
   ],
-  handler: async ({ values }: { values: Record<string, CSVInputType> }) => {
-    return {
-      success: true,
-      message: "Successfully imported graph from CSV files!",
-    };
+  handler: async ({ values }: { values: Record<string, any> }) => {
+    const { name, nodes, edges, directed } = values;
+    
+    // Get the database name
+    const databaseName = name.value as string;
+    const nodesFile = nodes.value as File;
+    const edgesFile = edges.value as File;
+    const isDirected = directed.value as boolean;
+    
+    try {
+      // Import using controller
+      const { controller } = await import("~/MainController");
+      // @ts-ignore - Import kuzu for file system access
+      const kuzu = await import("kuzu-wasm/sync");
+      
+      console.log(`[CSV Import] Starting import for database: ${databaseName}`);
+      
+      // Read files content
+      const nodesText = await nodesFile.text();
+      const edgesText = await edgesFile.text();
+      
+      // Parse CSV to get structure
+      const nodesLines = nodesText.trim().split("\n");
+      const edgesLines = edgesText.trim().split("\n");
+      
+      // Parse node CSV header to get all columns
+      const nodesHeader = nodesLines[0].trim();
+      const nodeColumns = nodesHeader.split(",").map(col => col.trim());
+      
+      // Parse edge CSV header
+      const edgesHeader = edgesLines[0].trim();
+      const edgeColumns = edgesHeader.split(",").map(col => col.trim());
+      const hasWeight = edgeColumns.includes("weight");
+      
+      // Step 1: Use filename (without .csv) as node table name
+      const nodeTableName = nodesFile.name.replace(/\.csv$/i, '');
+      console.log(`[CSV Import] Node table name: ${nodeTableName}`);
+      
+      // Determine primary key (first column) and additional properties
+      const primaryKeyColumn = nodeColumns[0];
+      const additionalProperties = nodeColumns.slice(1).map(col => ({
+        name: col,
+        type: "STRING" as const // Kuzu will auto-infer types from CSV data
+      }));
+      
+      console.log(`[CSV Import] Primary key: ${primaryKeyColumn}`);
+      console.log(`[CSV Import] Additional properties:`, additionalProperties);
+      
+      // Create node table schema with all properties
+      await controller.db.createNodeSchema(
+        nodeTableName,
+        primaryKeyColumn,
+        "STRING",
+        additionalProperties
+      );
+      
+      // Step 2: Use filename (without .csv) as edge table name
+      const edgeTableName = edgesFile.name.replace(/\.csv$/i, '');
+      
+      const edgeProperties: { name: string; type: any }[] = [];
+      if (hasWeight) {
+        edgeProperties.push({ name: "weight", type: "DOUBLE" });
+      }
+      
+      // Create edge table schema
+      await controller.db.createEdgeSchema(
+        edgeTableName,
+        [[nodeTableName, nodeTableName]],
+        edgeProperties
+      );
+      
+      // Step 3: Write CSV files to Kuzu's virtual file system  
+      const fs = kuzu.default.getFS();
+      const tempDir = '/tmp';
+      
+      // Ensure temp directory exists
+      try {
+        fs.mkdir(tempDir);
+      } catch (e) {
+        // Directory might already exist, ignore error
+      }
+      
+      const nodesPath = `${tempDir}/nodes_${Date.now()}.csv`;
+      const edgesPath = `${tempDir}/edges_${Date.now()}.csv`;
+      
+      // Write files to virtual file system
+      fs.writeFile(nodesPath, nodesText);
+      fs.writeFile(edgesPath, edgesText);
+      
+      // Step 4: Load nodes using LOAD FROM with all properties
+      
+      // Build property mapping for CREATE clause
+      // Map each CSV column to a node property
+      const propertyMappings = nodeColumns.map(col => `${col}: ${col}`).join(", ");
+      
+      const loadNodesQuery = `
+        LOAD FROM '${nodesPath}' (header = true)
+        CREATE (:\`${nodeTableName}\` {${propertyMappings}})
+      `;
+      
+      await controller.db.executeQuery(loadNodesQuery);
+      
+      // Step 5: Load edges using LOAD FROM
+      
+      // Determine source and target column names from edge CSV
+      const sourceColumn = edgeColumns[0]; // First column is source
+      const targetColumn = edgeColumns[1]; // Second column is target
+      
+      
+      if (isDirected) {
+        // For directed graphs, create one edge per line
+        const loadEdgesQuery = hasWeight
+          ? `
+            LOAD FROM '${edgesPath}' (header = true)
+            MATCH (s:\`${nodeTableName}\` {${primaryKeyColumn}: ${sourceColumn}}),
+                  (t:\`${nodeTableName}\` {${primaryKeyColumn}: ${targetColumn}})
+            CREATE (s)-[:\`${edgeTableName}\` {weight: CAST(weight AS DOUBLE)}]->(t)
+          `
+          : `
+            LOAD FROM '${edgesPath}' (header = true)
+            MATCH (s:\`${nodeTableName}\` {${primaryKeyColumn}: ${sourceColumn}}),
+                  (t:\`${nodeTableName}\` {${primaryKeyColumn}: ${targetColumn}})
+            CREATE (s)-[:\`${edgeTableName}\`]->(t)
+          `;
+        await controller.db.executeQuery(loadEdgesQuery);
+      } else {
+        // For undirected graphs, create edges in both directions
+        // First direction: source -> target
+        const loadEdgesQuery1 = hasWeight
+          ? `
+            LOAD FROM '${edgesPath}' (header = true)
+            MATCH (s:\`${nodeTableName}\` {${primaryKeyColumn}: ${sourceColumn}}),
+                  (t:\`${nodeTableName}\` {${primaryKeyColumn}: ${targetColumn}})
+            CREATE (s)-[:\`${edgeTableName}\` {weight: CAST(weight AS DOUBLE)}]->(t)
+          `
+          : `
+            LOAD FROM '${edgesPath}' (header = true)
+            MATCH (s:\`${nodeTableName}\` {${primaryKeyColumn}: ${sourceColumn}}),
+                  (t:\`${nodeTableName}\` {${primaryKeyColumn}: ${targetColumn}})
+            CREATE (s)-[:\`${edgeTableName}\`]->(t)
+          `;
+        
+        // Second direction: target -> source
+        const loadEdgesQuery2 = hasWeight
+          ? `
+            LOAD FROM '${edgesPath}' (header = true)
+            MATCH (s:\`${nodeTableName}\` {${primaryKeyColumn}: ${targetColumn}}),
+                  (t:\`${nodeTableName}\` {${primaryKeyColumn}: ${sourceColumn}})
+            CREATE (s)-[:\`${edgeTableName}\` {weight: CAST(weight AS DOUBLE)}]->(t)
+          `
+          : `
+            LOAD FROM '${edgesPath}' (header = true)
+            MATCH (s:\`${nodeTableName}\` {${primaryKeyColumn}: ${targetColumn}}),
+                  (t:\`${nodeTableName}\` {${primaryKeyColumn}: ${sourceColumn}})
+            CREATE (s)-[:\`${edgeTableName}\`]->(t)
+          `;
+        
+        await controller.db.executeQuery(loadEdgesQuery1);
+        await controller.db.executeQuery(loadEdgesQuery2);
+      }
+      
+      // Step 6: Clean up temporary files
+      try {
+        fs.unlink(nodesPath);
+        fs.unlink(edgesPath);
+      } catch (e) {
+        console.warn(`[CSV Import] Failed to clean up temporary files:`, e);
+      }
+      
+      // Step 7: Refresh graph state
+      const graphState = await controller.db.snapshotGraphState();
+      
+      console.log(`[CSV Import] Successfully imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges`);
+      
+      return {
+        success: true,
+        message: `Successfully imported graph "${databaseName}" with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges!`,
+        data: graphState,
+      };
+    } catch (error) {
+      console.error("[CSV Import] Error:", error);
+      return {
+        success: false,
+        message: `Failed to import CSV: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
   },
 };
 
