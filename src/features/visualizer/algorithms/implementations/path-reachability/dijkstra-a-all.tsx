@@ -12,13 +12,7 @@ import InputComponent, {
   createEmptyInputResult,
   createSwitchInput,
 } from "~/features/visualizer/inputs";
-
-// Infered from src/wasm/algorithms
-type DijkstraAToAllOutputData = {
-  source: string;
-  weighted: boolean;
-  paths: { target: string; path: string[]; weight?: number }[];
-};
+import type { DijkstraAToAllOutputData } from "~/igraph/algorithms/PathFinding/IgraphDijkstraAtoAll";
 
 export const dijkstraAToAll = createGraphAlgorithm<DijkstraAToAllOutputData>({
   title: "Dijkstra (A to All)",
@@ -33,7 +27,15 @@ export const dijkstraAToAll = createGraphAlgorithm<DijkstraAToAllOutputData>({
     }),
   ],
   wasmFunction: async (controller, [args]) => {
-    // if (module) return module.dijkstra_source_to_all(args);
+    const algorithm = controller.getAlgorithm();
+    if (algorithm === undefined) {
+      throw new Error("Algorithm controller not initialized");
+    }
+    const result = await algorithm.dijkstraAToAll(args);
+    return {
+      ...result,
+      type: "algorithm" as const,
+    };
   },
   output: (props) => <DijkstraAToAll {...props} />,
 });
