@@ -167,52 +167,55 @@ export const ImportCSV: ImportOption = {
   ],
   handler: async ({ values }: { values: Record<string, any> }) => {
     const { name, nodes, edges, directed } = values;
-    
+
     // Get the database name
     const databaseName = name.value as string;
     const nodesFile = nodes.value as File;
     const edgesFile = edges.value as File;
     const isDirected = directed.value as boolean;
-    
+
     try {
       // Import using controller
       const { controller } = await import("~/MainController");
       // @ts-ignore - Import kuzu for file system access
       const kuzu = await import("kuzu-wasm/sync");
-      
+
       console.log(`[CSV Import] Starting import for database: ${databaseName}`);
-      
+
       // Read files content
       const nodesText = await nodesFile.text();
       const edgesText = await edgesFile.text();
-      
+
       // Parse CSV to get structure
       const nodesLines = nodesText.trim().split("\n");
       const edgesLines = edgesText.trim().split("\n");
-      
+
       // Parse node CSV header to get all columns
       const nodesHeader = nodesLines[0].trim();
       const nodeColumns = nodesHeader.split(",").map(col => col.trim());
-      
+
       // Parse edge CSV header
       const edgesHeader = edgesLines[0].trim();
       const edgeColumns = edgesHeader.split(",").map(col => col.trim());
       const hasWeight = edgeColumns.includes("weight");
-      
-      // Step 1: Use filename (without .csv) as node table name
+
+      // Step 1: Extract table names from filenames (without .csv extension)
       const nodeTableName = nodesFile.name.replace(/\.csv$/i, '');
+      const edgeTableName = edgesFile.name.replace(/\.csv$/i, '');
+
       console.log(`[CSV Import] Node table name: ${nodeTableName}`);
-      
-      // Determine primary key (first column) and additional properties
+      console.log(`[CSV Import] Edge table name: ${edgeTableName}`);
+
+      // Step 2: Determine primary key and analyze column types
       const primaryKeyColumn = nodeColumns[0];
       const additionalProperties = nodeColumns.slice(1).map(col => ({
         name: col,
-        type: "STRING" as const // Kuzu will auto-infer types from CSV data
+        type: "STRING" as const // We'll use STRING for all additional properties for simplicity
       }));
-      
+
       console.log(`[CSV Import] Primary key: ${primaryKeyColumn}`);
       console.log(`[CSV Import] Additional properties:`, additionalProperties);
-      
+
       // Create node table schema with all properties
       await controller.db.createNodeSchema(
         nodeTableName,
@@ -220,125 +223,122 @@ export const ImportCSV: ImportOption = {
         "STRING",
         additionalProperties
       );
-      
-      // Step 2: Use filename (without .csv) as edge table name
-      const edgeTableName = edgesFile.name.replace(/\.csv$/i, '');
-      
-      const edgeProperties: { name: string; type: any }[] = [];
-      if (hasWeight) {
-        edgeProperties.push({ name: "weight", type: "DOUBLE" });
-      }
-      
-      // Create edge table schema
-      await controller.db.createEdgeSchema(
-        edgeTableName,
-        [[nodeTableName, nodeTableName]],
-        edgeProperties
-      );
-      
-      // Step 3: Write CSV files to Kuzu's virtual file system  
+
+      // Step 3: Create edge table schema using CREATE REL TABLE syntax
+      // This creates a proper relationship table that can be used with COPY FROM
+      const edgeTableQuery = hasWeight
+        ? `CREATE REL TABLE ${edgeTableName} (
+            FROM ${nodeTableName} TO ${nodeTableName},
+            weight DOUBLE
+          )`
+        : `CREATE REL TABLE ${edgeTableName} (
+            FROM ${nodeTableName} TO ${nodeTableName}
+          )`;
+
+      console.log(`[CSV Import] Creating edge table with query: ${edgeTableQuery}`);
+      await controller.db.executeQuery(edgeTableQuery);
+
+      // Step 4: Write CSV files to Kuzu's virtual file system
       const fs = kuzu.default.getFS();
       const tempDir = '/tmp';
-      
+
       // Ensure temp directory exists
       try {
         fs.mkdir(tempDir);
       } catch (e) {
         // Directory might already exist, ignore error
       }
-      
+
       const nodesPath = `${tempDir}/nodes_${Date.now()}.csv`;
       const edgesPath = `${tempDir}/edges_${Date.now()}.csv`;
-      
+
       // Write files to virtual file system
       fs.writeFile(nodesPath, nodesText);
       fs.writeFile(edgesPath, edgesText);
-      
-      // Step 4: Load nodes using LOAD FROM with all properties
-      
+
+      // Step 5: Load nodes using LOAD WITH HEADERS for explicit type control
+      // This approach provides better type safety and performance
+
+      // Build header types for LOAD WITH HEADERS
+      // For now, we use STRING for all columns, but this could be enhanced with type inference
+      const headerTypes = nodeColumns.map(col => `${col} STRING`).join(', ');
+
       // Build property mapping for CREATE clause
-      // Map each CSV column to a node property
       const propertyMappings = nodeColumns.map(col => `${col}: ${col}`).join(", ");
-      
+
+      // Use LOAD WITH HEADERS for explicit type control
+      // Example: LOAD WITH HEADERS (userID STRING, name STRING, age STRING) FROM "users.csv" (header = true)
       const loadNodesQuery = `
-        LOAD FROM '${nodesPath}' (header = true)
+        LOAD WITH HEADERS (${headerTypes}) FROM '${nodesPath}' (header = true)
         CREATE (:\`${nodeTableName}\` {${propertyMappings}})
       `;
-      
+
+      console.log(`[CSV Import] Loading nodes with LOAD WITH HEADERS: ${loadNodesQuery}`);
       await controller.db.executeQuery(loadNodesQuery);
-      
-      // Step 5: Load edges using LOAD FROM
-      
-      // Determine source and target column names from edge CSV
-      const sourceColumn = edgeColumns[0]; // First column is source
-      const targetColumn = edgeColumns[1]; // Second column is target
-      
-      
+
+      // Step 6: Load edges using COPY FROM for direct table loading
+      // This is much more efficient than LOAD FROM + MATCH + CREATE
+      // COPY FROM directly loads data into the relationship table
+
       if (isDirected) {
-        // For directed graphs, create one edge per line
-        const loadEdgesQuery = hasWeight
-          ? `
-            LOAD FROM '${edgesPath}' (header = true)
-            MATCH (s:\`${nodeTableName}\` {${primaryKeyColumn}: ${sourceColumn}}),
-                  (t:\`${nodeTableName}\` {${primaryKeyColumn}: ${targetColumn}})
-            CREATE (s)-[:\`${edgeTableName}\` {weight: CAST(weight AS DOUBLE)}]->(t)
-          `
-          : `
-            LOAD FROM '${edgesPath}' (header = true)
-            MATCH (s:\`${nodeTableName}\` {${primaryKeyColumn}: ${sourceColumn}}),
-                  (t:\`${nodeTableName}\` {${primaryKeyColumn}: ${targetColumn}})
-            CREATE (s)-[:\`${edgeTableName}\`]->(t)
-          `;
-        await controller.db.executeQuery(loadEdgesQuery);
+        // For directed graphs, use COPY FROM directly
+        const copyEdgesQuery = `COPY ${edgeTableName} FROM '${edgesPath}' (header = true)`;
+
+        console.log(`[CSV Import] Loading directed edges with COPY FROM: ${copyEdgesQuery}`);
+        await controller.db.executeQuery(copyEdgesQuery);
       } else {
-        // For undirected graphs, create edges in both directions
-        // First direction: source -> target
-        const loadEdgesQuery1 = hasWeight
-          ? `
-            LOAD FROM '${edgesPath}' (header = true)
-            MATCH (s:\`${nodeTableName}\` {${primaryKeyColumn}: ${sourceColumn}}),
-                  (t:\`${nodeTableName}\` {${primaryKeyColumn}: ${targetColumn}})
-            CREATE (s)-[:\`${edgeTableName}\` {weight: CAST(weight AS DOUBLE)}]->(t)
-          `
-          : `
-            LOAD FROM '${edgesPath}' (header = true)
-            MATCH (s:\`${nodeTableName}\` {${primaryKeyColumn}: ${sourceColumn}}),
-                  (t:\`${nodeTableName}\` {${primaryKeyColumn}: ${targetColumn}})
-            CREATE (s)-[:\`${edgeTableName}\`]->(t)
-          `;
-        
-        // Second direction: target -> source
-        const loadEdgesQuery2 = hasWeight
-          ? `
-            LOAD FROM '${edgesPath}' (header = true)
-            MATCH (s:\`${nodeTableName}\` {${primaryKeyColumn}: ${targetColumn}}),
-                  (t:\`${nodeTableName}\` {${primaryKeyColumn}: ${sourceColumn}})
-            CREATE (s)-[:\`${edgeTableName}\` {weight: CAST(weight AS DOUBLE)}]->(t)
-          `
-          : `
-            LOAD FROM '${edgesPath}' (header = true)
-            MATCH (s:\`${nodeTableName}\` {${primaryKeyColumn}: ${targetColumn}}),
-                  (t:\`${nodeTableName}\` {${primaryKeyColumn}: ${sourceColumn}})
-            CREATE (s)-[:\`${edgeTableName}\`]->(t)
-          `;
-        
-        await controller.db.executeQuery(loadEdgesQuery1);
-        await controller.db.executeQuery(loadEdgesQuery2);
+        // For undirected graphs, we need to create edges in both directions
+        // First, copy the original edges
+        const copyEdgesQuery1 = `COPY ${edgeTableName} FROM '${edgesPath}' (header = true)`;
+
+        console.log(`[CSV Import] Loading undirected edges (direction 1) with COPY FROM: ${copyEdgesQuery1}`);
+        await controller.db.executeQuery(copyEdgesQuery1);
+
+        // Then create a temporary file with reversed edges for the second direction
+        const reversedEdgesPath = `${tempDir}/reversed_edges_${Date.now()}.csv`;
+        const reversedEdgesContent = edgesLines.map((line, index) => {
+          if (index === 0) {
+            // Header line - keep as is
+            return line;
+          }
+          // Data lines - swap first two columns (source and target)
+          const parts = line.split(',');
+          if (parts.length >= 2) {
+            [parts[0], parts[1]] = [parts[1], parts[0]]; // Swap source and target
+          }
+          return parts.join(',');
+        }).join('\n');
+
+        fs.writeFile(reversedEdgesPath, reversedEdgesContent);
+
+        // Copy the reversed edges
+        const copyEdgesQuery2 = `COPY ${edgeTableName} FROM '${reversedEdgesPath}' (header = true)`;
+
+        console.log(`[CSV Import] Loading undirected edges (direction 2) with COPY FROM: ${copyEdgesQuery2}`);
+        await controller.db.executeQuery(copyEdgesQuery2);
+
+        // Clean up the temporary reversed edges file
+        try {
+          fs.unlink(reversedEdgesPath);
+        } catch (e) {
+          console.warn(`[CSV Import] Failed to clean up reversed edges file:`, e);
+        }
       }
-      
-      // Step 6: Clean up temporary files
+
+      // Step 7: Clean up temporary files
       try {
         fs.unlink(nodesPath);
         fs.unlink(edgesPath);
+        // Note: reversedEdgesPath is already cleaned up in the undirected case above
       } catch (e) {
         console.warn(`[CSV Import] Failed to clean up temporary files:`, e);
       }
-      
-      // Step 7: Refresh graph state
+
+      // Step 8: Refresh graph state
       const graphState = await controller.db.snapshotGraphState();
-      
-      console.log(`[CSV Import] Successfully imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges`);
-      
+
+      console.log(`[CSV Import] Successfully bulk-imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges using optimized COPY FROM approach`);
+
       return {
         success: true,
         message: `Successfully imported graph "${databaseName}" with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges!`,
