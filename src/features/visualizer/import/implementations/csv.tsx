@@ -206,39 +206,8 @@ export const ImportCSV: ImportOption = {
       console.log(`[CSV Import] Node table name: ${nodeTableName}`);
       console.log(`[CSV Import] Edge table name: ${edgeTableName}`);
 
-      // Step 2: Determine primary key and analyze column types
-      const primaryKeyColumn = nodeColumns[0];
-      const additionalProperties = nodeColumns.slice(1).map(col => ({
-        name: col,
-        type: "STRING" as const // We'll use STRING for all additional properties for simplicity
-      }));
-
-      console.log(`[CSV Import] Primary key: ${primaryKeyColumn}`);
-      console.log(`[CSV Import] Additional properties:`, additionalProperties);
-
-      // Create node table schema with all properties
-      await controller.db.createNodeSchema(
-        nodeTableName,
-        primaryKeyColumn,
-        "STRING",
-        additionalProperties
-      );
-
-      // Step 3: Create edge table schema using CREATE REL TABLE syntax
-      // This creates a proper relationship table that can be used with COPY FROM
-      const edgeTableQuery = hasWeight
-        ? `CREATE REL TABLE ${edgeTableName} (
-            FROM ${nodeTableName} TO ${nodeTableName},
-            weight DOUBLE
-          )`
-        : `CREATE REL TABLE ${edgeTableName} (
-            FROM ${nodeTableName} TO ${nodeTableName}
-          )`;
-
-      console.log(`[CSV Import] Creating edge table with query: ${edgeTableQuery}`);
-      await controller.db.executeQuery(edgeTableQuery);
-
-      // Step 4: Write CSV files to Kuzu's virtual file system
+      // Step 2: Write CSV files to Kuzu's virtual file system first
+      // We need the files in the VFS before we can infer types
       const fs = kuzu.default.getFS();
       const tempDir = '/tmp';
 
@@ -256,27 +225,99 @@ export const ImportCSV: ImportOption = {
       fs.writeFile(nodesPath, nodesText);
       fs.writeFile(edgesPath, edgesText);
 
-      // Step 5: Load nodes using LOAD WITH HEADERS for explicit type control
-      // This approach provides better type safety and performance
+      // Step 3: Infer column types by using LOAD FROM to scan the CSV
+      // LOAD FROM will automatically infer types from the CSV data
+      // We'll use RETURN to get the types without creating nodes yet
+      const primaryKeyColumn = nodeColumns[0];
+      
+      console.log(`[CSV Import] Primary key: ${primaryKeyColumn}`);
+      console.log(`[CSV Import] Inferring types for columns:`, nodeColumns);
 
-      // Build header types for LOAD WITH HEADERS
-      // For now, we use STRING for all columns, but this could be enhanced with type inference
-      const headerTypes = nodeColumns.map(col => `${col} STRING`).join(', ');
-
-      // Build property mapping for CREATE clause
-      const propertyMappings = nodeColumns.map(col => `${col}: ${col}`).join(", ");
-
-      // Use LOAD WITH HEADERS for explicit type control
-      // Example: LOAD WITH HEADERS (userID STRING, name STRING, age STRING) FROM "users.csv" (header = true)
-      const loadNodesQuery = `
-        LOAD WITH HEADERS (${headerTypes}) FROM '${nodesPath}' (header = true)
-        CREATE (:\`${nodeTableName}\` {${propertyMappings}})
+      // Query to infer types - load one row and return it to see inferred types
+      const typeInferenceQuery = `
+        LOAD FROM '${nodesPath}' (header = true)
+        RETURN ${nodeColumns.join(', ')}
+        LIMIT 1
       `;
 
-      console.log(`[CSV Import] Loading nodes with LOAD WITH HEADERS: ${loadNodesQuery}`);
-      await controller.db.executeQuery(loadNodesQuery);
+      console.log(`[CSV Import] Inferring types with query: ${typeInferenceQuery}`);
+      
+      // Use the getColumnTypes method from controller
+      const columnTypes = controller.db.getColumnTypes(typeInferenceQuery);
+      
+      // Extract column types from the query result
+      const inferredTypes: Record<string, "STRING" | "INT32" | "INT16" | "INT8" | "DOUBLE" | "FLOAT" | "BOOL" | "DATE"> = {};
+      
+      columnTypes.forEach((kuzuType: string, index: number) => {
+        const colName = nodeColumns[index];
+        // Map Kuzu types to schema types
+        let schemaType: "STRING" | "INT32" | "INT16" | "INT8" | "DOUBLE" | "FLOAT" | "BOOL" | "DATE" = "STRING";
+        
+        const typeUpper = kuzuType.toUpperCase();
+        if (typeUpper.includes("INT32")) {
+          schemaType = "INT32";
+        } else if (typeUpper.includes("INT16")) {
+          schemaType = "INT16";
+        } else if (typeUpper.includes("INT8")) {
+          schemaType = "INT8";
+        } else if (typeUpper.includes("INT64") || typeUpper.includes("INT")) {
+          // Map INT64 and generic INT to INT32 (closest available type)
+          schemaType = "INT32";
+        } else if (typeUpper.includes("DOUBLE")) {
+          schemaType = "DOUBLE";
+        } else if (typeUpper.includes("FLOAT")) {
+          schemaType = "FLOAT";
+        } else if (typeUpper.includes("BOOL")) {
+          schemaType = "BOOL";
+        } else if (typeUpper.includes("DATE")) {
+          schemaType = "DATE";
+        }
+        
+        inferredTypes[colName] = schemaType;
+      });
 
-      // Step 6: Load edges using COPY FROM for direct table loading
+      console.log(`[CSV Import] Inferred types:`, inferredTypes);
+
+      // Step 4: Create node table schema with inferred types
+      const primaryKeyType = inferredTypes[primaryKeyColumn] || "STRING";
+      const additionalProperties = nodeColumns.slice(1).map(col => ({
+        name: col,
+        type: inferredTypes[col] || "STRING"
+      }));
+
+      console.log(`[CSV Import] Creating node table with primary key: ${primaryKeyColumn} (${primaryKeyType})`);
+      console.log(`[CSV Import] Additional properties:`, additionalProperties);
+
+      await controller.db.createNodeSchema(
+        nodeTableName,
+        primaryKeyColumn,
+        primaryKeyType,
+        additionalProperties
+      );
+
+      // Step 5: Load nodes using COPY FROM for direct bulk loading
+      // COPY FROM directly loads data into the node table, which is much faster
+      // than LOAD FROM ... CREATE (which executes CREATE for each row)
+      const copyNodesQuery = `COPY ${nodeTableName} FROM '${nodesPath}' (header = true)`;
+
+      console.log(`[CSV Import] Loading nodes with COPY FROM: ${copyNodesQuery}`);
+      await controller.db.executeQuery(copyNodesQuery);
+
+      // Step 6: Create edge table schema using CREATE REL TABLE syntax
+      // Now that nodes are loaded, we can create the relationship table
+      const edgeTableQuery = hasWeight
+        ? `CREATE REL TABLE ${edgeTableName} (
+            FROM ${nodeTableName} TO ${nodeTableName},
+            weight DOUBLE
+          )`
+        : `CREATE REL TABLE ${edgeTableName} (
+            FROM ${nodeTableName} TO ${nodeTableName}
+          )`;
+
+      console.log(`[CSV Import] Creating edge table with query: ${edgeTableQuery}`);
+      await controller.db.executeQuery(edgeTableQuery);
+
+      // Step 7: Load edges using COPY FROM for direct table loading
       // This is much more efficient than LOAD FROM + MATCH + CREATE
       // COPY FROM directly loads data into the relationship table
 
@@ -325,7 +366,7 @@ export const ImportCSV: ImportOption = {
         }
       }
 
-      // Step 7: Clean up temporary files
+      // Step 8: Clean up temporary files
       try {
         fs.unlink(nodesPath);
         fs.unlink(edgesPath);
@@ -334,7 +375,7 @@ export const ImportCSV: ImportOption = {
         console.warn(`[CSV Import] Failed to clean up temporary files:`, e);
       }
 
-      // Step 8: Refresh graph state
+      // Step 9: Refresh graph state
       const graphState = await controller.db.snapshotGraphState();
 
       console.log(`[CSV Import] Successfully bulk-imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges using optimized COPY FROM approach`);

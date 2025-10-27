@@ -77,6 +77,19 @@ class KuzuController {
     return this.service.executeQuery(query);
   }
 
+  /**
+   * Get column types from a query result
+   *
+   * @param query - The Cypher query to execute.
+   * @returns Array of column type strings.
+   */
+  getColumnTypes(query: string): string[] {
+    if (!this.service) {
+      throw new Error("Kuzu service not initialized");
+    }
+    return this.service.getColumnTypes(query);
+  }
+
   snapshotGraphState() {
     if (!this.service) {
       throw new Error("Kuzu service not initialized");

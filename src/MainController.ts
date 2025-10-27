@@ -117,6 +117,11 @@ class MainController {
       return Promise.resolve(kuzuController.executeQuery(query));
     },
 
+    // Get column types from query
+    getColumnTypes(query: string) {
+      return kuzuController.getColumnTypes(query);
+    },
+
     // snapshotGraphState
     async snapshotGraphState() {
       return Promise.resolve(kuzuController.snapshotGraphState());

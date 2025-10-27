@@ -50,6 +50,24 @@ export default class KuzuBaseService {
   }
 
   /**
+   * Get column types from a query without processing full results
+   * Useful for type inference from LOAD queries
+   * @param {string} query - The Cypher query to execute
+   * @returns {Array<string>} - Array of column type strings
+   */
+  getColumnTypes(query: string): string[] {
+    if (!this.connection || !query.trim()) {
+      throw new Error("Connection not initialized or empty query");
+    }
+
+    const result = this.connection.query(query);
+    const columnTypes = result.getColumnTypes();
+    result.close();
+    
+    return columnTypes;
+  }
+
+  /**
    * Execute a Cypher query and process the results
    * @param {string} query - The Cypher query to execute
    * @returns {Object} - Query execution result object
