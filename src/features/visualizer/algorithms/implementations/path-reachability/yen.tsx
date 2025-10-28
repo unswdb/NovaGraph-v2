@@ -55,8 +55,16 @@ export const yen = createGraphAlgorithm<YenOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: async (controller, [arg1, arg2, arg3]) => {
-    // if (module) return module.yens_algorithm(arg1, arg2, arg3);
+  wasmFunction: async (controller, [startId, endId, k]) => {
+    const algorithm = controller.getAlgorithm();
+    if (algorithm === undefined) {
+      throw new Error("Algorithm controller not initialized");
+    }
+    const result = await algorithm.yenKShortestPaths(startId, endId, k);
+    return {
+      ...result,
+      type: "algorithm" as const,
+    };
   },
   output: (props) => <Yen {...props} />,
 });
