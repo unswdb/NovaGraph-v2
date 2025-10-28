@@ -32,7 +32,9 @@ function _parseResult(
 
   const paths = (data.paths ?? []).map((pathObj: any) => ({
     target: mapIdBack(pathObj.target),
-    path: (pathObj.path ?? []).map((nodeId: string | number) => mapIdBack(nodeId)),
+    path: (pathObj.path ?? []).map((nodeId: string | number) =>
+      mapIdBack(nodeId)
+    ),
     weight: pathObj.weight,
   }));
 
@@ -78,4 +80,3 @@ export async function igraphDijkstraAToAll(
   const wasmResult = await _runIgraphAlgo(igraphMod, startIgraphId);
   return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
 }
-

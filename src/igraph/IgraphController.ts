@@ -107,11 +107,7 @@ export class IgraphController {
 
   async dijkstraAToAll(start: string): Promise<DijkstraAToAllResult> {
     const graphData = await this._prepareGraphData();
-    return await igraphDijkstraAToAll(
-      this._wasmGraphModule,
-      graphData,
-      start
-    );
+    return await igraphDijkstraAToAll(this._wasmGraphModule, graphData, start);
   }
 
   async bellmanFordAToB(start: string, end: string) {
