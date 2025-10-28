@@ -7,19 +7,7 @@ import {
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";
-
-// Infered from src/wasm/algorithms
-type BellmanFordAToBOutputData = {
-  source: string;
-  target: string;
-  weighted: boolean;
-  path: {
-    from: string;
-    to: string;
-    weight?: number;
-  }[];
-  totalWeight?: number;
-};
+import type { BellmanFordAToBOutputData } from "~/igraph/algorithms/PathFinding/IgraphBellmanFordAtoB";
 
 export const bellmanFordAToB = createGraphAlgorithm<BellmanFordAToBOutputData>({
   title: "Bellman-Ford (A to B)",
@@ -42,7 +30,15 @@ export const bellmanFordAToB = createGraphAlgorithm<BellmanFordAToBOutputData>({
     }),
   ],
   wasmFunction: async (controller, [arg1, arg2]) => {
-    // if (module) return module.bellman_ford_source_to_target(arg1, arg2);
+    const algorithm = controller.getAlgorithm();
+    if (algorithm === undefined) {
+      throw new Error("Algorithm controller not initialized");
+    }
+    const result = await algorithm.bellmanFordAToB(arg1, arg2);
+    return {
+      ...result,
+      type: "algorithm" as const,
+    };
   },
   output: (props) => <BellmanFordAToB {...props} />,
 });

@@ -12,6 +12,10 @@ import {
   type DijkstraAToAllResult,
 } from "./algorithms/PathFinding/IgraphDijkstraAtoAll";
 import { igraphYen, type YenResult } from "./algorithms/PathFinding/IgraphYen";
+import {
+  igraphBellmanFordAToB,
+  type BellmanFordAToBResult,
+} from "./algorithms/PathFinding/IgraphBellmanFordAtoB";
 
 import type {
   EdgeSchema,
@@ -111,10 +115,14 @@ export class IgraphController {
     return await igraphDijkstraAToAll(this._wasmGraphModule, graphData, start);
   }
 
-  async bellmanFordAToB(start: string, end: string) {
+  async bellmanFordAToB(start: string, end: string): Promise<BellmanFordAToBResult> {
     const graphData = await this._prepareGraphData();
-    // return igraphBellmanFordAToB(...);
-    throw new Error("Bellman-Ford A to B not implemented yet");
+    return await igraphBellmanFordAToB(
+      this._wasmGraphModule,
+      graphData,
+      start,
+      end
+    );
   }
 
   async bellmanFordAToAll(start: string) {
