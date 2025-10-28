@@ -7,13 +7,9 @@ import {
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";
+import type { DFSOutputData } from "~/igraph/algorithms/PathFinding/IgraphDFS";
 
-// Infered from src/wasm/algorithms
-type DFSOutputData = {
-  source: string;
-  nodesFound: number;
-  subtrees: { num: number; tree: string[] }[];
-};
+// type moved to igraph layer
 
 export const dfs = createGraphAlgorithm<DFSOutputData>({
   title: "Depth-First Search",
@@ -29,7 +25,15 @@ export const dfs = createGraphAlgorithm<DFSOutputData>({
     }),
   ],
   wasmFunction: async (controller, [args]) => {
-    // if (module) return module.dfs(args);
+    const algorithm = controller.getAlgorithm();
+    if (algorithm === undefined) {
+      throw new Error("Algorithm controller not initialized");
+    }
+    const result = await algorithm.dfs(args);
+    return {
+      ...result,
+      type: "algorithm" as const,
+    };
   },
   output: (props) => <DFS {...props} />,
 });

@@ -3,6 +3,7 @@ import createModule from "../graph";
 import { KuzuToIgraphParsing } from "./utils/KuzuToIgraphConverter";
 import type { KuzuToIgraphParseResult } from "./types/types";
 import { igraphBFS, type BFSResult } from "./algorithms/PathFinding/IgraphBFS";
+import { igraphDFS, type DFSResult } from "./algorithms/PathFinding/IgraphDFS";
 import {
   igraphDijkstraAToB,
   type DijkstraAToBResult,
@@ -94,10 +95,9 @@ export class IgraphController {
     return await igraphBFS(this._wasmGraphModule, graphData, kuzuSourceID);
   }
 
-  async dfs() {
+  async dfs(kuzuSourceID: string): Promise<DFSResult> {
     const graphData = await this._prepareGraphData();
-    // return igraphDFS(this._wasmGraphModule, graphData.IgraphInput, graphData.IgraphToKuzuMap);
-    throw new Error("DFS not implemented yet");
+    return await igraphDFS(this._wasmGraphModule, graphData, kuzuSourceID);
   }
 
   // ==========================================
