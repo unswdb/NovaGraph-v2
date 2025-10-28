@@ -21,6 +21,10 @@ import {
   igraphBellmanFordAToAll,
   type BellmanFordAToAllResult,
 } from "./algorithms/PathFinding/IgraphBellmanFordAToAll";
+import {
+  igraphRandomWalk,
+  type RandomWalkResult,
+} from "./algorithms/PathFinding/IgraphRandomWalk";
 
 import type {
   EdgeSchema,
@@ -132,6 +136,11 @@ export class IgraphController {
   async bellmanFordAToAll(start: string): Promise<BellmanFordAToAllResult> {
     const graphData = await this._prepareGraphData();
     return await igraphBellmanFordAToAll(this._wasmGraphModule, graphData, start);
+  }
+
+  async randomWalk(start: string, steps: number): Promise<RandomWalkResult> {
+    const graphData = await this._prepareGraphData();
+    return await igraphRandomWalk(this._wasmGraphModule, graphData, start, steps);
   }
 
   async yenKShortestPaths(
