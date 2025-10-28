@@ -26,6 +26,10 @@ import {
   igraphRandomWalk,
   type RandomWalkResult,
 } from "./algorithms/PathFinding/IgraphRandomWalk";
+import {
+  igraphBetweennessCentrality,
+  type BetweennessCentralityResult,
+} from "./algorithms/Centrality/IgraphBetweenessCentrality";
 
 import type {
   EdgeSchema,
@@ -180,10 +184,9 @@ export class IgraphController {
   // CENTRALITY ALGORITHMS
   // ==========================================
 
-  async betweennessCentrality() {
+  async betweennessCentrality(): Promise<BetweennessCentralityResult> {
     const graphData = await this._prepareGraphData();
-    // return igraphBetweennessCentrality(...);
-    throw new Error("Betweenness Centrality not implemented yet");
+    return await igraphBetweennessCentrality(this._wasmGraphModule, graphData);
   }
 
   async closenessCentrality() {
