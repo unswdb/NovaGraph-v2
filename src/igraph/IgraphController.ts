@@ -11,6 +11,7 @@ import {
   igraphDijkstraAToAll,
   type DijkstraAToAllResult,
 } from "./algorithms/PathFinding/IgraphDijkstraAtoAll";
+import { igraphYen, type YenResult } from "./algorithms/PathFinding/IgraphYen";
 
 import type {
   EdgeSchema,
@@ -107,11 +108,7 @@ export class IgraphController {
 
   async dijkstraAToAll(start: string): Promise<DijkstraAToAllResult> {
     const graphData = await this._prepareGraphData();
-    return await igraphDijkstraAToAll(
-      this._wasmGraphModule,
-      graphData,
-      start
-    );
+    return await igraphDijkstraAToAll(this._wasmGraphModule, graphData, start);
   }
 
   async bellmanFordAToB(start: string, end: string) {
@@ -126,10 +123,13 @@ export class IgraphController {
     throw new Error("Bellman-Ford A to All not implemented yet");
   }
 
-  async yenKShortestPaths(start: string, end: string, k: number) {
+  async yenKShortestPaths(
+    start: string,
+    end: string,
+    k: number
+  ): Promise<YenResult> {
     const graphData = await this._prepareGraphData();
-    // return igraphYen(...);
-    throw new Error("Yen's K-Shortest Paths not implemented yet");
+    return await igraphYen(this._wasmGraphModule, graphData, start, end, k);
   }
 
   async minimumSpanningTree() {

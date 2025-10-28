@@ -45,4 +45,3 @@ export function mapColorMapIds(
     )
   ) as Record<string, number>;
 }
-
