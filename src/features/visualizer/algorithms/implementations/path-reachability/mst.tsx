@@ -12,18 +12,7 @@ import InputComponent, {
   createSwitchInput,
 } from "~/features/visualizer/inputs";
 
-// Infered from src/wasm/algorithms
-type MinimalSpanningTreeOutputData = {
-  weighted: boolean;
-  maxEdges: number; // ecount of original graph
-  totalWeight?: number; // only if weighted (sum over MST edges)
-  edges: {
-    num: number; // 1-based order in returned MST list
-    from: string;
-    to: string;
-    weight?: number;
-  }[];
-};
+import type { MinimalSpanningTreeOutputData } from "~/igraph/algorithms/PathFinding/IgraphMST";
 
 export const mst = createGraphAlgorithm<MinimalSpanningTreeOutputData>({
   title: "Minimum Spanning Tree",
@@ -31,7 +20,11 @@ export const mst = createGraphAlgorithm<MinimalSpanningTreeOutputData>({
     "Finds the subset of edges that connects all nodes in the graph with the minimum possible total edge weight.",
   inputs: [],
   wasmFunction: async (controller, _) => {
-    // if (module) return module.min_spanning_tree();
+    const algorithm = controller.getAlgorithm();
+    if (algorithm === undefined) {
+      throw new Error("Algorithm controller not initialized");
+    }
+    return await algorithm.minimumSpanningTree();
   },
   output: (props) => <MinimalSpanningTree {...props} />,
 });

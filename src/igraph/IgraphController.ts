@@ -21,6 +21,7 @@ import {
   igraphBellmanFordAToAll,
   type BellmanFordAToAllResult,
 } from "./algorithms/PathFinding/IgraphBellmanFordAToAll";
+import { igraphMST, type MSTResult } from "./algorithms/PathFinding/IgraphMST";
 
 import type {
   EdgeSchema,
@@ -143,10 +144,9 @@ export class IgraphController {
     return await igraphYen(this._wasmGraphModule, graphData, start, end, k);
   }
 
-  async minimumSpanningTree() {
+  async minimumSpanningTree(): Promise<MSTResult> {
     const graphData = await this._prepareGraphData();
-    // return igraphMST(...);
-    throw new Error("MST not implemented yet");
+    return await igraphMST(this._wasmGraphModule, graphData);
   }
 
   async graphDiameter() {
