@@ -12,17 +12,8 @@ import InputComponent, {
   createEmptyInputResult,
   createSwitchInput,
 } from "~/features/visualizer/inputs";
+import type { BellmanFordAToAllOutputData } from "~/igraph/algorithms/PathFinding/IgraphBellmanFordAToAll";
 
-// Infered from src/wasm/algorithms
-type BellmanFordAToAllOutputData = {
-  source: string;
-  weighted: boolean;
-  paths: {
-    target: string;
-    path: string[];
-    weight?: number;
-  }[];
-};
 
 export const bellmanFordAToAll =
   createGraphAlgorithm<BellmanFordAToAllOutputData>({
@@ -39,7 +30,15 @@ export const bellmanFordAToAll =
       }),
     ],
     wasmFunction: async (controller, [args]) => {
-      //   if (module) return module.bellman_ford_source_to_all(args);
+      const algorithm = controller.getAlgorithm();
+      if (algorithm === undefined) {
+        throw new Error("Algorithm controller not initialized");
+      }
+      const result = await algorithm.bellmanFordAToAll(args);
+      return {
+        ...result,
+        type: "algorithm" as const,
+      };
     },
     output: (props) => <BellmanFordAToAll {...props} />,
   });

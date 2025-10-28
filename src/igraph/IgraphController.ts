@@ -16,6 +16,10 @@ import {
   igraphBellmanFordAToB,
   type BellmanFordAToBResult,
 } from "./algorithms/PathFinding/IgraphBellmanFordAtoB";
+import {
+  igraphBellmanFordAToAll,
+  type BellmanFordAToAllResult,
+} from "./algorithms/PathFinding/IgraphBellmanFordAToAll";
 
 import type {
   EdgeSchema,
@@ -125,10 +129,9 @@ export class IgraphController {
     );
   }
 
-  async bellmanFordAToAll(start: string) {
+  async bellmanFordAToAll(start: string): Promise<BellmanFordAToAllResult> {
     const graphData = await this._prepareGraphData();
-    // return igraphBellmanFordAToAll(...);
-    throw new Error("Bellman-Ford A to All not implemented yet");
+    return await igraphBellmanFordAToAll(this._wasmGraphModule, graphData, start);
   }
 
   async yenKShortestPaths(
