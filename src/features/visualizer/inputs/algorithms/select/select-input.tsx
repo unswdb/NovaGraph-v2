@@ -169,7 +169,7 @@ function AlgorithmSingleSelectInputComponent({
       : true;
     const message = required
       ? validator && !!newValue.trim()
-        ? validator.message ?? ""
+        ? (validator.message ?? "")
         : "This field is required."
       : "";
 
@@ -276,7 +276,7 @@ function AlgorithmMultipleSelectInputComponent({
       : true;
     const message = required
       ? validator && newValues.length > 0
-        ? validator.message ?? ""
+        ? (validator.message ?? "")
         : "This field is required."
       : "";
 

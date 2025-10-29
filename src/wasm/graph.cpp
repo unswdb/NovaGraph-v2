@@ -80,23 +80,26 @@ val what_to_stderr(intptr_t ptr)
 
 void create_graph_from_kuzu_to_igraph(
     igraph_integer_t nodes,
-    val src_js,            // Int32Array
-    val dst_js,            // Int32Array
+    val src_js, // Int32Array
+    val dst_js, // Int32Array
     igraph_bool_t directed,
-    val weight_js          // Float64Array or undefined
-) {
+    val weight_js // Float64Array or undefined
+)
+{
     igraph_set_attribute_table(&igraph_cattribute_table);
 
     static bool graph_initialized = false;
     static bool weights_initialized = false;
 
-    if (graph_initialized) {
+    if (graph_initialized)
+    {
         igraph_destroy(&globalGraph);
         graph_initialized = false;
     }
 
     igraph_error_t rc = igraph_empty(&globalGraph, nodes, directed ? IGRAPH_DIRECTED : IGRAPH_UNDIRECTED);
-    if (rc != IGRAPH_SUCCESS) {
+    if (rc != IGRAPH_SUCCESS)
+    {
         throw std::runtime_error(std::string("igraph_empty failed: ") + igraph_strerror(rc));
     }
     graph_initialized = true;
@@ -105,50 +108,56 @@ void create_graph_from_kuzu_to_igraph(
 
     // Validate that source and destination arrays have the same length
     const int dst_count = dst_js["length"].as<int>();
-    if (edge_count != dst_count) {
+    if (edge_count != dst_count)
+    {
         igraph_destroy(&globalGraph);
         graph_initialized = false;
         throw std::runtime_error("Source and destination arrays must have the same length");
     }
-    
+
     // Initialize edge vector for batch addition - USE igraph_vector_int_t
     igraph_vector_int_t edge_vector;
     rc = igraph_vector_int_init(&edge_vector, 0);
-    if (rc != IGRAPH_SUCCESS) {
+    if (rc != IGRAPH_SUCCESS)
+    {
         igraph_destroy(&globalGraph);
         graph_initialized = false;
         throw std::runtime_error(std::string("igraph_vector_int_init failed: ") + igraph_strerror(rc));
     }
-    
+
     // Reserve space for all edges (2 * number of edges)
     rc = igraph_vector_int_reserve(&edge_vector, 2 * edge_count);
-    if (rc != IGRAPH_SUCCESS) {
+    if (rc != IGRAPH_SUCCESS)
+    {
         igraph_vector_int_destroy(&edge_vector);
         igraph_destroy(&globalGraph);
         graph_initialized = false;
         throw std::runtime_error(std::string("igraph_vector_int_reserve failed: ") + igraph_strerror(rc));
     }
-    
+
     // Populate the edge vector with source and destination pairs
-    for (int i = 0; i < edge_count; i++) {
+    for (int i = 0; i < edge_count; i++)
+    {
         const igraph_integer_t s = src_js[i].as<int>();
         const igraph_integer_t t = dst_js[i].as<int>();
-        
+
         // Add bounds checking
-        if (s < 0 || s >= nodes || t < 0 || t >= nodes) {
+        if (s < 0 || s >= nodes || t < 0 || t >= nodes)
+        {
             igraph_vector_int_destroy(&edge_vector);
             igraph_destroy(&globalGraph);
             graph_initialized = false;
             throw std::runtime_error("Vertex index out of bounds");
         }
-        
+
         igraph_vector_int_push_back(&edge_vector, s);
         igraph_vector_int_push_back(&edge_vector, t);
     }
-    
+
     // Add all edges to the graph in batch
     rc = igraph_add_edges(&globalGraph, &edge_vector, 0);
-    if (rc != IGRAPH_SUCCESS) {
+    if (rc != IGRAPH_SUCCESS)
+    {
         igraph_vector_int_destroy(&edge_vector);
         igraph_destroy(&globalGraph);
         graph_initialized = false;
@@ -156,24 +165,29 @@ void create_graph_from_kuzu_to_igraph(
     }
     igraph_vector_int_destroy(&edge_vector);
 
-    if (weights_initialized) {
+    if (weights_initialized)
+    {
         igraph_vector_destroy(&globalWeights);
         weights_initialized = false;
     }
 
-    if (!weight_js.isUndefined() && !weight_js.isNull()) {
+    if (!weight_js.isUndefined() && !weight_js.isNull())
+    {
         const int weight_count = weight_js["length"].as<int>();
         rc = igraph_vector_init(&globalWeights, edge_count);
-        if (rc != IGRAPH_SUCCESS) {
+        if (rc != IGRAPH_SUCCESS)
+        {
             igraph_destroy(&globalGraph);
             graph_initialized = false;
             throw std::runtime_error(std::string("igraph_vector_init failed: ") + igraph_strerror(rc));
         }
         weights_initialized = true;
 
-        for (int i = 0; i < edge_count; i++) {
+        for (int i = 0; i < edge_count; i++)
+        {
             double w = (i < weight_count) ? weight_js[i].as<double>() : 0.0;
-            VECTOR(globalWeights)[i] = w;
+            VECTOR(globalWeights)
+            [i] = w;
         }
         igraph_cattribute_EAN_setv(&globalGraph, "weight", &globalWeights);
     }

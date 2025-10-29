@@ -100,6 +100,39 @@ function RandomWalk(props: GraphAlgorithmResult<RandomWalkOutputData>) {
           />
         </div>
       </div>
+
+      {/* What this means */}
+      <div className="space-y-3 pt-3 border-t border-t-border">
+        <h3 className="font-semibold">What this means</h3>
+        <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
+          <li>
+            A Random Walk simulates a step-by-step journey starting from{" "}
+            <span className="font-medium">{source}</span>, where each next node
+            is chosen randomly from its neighbors.
+          </li>
+          <li>
+            It’s useful for analyzing{" "}
+            <span className="font-medium">
+              network diffusion, influence spread, and centrality
+            </span>
+            , showing how likely a node is to be revisited over time.
+          </li>
+          <li>
+            The walk took <span className="font-medium">{steps}</span> steps,
+            and <span className="font-medium">{maxFrequencyNode}</span> was
+            visited <span className="font-medium">{maxFrequency}</span> times,
+            indicating it has high connectivity or strong reachability.
+          </li>
+          <li>
+            The traversal path shows the exact visit order, including repeated
+            nodes, while cumulative weights track total distance or probability.
+          </li>
+          <li>
+            Because choices are random, running the algorithm again can produce
+            a different path and different visitation frequencies.
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }

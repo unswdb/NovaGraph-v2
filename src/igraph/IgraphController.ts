@@ -21,11 +21,11 @@ import {
   igraphBellmanFordAToAll,
   type BellmanFordAToAllResult,
 } from "./algorithms/PathFinding/IgraphBellmanFordAToAll";
-import { igraphMST, type MSTResult } from "./algorithms/PathFinding/IgraphMST";
 import {
   igraphRandomWalk,
   type RandomWalkResult,
 } from "./algorithms/PathFinding/IgraphRandomWalk";
+import { igraphMST, type MSTResult } from "./algorithms/PathFinding/IgraphMST";
 import {
   igraphBetweennessCentrality,
   type BetweennessCentralityResult,

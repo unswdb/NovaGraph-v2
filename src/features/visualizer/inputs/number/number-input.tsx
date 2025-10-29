@@ -62,7 +62,7 @@ export default function NumberInputComponent({
       : true;
     const message = required
       ? validator && isFinite(newValue)
-        ? validator.message ?? ""
+        ? (validator.message ?? "")
         : "This field is required."
       : "";
 

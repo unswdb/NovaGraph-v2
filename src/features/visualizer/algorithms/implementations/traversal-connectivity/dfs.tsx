@@ -83,6 +83,41 @@ function DFS(props: GraphAlgorithmResult<DFSOutputData>) {
           />
         </div>
       </div>
+
+      {/* What this means */}
+      <div className="space-y-3 pt-3 border-t border-t-border">
+        <h3 className="font-semibold">What this means</h3>
+        <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
+          <li>
+            Depth-First Search (DFS) explores as deep as possible along each
+            path from <span className="font-medium">{source}</span> before
+            backtracking and continuing with other branches.
+          </li>
+          <li>
+            It’s used to uncover{" "}
+            <span className="font-medium">
+              connectivity, traversal order, and graph structure
+            </span>
+            , forming a DFS forest if the graph isn’t fully connected.
+          </li>
+          <li>
+            <span className="font-medium">{nodesFound}</span> nodes were
+            visited, forming{" "}
+            <span className="font-medium">{subtrees.length}</span> subtree
+            {subtrees.length !== 1 ? "s" : ""} in total.
+          </li>
+          <li>
+            Each subtree shows the sequence of nodes explored before
+            backtracking from root to leaves.
+          </li>
+          <li>
+            DFS does{" "}
+            <span className="font-medium">not guarantee shortest paths</span>,
+            but reveals how the graph can be reached through recursive
+            exploration.
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }

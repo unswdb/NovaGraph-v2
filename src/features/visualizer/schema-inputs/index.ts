@@ -56,12 +56,14 @@ export type PrimaryKeyValueType = SchemaInputValueTypesByContext<"primary">;
 export type NonPrimaryKeyValueType =
   SchemaInputValueTypesByContext<"non-primary">;
 
-type InputTypeForSchemaKeyType<T extends SchemaKeyType> = Extract<
-  AllSchemaInputs,
-  SchemaInput<any, T, any>
-> extends SchemaInput<infer I, T, any>
-  ? I
-  : never;
+type InputTypeForSchemaKeyType<T extends SchemaKeyType> =
+  Extract<AllSchemaInputs, SchemaInput<any, T, any>> extends SchemaInput<
+    infer I,
+    T,
+    any
+  >
+    ? I
+    : never;
 
 type PropsForSchemaKeyType<T extends SchemaKeyType> = PropsForInput<
   InputTypeForSchemaKeyType<T>

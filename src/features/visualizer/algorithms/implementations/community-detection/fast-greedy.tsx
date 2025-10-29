@@ -60,6 +60,34 @@ function FastGreedy(props: GraphAlgorithmResult<FastGreedyOutputData>) {
           />
         </div>
       </div>
+
+      {/* What this means */}
+      <div className="space-y-3 pt-3 border-t border-t-border">
+        <h3 className="font-semibold">What this means</h3>
+        <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
+          <li>
+            Fast Greedy groups nodes into communities by{" "}
+            <span className="font-medium">greedily maximizing modularity</span>,
+            a score that rewards dense links inside communities and sparse links
+            between them.
+          </li>
+          <li>
+            The reported modularity (
+            <span className="font-medium">{modularity.toFixed(2)}</span>)
+            summarizes the partition’s quality;{" "}
+            <span className="font-medium">higher is better</span> for the same
+            graph/weighting.
+          </li>
+          <li>
+            Each “Community” lists its member nodes. Communities may vary in
+            size; very small ones can indicate outliers or bridge regions.
+          </li>
+          <li>
+            Use cases: quick community detection on large graphs; baseline to
+            compare with Louvain/Leiden results.
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }
