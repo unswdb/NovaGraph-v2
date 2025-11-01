@@ -1,4 +1,5 @@
 import type { KuzuToIgraphParseResult } from "../../types/types";
+import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
 
 export type BFSData = {
   algorithm: string;
@@ -24,15 +25,7 @@ function _parseResult(
   IgraphToKuzu: Map<number, string>,
   algorithmResult: BFSResult
 ): BFSResult {
-  const mapIdBack = (id: string | number): string => {
-    const num = typeof id === "string" ? parseInt(id, 10) : id;
-    const mapped = IgraphToKuzu.get(num);
-    if (mapped === undefined) {
-      console.warn(`[IgraphTranslator] Missing reverse mapping for id ${id}`);
-      return String(id);
-    }
-    return mapped;
-  };
+  const mapIdBack = createMapIdBack(IgraphToKuzu);
 
   // Map the data back to Kuzu IDs
   const mappedData: BFSData = {
@@ -45,15 +38,9 @@ function _parseResult(
     })),
   };
 
-  // Handle colorMap
-  const colorMapOut: Record<string, number> = {};
-  for (const [k, v] of Object.entries(algorithmResult.colorMap)) {
-    colorMapOut[mapIdBack(k)] = v;
-  }
-
   return {
     mode: algorithmResult.mode,
-    colorMap: colorMapOut,
+    colorMap: mapColorMapIds(algorithmResult.colorMap, mapIdBack),
     data: mappedData,
   };
 }

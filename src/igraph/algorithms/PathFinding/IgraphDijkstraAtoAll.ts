@@ -1,93 +1,82 @@
 import type { KuzuToIgraphParseResult } from "../../types/types";
 import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
 
-// Infered from src/wasm/algorithms
-export type DijkstraAToBOutputData = {
+// Infered from src/wasm/algorithms/path-finding.cpp lines 63-132
+export type DijkstraAToAllOutputData = {
   algorithm: string;
   source: string;
-  target: string;
   weighted: boolean;
-  path: { from: string; to: string; weight?: number }[];
-  totalWeight?: number;
+  paths: { target: string; path: string[]; weight?: number }[];
 };
 
-export type DijkstraAToBResult = {
+export type DijkstraAToAllResult = {
   colorMap: Record<string, number>;
   mode: number;
-  data: DijkstraAToBOutputData;
+  data: DijkstraAToAllOutputData;
 };
 
 async function _runIgraphAlgo(
   igraphMod: any,
-  igraphStart: number,
-  igraphEnd: number
+  igraphStart: number
 ): Promise<any> {
-  return await igraphMod.dijkstra_source_to_target(igraphStart, igraphEnd);
+  return await igraphMod.dijkstra_source_to_all(igraphStart);
 }
 
 function _parseResult(
   IgraphToKuzu: Map<number, string>,
   algorithmResult: any
-): DijkstraAToBResult {
+): DijkstraAToAllResult {
   const mapIdBack = createMapIdBack(IgraphToKuzu);
 
   const { data, mode, colorMap = {} } = algorithmResult;
 
-  const path = (data.path ?? []).map(({ from, to, weight }: any) => ({
-    from: mapIdBack(from),
-    to: mapIdBack(to),
-    weight,
+  const paths = (data.paths ?? []).map((pathObj: any) => ({
+    target: mapIdBack(pathObj.target),
+    path: (pathObj.path ?? []).map((nodeId: string | number) =>
+      mapIdBack(nodeId)
+    ),
+    weight: pathObj.weight,
   }));
 
   return {
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
-      algorithm: data.algorithm ?? "Dijkstra Single Path",
+      algorithm: data.algorithm ?? "Dijkstra Single Source",
       source: mapIdBack(data.source),
-      target: mapIdBack(data.target),
       weighted: data.weighted,
-      path,
-      totalWeight: data.totalWeight,
+      paths,
     },
   };
 }
 
-export async function igraphDijkstraAToB(
+export async function igraphDijkstraAToAll(
   igraphMod: any,
   graphData: KuzuToIgraphParseResult,
-  kuzuSourceID: string,
-  kuzuTargetID: string
-): Promise<DijkstraAToBResult> {
+  kuzuSourceID: string
+): Promise<DijkstraAToAllResult> {
   const startIgraphId = graphData.KuzuToIgraphMap.get(kuzuSourceID);
-  const endIgraphId = graphData.KuzuToIgraphMap.get(kuzuTargetID);
 
-  if (startIgraphId === undefined || endIgraphId === undefined) {
+  if (startIgraphId === undefined) {
     const weighted =
       Array.isArray(graphData.IgraphInput?.weight) &&
       graphData.IgraphInput.weight.length > 0;
 
     const colorMapOut: Record<string, number> = {};
     colorMapOut[String(kuzuSourceID)] = 1;
-    colorMapOut[String(kuzuTargetID)] = 1;
 
     return {
       mode: 2,
       colorMap: colorMapOut,
       data: {
-        algorithm: "Dijkstra Single Path",
+        algorithm: "Dijkstra Single Source",
         source: String(kuzuSourceID),
-        target: String(kuzuTargetID),
         weighted,
-        path: [],
+        paths: [],
       },
     };
   }
 
-  const wasmResult = await _runIgraphAlgo(
-    igraphMod,
-    startIgraphId,
-    endIgraphId
-  );
+  const wasmResult = await _runIgraphAlgo(igraphMod, startIgraphId);
   return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
 }

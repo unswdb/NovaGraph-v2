@@ -12,13 +12,7 @@ import InputComponent, {
   createEmptyInputResult,
   createSwitchInput,
 } from "~/features/visualizer/inputs";
-
-// Infered from src/wasm/algorithms
-type DijkstraAToAllOutputData = {
-  source: string;
-  weighted: boolean;
-  paths: { target: string; path: string[]; weight?: number }[];
-};
+import type { DijkstraAToAllOutputData } from "~/igraph/algorithms/PathFinding/IgraphDijkstraAtoAll";
 
 export const dijkstraAToAll = createGraphAlgorithm<DijkstraAToAllOutputData>({
   title: "Dijkstra (A to All)",
@@ -33,7 +27,15 @@ export const dijkstraAToAll = createGraphAlgorithm<DijkstraAToAllOutputData>({
     }),
   ],
   wasmFunction: async (controller, [args]) => {
-    // if (module) return module.dijkstra_source_to_all(args);
+    const algorithm = controller.getAlgorithm();
+    if (algorithm === undefined) {
+      throw new Error("Algorithm controller not initialized");
+    }
+    const result = await algorithm.dijkstraAToAll(args);
+    return {
+      ...result,
+      type: "algorithm" as const,
+    };
   },
   output: (props) => <DijkstraAToAll {...props} />,
 });
@@ -90,6 +92,37 @@ function DijkstraAToAll(props: GraphAlgorithmResult<DijkstraAToAllOutputData>) {
             rowProps={{ showWeight: showWeight.value ?? false, paths }}
           />
         </div>
+      </div>
+
+      {/* What this means */}
+      <div className="space-y-3 pt-3 border-t border-t-border">
+        <h3 className="font-semibold">What this means</h3>
+        <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
+          <li>
+            Dijkstra computes the{" "}
+            <span className="font-medium">minimum-weight path</span> from{" "}
+            <span className="font-medium">{source}</span> to{" "}
+            <span className="font-medium">every reachable node</span>, assuming{" "}
+            <span className="font-medium">no negative edges</span>. With
+            negative edges, use Bellman-Ford.
+          </li>
+          <li>
+            Each row shows a target, its{" "}
+            <span className="font-medium">hop count</span>, optional
+            <span className="font-medium"> total weight</span>, and the{" "}
+            <span className="font-medium">actual shortest-path sequence</span>.
+          </li>
+          <li>
+            “Shortest” refers to{" "}
+            <span className="font-medium">lowest total weight</span>, not
+            necessarily the fewest hops.
+          </li>
+          <li>
+            If a node doesn’t appear, it’s{" "}
+            <span className="font-medium">unreachable</span> from the source
+            under current edge directions/weights.
+          </li>
+        </ul>
       </div>
     </div>
   );

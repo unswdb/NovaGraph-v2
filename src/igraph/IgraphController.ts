@@ -7,6 +7,10 @@ import {
   igraphDijkstraAToB,
   type DijkstraAToBResult,
 } from "./algorithms/PathFinding/IgraphDijkstraAtoB";
+import {
+  igraphDijkstraAToAll,
+  type DijkstraAToAllResult,
+} from "./algorithms/PathFinding/IgraphDijkstraAtoAll";
 
 import type {
   EdgeSchema,
@@ -101,10 +105,9 @@ export class IgraphController {
     );
   }
 
-  async dijkstraAToAll(start: string) {
+  async dijkstraAToAll(start: string): Promise<DijkstraAToAllResult> {
     const graphData = await this._prepareGraphData();
-    // return igraphDijkstraAToAll(...);
-    throw new Error("Dijkstra A to All not implemented yet");
+    return await igraphDijkstraAToAll(this._wasmGraphModule, graphData, start);
   }
 
   async bellmanFordAToB(start: string, end: string) {

@@ -49,7 +49,7 @@ export default function CreateNodeDialog({
   const selectedNodeSchema = useMemo(
     () =>
       !!selectedTableName.value
-        ? nodeTablesMap.get(selectedTableName.value) ?? null
+        ? (nodeTablesMap.get(selectedTableName.value) ?? null)
         : null,
     [selectedTableName.value]
   );

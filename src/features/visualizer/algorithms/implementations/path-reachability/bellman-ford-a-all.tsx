@@ -99,6 +99,47 @@ function BellmanFordAToAll(
           />
         </div>
       </div>
+
+      {/* What this means */}
+      <div className="space-y-3 pt-3 border-t border-t-border">
+        <h3 className="font-semibold">What this means</h3>
+        <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
+          <li>
+            Bellman-Ford computes{" "}
+            <span className="font-medium">
+              shortest paths from {source} to all reachable nodes
+            </span>
+            , supporting{" "}
+            <span className="font-medium">negative edge weights</span>.
+          </li>
+          <li>
+            It’s useful when Dijkstra’s assumptions don’t hold (negative
+            weights) and for graphs where edge costs may be penalties or
+            credits.
+          </li>
+          <li>
+            Each row shows the <span className="font-medium">target</span>, the
+            number of <span className="font-medium">hops</span>, the total{" "}
+            <span className="font-medium">path weight</span> (if enabled), and
+            the <span className="font-medium">actual shortest path</span>{" "}
+            sequence.
+          </li>
+          <li>
+            Shortest paths minimize{" "}
+            <span className="font-medium">total weight</span>, not hops. A path
+            with more edges can still be cheaper than a shorter (in hops) path.
+          </li>
+          <li>
+            If a <span className="font-medium">negative-weight cycle</span> is
+            reachable from {source}, true shortest paths don’t exist. (This
+            result assumes none were detected for the nodes shown)
+          </li>
+          <li>
+            When weights are hidden or the graph is unweighted, each edge is
+            effectively treated as cost <span className="font-medium">1</span>.
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }

@@ -67,7 +67,7 @@ RUN em++ wasm/*.cpp wasm/algorithms/*.cpp wasm/generators/*.cpp -o graph.js \
     --emit-tsd graph.d.ts
 
 
-# -------- Remaining Stages (same as your original) --------
+# -------- Remaining Stages --------
 FROM node:22-slim AS base-deps
 WORKDIR /src
 COPY package.json package-lock.json ./

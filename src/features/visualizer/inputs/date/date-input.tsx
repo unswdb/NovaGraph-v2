@@ -70,7 +70,7 @@ export default function DateInputComponent({
       : true;
     const message = required
       ? validator && !!newValue.trim()
-        ? validator.message ?? ""
+        ? (validator.message ?? "")
         : "This field is required."
       : "";
 

@@ -76,6 +76,37 @@ function EulerianPath(props: GraphAlgorithmResult<EulerianPathOutputData>) {
           />
         </div>
       </div>
+
+      {/* What this means */}
+      <div className="space-y-3 pt-3 border-t border-t-border">
+        <h3 className="font-semibold">What this means</h3>
+        <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
+          <li>
+            An Eulerian path is a walk that{" "}
+            <span className="font-medium">uses every edge exactly once</span>{" "}
+            but doesn’t need to return to the start.
+          </li>
+          <li>
+            The path here begins at <span className="font-medium">{start}</span>{" "}
+            and ends at <span className="font-medium">{end}</span>, listing
+            every traversed edge in order with the{" "}
+            <span className="font-medium">running total</span>.
+          </li>
+          <li>
+            Existence implies Eulerian path conditions (e.g., in undirected
+            graphs,{" "}
+            <span className="font-medium">
+              exactly two vertices have odd degree
+            </span>
+            , all edges lie in one component).
+          </li>
+          <li>
+            Practical use: you can plan a{" "}
+            <span className="font-medium">single sweep</span> that covers all
+            links without repetitions.
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }

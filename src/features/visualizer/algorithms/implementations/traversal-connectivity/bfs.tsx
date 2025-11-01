@@ -7,12 +7,9 @@ import {
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";
-import type {
-  BFSData,
-  BFSResult,
-} from "~/igraph/algorithms/PathFinding/IgraphBFS";
+import type { BFSData as BFSOutputData } from "~/igraph/algorithms/PathFinding/IgraphBFS";
 
-export const bfs = createGraphAlgorithm<BFSData>({
+export const bfs = createGraphAlgorithm<BFSOutputData>({
   title: "Breadth-First Search",
   description:
     "Traverses the graph from a source by exploring all neighbors level by level. It continues until all nodes are visited.",
@@ -44,7 +41,7 @@ export const bfs = createGraphAlgorithm<BFSData>({
   output: (props) => <BFS {...props} />,
 });
 
-function BFS(props: GraphAlgorithmResult<BFSData>) {
+function BFS(props: GraphAlgorithmResult<BFSOutputData>) {
   const { source, nodesFound, layers } = props.data;
 
   const rowHeight = useDynamicRowHeight({
@@ -128,7 +125,7 @@ function BFSLayerRowComponent({
   index,
   style,
   layers,
-}: RowComponentProps<{ layers: BFSData["layers"] }>) {
+}: RowComponentProps<{ layers: BFSOutputData["layers"] }>) {
   // Top header row
   if (index === 0) {
     return (
