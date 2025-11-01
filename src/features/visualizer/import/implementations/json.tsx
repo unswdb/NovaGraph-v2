@@ -177,8 +177,6 @@ export const ImportJSON: ImportOption = {
       // @ts-ignore - Import kuzu for file system access
       const kuzu = await import("kuzu-wasm/sync");
 
-      console.log(`[JSON Import] Starting import for database: ${databaseName}`);
-
       // Read files content
       const nodesText = await nodesFile.text();
       const edgesText = await edgesFile.text();
@@ -250,7 +248,6 @@ export const ImportJSON: ImportOption = {
 
       // Step 3: Install JSON extension (if not already installed)
       try {
-        console.log(`[JSON Import] Installing JSON extension...`);
         await controller.db.executeQuery("INSTALL json");
         await controller.db.executeQuery("LOAD EXTENSION json");
       } catch (e) {
@@ -259,9 +256,6 @@ export const ImportJSON: ImportOption = {
       }
 
       // Step 4: Infer column types by using LOAD FROM to scan the JSON
-      console.log(`[JSON Import] Primary key: ${primaryKeyColumn}`);
-      console.log(`[JSON Import] Inferring types for columns:`, nodeKeys);
-
       // Query to infer types - load one row and return it to see inferred types
       const typeInferenceQuery = `
         LOAD FROM '${nodesPath}'
@@ -269,8 +263,6 @@ export const ImportJSON: ImportOption = {
         LIMIT 1
       `;
 
-      console.log(`[JSON Import] Inferring types with query: ${typeInferenceQuery}`);
-      
       // Use the getColumnTypes method from controller
       const columnTypes = controller.db.getColumnTypes(typeInferenceQuery);
       
@@ -314,12 +306,7 @@ export const ImportJSON: ImportOption = {
         inferredTypes[colName] = schemaType;
       });
 
-      console.log(`[JSON Import] Inferred types:`, inferredTypes);
-
       // Step 5: Create node table schema with inferred types
-      console.log(`[JSON Import] Creating node table with primary key: ${primaryKeyColumn}`);
-      console.log(`[JSON Import] Inferred types:`, inferredTypes);
-
       // For JSON, always use raw SQL CREATE NODE TABLE to support all types
       const propertyDefinitions = nodeKeys.map(col => {
         return `${col} ${inferredTypes[col]}`;
@@ -331,14 +318,12 @@ export const ImportJSON: ImportOption = {
           PRIMARY KEY(${primaryKeyColumn})
         )
       `;
-      
-      console.log(`[JSON Import] Creating node table: ${createNodeTableQuery}`);
+
       await controller.db.executeQuery(createNodeTableQuery);
 
       // Step 6: Load nodes using COPY FROM
       const copyNodesQuery = `COPY ${nodeTableName} FROM '${nodesPath}'`;
 
-      console.log(`[JSON Import] Loading nodes with COPY FROM: ${copyNodesQuery}`);
       await controller.db.executeQuery(copyNodesQuery);
 
       // Step 7: Create edge table schema using CREATE REL TABLE syntax
@@ -370,7 +355,6 @@ export const ImportJSON: ImportOption = {
         )`;
       }
 
-      console.log(`[JSON Import] Creating edge table with query: ${edgeTableQuery}`);
       await controller.db.executeQuery(edgeTableQuery);
 
       // Step 8: Load edges using COPY FROM
@@ -378,14 +362,11 @@ export const ImportJSON: ImportOption = {
         // For directed graphs, use COPY FROM directly
         const copyEdgesQuery = `COPY ${edgeTableName} FROM '${edgesPath}'`;
 
-        console.log(`[JSON Import] Loading directed edges with COPY FROM: ${copyEdgesQuery}`);
         await controller.db.executeQuery(copyEdgesQuery);
       } else {
         // For undirected graphs, we need to create edges in both directions
         // First, copy the original edges
         const copyEdgesQuery1 = `COPY ${edgeTableName} FROM '${edgesPath}'`;
-
-        console.log(`[JSON Import] Loading undirected edges (direction 1) with COPY FROM: ${copyEdgesQuery1}`);
         await controller.db.executeQuery(copyEdgesQuery1);
 
         // Then create a temporary file with reversed edges
@@ -404,8 +385,6 @@ export const ImportJSON: ImportOption = {
 
         // Copy the reversed edges
         const copyEdgesQuery2 = `COPY ${edgeTableName} FROM '${reversedEdgesPath}'`;
-
-        console.log(`[JSON Import] Loading undirected edges (direction 2) with COPY FROM: ${copyEdgesQuery2}`);
         await controller.db.executeQuery(copyEdgesQuery2);
 
         // Clean up the temporary reversed edges file
