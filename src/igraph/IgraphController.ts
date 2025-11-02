@@ -42,6 +42,10 @@ import {
   igraphEigenvectorCentrality,
   type EigenvectorCentralityResult,
 } from "./algorithms/Centrality/IgraphEigenvectorCentrality";
+import {
+  igraphHarmonicCentrality,
+  type HarmonicCentralityResult,
+} from "./algorithms/Centrality/IgraphHarmonicCentrality";
 
 import type {
   EdgeSchema,
@@ -213,6 +217,11 @@ export class IgraphController {
   async eigenvectorCentrality() {
     const graphData = await this._prepareGraphData();
     return await igraphEigenvectorCentrality(this._wasmGraphModule, graphData);
+  }
+
+  async harmonicCentrality(): Promise<HarmonicCentralityResult> {
+    const graphData = await this._prepareGraphData();
+    return await igraphHarmonicCentrality(this._wasmGraphModule, graphData);
   }
 
   async pageRank() {
