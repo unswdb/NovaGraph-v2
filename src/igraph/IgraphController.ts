@@ -82,6 +82,10 @@ import {
   igraphTriangles,
   type TriangleCountResult,
 } from "./algorithms/Community/IgraphTriangles";
+import {
+  igraphStronglyConnectedComponents,
+  type SCCResult,
+} from "./algorithms/Community/IgraphStronglyConnectedComponents";
 
 import type {
   EdgeSchema,
@@ -158,6 +162,11 @@ export class IgraphController {
   async dfs(kuzuSourceID: string): Promise<DFSResult> {
     const graphData = await this._prepareGraphData();
     return await igraphDFS(this._wasmGraphModule, graphData, kuzuSourceID);
+  }
+
+  async stronglyConnectedComponents(): Promise<SCCResult> {
+    const graphData = await this._prepareGraphData();
+    return await igraphStronglyConnectedComponents(this._wasmGraphModule, graphData);
   }
 
   // ==========================================
