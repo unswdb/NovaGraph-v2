@@ -66,6 +66,10 @@ import {
   igraphFastGreedy,
   type FastGreedyResult,
 } from "./algorithms/Community/IgraphFastGreedy";
+import {
+  igraphLabelPropagation,
+  type LabelPropagationResult,
+} from "./algorithms/Community/IgraphLabelPropagation";
 
 import type {
   EdgeSchema,
@@ -273,10 +277,9 @@ export class IgraphController {
     return await igraphFastGreedy(this._wasmGraphModule, graphData);
   }
 
-  async labelPropagation() {
+  async labelPropagation(): Promise<LabelPropagationResult> {
     const graphData = await this._prepareGraphData();
-    // return igraphLabelPropagation(...);
-    throw new Error("Label Propagation not implemented yet");
+    return await igraphLabelPropagation(this._wasmGraphModule, graphData);
   }
 
   // ==========================================

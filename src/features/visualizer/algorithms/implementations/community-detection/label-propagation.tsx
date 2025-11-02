@@ -6,17 +6,13 @@ import {
 import { ChevronRight } from "lucide-react";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
+import type { LabelPropagationOutputData } from "~/igraph/algorithms/Community/IgraphLabelPropagation";
 
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
-
-// Infered from src/wasm/algorithms
-type LabelPropagationOutputData = {
-  communities: string[][];
-};
 
 export const labelPropagation =
   createGraphAlgorithm<LabelPropagationOutputData>({
@@ -25,7 +21,15 @@ export const labelPropagation =
       "Assigns nodes to communities based on their labels. Results may vary between runs due to the randomness of the algorithm.",
     inputs: [],
     wasmFunction: async (controller, _) => {
-      //   if (module) return module.label_propagation();
+      const algorithm = controller.getAlgorithm();
+      if (algorithm === undefined) {
+        throw new Error("Algorithm controller not initialized");
+      }
+      const result = await algorithm.labelPropagation();
+      return {
+        ...result,
+        type: "algorithm",
+      };
     },
     output: (props) => <LabelPropagation {...props} />,
   });
