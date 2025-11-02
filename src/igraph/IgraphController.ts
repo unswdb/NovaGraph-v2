@@ -50,6 +50,10 @@ import {
   igraphStrengthCentrality,
   type StrengthCentralityResult,
 } from "./algorithms/Centrality/IgraphStrengthCentrality";
+import {
+  igraphPageRank,
+  type PageRankResult,
+} from "./algorithms/Centrality/IgraphPageRank";
 
 import type {
   EdgeSchema,
@@ -233,10 +237,9 @@ export class IgraphController {
     return await igraphStrengthCentrality(this._wasmGraphModule, graphData);
   }
 
-  async pageRank() {
+  async pageRank(damping: number): Promise<PageRankResult> {
     const graphData = await this._prepareGraphData();
-    // return igraphPageRank(...);
-    throw new Error("PageRank not implemented yet");
+    return await igraphPageRank(this._wasmGraphModule, graphData, damping);
   }
 
   // ==========================================

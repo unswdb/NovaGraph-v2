@@ -5,14 +5,9 @@ import {
 } from "react-window";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
-
-import type { CentralityOutputData } from "./types";
+import type { PageRankOutputData } from "~/igraph/algorithms/Centrality/IgraphPageRank";
 
 import { createNumberInput } from "~/features/visualizer/inputs";
-
-type PageRankOutputData = CentralityOutputData & {
-  damping: string;
-};
 
 export const pageRank = createGraphAlgorithm<PageRankOutputData>({
   title: "Page Rank",
@@ -30,7 +25,15 @@ export const pageRank = createGraphAlgorithm<PageRankOutputData>({
     }),
   ],
   wasmFunction: async (controller, [arg1]) => {
-    // if (module) return module.pagerank(arg1);
+    const algorithm = controller.getAlgorithm();
+    if (algorithm === undefined) {
+      throw new Error("Algorithm controller not initialized");
+    }
+    const result = await algorithm.pageRank(arg1);
+    return {
+      ...result,
+      type: "algorithm" as const,
+    };
   },
   output: (props) => <PageRank {...props} />,
 });
