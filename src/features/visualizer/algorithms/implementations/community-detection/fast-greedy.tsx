@@ -6,6 +6,7 @@ import {
 import { ChevronRight } from "lucide-react";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
+import type { FastGreedyOutputData } from "~/igraph/algorithms/Community/IgraphFastGreedy";
 
 import {
   Collapsible,
@@ -13,18 +14,20 @@ import {
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
 
-// Infered from src/wasm/algorithms
-type FastGreedyOutputData = {
-  modularity: number;
-  communities: string[][];
-};
-
 export const fastGreedy = createGraphAlgorithm<FastGreedyOutputData>({
   title: "Fast Greedy Algorithm",
   description: "Builds communities by greedily optimizing modularity.",
   inputs: [],
   wasmFunction: async (controller, _) => {
-    // if (module) return module.fast_greedy();
+    const algorithm = controller.getAlgorithm();
+    if (algorithm === undefined) {
+      throw new Error("Algorithm controller not initialized");
+    }
+    const result = await algorithm.fastGreedyCommunities();
+    return {
+      ...result,
+      type: "algorithm",
+    };
   },
   output: (props) => <FastGreedy {...props} />,
 });

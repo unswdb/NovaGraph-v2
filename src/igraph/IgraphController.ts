@@ -62,6 +62,10 @@ import {
   igraphLeiden,
   type LeidenResult,
 } from "./algorithms/Community/IgraphLeiden";
+import {
+  igraphFastGreedy,
+  type FastGreedyResult,
+} from "./algorithms/Community/IgraphFastGreedy";
 
 import type {
   EdgeSchema,
@@ -262,6 +266,11 @@ export class IgraphController {
   async leidenCommunities(resolution: number): Promise<LeidenResult> {
     const graphData = await this._prepareGraphData();
     return await igraphLeiden(this._wasmGraphModule, graphData, resolution);
+  }
+
+  async fastGreedyCommunities(): Promise<FastGreedyResult> {
+    const graphData = await this._prepareGraphData();
+    return await igraphFastGreedy(this._wasmGraphModule, graphData);
   }
 
   async labelPropagation() {
