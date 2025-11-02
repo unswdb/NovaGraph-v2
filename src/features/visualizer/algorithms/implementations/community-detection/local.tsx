@@ -5,16 +5,7 @@ import {
 } from "react-window";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
-
-// Infered from src/wasm/algorithms
-type LocalClusteringCoefficientOutputData = {
-  global_coefficient: number; // 4 dp, avg-ignore-zeros
-  coefficients: {
-    id: number; // vertex id
-    node: string; // vertex name
-    value: number; // 4 dp (can be NaN when undefined)
-  }[];
-};
+import type { LocalClusteringCoefficientOutputData } from "~/igraph/algorithms/Community/IgraphLocalClusteringCoefficient";
 
 export const localClusteringCoefficient =
   createGraphAlgorithm<LocalClusteringCoefficientOutputData>({
@@ -23,7 +14,15 @@ export const localClusteringCoefficient =
       "Measures the number of triangles that pass through a node. Any nodes with a clustering coefficient of 0 are not part of any triangles.",
     inputs: [],
     wasmFunction: async (controller, _) => {
-      //   if (module) return module.local_clustering_coefficient();
+      const algorithm = controller.getAlgorithm();
+      if (algorithm === undefined) {
+        throw new Error("Algorithm controller not initialized");
+      }
+      const result = await algorithm.localClusteringCoefficient();
+      return {
+        ...result,
+        type: "algorithm",
+      };
     },
     output: (props) => <LocalClusteringCoefficient {...props} />,
   });

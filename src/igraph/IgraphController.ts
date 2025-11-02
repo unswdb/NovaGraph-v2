@@ -70,6 +70,10 @@ import {
   igraphLabelPropagation,
   type LabelPropagationResult,
 } from "./algorithms/Community/IgraphLabelPropagation";
+import {
+  igraphLocalClusteringCoefficient,
+  type LocalClusteringCoefficientResult,
+} from "./algorithms/Community/IgraphLocalClusteringCoefficient";
 
 import type {
   EdgeSchema,
@@ -280,6 +284,11 @@ export class IgraphController {
   async labelPropagation(): Promise<LabelPropagationResult> {
     const graphData = await this._prepareGraphData();
     return await igraphLabelPropagation(this._wasmGraphModule, graphData);
+  }
+
+  async localClusteringCoefficient(): Promise<LocalClusteringCoefficientResult> {
+    const graphData = await this._prepareGraphData();
+    return await igraphLocalClusteringCoefficient(this._wasmGraphModule, graphData);
   }
 
   // ==========================================
