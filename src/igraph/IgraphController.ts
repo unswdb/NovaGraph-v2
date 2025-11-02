@@ -30,6 +30,10 @@ import {
   igraphBetweennessCentrality,
   type BetweennessCentralityResult,
 } from "./algorithms/Centrality/IgraphBetweenessCentrality";
+import {
+  igraphClosenessCentrality,
+  type ClosenessCentralityResult,
+} from "./algorithms/Centrality/IgraphCloseCentrality";
 
 import type {
   EdgeSchema,
@@ -191,8 +195,7 @@ export class IgraphController {
 
   async closenessCentrality() {
     const graphData = await this._prepareGraphData();
-    // return igraphClosenessCentrality(...);
-    throw new Error("Closeness Centrality not implemented yet");
+    return await igraphClosenessCentrality(this._wasmGraphModule, graphData);
   }
 
   async eigenvectorCentrality() {
