@@ -6,6 +6,7 @@ import {
 import { ChevronRight } from "lucide-react";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
+import type { LeidenOutputData } from "~/igraph/algorithms/Community/IgraphLeiden";
 
 import { createNumberInput } from "~/features/visualizer/inputs";
 import {
@@ -13,13 +14,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
-
-// Infered from src/wasm/algorithms
-type LeidenOutputData = {
-  modularity: number;
-  quality: number;
-  communities: string[][];
-};
 
 export const leiden = createGraphAlgorithm<LeidenOutputData>({
   title: "Leiden Algorithm",
@@ -38,7 +32,15 @@ export const leiden = createGraphAlgorithm<LeidenOutputData>({
     }),
   ],
   wasmFunction: async (controller, [arg1]) => {
-    // if (module) return module.leiden(arg1);
+    const algorithm = controller.getAlgorithm();
+    if (algorithm === undefined) {
+      throw new Error("Algorithm controller not initialized");
+    }
+    const result = await algorithm.leidenCommunities(arg1);
+    return {
+      ...result,
+      type: "algorithm",
+    };
   },
   output: (props) => <Leiden {...props} />,
 });

@@ -58,6 +58,10 @@ import {
   igraphLouvain,
   type LouvainResult,
 } from "./algorithms/Community/IgraphLouvain";
+import {
+  igraphLeiden,
+  type LeidenResult,
+} from "./algorithms/Community/IgraphLeiden";
 
 import type {
   EdgeSchema,
@@ -253,6 +257,11 @@ export class IgraphController {
   async louvainCommunities(resolution: number): Promise<LouvainResult> {
     const graphData = await this._prepareGraphData();
     return await igraphLouvain(this._wasmGraphModule, graphData, resolution);
+  }
+
+  async leidenCommunities(resolution: number): Promise<LeidenResult> {
+    const graphData = await this._prepareGraphData();
+    return await igraphLeiden(this._wasmGraphModule, graphData, resolution);
   }
 
   async labelPropagation() {
