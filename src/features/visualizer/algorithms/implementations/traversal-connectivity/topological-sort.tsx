@@ -1,14 +1,7 @@
 import { List, type RowComponentProps } from "react-window";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
-
-// Infered from src/wasm/algorithms
-type TopologicalSortOutputData = {
-  order: {
-    id: number; // numeric vertex id
-    node: string; // vertex name
-  }[]; // in topological order
-};
+import type { TopologicalSortOutputData } from "~/igraph/algorithms/Misc/IgraphTopologicalSort";
 
 export const topologicalSort = createGraphAlgorithm<TopologicalSortOutputData>({
   title: "Topological Sort",
@@ -16,7 +9,15 @@ export const topologicalSort = createGraphAlgorithm<TopologicalSortOutputData>({
     "Orders nodes in a directed acyclic graph (DAG) such that all edges go from earlier to later nodes",
   inputs: [],
   wasmFunction: async (controller, _) => {
-    // if (module) return module.topological_sort();
+    const algorithm = controller.getAlgorithm();
+    if (algorithm === undefined) {
+      throw new Error("Algorithm controller not initialized");
+    }
+    const result = await algorithm.topologicalSort();
+    return {
+      ...result,
+      type: "algorithm",
+    };
   },
   output: (props) => <TopologicalSort {...props} />,
 });

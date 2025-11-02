@@ -94,6 +94,10 @@ import {
   igraphVerticesAreAdjacent,
   type VerticesAreAdjacentResult,
 } from "./algorithms/Misc/IgraphVerticesAreAdjacent";
+import {
+  igraphTopologicalSort,
+  type TopologicalSortResult,
+} from "./algorithms/Misc/IgraphTopologicalSort";
 
 import type {
   EdgeSchema,
@@ -185,6 +189,11 @@ export class IgraphController {
   async verticesAreAdjacent(source: string, target: string): Promise<VerticesAreAdjacentResult> {
     const graphData = await this._prepareGraphData();
     return await igraphVerticesAreAdjacent(this._wasmGraphModule, graphData, source, target);
+  }
+
+  async topologicalSort(): Promise<TopologicalSortResult> {
+    const graphData = await this._prepareGraphData();
+    return await igraphTopologicalSort(this._wasmGraphModule, graphData);
   }
 
   // ==========================================
