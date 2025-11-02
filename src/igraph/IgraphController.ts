@@ -54,6 +54,10 @@ import {
   igraphPageRank,
   type PageRankResult,
 } from "./algorithms/Centrality/IgraphPageRank";
+import {
+  igraphLouvain,
+  type LouvainResult,
+} from "./algorithms/Community/IgraphLouvain";
 
 import type {
   EdgeSchema,
@@ -246,10 +250,9 @@ export class IgraphController {
   // COMMUNITY DETECTION ALGORITHMS
   // ==========================================
 
-  async louvainCommunities() {
+  async louvainCommunities(resolution: number): Promise<LouvainResult> {
     const graphData = await this._prepareGraphData();
-    // return igraphLouvain(...);
-    throw new Error("Louvain Communities not implemented yet");
+    return await igraphLouvain(this._wasmGraphModule, graphData, resolution);
   }
 
   async labelPropagation() {

@@ -6,6 +6,7 @@ import {
 import { ChevronRight } from "lucide-react";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
+import type { LouvainOutputData } from "~/igraph/algorithms/Community/IgraphLouvain";
 
 import { createNumberInput } from "~/features/visualizer/inputs";
 import {
@@ -13,12 +14,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
-
-// Infered from src/wasm/algorithms
-type LouvainOutputData = {
-  modularity: number;
-  communities: string[][]; // index = community id, value = node-name[]
-};
 
 export const louvain = createGraphAlgorithm<LouvainOutputData>({
   title: "Louvain Algorithm",
@@ -37,7 +32,15 @@ export const louvain = createGraphAlgorithm<LouvainOutputData>({
     }),
   ],
   wasmFunction: async (controller, [arg1]) => {
-    // if (module) return module.louvain(arg1);
+    const algorithm = controller.getAlgorithm();
+    if (algorithm === undefined) {
+      throw new Error("Algorithm controller not initialized");
+    }
+    const result = await algorithm.louvainCommunities(arg1);
+    return {
+      ...result,
+      type: "algorithm",
+    };
   },
   output: (props) => <Louvain {...props} />,
 });
