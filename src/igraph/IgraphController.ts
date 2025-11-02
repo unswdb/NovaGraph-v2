@@ -86,6 +86,10 @@ import {
   igraphStronglyConnectedComponents,
   type SCCResult,
 } from "./algorithms/Community/IgraphStronglyConnectedComponents";
+import {
+  igraphWeaklyConnectedComponents,
+  type WCCResult,
+} from "./algorithms/Community/IgraphWeaklyConnectedComponents";
 
 import type {
   EdgeSchema,
@@ -167,6 +171,11 @@ export class IgraphController {
   async stronglyConnectedComponents(): Promise<SCCResult> {
     const graphData = await this._prepareGraphData();
     return await igraphStronglyConnectedComponents(this._wasmGraphModule, graphData);
+  }
+
+  async weaklyConnectedComponents(): Promise<WCCResult> {
+    const graphData = await this._prepareGraphData();
+    return await igraphWeaklyConnectedComponents(this._wasmGraphModule, graphData);
   }
 
   // ==========================================
