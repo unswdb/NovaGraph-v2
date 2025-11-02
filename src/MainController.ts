@@ -37,7 +37,6 @@ class MainController {
   }
 
   getAlgorithm() {
-    console.log("getAlgorithm should be here");
     if (this._IgraphController === undefined) {
       throw Error("IgraphController is undefinned");
     }

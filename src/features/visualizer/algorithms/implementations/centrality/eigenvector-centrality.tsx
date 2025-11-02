@@ -5,12 +5,7 @@ import {
 } from "react-window";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
-
-import type { CentralityOutputData } from "./types";
-
-type EigenvectorCentralityOutputData = CentralityOutputData & {
-  eigenvalue: number;
-};
+import type { EigenvectorCentralityOutputData } from "~/igraph/algorithms/Centrality/IgraphEigenvectorCentrality";
 
 export const eigenvectorCentrality =
   createGraphAlgorithm<EigenvectorCentralityOutputData>({
@@ -18,7 +13,15 @@ export const eigenvectorCentrality =
     description: "Measures the influence of a node in a network.",
     inputs: [],
     wasmFunction: async (controller, _) => {
-      //   if (module) return module.eigenvector_centrality();
+      const algorithm = controller.getAlgorithm();
+      if (algorithm === undefined) {
+        throw new Error("Algorithm controller not initialized");
+      }
+      const result = await algorithm.eigenvectorCentrality();
+      return {
+        ...result,
+        type: "algorithm",
+      };
     },
     output: (props) => <EigenvectorCentrality {...props} />,
   });
@@ -26,6 +29,8 @@ export const eigenvectorCentrality =
 function EigenvectorCentrality(
   props: GraphAlgorithmResult<EigenvectorCentralityOutputData>
 ) {
+  console.log("EigenvectorCentrality")
+
   const { eigenvalue, centralities } = props.data;
 
   const rowHeight = useDynamicRowHeight({

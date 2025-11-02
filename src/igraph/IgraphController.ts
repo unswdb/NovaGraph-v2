@@ -38,6 +38,10 @@ import {
   igraphDegreeCentrality,
   type DegreeCentralityResult,
 } from "./algorithms/Centrality/IgraphDegreeCentrality";
+import {
+  igraphEigenvectorCentrality,
+  type EigenvectorCentralityResult,
+} from "./algorithms/Centrality/IgraphEigenvectorCentrality";
 
 import type {
   EdgeSchema,
@@ -99,7 +103,6 @@ export class IgraphController {
       igraphInput.directed,
       igraphInput.weight
     );
-
     return parseResult;
   }
 
@@ -209,8 +212,7 @@ export class IgraphController {
 
   async eigenvectorCentrality() {
     const graphData = await this._prepareGraphData();
-    // return igraphEigenvectorCentrality(...);
-    throw new Error("Eigenvector Centrality not implemented yet");
+    return await igraphEigenvectorCentrality(this._wasmGraphModule, graphData);
   }
 
   async pageRank() {

@@ -77,7 +77,6 @@ export default function InputDialog({
         const args = algorithm.inputs.map(
           (input) => inputResults[input.key].value
         );
-
         const algorithmResponse = await algorithm.wasmFunction(
           controller,
           args

@@ -58,7 +58,7 @@ export function snapshotGraphState(connection: any): {
         const edgeSchemaConnectionResult = connection.query(
           getEdgeSchemaConnectionQuery(newTable.tableName)
         );
-        console.log(edgeSchemaConnectionResult, newTable.tableName, tablesResult);
+        // console.log(edgeSchemaConnectionResult, newTable.tableName, tablesResult);
         const edgeSchemaConnection = parseTableConnection(
           edgeSchemaConnectionResult
         );
