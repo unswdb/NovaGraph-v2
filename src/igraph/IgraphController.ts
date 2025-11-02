@@ -98,6 +98,10 @@ import {
   igraphTopologicalSort,
   type TopologicalSortResult,
 } from "./algorithms/Misc/IgraphTopologicalSort";
+import {
+  igraphDiameter,
+  type GraphDiameterResult,
+} from "./algorithms/Misc/IgraphDiameter";
 
 import type {
   EdgeSchema,
@@ -249,10 +253,9 @@ export class IgraphController {
     return await igraphMST(this._wasmGraphModule, graphData);
   }
 
-  async graphDiameter() {
+  async graphDiameter(): Promise<GraphDiameterResult> {
     const graphData = await this._prepareGraphData();
-    // return igraphDiameter(...);
-    throw new Error("Graph Diameter not implemented yet");
+    return await igraphDiameter(this._wasmGraphModule, graphData);
   }
 
   async eulerianPath() {
