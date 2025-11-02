@@ -6,9 +6,7 @@ import {
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
-import type { CentralityOutputData } from "./types";
-
-type DegreeCentralityOutputData = CentralityOutputData;
+import type { DegreeCentralityOutputData } from "~/igraph/algorithms/Centrality/IgraphDegreeCentrality";
 
 export const degreeCentrality =
   createGraphAlgorithm<DegreeCentralityOutputData>({
@@ -16,7 +14,15 @@ export const degreeCentrality =
     description: "Measures the number of edges connected to a node.",
     inputs: [],
     wasmFunction: async (controller, _) => {
-      //   if (module) return module.degree_centrality();
+      const algorithm = controller.getAlgorithm();
+      if (algorithm === undefined) {
+        throw new Error("Algorithm controller not initialized");
+      }
+      const result = await algorithm.degreeCentrality();
+      return {
+        ...result,
+        type: "algorithm",
+      };
     },
     output: (props) => <DegreeCentrality {...props} />,
   });

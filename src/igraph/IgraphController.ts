@@ -34,6 +34,10 @@ import {
   igraphClosenessCentrality,
   type ClosenessCentralityResult,
 } from "./algorithms/Centrality/IgraphCloseCentrality";
+import {
+  igraphDegreeCentrality,
+  type DegreeCentralityResult,
+} from "./algorithms/Centrality/IgraphDegreeCentrality";
 
 import type {
   EdgeSchema,
@@ -196,6 +200,11 @@ export class IgraphController {
   async closenessCentrality() {
     const graphData = await this._prepareGraphData();
     return await igraphClosenessCentrality(this._wasmGraphModule, graphData);
+  }
+
+  async degreeCentrality(): Promise<DegreeCentralityResult> {
+    const graphData = await this._prepareGraphData();
+    return await igraphDegreeCentrality(this._wasmGraphModule, graphData);
   }
 
   async eigenvectorCentrality() {
