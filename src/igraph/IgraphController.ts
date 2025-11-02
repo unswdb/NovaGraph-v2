@@ -78,6 +78,10 @@ import {
   igraphKCore,
   type KCoreResult,
 } from "./algorithms/Community/IgraphKCore";
+import {
+  igraphTriangles,
+  type TriangleCountResult,
+} from "./algorithms/Community/IgraphTriangles";
 
 import type {
   EdgeSchema,
@@ -298,6 +302,11 @@ export class IgraphController {
   async kCore(k: number): Promise<KCoreResult> {
     const graphData = await this._prepareGraphData();
     return await igraphKCore(this._wasmGraphModule, graphData, k);
+  }
+
+  async triangles(): Promise<TriangleCountResult> {
+    const graphData = await this._prepareGraphData();
+    return await igraphTriangles(this._wasmGraphModule, graphData);
   }
 
   // ==========================================

@@ -13,15 +13,7 @@ import {
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
 
-// Infered from src/wasm/algorithms
-type TriangleCountOutputData = {
-  triangles: {
-    id: number; // 1-based triangle id
-    node1: string;
-    node2: string;
-    node3: string;
-  }[];
-};
+import type { TriangleCountOutputData } from "~/igraph/algorithms/Community/IgraphTriangles";
 
 export const triangleCount = createGraphAlgorithm<TriangleCountOutputData>({
   title: "Triangle Count",
@@ -29,7 +21,15 @@ export const triangleCount = createGraphAlgorithm<TriangleCountOutputData>({
     "Counts the number of triangles (groups of 3 connected nodes) in a graph.",
   inputs: [],
   wasmFunction: async (controller, _) => {
-    // if (module) return module.triangle_count();
+    const algorithm = controller.getAlgorithm();
+    if (algorithm === undefined) {
+      throw new Error("Algorithm controller not initialized");
+    }
+    const result = await algorithm.triangles();
+    return {
+      ...result,
+      type: "algorithm",
+    };
   },
   output: (props) => <TriangleCount {...props} />,
 });
