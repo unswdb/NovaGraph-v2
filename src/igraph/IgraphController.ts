@@ -90,6 +90,10 @@ import {
   igraphWeaklyConnectedComponents,
   type WCCResult,
 } from "./algorithms/Community/IgraphWeaklyConnectedComponents";
+import {
+  igraphVerticesAreAdjacent,
+  type VerticesAreAdjacentResult,
+} from "./algorithms/Misc/IgraphVerticesAreAdjacent";
 
 import type {
   EdgeSchema,
@@ -176,6 +180,11 @@ export class IgraphController {
   async weaklyConnectedComponents(): Promise<WCCResult> {
     const graphData = await this._prepareGraphData();
     return await igraphWeaklyConnectedComponents(this._wasmGraphModule, graphData);
+  }
+
+  async verticesAreAdjacent(source: string, target: string): Promise<VerticesAreAdjacentResult> {
+    const graphData = await this._prepareGraphData();
+    return await igraphVerticesAreAdjacent(this._wasmGraphModule, graphData, source, target);
   }
 
   // ==========================================
