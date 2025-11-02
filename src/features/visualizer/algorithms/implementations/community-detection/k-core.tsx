@@ -1,16 +1,7 @@
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 import { createNumberInput } from "~/features/visualizer/inputs";
-
-// Infered from src/wasm/algorithms
-type KCoreOutputData = {
-  k: number;
-  max_coreness: number; // max over all vertices
-  cores: {
-    id: number; // vertex id (original graph)
-    node: string; // vertex name
-  }[];
-};
+import type { KCoreOutputData } from "~/igraph/algorithms/Community/IgraphKCore";
 
 export const kCore = createGraphAlgorithm<KCoreOutputData>({
   title: "K-Core Decomposition",
@@ -28,7 +19,15 @@ export const kCore = createGraphAlgorithm<KCoreOutputData>({
     }),
   ],
   wasmFunction: async (controller, [arg1]) => {
-    // if (module) return module.k_core(arg1);
+    const algorithm = controller.getAlgorithm();
+    if (algorithm === undefined) {
+      throw new Error("Algorithm controller not initialized");
+    }
+    const result = await algorithm.kCore(arg1);
+    return {
+      ...result,
+      type: "algorithm",
+    };
   },
   output: (props) => <KCore {...props} />,
 });

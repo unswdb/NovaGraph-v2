@@ -74,6 +74,10 @@ import {
   igraphLocalClusteringCoefficient,
   type LocalClusteringCoefficientResult,
 } from "./algorithms/Community/IgraphLocalClusteringCoefficient";
+import {
+  igraphKCore,
+  type KCoreResult,
+} from "./algorithms/Community/IgraphKCore";
 
 import type {
   EdgeSchema,
@@ -289,6 +293,11 @@ export class IgraphController {
   async localClusteringCoefficient(): Promise<LocalClusteringCoefficientResult> {
     const graphData = await this._prepareGraphData();
     return await igraphLocalClusteringCoefficient(this._wasmGraphModule, graphData);
+  }
+
+  async kCore(k: number): Promise<KCoreResult> {
+    const graphData = await this._prepareGraphData();
+    return await igraphKCore(this._wasmGraphModule, graphData, k);
   }
 
   // ==========================================
