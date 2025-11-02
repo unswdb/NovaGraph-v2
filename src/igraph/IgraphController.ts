@@ -106,6 +106,10 @@ import {
   igraphEulerianPath,
   type EulerianPathResult,
 } from "./algorithms/Misc/IgraphEulerianPath";
+import {
+  igraphEulerianCircuit,
+  type EulerianCircuitResult,
+} from "./algorithms/Misc/IgraphEulerianCircuit";
 
 import type {
   EdgeSchema,
@@ -267,10 +271,9 @@ export class IgraphController {
     return await igraphEulerianPath(this._wasmGraphModule, graphData);
   }
 
-  async eulerianCircuit() {
+  async eulerianCircuit(): Promise<EulerianCircuitResult> {
     const graphData = await this._prepareGraphData();
-    // return igraphEulerianCircuit(...);
-    throw new Error("Eulerian Circuit not implemented yet");
+    return await igraphEulerianCircuit(this._wasmGraphModule, graphData);
   }
 
   // ==========================================
