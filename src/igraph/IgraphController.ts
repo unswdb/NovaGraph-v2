@@ -102,6 +102,10 @@ import {
   igraphDiameter,
   type GraphDiameterResult,
 } from "./algorithms/Misc/IgraphDiameter";
+import {
+  igraphEulerianPath,
+  type EulerianPathResult,
+} from "./algorithms/Misc/IgraphEulerianPath";
 
 import type {
   EdgeSchema,
@@ -258,10 +262,9 @@ export class IgraphController {
     return await igraphDiameter(this._wasmGraphModule, graphData);
   }
 
-  async eulerianPath() {
+  async eulerianPath(): Promise<EulerianPathResult> {
     const graphData = await this._prepareGraphData();
-    // return igraphEulerianPath(...);
-    throw new Error("Eulerian Path not implemented yet");
+    return await igraphEulerianPath(this._wasmGraphModule, graphData);
   }
 
   async eulerianCircuit() {

@@ -5,24 +5,22 @@ import {
 } from "react-window";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
-
-// Infered from src/wasm/algorithms
-type EulerianPathOutputData = {
-  start: string; // name of first vertex in sequence
-  end: string; // name of last vertex in sequence
-  path: {
-    from: string;
-    to: string;
-    weight?: number;
-  }[]; // consecutive steps
-};
+import type { EulerianPathOutputData } from "~/igraph/algorithms/Misc/IgraphEulerianPath";
 
 export const eulerianPath = createGraphAlgorithm<EulerianPathOutputData>({
   title: "Eulerian Path",
   description: "Finds a path that visits every edge exactly once.",
   inputs: [],
   wasmFunction: async (controller, _) => {
-    // if (module) return module.eulerian_path();
+    const algorithm = controller.getAlgorithm();
+    if (algorithm === undefined) {
+      throw new Error("Algorithm controller not initialized");
+    }
+    const result = await algorithm.eulerianPath();
+    return {
+      ...result,
+      type: "algorithm",
+    };
   },
   output: (props) => <EulerianPath {...props} />,
 });
