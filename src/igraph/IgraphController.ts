@@ -46,6 +46,10 @@ import {
   igraphHarmonicCentrality,
   type HarmonicCentralityResult,
 } from "./algorithms/Centrality/IgraphHarmonicCentrality";
+import {
+  igraphStrengthCentrality,
+  type StrengthCentralityResult,
+} from "./algorithms/Centrality/IgraphStrengthCentrality";
 
 import type {
   EdgeSchema,
@@ -222,6 +226,11 @@ export class IgraphController {
   async harmonicCentrality(): Promise<HarmonicCentralityResult> {
     const graphData = await this._prepareGraphData();
     return await igraphHarmonicCentrality(this._wasmGraphModule, graphData);
+  }
+
+  async strengthCentrality(): Promise<StrengthCentralityResult> {
+    const graphData = await this._prepareGraphData();
+    return await igraphStrengthCentrality(this._wasmGraphModule, graphData);
   }
 
   async pageRank() {
