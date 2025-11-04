@@ -5,17 +5,9 @@ import {
 } from "react-window";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
+import type { MissingEdgePredictionOutputData } from "~/igraph/algorithms/Misc/IgraphMissingEdgePrediction";
 
 import { createNumberInput } from "~/features/visualizer/inputs";
-
-// Infered from src/wasm/algorithms
-type MissingEdgePredictionOutputData = {
-  predictedEdges: Array<{
-    from: string; // name(src)
-    to: string; // name(tar)
-    probability: string; // e.g. "73.200%" (3 dp string)
-  }>;
-};
 
 export const missingEdgePrediction =
   createGraphAlgorithm<MissingEdgePredictionOutputData>({
@@ -42,8 +34,16 @@ export const missingEdgePrediction =
         required: true,
       }),
     ],
-    wasmFunction: async (controller, [arg1, arg2]) => {
-      //   if (module) return module.missing_edge_prediction(arg1, arg2);
+    wasmFunction: async (controller, [sampleSize, numBins]) => {
+      const algorithm = controller.getAlgorithm();
+      if (algorithm === undefined) {
+        throw new Error("Algorithm controller not initialized");
+      }
+      const result = await algorithm.missingEdgePrediction(sampleSize, numBins);
+      return {
+        ...result,
+        type: "algorithm",
+      };
     },
     output: (props) => <MissingEdgePrediction {...props} />,
   });

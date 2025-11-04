@@ -110,6 +110,10 @@ import {
   igraphEulerianCircuit,
   type EulerianCircuitResult,
 } from "./algorithms/Misc/IgraphEulerianCircuit";
+import {
+  igraphMissingEdgePrediction,
+  type MissingEdgePredictionResult,
+} from "./algorithms/Misc/IgraphMissingEdgePrediction";
 
 import type {
   EdgeSchema,
@@ -362,5 +366,18 @@ export class IgraphController {
     const graphData = await this._prepareGraphData();
     // return igraphJaccard(...);
     throw new Error("Jaccard Similarity not implemented yet");
+  }
+
+  async missingEdgePrediction(
+    sampleSize: number,
+    numBins: number
+  ): Promise<MissingEdgePredictionResult> {
+    const graphData = await this._prepareGraphData();
+    return await igraphMissingEdgePrediction(
+      this._wasmGraphModule,
+      graphData,
+      sampleSize,
+      numBins
+    );
   }
 }
