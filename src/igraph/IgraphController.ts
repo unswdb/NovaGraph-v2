@@ -114,6 +114,10 @@ import {
   igraphMissingEdgePrediction,
   type MissingEdgePredictionResult,
 } from "./algorithms/Misc/IgraphMissingEdgePrediction";
+import {
+  igraphJaccardSimilarity,
+  type JaccardSimilarityResult,
+} from "./algorithms/Misc/IgraphJaccardSimilarity";
 
 import type {
   EdgeSchema,
@@ -362,10 +366,9 @@ export class IgraphController {
   // SIMILARITY & MATCHING ALGORITHMS
   // ==========================================
 
-  async jaccardSimilarity() {
+  async jaccardSimilarity(nodes: string[]): Promise<JaccardSimilarityResult> {
     const graphData = await this._prepareGraphData();
-    // return igraphJaccard(...);
-    throw new Error("Jaccard Similarity not implemented yet");
+    return await igraphJaccardSimilarity(this._wasmGraphModule, graphData, nodes);
   }
 
   async missingEdgePrediction(

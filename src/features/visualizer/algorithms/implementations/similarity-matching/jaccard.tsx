@@ -3,17 +3,7 @@ import { Grid, type CellComponentProps } from "react-window";
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";
-
-// Infered from src/wasm/algorithms
-type JaccardSimilarityOutputData = {
-  nodes: string[]; // names of queried nodes, input order
-  similarityMatrix: number[][]; // 2 dp numbers
-  maxSimilarity: {
-    node1: string;
-    node2: string;
-    similarity: number; // also 2 dp
-  };
-};
+import type { JaccardSimilarityOutputData } from "~/igraph/algorithms/Misc/IgraphJaccardSimilarity";
 
 export const jaccardSimilarity =
   createGraphAlgorithm<JaccardSimilarityOutputData>({
@@ -40,8 +30,16 @@ export const jaccardSimilarity =
         },
       }),
     ],
-    wasmFunction: async (controller, [args]) => {
-      //   if (module) return module.jaccard_similarity(args);
+    wasmFunction: async (controller, [nodeIds]) => {
+      const algorithm = controller.getAlgorithm();
+      if (algorithm === undefined) {
+        throw new Error("Algorithm controller not initialized");
+      }
+      const result = await algorithm.jaccardSimilarity(nodeIds);
+      return {
+        ...result,
+        type: "algorithm",
+      };
     },
     output: (props) => <Jaccard {...props} />,
   });
