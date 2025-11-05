@@ -174,13 +174,21 @@ export const ImportCSV: ImportOption = {
     const edgesFile = edges.value as File;
     const isDirected = directed.value as boolean;
 
-    try {
-      // Import using controller
-      const { controller } = await import("~/MainController");
-      // @ts-ignore - Import kuzu for file system access
-      const kuzu = await import("kuzu-wasm/sync");
+    const trimmedDatabaseName = (databaseName || "").trim();
+    if (!trimmedDatabaseName) {
+      throw new Error("Please provide a name for the new database.");
+    }
 
-      console.log(`[CSV Import] Starting import for database: ${databaseName}`);
+    const { controller } = await import("~/MainController");
+    const previousDatabaseName = await controller.db
+      .getCurrentDatabaseName()
+      .catch(() => null);
+    let createdDatabase = false;
+
+    try {
+      console.log(
+        `[CSV Import] Starting import for database: ${trimmedDatabaseName}`
+      );
 
       // Read files content
       const nodesText = await nodesFile.text();
@@ -206,24 +214,38 @@ export const ImportCSV: ImportOption = {
       console.log(`[CSV Import] Node table name: ${nodeTableName}`);
       console.log(`[CSV Import] Edge table name: ${edgeTableName}`);
 
+      const createResult = await controller.db.createDatabase(
+        trimmedDatabaseName
+      );
+      if (!createResult.success) {
+        throw new Error(
+          createResult.error ||
+            createResult.message ||
+            `Failed to create database "${trimmedDatabaseName}"`
+        );
+      }
+      createdDatabase = true;
+
+      const connectResult = await controller.db.connectToDatabase(
+        trimmedDatabaseName
+      );
+      if (!connectResult.success) {
+        throw new Error(
+          connectResult.error ||
+            connectResult.message ||
+            `Failed to connect to database "${trimmedDatabaseName}"`
+        );
+      }
+
       // Step 2: Write CSV files to Kuzu's virtual file system first
       // We need the files in the VFS before we can infer types
-      const fs = kuzu.default.getFS();
       const tempDir = '/tmp';
-
-      // Ensure temp directory exists
-      try {
-        fs.mkdir(tempDir);
-      } catch (e) {
-        // Directory might already exist, ignore error
-      }
 
       const nodesPath = `${tempDir}/nodes_${Date.now()}.csv`;
       const edgesPath = `${tempDir}/edges_${Date.now()}.csv`;
 
-      // Write files to virtual file system
-      fs.writeFile(nodesPath, nodesText);
-      fs.writeFile(edgesPath, edgesText);
+      await controller.db.writeVirtualFile(nodesPath, nodesText);
+      await controller.db.writeVirtualFile(edgesPath, edgesText);
 
       // Step 3: Infer column types by using LOAD FROM to scan the CSV
       // LOAD FROM will automatically infer types from the CSV data
@@ -243,7 +265,7 @@ export const ImportCSV: ImportOption = {
       console.log(`[CSV Import] Inferring types with query: ${typeInferenceQuery}`);
       
       // Use the getColumnTypes method from controller
-      const columnTypes = controller.db.getColumnTypes(typeInferenceQuery);
+      const columnTypes = await controller.db.getColumnTypes(typeInferenceQuery);
       
       // Extract column types from the query result
       const inferredTypes: Record<string, "STRING" | "INT32" | "INT16" | "INT8" | "DOUBLE" | "FLOAT" | "BOOL" | "DATE"> = {};
@@ -350,7 +372,7 @@ export const ImportCSV: ImportOption = {
           return parts.join(',');
         }).join('\n');
 
-        fs.writeFile(reversedEdgesPath, reversedEdgesContent);
+        await controller.db.writeVirtualFile(reversedEdgesPath, reversedEdgesContent);
 
         // Copy the reversed edges
         const copyEdgesQuery2 = `COPY ${edgeTableName} FROM '${reversedEdgesPath}' (header = true)`;
@@ -359,21 +381,15 @@ export const ImportCSV: ImportOption = {
         await controller.db.executeQuery(copyEdgesQuery2);
 
         // Clean up the temporary reversed edges file
-        try {
-          fs.unlink(reversedEdgesPath);
-        } catch (e) {
-          console.warn(`[CSV Import] Failed to clean up reversed edges file:`, e);
-        }
+        await controller.db.deleteVirtualFile(reversedEdgesPath);
       }
 
       // Step 8: Clean up temporary files
-      try {
-        fs.unlink(nodesPath);
-        fs.unlink(edgesPath);
-        // Note: reversedEdgesPath is already cleaned up in the undirected case above
-      } catch (e) {
-        console.warn(`[CSV Import] Failed to clean up temporary files:`, e);
-      }
+      await controller.db.deleteVirtualFile(nodesPath);
+      await controller.db.deleteVirtualFile(edgesPath);
+      // Note: reversedEdgesPath is already cleaned up in the undirected case above
+
+      await controller.db.saveDatabase().catch(() => {});
 
       // Step 9: Refresh graph state
       const graphState = await controller.db.snapshotGraphState();
@@ -382,15 +398,41 @@ export const ImportCSV: ImportOption = {
 
       return {
         success: true,
-        message: `Successfully imported graph "${databaseName}" with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges!`,
-        data: graphState,
+        message: `Successfully imported graph "${trimmedDatabaseName}" with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges!`,
+        databaseName: trimmedDatabaseName,
+        data: {
+          nodes: graphState.nodes,
+          edges: graphState.edges,
+          nodeTables: graphState.nodeTables,
+          edgeTables: graphState.edgeTables,
+          directed: isDirected,
+        },
       };
     } catch (error) {
       console.error("[CSV Import] Error:", error);
-      return {
-        success: false,
-        message: `Failed to import CSV: ${error instanceof Error ? error.message : String(error)}`,
-      };
+      if (previousDatabaseName) {
+        try {
+          await controller.db.connectToDatabase(previousDatabaseName);
+        } catch (reconnectError) {
+          console.error(
+            "[CSV Import] Failed to reconnect to previous database:",
+            reconnectError
+          );
+        }
+      }
+
+      if (createdDatabase) {
+        try {
+          await controller.db.deleteDatabase(trimmedDatabaseName);
+        } catch (cleanupError) {
+          console.error(
+            `[CSV Import] Failed to clean up database "${trimmedDatabaseName}" after error:`,
+            cleanupError
+          );
+        }
+      }
+
+      throw error instanceof Error ? error : new Error(String(error));
     }
   },
 };

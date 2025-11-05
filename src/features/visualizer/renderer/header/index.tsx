@@ -11,7 +11,7 @@ export type Accessor = { label: string; accessor: (n: GraphNode) => string };
 
 const GraphRendererHeader = observer(
   ({ onSelectNode }: { onSelectNode: (n: GraphNode | null) => void }) => {
-    const { database, setDatabase, databases, addDatabase } = useStore();
+    const { database, databases, switchDatabase, deleteDatabase } = useStore();
     const { nodes } = database.graph;
 
     const accessors: Accessor[] = [
@@ -28,9 +28,9 @@ const GraphRendererHeader = observer(
           <span className="whitespace-nowrap">Database:</span>
           <ImportDropdown
             database={database}
-            setDatabase={setDatabase}
             databases={databases}
-            addDatabase={addDatabase}
+            onSelectDatabase={switchDatabase}
+            onDeleteDatabase={deleteDatabase}
             className="flex-1 max-w-[200px]"
           />
           <CreateNode

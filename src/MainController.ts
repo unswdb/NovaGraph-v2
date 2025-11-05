@@ -13,7 +13,10 @@ class MainController {
   // Private sector
   private _IgraphController: undefined | IgraphController;
   private async _initKuzu() {
-    return kuzuController.initialize("inmemory", "sync", {});
+    //return kuzuController.initialize("inmemory", "sync", {});
+    //return kuzuController.initialize("inmemory", "async", {});
+    //return kuzuController.initialize("persistent", "sync", {});
+    return kuzuController.initialize("persistent", "async", {});
   }
   private async _initIgraph() {
     return await this._IgraphController?.initIgraph();
@@ -118,7 +121,7 @@ class MainController {
     },
 
     // Get column types from query
-    getColumnTypes(query: string) {
+    async getColumnTypes(query: string) {
       return kuzuController.getColumnTypes(query);
     },
 
@@ -177,6 +180,47 @@ class MainController {
         kuzuController.updateEdge(node1, node2, edgeTableName, values)
       );
     },
+
+    async writeVirtualFile(path: string, content: string) {
+      return kuzuController.writeVirtualFile(path, content);
+    },
+
+    async deleteVirtualFile(path: string) {
+      return kuzuController.deleteVirtualFile(path);
+    },
+
+    async createDatabase(dbName: string) {
+      return Promise.resolve(kuzuController.createDatabase(dbName));
+    },
+
+    async deleteDatabase(dbName: string) {
+      return Promise.resolve(kuzuController.deleteDatabase(dbName));
+    },
+
+    async listDatabases() {
+      return Promise.resolve(kuzuController.listDatabases());
+    },
+
+    async connectToDatabase(
+      dbName: string,
+      options: Record<string, any> = {}
+    ) {
+      return Promise.resolve(
+        kuzuController.connectToDatabase(dbName, options)
+      );
+    },
+
+    async getCurrentDatabaseName() {
+      return Promise.resolve(kuzuController.getCurrentDatabaseName());
+    },
+
+    async saveDatabase() {
+      return Promise.resolve(kuzuController.saveDatabase());
+    },
+
+    async loadDatabase() {
+      return Promise.resolve(kuzuController.loadDatabase());
+    },
   };
 
   _internal = {
@@ -200,6 +244,7 @@ class MainController {
     async getAllSchemaProperties() {
       return Promise.resolve(kuzuController.getAllSchemaProperties());
     },
+
   };
 }
 

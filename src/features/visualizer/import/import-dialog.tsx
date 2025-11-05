@@ -78,20 +78,30 @@ function ImportContent({ option, store, onClose }: { option: ImportOption; store
     isLoading,
     getErrorMessage,
   } = useAsyncFn(option.handler.bind(option), {
-    onSuccess: (result: any) => {
-      toast.success(result.message);
-      
-      // If import was successful and has data, update the graph state
-      if (result.data) {
+    onSuccess: async (result: any) => {
+      if (result?.message) {
+        toast.success(result.message);
+      }
+
+      if (result?.databaseName && result?.data) {
+        store.setActiveDatabaseFromSnapshot(result.databaseName, {
+          nodes: result.data.nodes,
+          edges: result.data.edges,
+          nodeTables: result.data.nodeTables,
+          edgeTables: result.data.edgeTables,
+          directed: result.data.directed,
+        });
+        await store.refreshDatabases();
+      } else if (result?.data) {
         store.setGraphState({
           nodes: result.data.nodes,
           edges: result.data.edges,
           nodeTables: result.data.nodeTables,
           edgeTables: result.data.edgeTables,
+          directed: result.data.directed,
         });
       }
-      
-      // Close dialog after successful import
+
       onClose();
     },
     onError: (err) => {

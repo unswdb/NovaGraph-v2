@@ -58,6 +58,7 @@ export function createSchema(s: GraphSchema): GraphSchema {
 }
 
 export type GraphDatabase = {
+  name: string;
   label: string;
   graph: {
     nodes: GraphNode[];
@@ -70,6 +71,11 @@ export type GraphDatabase = {
     edgeTablesMap: Map<string, EdgeSchema>;
     directed: boolean;
   };
+};
+
+export type DatabaseOption = {
+  name: string;
+  label: string;
 };
 
 export type ExecuteQueryResult = ReturnType<KuzuBaseService["executeQuery"]>;

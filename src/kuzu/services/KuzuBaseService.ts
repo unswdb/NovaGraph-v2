@@ -46,6 +46,14 @@ export default class KuzuBaseService {
   }
 
   snapshotGraphState() {
+    if (!this.connection) {
+      return {
+        nodes: [],
+        edges: [],
+        nodeTables: [],
+        edgeTables: [],
+      };
+    }
     return snapshotGraphState(this.connection);
   }
 
@@ -55,7 +63,7 @@ export default class KuzuBaseService {
    * @param {string} query - The Cypher query to execute
    * @returns {Array<string>} - Array of column type strings
    */
-  getColumnTypes(query: string): string[] {
+  getColumnTypes(query: string): string[] | Promise<string[]> {
     if (!this.connection || !query.trim()) {
       throw new Error("Connection not initialized or empty query");
     }
@@ -72,7 +80,7 @@ export default class KuzuBaseService {
    * @param {string} query - The Cypher query to execute
    * @returns {Object} - Query execution result object
    */
-  executeQuery(query: string) {
+  executeQuery(query: string): any {
     if (!this.connection || !query.trim()) {
       throw new Error("Connection not initialized or empty query");
     }
