@@ -12,7 +12,7 @@ import {
   getAllSchemaPropertiesQuery,
   getEdgeSchemaConnectionQuery,
   getSingleSchemaPropertiesQuery,
-} from "../helpers/KuzuQueryBuilder";
+} from "./KuzuQueryBuilder";
 import {
   parseNodesResult,
   parseEdgesResult,

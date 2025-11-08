@@ -1,9 +1,9 @@
-import { snapshotGraphState } from "./KuzuQueryExecutor";
+import { snapshotGraphState } from "../helpers/KuzuQueryExecutor";
 
 import {
   queryResultColorMapExtraction,
   processQueryResult,
-} from "./KuzuQueryResultExtractor";
+} from "../helpers/KuzuQueryResultExtractor";
 
 import {
   createSchemaQuery,
@@ -28,7 +28,7 @@ import type { InputChangeResult } from "~/features/visualizer/inputs";
 import type {
   ErrorQueryResult,
   SuccessQueryResult,
-} from "./KuzuQueryResultExtractor.types";
+} from "../helpers/KuzuQueryResultExtractor.types";
 import type Connection from "../types/kuzu_wasm_internal/connection";
 import { throwOnFailedQuery } from "./KuzuBaseService.util";
 

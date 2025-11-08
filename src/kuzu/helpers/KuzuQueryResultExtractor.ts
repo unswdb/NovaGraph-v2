@@ -3,7 +3,7 @@ import type {
   GraphNode,
   GraphSchema,
 } from "~/features/visualizer/types";
-import { getSingleSchemaPropertiesQuery } from "../helpers/KuzuQueryBuilder";
+import { getSingleSchemaPropertiesQuery } from "./KuzuQueryBuilder";
 import type {
   NonPrimaryKeyType,
   PrimaryKeyType,
