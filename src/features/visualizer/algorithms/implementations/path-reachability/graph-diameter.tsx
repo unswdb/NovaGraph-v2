@@ -5,23 +5,16 @@ import {
 } from "react-window";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
+
 import type { GraphDiameterOutputData } from "~/igraph/algorithms/Misc/IgraphDiameter";
 
 export const graphDiameter = createGraphAlgorithm<GraphDiameterOutputData>({
   title: "Graph Diameter",
   description: "Calculates the longest shortest path between any two nodes.",
   inputs: [],
-    wasmFunction: async (controller, _) => {
-      const algorithm = controller.getAlgorithm();
-      if (algorithm === undefined) {
-        throw new Error("Algorithm controller not initialized");
-      }
-      const result = await algorithm.graphDiameter();
-      return {
-        ...result,
-        type: "algorithm",
-      };
-    },
+  wasmFunction: async (igraphController, _) => {
+    return await igraphController.graphDiameter();
+  },
   output: (props) => <GraphDiameter {...props} />,
 });
 

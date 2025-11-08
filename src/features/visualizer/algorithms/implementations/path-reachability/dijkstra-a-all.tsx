@@ -26,16 +26,8 @@ export const dijkstraAToAll = createGraphAlgorithm<DijkstraAToAllOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: async (controller, [args]) => {
-    const algorithm = controller.getAlgorithm();
-    if (algorithm === undefined) {
-      throw new Error("Algorithm controller not initialized");
-    }
-    const result = await algorithm.dijkstraAToAll(args);
-    return {
-      ...result,
-      type: "algorithm" as const,
-    };
+  wasmFunction: async (igraphController, [arg1]) => {
+    return await igraphController.dijkstraAToAll(arg1);
   },
   output: (props) => <DijkstraAToAll {...props} />,
 });
@@ -182,7 +174,9 @@ function DijkstraSingleSourcePathRowComponent({
       >
         {path.path.map((p, i) => (
           <div key={`${index}-${i}-${p}`} className="flex items-center">
-            <span className="px-3 py-1.5 rounded-md bg-primary-low">{p}</span>
+            <span className="px-3 py-1.5 rounded-md text-nowrap bg-primary-low">
+              {p}
+            </span>
             {i < path.path.length - 1 && <span>→</span>}
           </div>
         ))}

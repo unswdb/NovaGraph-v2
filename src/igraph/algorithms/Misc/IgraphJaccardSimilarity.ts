@@ -35,13 +35,12 @@ function mapKuzuIdsToIgraphIds(
 async function _runIgraphAlgo(
   igraphMod: any,
   graphData: KuzuToIgraphParseResult,
-  kuzuNodeIds: string[]
+  igraphIds: number[]
 ): Promise<any> {
-  const igraphIds = mapKuzuIdsToIgraphIds(kuzuNodeIds, graphData.KuzuToIgraphMap);
   try {
     return await igraphMod.jaccard_similarity(igraphIds);
   } catch (e) {
-    throw new Error("internal jaccard similarity error: " + e);
+    throw new Error(igraphMod.what_to_stderr(e));
   }
 }
 
@@ -53,20 +52,21 @@ function _parseResult(
 
   const { data, mode, colorMap = {} } = algorithmResult;
 
-  const mappedColorMap = mapColorMapIds(colorMap, mapIdBack);
-
-  const nodes: string[] = (data.nodes ?? []).map((n: any) => mapIdBack(n));
-  const maxSimilarity = data.maxSimilarity ?? { node1: "", node2: "", similarity: 0 };
+  const maxSimilarity = data.maxSimilarity ?? {
+    node1: "",
+    node2: "",
+    similarity: 0,
+  };
 
   return {
     mode,
-    colorMap: mappedColorMap,
+    colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
-      nodes,
+      nodes: data.nodes,
       similarityMatrix: data.similarityMatrix ?? [],
       maxSimilarity: {
-        node1: mapIdBack(maxSimilarity.node1),
-        node2: mapIdBack(maxSimilarity.node2),
+        node1: maxSimilarity.node1,
+        node2: maxSimilarity.node2,
         similarity: maxSimilarity.similarity ?? 0,
       },
     },
@@ -78,8 +78,10 @@ export async function igraphJaccardSimilarity(
   graphData: KuzuToIgraphParseResult,
   kuzuNodeIds: string[]
 ): Promise<JaccardSimilarityResult> {
-  const wasmResult = await _runIgraphAlgo(igraphMod, graphData, kuzuNodeIds);
+  const igraphIds = mapKuzuIdsToIgraphIds(
+    kuzuNodeIds,
+    graphData.KuzuToIgraphMap
+  );
+  const wasmResult = await _runIgraphAlgo(igraphMod, graphData, igraphIds);
   return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
 }
-
-

@@ -55,16 +55,8 @@ export const yen = createGraphAlgorithm<YenOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: async (controller, [startId, endId, k]) => {
-    const algorithm = controller.getAlgorithm();
-    if (algorithm === undefined) {
-      throw new Error("Algorithm controller not initialized");
-    }
-    const result = await algorithm.yenKShortestPaths(startId, endId, k);
-    return {
-      ...result,
-      type: "algorithm" as const,
-    };
+  wasmFunction: async (igraphController, [arg1, arg2, k]) => {
+    return await igraphController.yenKShortestPaths(arg1, arg2, k);
   },
   output: (props) => <Yen {...props} />,
 });
@@ -126,14 +118,20 @@ function Yen(props: GraphAlgorithmResult<YenOutputData>) {
             />
           </div>
         </div>
-        <div className="max-h-80 overflow-y-auto border border-border rounded-md">
-          <List
-            rowComponent={YenPathRowComponent}
-            rowCount={paths.length + 1} // Top header row
-            rowHeight={rowHeight}
-            rowProps={{ showWeight: showWeight.value ?? false, paths }}
-          />
-        </div>
+        {paths.length > 0 ? (
+          <div className="max-h-80 overflow-y-auto border border-border rounded-md">
+            <List
+              rowComponent={YenPathRowComponent}
+              rowCount={paths.length + 1} // Top header row
+              rowHeight={rowHeight}
+              rowProps={{ showWeight: showWeight.value ?? false, paths }}
+            />
+          </div>
+        ) : (
+          <p className="text-critical font-medium">
+            No shortest paths exist because target isn't reachable
+          </p>
+        )}
       </div>
 
       {/* What this means */}
@@ -238,7 +236,9 @@ function YenPathRowComponent({
       >
         {path.path.map((p, i) => (
           <div key={`${index}-${i}-${p}`} className="flex items-center">
-            <span className="px-3 py-1.5 rounded-md bg-primary-low">{p}</span>
+            <span className="px-3 py-1.5 rounded-md text-nowrap bg-primary-low">
+              {p}
+            </span>
             {i < path.path.length - 1 && <span>→</span>}
           </div>
         ))}

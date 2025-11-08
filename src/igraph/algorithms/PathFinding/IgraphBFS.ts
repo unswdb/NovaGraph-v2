@@ -18,7 +18,11 @@ async function _runIgraphAlgo(
   igraphMod: any,
   igraphSourceID: number
 ): Promise<BFSResult> {
-  return await igraphMod.bfs(igraphSourceID);
+  try {
+    return await igraphMod.bfs(igraphSourceID);
+  } catch (e) {
+    throw new Error(igraphMod.what_to_stderr(e));
+  }
 }
 
 function _parseResult(
@@ -27,21 +31,15 @@ function _parseResult(
 ): BFSResult {
   const mapIdBack = createMapIdBack(IgraphToKuzu);
 
-  // Map the data back to Kuzu IDs
-  const mappedData: BFSData = {
-    algorithm: algorithmResult.data.algorithm,
-    source: mapIdBack(algorithmResult.data.source),
-    nodesFound: algorithmResult.data.nodesFound,
-    layers: algorithmResult.data.layers.map((l) => ({
-      layer: l.layer.map((x) => mapIdBack(x)),
-      index: l.index,
-    })),
-  };
-
   return {
     mode: algorithmResult.mode,
     colorMap: mapColorMapIds(algorithmResult.colorMap, mapIdBack),
-    data: mappedData,
+    data: {
+      algorithm: algorithmResult.data.algorithm,
+      source: algorithmResult.data.source,
+      nodesFound: algorithmResult.data.nodesFound,
+      layers: algorithmResult.data.layers,
+    },
   };
 }
 

@@ -4,6 +4,7 @@ export type IgraphInput = {
   dst: Int32Array; // length = E
   directed: boolean; // true = directed
   weight?: Float64Array | Float32Array; // optional, length = E
+  labels: string[];
 };
 
 export type KuzuToIgraphParseResult = {

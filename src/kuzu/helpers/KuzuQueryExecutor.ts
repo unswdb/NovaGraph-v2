@@ -1,14 +1,4 @@
 import {
-  isEdgeSchema,
-  isNodeSchema,
-  type BaseGraphSchema,
-  type EdgeSchema,
-  type GraphEdge,
-  type GraphNode,
-  type GraphSchema,
-  type NodeSchema,
-} from "~/features/visualizer/types";
-import {
   getAllSchemaPropertiesQuery,
   getEdgeSchemaConnectionQuery,
   getSingleSchemaPropertiesQuery,
@@ -20,6 +10,17 @@ import {
   parseSingleTableResult,
   parseTableConnection,
 } from "./KuzuQueryResultExtractor";
+
+import {
+  isEdgeSchema,
+  isNodeSchema,
+  type BaseGraphSchema,
+  type EdgeSchema,
+  type GraphEdge,
+  type GraphNode,
+  type GraphSchema,
+  type NodeSchema,
+} from "~/features/visualizer/types";
 
 // type ConnectionSync = import("../../types/kuzu-wasm/sync/connection");
 

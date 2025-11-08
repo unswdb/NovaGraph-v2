@@ -20,7 +20,7 @@ async function _runIgraphAlgo(igraphMod: any): Promise<any> {
   try {
     return await igraphMod.topological_sort();
   } catch (e) {
-    throw new Error("internal topological sort error: " + e);
+    throw new Error(igraphMod.what_to_stderr(e));
   }
 }
 
@@ -37,10 +37,7 @@ function _parseResult(
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
       algorithm: data.algorithm ?? "Topological Sort",
-      order: (data.order ?? []).map((item: any) => ({
-        id: mapIdBack(item.id),
-        node: item.node ?? "",
-      })),
+      order: data.order ?? [],
     },
   };
 }
@@ -52,4 +49,3 @@ export async function igraphTopologicalSort(
   const wasmResult = await _runIgraphAlgo(igraphMod);
   return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
 }
-

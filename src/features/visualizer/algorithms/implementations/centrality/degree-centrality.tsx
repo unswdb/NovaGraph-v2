@@ -13,16 +13,8 @@ export const degreeCentrality =
     title: "Degree Centrality",
     description: "Measures the number of edges connected to a node.",
     inputs: [],
-    wasmFunction: async (controller, _) => {
-      const algorithm = controller.getAlgorithm();
-      if (algorithm === undefined) {
-        throw new Error("Algorithm controller not initialized");
-      }
-      const result = await algorithm.degreeCentrality();
-      return {
-        ...result,
-        type: "algorithm",
-      };
+    wasmFunction: async (igraphController, _) => {
+      return await igraphController.degreeCentrality();
     },
     output: (props) => <DegreeCentrality {...props} />,
   });

@@ -1,5 +1,6 @@
 import type { KuzuToIgraphParseResult } from "../../types/types";
 import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
+
 import type { CentralityItem } from "~/features/visualizer/algorithms/implementations/centrality/types";
 
 export type ClosenessCentralityOutputData = {
@@ -15,7 +16,11 @@ export type ClosenessCentralityResult = {
 };
 
 async function _runIgraphAlgo(igraphMod: any): Promise<any> {
-  return await igraphMod.closeness_centrality();
+  try {
+    return await igraphMod.closeness_centrality();
+  } catch (e) {
+    throw new Error(igraphMod.what_to_stderr(e));
+  }
 }
 
 function _parseResult(
@@ -44,5 +49,3 @@ export async function igraphClosenessCentrality(
   const wasmResult = await _runIgraphAlgo(igraphMod);
   return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
 }
-
-

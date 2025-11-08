@@ -28,7 +28,11 @@ async function _runIgraphAlgo(
   igraphEnd: number,
   k: number
 ): Promise<any> {
-  return await igraphMod.yen_source_to_target(igraphStart, igraphEnd, k);
+  try {
+    return await igraphMod.yen_source_to_target(igraphStart, igraphEnd, k);
+  } catch (e) {
+    throw new Error(igraphMod.what_to_stderr(e));
+  }
 }
 
 function _parseResult(
@@ -39,22 +43,16 @@ function _parseResult(
 
   const { data, mode, colorMap = {} } = algorithmResult;
 
-  const paths = (data.paths ?? []).map((p: any) => ({
-    num: p.num,
-    path: (p.path ?? []).map((nodeId: string | number) => mapIdBack(nodeId)),
-    weight: p.weight,
-  }));
-
   return {
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
       algorithm: data.algorithm ?? "Yen's k Shortest Paths",
-      source: mapIdBack(data.source),
-      target: mapIdBack(data.target),
+      source: data.source,
+      target: data.target,
       k: data.k,
       weighted: data.weighted,
-      paths,
+      paths: data.paths ?? [],
     },
   };
 }

@@ -5,6 +5,7 @@ import {
 } from "react-window";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
+
 import type { HarmonicCentralityOutputData } from "~/igraph/algorithms/Centrality/IgraphHarmonicCentrality";
 
 export const harmonicCentrality =
@@ -13,16 +14,8 @@ export const harmonicCentrality =
     description:
       "Measures the average harmonic mean of the shortest paths between a node to all other nodes.",
     inputs: [],
-    wasmFunction: async (controller, _) => {
-      const algorithm = controller.getAlgorithm();
-      if (algorithm === undefined) {
-        throw new Error("Algorithm controller not initialized");
-      }
-      const result = await algorithm.harmonicCentrality();
-      return {
-        ...result,
-        type: "algorithm",
-      };
+    wasmFunction: async (igraphController, _) => {
+      return await igraphController.harmonicCentrality();
     },
     output: (props) => <HarmonicCentrality {...props} />,
   });

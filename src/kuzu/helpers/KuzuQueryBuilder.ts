@@ -5,12 +5,13 @@
  * Each function returns a Cypher query string that can be executed by any query executor.
  */
 
-import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
 import type {
   CompositeType,
   ScalarType,
   ValueWithType,
 } from "../types/KuzuDBTypes";
+
+import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
 import type {
   NonPrimaryKeyType,
   PrimaryKeyType,

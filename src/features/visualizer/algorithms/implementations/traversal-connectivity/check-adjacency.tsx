@@ -4,40 +4,35 @@ import { cn } from "~/lib/utils";
 import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";
 import type { VerticesAreAdjacentOutputData } from "~/igraph/algorithms/Misc/IgraphVerticesAreAdjacent";
 
-export const checkAdjacency = createGraphAlgorithm<VerticesAreAdjacentOutputData>({
-  title: "Check Adjacency",
-  description: "Checks to see if two nodes are connected by a single edge.",
-  inputs: [
-    createAlgorithmSelectInput({
-      id: "check-adjacency-start-node",
-      key: "start_node",
-      displayName: "Start Node",
-      source: "nodes",
-      required: true,
-    }),
-    createAlgorithmSelectInput({
-      id: "check-adjacency-end-node",
-      key: "end_node",
-      displayName: "End Node",
-      source: "nodes",
-      required: true,
-    }),
-  ],
-  wasmFunction: async (controller, [arg1, arg2]) => {
-    const algorithm = controller.getAlgorithm();
-    if (algorithm === undefined) {
-      throw new Error("Algorithm controller not initialized");
-    }
-    const result = await algorithm.verticesAreAdjacent(arg1, arg2);
-    return {
-      ...result,
-      type: "algorithm",
-    };
-  },
-  output: (props) => <CheckAdjacency {...props} />,
-});
+export const checkAdjacency =
+  createGraphAlgorithm<VerticesAreAdjacentOutputData>({
+    title: "Check Adjacency",
+    description: "Checks to see if two nodes are connected by a single edge.",
+    inputs: [
+      createAlgorithmSelectInput({
+        id: "check-adjacency-start-node",
+        key: "start_node",
+        displayName: "Start Node",
+        source: "nodes",
+        required: true,
+      }),
+      createAlgorithmSelectInput({
+        id: "check-adjacency-end-node",
+        key: "end_node",
+        displayName: "End Node",
+        source: "nodes",
+        required: true,
+      }),
+    ],
+    wasmFunction: async (igraphController, [arg1, arg2]) => {
+      return await igraphController.verticesAreAdjacent(arg1, arg2);
+    },
+    output: (props) => <CheckAdjacency {...props} />,
+  });
 
-function CheckAdjacency(props: GraphAlgorithmResult<VerticesAreAdjacentOutputData>) {
+function CheckAdjacency(
+  props: GraphAlgorithmResult<VerticesAreAdjacentOutputData>
+) {
   const { source, target, adjacent, weight } = props.data;
   return (
     <div className="space-y-4">

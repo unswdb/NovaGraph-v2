@@ -14,16 +14,8 @@ export const nodeStrengthCentrality =
     description:
       "Measures the sum of the weights of the edges connected to a node.",
     inputs: [],
-    wasmFunction: async (controller, _) => {
-      const algorithm = controller.getAlgorithm();
-      if (algorithm === undefined) {
-        throw new Error("Algorithm controller not initialized");
-      }
-      const result = await algorithm.strengthCentrality();
-      return {
-        ...result,
-        type: "algorithm",
-      };
+    wasmFunction: async (igraphController, _) => {
+      return await igraphController.strengthCentrality();
     },
     output: (props) => <NodeStrengthCentrality {...props} />,
   });

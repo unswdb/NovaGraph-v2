@@ -23,7 +23,7 @@ async function _runIgraphAlgo(igraphMod: any): Promise<any> {
   try {
     return await igraphMod.diameter();
   } catch (e) {
-    throw new Error("internal diameter error: " + e);
+    throw new Error(igraphMod.what_to_stderr(e));
   }
 }
 
@@ -35,21 +35,15 @@ function _parseResult(
 
   const { data, mode, colorMap = {} } = algorithmResult;
 
-  const path = (data.path ?? []).map(({ from, to, weight }: any) => ({
-    from: mapIdBack(from),
-    to: mapIdBack(to),
-    weight,
-  }));
-
   return {
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
-      source: mapIdBack(data.source),
-      target: mapIdBack(data.target),
+      source: data.source,
+      target: data.target,
       weighted: data.weighted ?? false,
       diameter: data.diameter ?? 0,
-      path,
+      path: data.path,
     },
   };
 }
@@ -61,4 +55,3 @@ export async function igraphDiameter(
   const wasmResult = await _runIgraphAlgo(igraphMod);
   return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
 }
-

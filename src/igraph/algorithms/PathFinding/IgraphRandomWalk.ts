@@ -28,7 +28,11 @@ async function _runIgraphAlgo(
   igraphStart: number,
   steps: number
 ): Promise<any> {
-  return await igraphMod.random_walk(igraphStart, steps);
+  try {
+    return await igraphMod.random_walk(igraphStart, steps);
+  } catch (e) {
+    throw new Error(igraphMod.what_to_stderr(e));
+  }
 }
 
 function _parseResult(
@@ -38,13 +42,6 @@ function _parseResult(
   const mapIdBack = createMapIdBack(IgraphToKuzu);
 
   const { data, mode, colorMap = {} } = algorithmResult;
-
-  const path = (data.path ?? []).map((p: any) => ({
-    step: p.step,
-    from: mapIdBack(p.from),
-    to: mapIdBack(p.to),
-    weight: p.weight,
-  }));
 
   return {
     mode,
@@ -56,7 +53,7 @@ function _parseResult(
       weighted: data.weighted,
       maxFrequencyNode: mapIdBack(data.maxFrequencyNode),
       maxFrequency: data.maxFrequency,
-      path,
+      path: data.path ?? [],
     },
   };
 }
@@ -95,5 +92,3 @@ export async function igraphRandomWalk(
   const wasmResult = await _runIgraphAlgo(igraphMod, startIgraphId, steps);
   return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
 }
-
-

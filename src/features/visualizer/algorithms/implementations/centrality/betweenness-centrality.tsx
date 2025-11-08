@@ -5,6 +5,7 @@ import {
 } from "react-window";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
+
 import type { BetweennessCentralityOutputData } from "~/igraph/algorithms/Centrality/IgraphBetweenessCentrality";
 
 export const betweennessCentrality =
@@ -13,16 +14,8 @@ export const betweennessCentrality =
     description:
       "Count how often a node lies on shortest paths between others.",
     inputs: [],
-    wasmFunction: async (controller, _) => {
-      const algorithm = controller.getAlgorithm();
-      if (algorithm === undefined) {
-        throw new Error("Algorithm controller not initialized");
-      }
-      const result = await algorithm.betweennessCentrality();
-      return {
-        ...result,
-        type: "algorithm" ,
-      };
+    wasmFunction: async (igraphController, _) => {
+      return await igraphController.betweennessCentrality();
     },
     output: (props) => <BetweennessCentrality {...props} />,
   });

@@ -164,7 +164,7 @@ export class IgraphController {
     const kuzuData = await this._getKuzuData();
     const direction = this._getDirection();
     const parseResult = KuzuToIgraphParsing(
-      kuzuData.nodes.length,
+      kuzuData.nodes,
       kuzuData.edges,
       direction
     );
@@ -177,7 +177,8 @@ export class IgraphController {
       igraphInput.src,
       igraphInput.dst,
       igraphInput.directed,
-      igraphInput.weight
+      igraphInput.weight,
+      igraphInput.labels
     );
     return parseResult;
   }
@@ -198,17 +199,31 @@ export class IgraphController {
 
   async stronglyConnectedComponents(): Promise<SCCResult> {
     const graphData = await this._prepareGraphData();
-    return await igraphStronglyConnectedComponents(this._wasmGraphModule, graphData);
+    return await igraphStronglyConnectedComponents(
+      this._wasmGraphModule,
+      graphData
+    );
   }
 
   async weaklyConnectedComponents(): Promise<WCCResult> {
     const graphData = await this._prepareGraphData();
-    return await igraphWeaklyConnectedComponents(this._wasmGraphModule, graphData);
+    return await igraphWeaklyConnectedComponents(
+      this._wasmGraphModule,
+      graphData
+    );
   }
 
-  async verticesAreAdjacent(source: string, target: string): Promise<VerticesAreAdjacentResult> {
+  async verticesAreAdjacent(
+    source: string,
+    target: string
+  ): Promise<VerticesAreAdjacentResult> {
     const graphData = await this._prepareGraphData();
-    return await igraphVerticesAreAdjacent(this._wasmGraphModule, graphData, source, target);
+    return await igraphVerticesAreAdjacent(
+      this._wasmGraphModule,
+      graphData,
+      source,
+      target
+    );
   }
 
   async topologicalSort(): Promise<TopologicalSortResult> {
@@ -235,7 +250,10 @@ export class IgraphController {
     return await igraphDijkstraAToAll(this._wasmGraphModule, graphData, start);
   }
 
-  async bellmanFordAToB(start: string, end: string): Promise<BellmanFordAToBResult> {
+  async bellmanFordAToB(
+    start: string,
+    end: string
+  ): Promise<BellmanFordAToBResult> {
     const graphData = await this._prepareGraphData();
     return await igraphBellmanFordAToB(
       this._wasmGraphModule,
@@ -247,12 +265,21 @@ export class IgraphController {
 
   async bellmanFordAToAll(start: string): Promise<BellmanFordAToAllResult> {
     const graphData = await this._prepareGraphData();
-    return await igraphBellmanFordAToAll(this._wasmGraphModule, graphData, start);
+    return await igraphBellmanFordAToAll(
+      this._wasmGraphModule,
+      graphData,
+      start
+    );
   }
 
   async randomWalk(start: string, steps: number): Promise<RandomWalkResult> {
     const graphData = await this._prepareGraphData();
-    return await igraphRandomWalk(this._wasmGraphModule, graphData, start, steps);
+    return await igraphRandomWalk(
+      this._wasmGraphModule,
+      graphData,
+      start,
+      steps
+    );
   }
 
   async yenKShortestPaths(
@@ -349,7 +376,10 @@ export class IgraphController {
 
   async localClusteringCoefficient(): Promise<LocalClusteringCoefficientResult> {
     const graphData = await this._prepareGraphData();
-    return await igraphLocalClusteringCoefficient(this._wasmGraphModule, graphData);
+    return await igraphLocalClusteringCoefficient(
+      this._wasmGraphModule,
+      graphData
+    );
   }
 
   async kCore(k: number): Promise<KCoreResult> {
@@ -368,7 +398,11 @@ export class IgraphController {
 
   async jaccardSimilarity(nodes: string[]): Promise<JaccardSimilarityResult> {
     const graphData = await this._prepareGraphData();
-    return await igraphJaccardSimilarity(this._wasmGraphModule, graphData, nodes);
+    return await igraphJaccardSimilarity(
+      this._wasmGraphModule,
+      graphData,
+      nodes
+    );
   }
 
   async missingEdgePrediction(

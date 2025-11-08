@@ -11,7 +11,6 @@ import InputComponent, {
   createEmptyInputResult,
   createSwitchInput,
 } from "~/features/visualizer/inputs";
-
 import type { MinimalSpanningTreeOutputData } from "~/igraph/algorithms/PathFinding/IgraphMST";
 
 export const mst = createGraphAlgorithm<MinimalSpanningTreeOutputData>({
@@ -19,12 +18,8 @@ export const mst = createGraphAlgorithm<MinimalSpanningTreeOutputData>({
   description:
     "Finds the subset of edges that connects all nodes in the graph with the minimum possible total edge weight.",
   inputs: [],
-  wasmFunction: async (controller, _) => {
-    const algorithm = controller.getAlgorithm();
-    if (algorithm === undefined) {
-      throw new Error("Algorithm controller not initialized");
-    }
-    return await algorithm.minimumSpanningTree();
+  wasmFunction: async (igraphController, _) => {
+    return await igraphController.minimumSpanningTree();
   },
   output: (props) => <MinimalSpanningTree {...props} />,
 });

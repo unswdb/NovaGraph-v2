@@ -5,22 +5,15 @@ import {
 } from "react-window";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
+
 import type { EulerianPathOutputData } from "~/igraph/algorithms/Misc/IgraphEulerianPath";
 
 export const eulerianPath = createGraphAlgorithm<EulerianPathOutputData>({
   title: "Eulerian Path",
   description: "Finds a path that visits every edge exactly once.",
   inputs: [],
-  wasmFunction: async (controller, _) => {
-    const algorithm = controller.getAlgorithm();
-    if (algorithm === undefined) {
-      throw new Error("Algorithm controller not initialized");
-    }
-    const result = await algorithm.eulerianPath();
-    return {
-      ...result,
-      type: "algorithm",
-    };
+  wasmFunction: async (igraphController, _) => {
+    return await igraphController.eulerianPath();
   },
   output: (props) => <EulerianPath {...props} />,
 });

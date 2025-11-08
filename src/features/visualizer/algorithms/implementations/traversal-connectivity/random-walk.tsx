@@ -35,16 +35,8 @@ export const randomWalk = createGraphAlgorithm<RandomWalkOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: async (controller, [arg1, arg2]) => {
-    const algorithm = controller.getAlgorithm();
-    if (algorithm === undefined) {
-      throw new Error("Algorithm controller not initialized");
-    }
-    const result = await algorithm.randomWalk(arg1, arg2);
-    return {
-      ...result,
-      type: "algorithm" as const,
-    };
+  wasmFunction: async (igraphController, [arg1, arg2]) => {
+    return await igraphController.randomWalk(arg1, arg2);
   },
   output: (props) => <RandomWalk {...props} />,
 });

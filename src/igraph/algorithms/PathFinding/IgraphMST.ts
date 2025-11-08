@@ -22,7 +22,11 @@ export type MSTResult = {
 };
 
 async function _runIgraphAlgo(igraphMod: any): Promise<any> {
-  return await igraphMod.min_spanning_tree();
+  try {
+    return await igraphMod.min_spanning_tree();
+  } catch (e) {
+    throw new Error(igraphMod.what_to_stderr(e));
+  }
 }
 
 function _parseResult(
@@ -33,13 +37,6 @@ function _parseResult(
 
   const { data, mode, colorMap = {} } = algorithmResult;
 
-  const edges = (data.edges ?? []).map(({ num, from, to, weight }: any) => ({
-    num,
-    from: mapIdBack(from),
-    to: mapIdBack(to),
-    weight,
-  }));
-
   return {
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
@@ -48,7 +45,7 @@ function _parseResult(
       weighted: data.weighted ?? false,
       maxEdges: data.maxEdges ?? 0,
       totalWeight: data.totalWeight,
-      edges,
+      edges: data.edges ?? [],
     },
   };
 }
@@ -60,4 +57,3 @@ export async function igraphMST(
   const wasmResult = await _runIgraphAlgo(igraphMod);
   return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
 }
-

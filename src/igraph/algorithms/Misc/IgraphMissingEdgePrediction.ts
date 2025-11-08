@@ -23,7 +23,7 @@ async function _runIgraphAlgo(
   try {
     return await igraphMod.missing_edge_prediction(numSamples, numBins);
   } catch (e) {
-    throw new Error("internal missing edge prediction error: " + e);
+    throw new Error(igraphMod.what_to_stderr(e));
   }
 }
 
@@ -35,21 +35,11 @@ function _parseResult(
 
   const { data, mode, colorMap = {} } = algorithmResult;
 
-  const predictedEdges = (data.predictedEdges ?? []).map(
-    ({ from, to, probability }: any) => ({
-      // from and to are already Kuzu names from igraph_get_name, but we map them
-      // to ensure consistency (mapIdBack handles both strings and numbers)
-      from: mapIdBack(from),
-      to: mapIdBack(to),
-      probability,
-    })
-  );
-
   return {
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
-      predictedEdges,
+      predictedEdges: data.predictedEdges,
     },
   };
 }
@@ -63,4 +53,3 @@ export async function igraphMissingEdgePrediction(
   const wasmResult = await _runIgraphAlgo(igraphMod, sampleSize, numBins);
   return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
 }
-

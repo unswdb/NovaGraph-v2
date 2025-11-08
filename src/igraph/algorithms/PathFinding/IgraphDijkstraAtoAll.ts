@@ -19,7 +19,11 @@ async function _runIgraphAlgo(
   igraphMod: any,
   igraphStart: number
 ): Promise<any> {
-  return await igraphMod.dijkstra_source_to_all(igraphStart);
+  try {
+    return await igraphMod.dijkstra_source_to_all(igraphStart);
+  } catch (e) {
+    throw new Error(igraphMod.what_to_stderr(e));
+  }
 }
 
 function _parseResult(
@@ -30,22 +34,14 @@ function _parseResult(
 
   const { data, mode, colorMap = {} } = algorithmResult;
 
-  const paths = (data.paths ?? []).map((pathObj: any) => ({
-    target: mapIdBack(pathObj.target),
-    path: (pathObj.path ?? []).map((nodeId: string | number) =>
-      mapIdBack(nodeId)
-    ),
-    weight: pathObj.weight,
-  }));
-
   return {
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
       algorithm: data.algorithm ?? "Dijkstra Single Source",
-      source: mapIdBack(data.source),
+      source: data.source,
       weighted: data.weighted,
-      paths,
+      paths: data.paths ?? [],
     },
   };
 }

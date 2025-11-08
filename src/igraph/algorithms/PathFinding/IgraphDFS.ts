@@ -19,7 +19,11 @@ async function _runIgraphAlgo(
   igraphMod: any,
   igraphSourceID: number
 ): Promise<any> {
-  return await igraphMod.dfs(igraphSourceID);
+  try {
+    return await igraphMod.dfs(igraphSourceID);
+  } catch (e) {
+    throw new Error(igraphMod.what_to_stderr(e));
+  }
 }
 
 function _parseResult(
@@ -32,7 +36,7 @@ function _parseResult(
 
   const subtrees = (data.subtrees ?? []).map((s: any) => ({
     num: s.num,
-    tree: (s.tree ?? []).map((nodeId: string | number) => mapIdBack(nodeId)),
+    tree: s.tree ?? [],
   }));
 
   return {
@@ -40,7 +44,7 @@ function _parseResult(
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
       algorithm: data.algorithm ?? "Depth-First Search",
-      source: mapIdBack(data.source),
+      source: data.source,
       nodesFound: data.nodesFound,
       subtrees,
     },
@@ -76,5 +80,3 @@ export async function igraphDFS(
   const wasmResult = await _runIgraphAlgo(igraphMod, igraphID);
   return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
 }
-
-

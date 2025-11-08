@@ -22,7 +22,7 @@ async function _runIgraphAlgo(
   try {
     return await igraphMod.vertices_are_adjacent(igraphSource, igraphTarget);
   } catch (e) {
-    throw new Error("internal vertices are adjacent error: " + e);
+    throw new Error(igraphMod.what_to_stderr(e));
   }
 }
 
@@ -38,8 +38,8 @@ function _parseResult(
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
-      source: mapIdBack(data.source),
-      target: mapIdBack(data.target),
+      source: data.source,
+      target: data.target,
       adjacent: data.adjacent ?? false,
       weight: data.weight,
     },

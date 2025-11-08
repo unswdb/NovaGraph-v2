@@ -18,16 +18,8 @@ export const kCore = createGraphAlgorithm<KCoreOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: async (controller, [arg1]) => {
-    const algorithm = controller.getAlgorithm();
-    if (algorithm === undefined) {
-      throw new Error("Algorithm controller not initialized");
-    }
-    const result = await algorithm.kCore(arg1);
-    return {
-      ...result,
-      type: "algorithm",
-    };
+  wasmFunction: async (igraphController, [arg1]) => {
+    return await igraphController.kCore(arg1);
   },
   output: (props) => <KCore {...props} />,
 });
@@ -65,15 +57,23 @@ function KCore(props: GraphAlgorithmResult<KCoreOutputData>) {
       {/* Nodes in 2-Core */}
       <div className="space-y-3 pt-3 border-t border-t-border">
         <h3 className="font-semibold">Nodes in Core</h3>
-        <div className="flex flex-wrap gap-2 max-h-80 overflow-y-auto">
-          {cores.map((core, i) => (
-            <span
-              key={`${i}-${core}`}
-              className="px-3 py-1.5 rounded-md bg-primary-low max-w-96 truncate whitespace-nowrap"
-            >
-              {core.node}
-            </span>
-          ))}
+        <div className="max-h-80 overflow-auto">
+          {cores.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {cores.map((core, i) => (
+                <span
+                  key={`${i}-${core}`}
+                  className="px-3 py-1.5 rounded-md bg-primary-low max-w-96 truncate whitespace-nowrap"
+                >
+                  {core.node}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-critical font-medium">
+              No nodes in the graph has degree of {k}
+            </p>
+          )}
         </div>
       </div>
 

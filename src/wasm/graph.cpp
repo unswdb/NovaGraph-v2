@@ -83,7 +83,8 @@ void create_graph_from_kuzu_to_igraph(
     val src_js, // Int32Array
     val dst_js, // Int32Array
     igraph_bool_t directed,
-    val weight_js // Float64Array or undefined
+    val weight_js, // Float64Array or undefined
+    val labels_js  // Array<string> or undefined
 )
 {
     igraph_set_attribute_table(&igraph_cattribute_table);
@@ -103,6 +104,22 @@ void create_graph_from_kuzu_to_igraph(
         throw std::runtime_error(std::string("igraph_empty failed: ") + igraph_strerror(rc));
     }
     graph_initialized = true;
+
+    // Set node labels
+    if (!labels_js.isUndefined() && !labels_js.isNull())
+    {
+        const int label_count = labels_js["length"].as<int>();
+        if (label_count != nodes)
+        {
+            igraph_destroy(&globalGraph);
+            throw std::runtime_error("labels_js length must equal 'nodes'");
+        }
+        for (int i = 0; i < nodes; ++i)
+        {
+            const std::string label = labels_js[i].as<std::string>();
+            SETVAS(&globalGraph, "label", i, label.c_str());
+        }
+    }
 
     const int edge_count = src_js["length"].as<int>();
 

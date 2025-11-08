@@ -1,10 +1,8 @@
 import { snapshotGraphState } from "../helpers/KuzuQueryExecutor";
-
 import {
   queryResultColorMapExtraction,
   processQueryResult,
 } from "../helpers/KuzuQueryResultExtractor";
-
 import {
   createSchemaQuery,
   createNodeQuery,
@@ -17,6 +15,13 @@ import {
   updateNodeQuery,
   deleteEdgeQuery,
 } from "../helpers/KuzuQueryBuilder";
+import type {
+  ErrorQueryResult,
+  SuccessQueryResult,
+} from "../helpers/KuzuQueryResultExtractor.types";
+import type Connection from "../types/kuzu_wasm_internal/connection";
+
+import { throwOnFailedQuery } from "./KuzuBaseService.util";
 
 import type { CompositeType } from "~/kuzu/types/KuzuDBTypes";
 import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
@@ -25,12 +30,6 @@ import type {
   PrimaryKeyType,
 } from "~/features/visualizer/schema-inputs";
 import type { InputChangeResult } from "~/features/visualizer/inputs";
-import type {
-  ErrorQueryResult,
-  SuccessQueryResult,
-} from "../helpers/KuzuQueryResultExtractor.types";
-import type Connection from "../types/kuzu_wasm_internal/connection";
-import { throwOnFailedQuery } from "./KuzuBaseService.util";
 
 export default class KuzuBaseService {
   protected db: any;

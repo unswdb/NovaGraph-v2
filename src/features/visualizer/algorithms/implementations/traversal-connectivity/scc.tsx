@@ -6,8 +6,8 @@ import {
 import { ChevronRight } from "lucide-react";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
-import type { SCCOutputData } from "~/igraph/algorithms/Community/IgraphStronglyConnectedComponents";
 
+import type { SCCOutputData } from "~/igraph/algorithms/Community/IgraphStronglyConnectedComponents";
 import {
   Collapsible,
   CollapsibleContent,
@@ -18,16 +18,8 @@ export const scc = createGraphAlgorithm<SCCOutputData>({
   title: "Strongly Connected (SCC)",
   description: "Finds the strongly connected components in a graph.",
   inputs: [],
-  wasmFunction: async (controller, _) => {
-    const algorithm = controller.getAlgorithm();
-    if (algorithm === undefined) {
-      throw new Error("Algorithm controller not initialized");
-    }
-    const result = await algorithm.stronglyConnectedComponents();
-    return {
-      ...result,
-      type: "algorithm",
-    };
+  wasmFunction: async (igraphController, _) => {
+    return await igraphController.stronglyConnectedComponents();
   },
   output: (props) => <SCC {...props} />,
 });

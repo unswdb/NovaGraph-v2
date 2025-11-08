@@ -14,7 +14,6 @@ import InputComponent, {
 } from "~/features/visualizer/inputs";
 import type { BellmanFordAToAllOutputData } from "~/igraph/algorithms/PathFinding/IgraphBellmanFordAToAll";
 
-
 export const bellmanFordAToAll =
   createGraphAlgorithm<BellmanFordAToAllOutputData>({
     title: "Bellman-Ford (A to All)",
@@ -29,16 +28,8 @@ export const bellmanFordAToAll =
         required: true,
       }),
     ],
-    wasmFunction: async (controller, [args]) => {
-      const algorithm = controller.getAlgorithm();
-      if (algorithm === undefined) {
-        throw new Error("Algorithm controller not initialized");
-      }
-      const result = await algorithm.bellmanFordAToAll(args);
-      return {
-        ...result,
-        type: "algorithm" as const,
-      };
+    wasmFunction: async (igraphController, [arg1]) => {
+      return await igraphController.bellmanFordAToAll(arg1);
     },
     output: (props) => <BellmanFordAToAll {...props} />,
   });
@@ -197,7 +188,9 @@ function BFSingleSourcePathRowComponent({
       >
         {path.path.map((p, i) => (
           <div key={`${index}-${i}-${p}`} className="flex items-center">
-            <span className="px-3 py-1.5 rounded-md bg-primary-low">{p}</span>
+            <span className="px-3 py-1.5 rounded-md text-nowrap bg-primary-low">
+              {p}
+            </span>
             {i < path.path.length - 1 && <span>→</span>}
           </div>
         ))}

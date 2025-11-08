@@ -19,7 +19,7 @@ async function _runIgraphAlgo(igraphMod: any): Promise<any> {
   try {
     return await igraphMod.eulerian_circuit();
   } catch (e) {
-    throw new Error("internal eulerian circuit error: " + e);
+    throw new Error(igraphMod.what_to_stderr(e));
   }
 }
 
@@ -31,17 +31,11 @@ function _parseResult(
 
   const { data, mode, colorMap = {} } = algorithmResult;
 
-  const path = (data.path ?? []).map(({ from, to, weight }: any) => ({
-    from: mapIdBack(from),
-    to: mapIdBack(to),
-    weight,
-  }));
-
   return {
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
-      path,
+      path: data.path,
     },
   };
 }
@@ -53,4 +47,3 @@ export async function igraphEulerianCircuit(
   const wasmResult = await _runIgraphAlgo(igraphMod);
   return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
 }
-

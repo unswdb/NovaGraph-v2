@@ -78,7 +78,7 @@ export default function InputDialog({
           (input) => inputResults[input.key].value
         );
         const algorithmResponse = await algorithm.wasmFunction(
-          controller,
+          controller.getAlgorithm(),
           args
         );
         setActiveAlgorithm(algorithm);

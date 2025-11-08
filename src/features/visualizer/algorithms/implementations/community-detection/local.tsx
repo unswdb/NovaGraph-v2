@@ -5,6 +5,7 @@ import {
 } from "react-window";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
+
 import type { LocalClusteringCoefficientOutputData } from "~/igraph/algorithms/Community/IgraphLocalClusteringCoefficient";
 
 export const localClusteringCoefficient =
@@ -13,16 +14,8 @@ export const localClusteringCoefficient =
     description:
       "Measures the number of triangles that pass through a node. Any nodes with a clustering coefficient of 0 are not part of any triangles.",
     inputs: [],
-    wasmFunction: async (controller, _) => {
-      const algorithm = controller.getAlgorithm();
-      if (algorithm === undefined) {
-        throw new Error("Algorithm controller not initialized");
-      }
-      const result = await algorithm.localClusteringCoefficient();
-      return {
-        ...result,
-        type: "algorithm",
-      };
+    wasmFunction: async (igraphController, _) => {
+      return await igraphController.localClusteringCoefficient();
     },
     output: (props) => <LocalClusteringCoefficient {...props} />,
   });
