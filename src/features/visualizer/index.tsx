@@ -9,12 +9,14 @@ import SettingsSidebar from "./settings";
 import GraphRenderer from "./renderer";
 import { StoreProvider } from "./hooks/use-store";
 import CodeOutputDrawer from "./drawer";
+import { LS_KEY } from "../landing/use-navigate-app";
 
 const Visualizer = observer(() => {
   const [store] = useState(() => new VisualizerStore());
 
   useEffect(() => {
     store.initialize();
+    localStorage.setItem(LS_KEY, "app");
     return () => store.cleanup();
   }, []);
 
