@@ -15,10 +15,7 @@ import type {
   NonPrimaryKeyType,
   PrimaryKeyType,
 } from "~/features/visualizer/schema-inputs";
-import type {
-  ColorMap,
-  SizeMap,
-} from "~/features/visualizer/algorithms/implementations";
+import type { ColorMap } from "~/igraph/types";
 
 /**
  * Helper method to process a single query result (returns a single object)

@@ -18,8 +18,8 @@ export default function CopyButton({
         await navigator.clipboard.writeText(value);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
-      } catch (error) {
-        console.error("Failed to copy text: ", error);
+      } catch {
+        throw new Error("Failed to copy text, try again later");
       }
     }
   };

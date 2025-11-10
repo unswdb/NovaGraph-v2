@@ -1,42 +1,37 @@
-import type { KuzuToIgraphParseResult } from "../../types/types";
-import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
+import type {
+  BaseGraphAlgorithmResult,
+  GraphModule,
+  KuzuToIgraphParseResult,
+} from "../../types";
+import { createMapIdBack, mapColorMapIds } from "../../utils/mapIdBack";
+
+import type { GraphNode } from "~/features/visualizer/types";
+import { _runIgraphAlgo } from "~/igraph/utils/runIgraphAlgo";
 
 // Inferred from src/wasm/algorithms/path-finding.cpp (dfs)
-export type DFSOutputData = {
+export type DFSOutputData<T = string> = {
   algorithm: string;
-  source: string;
+  source: T;
   nodesFound: number;
-  subtrees: { num: number; tree: string[] }[];
+  subtrees: { num: number; tree: T[] }[];
 };
 
-export type DFSResult = {
-  colorMap: Record<string, number>;
-  mode: number;
-  data: DFSOutputData;
+export type DFSResult<T = string> = BaseGraphAlgorithmResult & {
+  data: DFSOutputData<T>;
 };
-
-async function _runIgraphAlgo(
-  igraphMod: any,
-  igraphSourceID: number
-): Promise<any> {
-  try {
-    return await igraphMod.dfs(igraphSourceID);
-  } catch (e) {
-    throw new Error(igraphMod.what_to_stderr(e));
-  }
-}
 
 function _parseResult(
   IgraphToKuzu: Map<number, string>,
-  algorithmResult: any
+  nodesMap: Map<string, GraphNode>,
+  algorithmResult: DFSResult<number>
 ): DFSResult {
-  const mapIdBack = createMapIdBack(IgraphToKuzu);
+  const { mapIdBack, mapLabelBack } = createMapIdBack(IgraphToKuzu, nodesMap);
 
   const { data, mode, colorMap = {} } = algorithmResult;
 
-  const subtrees = (data.subtrees ?? []).map((s: any) => ({
+  const subtrees = data.subtrees.map((s) => ({
     num: s.num,
-    tree: s.tree ?? [],
+    tree: s.tree.map((nodeId: string | number) => mapLabelBack(nodeId)),
   }));
 
   return {
@@ -44,7 +39,7 @@ function _parseResult(
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
       algorithm: data.algorithm ?? "Depth-First Search",
-      source: data.source,
+      source: mapLabelBack(data.source),
       nodesFound: data.nodesFound,
       subtrees,
     },
@@ -52,31 +47,20 @@ function _parseResult(
 }
 
 export async function igraphDFS(
-  igraphMod: any,
+  igraphMod: GraphModule,
   graphData: KuzuToIgraphParseResult,
   kuzuSourceID: string
 ): Promise<DFSResult> {
   const igraphID = graphData.KuzuToIgraphMap.get(kuzuSourceID);
 
-  if (igraphID === undefined) {
-    const colorMapOut: Record<string, number> = { [kuzuSourceID]: 1 };
-    return {
-      mode: 3,
-      colorMap: colorMapOut,
-      data: {
-        algorithm: "Depth-First Search",
-        source: kuzuSourceID,
-        nodesFound: 1,
-        subtrees: [
-          {
-            num: 1,
-            tree: [kuzuSourceID],
-          },
-        ],
-      },
-    };
+  if (igraphID == null) {
+    throw new Error(`Source node "${kuzuSourceID}" not found in graph data`);
   }
 
-  const wasmResult = await _runIgraphAlgo(igraphMod, igraphID);
-  return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
+  const wasmResult = await _runIgraphAlgo(igraphMod, (m) => m.dfs(igraphID));
+  return _parseResult(
+    graphData.IgraphToKuzuMap,
+    graphData.nodesMap,
+    wasmResult
+  );
 }

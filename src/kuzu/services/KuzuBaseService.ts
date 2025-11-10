@@ -30,6 +30,7 @@ import type {
   PrimaryKeyType,
 } from "~/features/visualizer/schema-inputs";
 import type { InputChangeResult } from "~/features/visualizer/inputs";
+import type { ColorMap } from "~/igraph/types";
 
 export default class KuzuBaseService {
   protected db: any;
@@ -62,7 +63,7 @@ export default class KuzuBaseService {
     const successQueries: SuccessQueryResult[] = [];
     const failedQueries: ErrorQueryResult[] = [];
     let allSuccess = true;
-    let colorMap = {};
+    let colorMap: ColorMap = {};
     let resultType = "graph";
 
     let currentResult = this.connection.query(query);

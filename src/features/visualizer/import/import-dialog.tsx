@@ -17,7 +17,7 @@ import { Separator } from "~/components/ui/separator";
 import { Button } from "~/components/ui/button";
 import { useAsyncFn } from "~/hooks/use-async-fn";
 
-export default function ImportDialog({ onClose }: { onClose: () => void }) {
+export default function ImportDialog() {
   return (
     <DialogContent className="flex flex-col gap-2 max-h-[80vh] !max-w-[min(100%,calc(80vw))]">
       <DialogHeader>

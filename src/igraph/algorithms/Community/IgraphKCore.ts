@@ -1,34 +1,30 @@
-import type { KuzuToIgraphParseResult } from "../../types/types";
-import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
+import type {
+  BaseGraphAlgorithmResult,
+  GraphModule,
+  KuzuToIgraphParseResult,
+} from "../../types";
+import { createMapIdBack, mapColorMapIds } from "../../utils/mapIdBack";
 
-export type KCoreOutputData = {
+import type { GraphNode } from "~/features/visualizer/types";
+import { _runIgraphAlgo } from "~/igraph/utils/runIgraphAlgo";
+
+export type KCoreOutputData<T = string> = {
+  algorithm: string;
   k: number;
   max_coreness: number; // max over all vertices
-  cores: {
-    id: number; // vertex id (original graph)
-    node: string; // vertex name
-  }[];
+  cores: T[];
 };
 
-export type KCoreResult = {
-  colorMap: Record<string, number>;
-  mode: number;
-  data: KCoreOutputData;
+export type KCoreResult<T = string> = BaseGraphAlgorithmResult & {
+  data: KCoreOutputData<T>;
 };
-
-async function _runIgraphAlgo(igraphMod: any, k: number): Promise<any> {
-  try {
-    return await igraphMod.k_core(k);
-  } catch (e) {
-    throw new Error(igraphMod.what_to_stderr(e));
-  }
-}
 
 function _parseResult(
   IgraphToKuzu: Map<number, string>,
-  algorithmResult: any
+  nodesMap: Map<string, GraphNode>,
+  algorithmResult: KCoreResult<number>
 ): KCoreResult {
-  const mapIdBack = createMapIdBack(IgraphToKuzu);
+  const { mapIdBack, mapLabelBack } = createMapIdBack(IgraphToKuzu, nodesMap);
 
   const { data, mode, colorMap = {} } = algorithmResult;
 
@@ -36,18 +32,23 @@ function _parseResult(
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
-      k: data.k ?? 0,
-      max_coreness: data.max_coreness ?? 0,
-      cores: data.cores,
+      algorithm: data.algorithm,
+      k: data.k,
+      max_coreness: data.max_coreness,
+      cores: data.cores.map((core) => mapLabelBack(core)),
     },
   };
 }
 
 export async function igraphKCore(
-  igraphMod: any,
+  igraphMod: GraphModule,
   graphData: KuzuToIgraphParseResult,
   k: number
 ): Promise<KCoreResult> {
-  const wasmResult = await _runIgraphAlgo(igraphMod, k);
-  return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
+  const wasmResult = await _runIgraphAlgo(igraphMod, (m) => m.k_core(k));
+  return _parseResult(
+    graphData.IgraphToKuzuMap,
+    graphData.nodesMap,
+    wasmResult
+  );
 }

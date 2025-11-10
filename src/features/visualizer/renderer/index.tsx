@@ -8,16 +8,15 @@ import { observer } from "mobx-react-lite";
 
 import type { GraphEdge, GraphNode } from "../types";
 import { useStore } from "../hooks/use-store";
-import type { ColorMap, SizeMap } from "../algorithms/implementations";
 
 import GraphRendererHeader from "./header";
 import GraphRendererFooter from "./footer";
 import { useGraphRendererHelpers } from "./hooks/use-graph-renderer-helpers";
 import { useZoomControls } from "./hooks/use-zoom-controls";
 import NodeMetadata from "./node-metadata";
-import { MODE } from "./constant";
 
 import { cn } from "~/lib/utils";
+import { MODE, type ColorMap, type SizeMap } from "~/igraph/types";
 
 const INITIAL_ZOOM_LEVEL = 1;
 const SIMULATION_LINK_DISTANCE = 20;

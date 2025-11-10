@@ -1,57 +1,67 @@
-import type { KuzuToIgraphParseResult } from "../../types/types";
-import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
+import type {
+  BaseGraphAlgorithmResult,
+  GraphModule,
+  KuzuToIgraphParseResult,
+} from "../../types";
+import { createMapIdBack, mapColorMapIds } from "../../utils/mapIdBack";
 
-export type GraphDiameterOutputData = {
-  source: string;
-  target: string;
+import type { GraphNode } from "~/features/visualizer/types";
+import { _runIgraphAlgo } from "~/igraph/utils/runIgraphAlgo";
+
+export type GraphDiameterOutputData<T = string> = {
+  algorithm: string;
+  source: T;
+  target: T;
   weighted: boolean;
   diameter: number;
   path: {
-    from: string;
-    to: string;
+    from: T;
+    to: T;
     weight?: number; // per-edge, only if weighted
   }[];
 };
 
-export type GraphDiameterResult = {
-  colorMap: Record<string, number>;
-  mode: number;
-  data: GraphDiameterOutputData;
+export type GraphDiameterResult<T = string> = BaseGraphAlgorithmResult & {
+  data: GraphDiameterOutputData<T>;
 };
-
-async function _runIgraphAlgo(igraphMod: any): Promise<any> {
-  try {
-    return await igraphMod.diameter();
-  } catch (e) {
-    throw new Error(igraphMod.what_to_stderr(e));
-  }
-}
 
 function _parseResult(
   IgraphToKuzu: Map<number, string>,
-  algorithmResult: any
+  nodesMap: Map<string, GraphNode>,
+  algorithmResult: GraphDiameterResult<number>
 ): GraphDiameterResult {
-  const mapIdBack = createMapIdBack(IgraphToKuzu);
+  const { mapIdBack, mapLabelBack } = createMapIdBack(IgraphToKuzu, nodesMap);
 
   const { data, mode, colorMap = {} } = algorithmResult;
+
+  const path = data.path.map(({ from, to, weight }) => ({
+    from: mapLabelBack(from),
+    to: mapLabelBack(to),
+    weight,
+  }));
 
   return {
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
-      source: data.source,
-      target: data.target,
-      weighted: data.weighted ?? false,
-      diameter: data.diameter ?? 0,
-      path: data.path,
+      algorithm: data.algorithm,
+      source: mapLabelBack(data.source),
+      target: mapLabelBack(data.target),
+      weighted: data.weighted,
+      diameter: data.diameter,
+      path,
     },
   };
 }
 
 export async function igraphDiameter(
-  igraphMod: any,
+  igraphMod: GraphModule,
   graphData: KuzuToIgraphParseResult
 ): Promise<GraphDiameterResult> {
-  const wasmResult = await _runIgraphAlgo(igraphMod);
-  return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
+  const wasmResult = await _runIgraphAlgo(igraphMod, (m) => m.diameter());
+  return _parseResult(
+    graphData.IgraphToKuzuMap,
+    graphData.nodesMap,
+    wasmResult
+  );
 }

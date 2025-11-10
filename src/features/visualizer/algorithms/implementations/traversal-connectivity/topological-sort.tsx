@@ -102,7 +102,7 @@ function TopologicalOrderRowComponent({
       style={style}
     >
       <span className="px-3 py-1.5">{index}</span>
-      <span className="px-3 py-1.5 truncate">{order.node}</span>
+      <span className="px-3 py-1.5 truncate">{order}</span>
     </div>
   );
 }

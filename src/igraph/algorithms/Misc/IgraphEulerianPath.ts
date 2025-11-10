@@ -1,53 +1,63 @@
-import type { KuzuToIgraphParseResult } from "../../types/types";
-import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
+import type {
+  BaseGraphAlgorithmResult,
+  GraphModule,
+  KuzuToIgraphParseResult,
+} from "../../types";
+import { createMapIdBack, mapColorMapIds } from "../../utils/mapIdBack";
 
-export type EulerianPathOutputData = {
-  start: string;
-  end: string;
+import type { GraphNode } from "~/features/visualizer/types";
+import { _runIgraphAlgo } from "~/igraph/utils/runIgraphAlgo";
+
+export type EulerianPathOutputData<T = string> = {
+  algorithm: string;
+  start: T;
+  end: T;
   path: {
-    from: string;
-    to: string;
+    from: T;
+    to: T;
     weight?: number;
   }[];
 };
 
-export type EulerianPathResult = {
-  colorMap: Record<string, number>;
-  mode: number;
-  data: EulerianPathOutputData;
+export type EulerianPathResult<T = string> = BaseGraphAlgorithmResult & {
+  data: EulerianPathOutputData<T>;
 };
-
-async function _runIgraphAlgo(igraphMod: any): Promise<any> {
-  try {
-    return await igraphMod.eulerian_path();
-  } catch (e) {
-    throw new Error(igraphMod.what_to_stderr(e));
-  }
-}
 
 function _parseResult(
   IgraphToKuzu: Map<number, string>,
-  algorithmResult: any
+  nodesMap: Map<string, GraphNode>,
+  algorithmResult: EulerianPathResult<number>
 ): EulerianPathResult {
-  const mapIdBack = createMapIdBack(IgraphToKuzu);
+  const { mapIdBack, mapLabelBack } = createMapIdBack(IgraphToKuzu, nodesMap);
 
   const { data, mode, colorMap = {} } = algorithmResult;
+
+  const path = data.path.map(({ from, to, weight }) => ({
+    from: mapLabelBack(from),
+    to: mapLabelBack(to),
+    weight,
+  }));
 
   return {
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
-      start: data.start,
-      end: data.end,
-      path: data.path,
+      algorithm: data.algorithm,
+      start: mapLabelBack(data.start),
+      end: mapLabelBack(data.end),
+      path,
     },
   };
 }
 
 export async function igraphEulerianPath(
-  igraphMod: any,
+  igraphMod: GraphModule,
   graphData: KuzuToIgraphParseResult
 ): Promise<EulerianPathResult> {
-  const wasmResult = await _runIgraphAlgo(igraphMod);
-  return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
+  const wasmResult = await _runIgraphAlgo(igraphMod, (m) => m.eulerian_path());
+  return _parseResult(
+    graphData.IgraphToKuzuMap,
+    graphData.nodesMap,
+    wasmResult
+  );
 }

@@ -6,9 +6,10 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { toast } from "sonner";
+import { useEffect } from "react";
 
 import type { Route } from "./+types/root";
-
 import "./globals.css";
 import isNoise from "./errors";
 
@@ -17,9 +18,6 @@ import { TooltipProvider } from "~/components/ui/tooltip";
 import { Toaster } from "~/components/ui/sonner";
 import { LoadingProvider } from "~/components/ui/loading/loading-context";
 import { Loading } from "~/components/ui/loading";
-
-import { toast } from "sonner";
-import { useEffect } from "react";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },

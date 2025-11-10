@@ -1,49 +1,61 @@
-import type { KuzuToIgraphParseResult } from "../../types/types";
-import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
+import type {
+  BaseGraphAlgorithmResult,
+  GraphModule,
+  KuzuToIgraphParseResult,
+} from "../../types";
+import { createMapIdBack, mapColorMapIds } from "../../utils/mapIdBack";
 
-export type EulerianCircuitOutputData = {
+import type { GraphNode } from "~/features/visualizer/types";
+import { _runIgraphAlgo } from "~/igraph/utils/runIgraphAlgo";
+
+export type EulerianCircuitOutputData<T = string> = {
+  algorithm: string;
   path: {
-    from: string;
-    to: string;
+    from: T;
+    to: T;
     weight?: number;
   }[];
 };
 
-export type EulerianCircuitResult = {
-  colorMap: Record<string, number>;
-  mode: number;
-  data: EulerianCircuitOutputData;
+export type EulerianCircuitResult<T = string> = BaseGraphAlgorithmResult & {
+  data: EulerianCircuitOutputData<T>;
 };
-
-async function _runIgraphAlgo(igraphMod: any): Promise<any> {
-  try {
-    return await igraphMod.eulerian_circuit();
-  } catch (e) {
-    throw new Error(igraphMod.what_to_stderr(e));
-  }
-}
 
 function _parseResult(
   IgraphToKuzu: Map<number, string>,
-  algorithmResult: any
+  nodesMap: Map<string, GraphNode>,
+  algorithmResult: EulerianCircuitResult<number>
 ): EulerianCircuitResult {
-  const mapIdBack = createMapIdBack(IgraphToKuzu);
+  const { mapLabelBack, mapIdBack } = createMapIdBack(IgraphToKuzu, nodesMap);
 
   const { data, mode, colorMap = {} } = algorithmResult;
+
+  const path = data.path.map(({ from, to, weight }) => ({
+    from: mapLabelBack(from),
+    to: mapLabelBack(to),
+    weight,
+  }));
 
   return {
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
-      path: data.path,
+      algorithm: data.algorithm,
+      path,
     },
   };
 }
 
 export async function igraphEulerianCircuit(
-  igraphMod: any,
+  igraphMod: GraphModule,
   graphData: KuzuToIgraphParseResult
 ): Promise<EulerianCircuitResult> {
-  const wasmResult = await _runIgraphAlgo(igraphMod);
-  return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
+  const wasmResult = await _runIgraphAlgo(igraphMod, (m) =>
+    m.eulerian_circuit()
+  );
+  return _parseResult(
+    graphData.IgraphToKuzuMap,
+    graphData.nodesMap,
+    wasmResult
+  );
 }

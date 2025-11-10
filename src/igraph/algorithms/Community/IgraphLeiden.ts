@@ -1,35 +1,29 @@
-import type { KuzuToIgraphParseResult } from "../../types/types";
-import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
+import type {
+  BaseGraphAlgorithmResult,
+  GraphModule,
+  KuzuToIgraphParseResult,
+} from "../../types";
+import { createMapIdBack, mapColorMapIds } from "../../utils/mapIdBack";
 
-export type LeidenOutputData = {
+import type { GraphNode } from "~/features/visualizer/types";
+import { _runIgraphAlgo } from "~/igraph/utils/runIgraphAlgo";
+
+export type LeidenOutputData<T = string> = {
   modularity: number;
   quality: number;
-  communities: string[][]; // index = community id, value = node-name[]
+  communities: T[][]; // index = community id, value = node-name[]
 };
 
-export type LeidenResult = {
-  colorMap: Record<string, number>;
-  mode: number;
-  data: LeidenOutputData;
+export type LeidenResult<T = string> = BaseGraphAlgorithmResult & {
+  data: LeidenOutputData<T>;
 };
-
-// TODO: more comprehensive testing
-async function _runIgraphAlgo(
-  igraphMod: any,
-  resolution: number
-): Promise<any> {
-  try {
-    return await igraphMod.leiden(resolution);
-  } catch (e) {
-    throw new Error(igraphMod.what_to_stderr(e));
-  }
-}
 
 function _parseResult(
   IgraphToKuzu: Map<number, string>,
-  algorithmResult: any
+  nodesMap: Map<string, GraphNode>,
+  algorithmResult: LeidenResult<number>
 ): LeidenResult {
-  const mapIdBack = createMapIdBack(IgraphToKuzu);
+  const { mapIdBack, mapLabelBack } = createMapIdBack(IgraphToKuzu, nodesMap);
 
   const { data, mode, colorMap = {} } = algorithmResult;
 
@@ -37,18 +31,26 @@ function _parseResult(
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
-      modularity: data.modularity ?? 0,
-      quality: data.quality ?? 0,
-      communities: data.communities,
+      modularity: data.modularity,
+      quality: data.quality,
+      communities: data.communities.map((communityGroup) =>
+        communityGroup.map((communityItem) => mapLabelBack(communityItem))
+      ),
     },
   };
 }
 
 export async function igraphLeiden(
-  igraphMod: any,
+  igraphMod: GraphModule,
   graphData: KuzuToIgraphParseResult,
   resolution: number
 ): Promise<LeidenResult> {
-  const wasmResult = await _runIgraphAlgo(igraphMod, resolution);
-  return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
+  const wasmResult = await _runIgraphAlgo(igraphMod, (m) =>
+    m.leiden(resolution)
+  );
+  return _parseResult(
+    graphData.IgraphToKuzuMap,
+    graphData.nodesMap,
+    wasmResult
+  );
 }

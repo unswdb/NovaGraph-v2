@@ -47,7 +47,7 @@ class MainController {
   db = {
     getGraphDirection() {
       // Todo: fix this later once implement graph direction
-      return false;
+      return true;
     },
 
     async createNodeSchema(

@@ -2,6 +2,7 @@ import SyntaxHighlighterPkg from "react-syntax-highlighter";
 import { useState } from "react";
 import { Table as TableIcon } from "lucide-react";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const { Light: SyntaxHighlighter } = SyntaxHighlighterPkg as any;
 
 import type { ImportOption } from "./types";

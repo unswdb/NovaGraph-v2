@@ -1,30 +1,28 @@
-import type { KuzuToIgraphParseResult } from "../../types/types";
-import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
+import type {
+  BaseGraphAlgorithmResult,
+  GraphModule,
+  KuzuToIgraphParseResult,
+} from "../../types";
+import { createMapIdBack, mapColorMapIds } from "../../utils/mapIdBack";
 
-export type WCCOutputData = {
-  components: string[][]; // index = component id, value = node-name[]
+import type { GraphNode } from "~/features/visualizer/types";
+import { _runIgraphAlgo } from "~/igraph/utils/runIgraphAlgo";
+
+export type WCCOutputData<T = string> = {
+  algorithm: string;
+  components: T[][]; // index = component id, value = node-name[]
 };
 
-export type WCCResult = {
-  colorMap: Record<string, number>;
-  mode: number;
-  data: WCCOutputData;
+export type WCCResult<T = string> = BaseGraphAlgorithmResult & {
+  data: WCCOutputData<T>;
 };
-
-// TODO: debug this
-async function _runIgraphAlgo(igraphMod: any): Promise<any> {
-  try {
-    return await igraphMod.weakly_connected_components();
-  } catch (e) {
-    throw new Error(igraphMod.what_to_stderr(e));
-  }
-}
 
 function _parseResult(
   IgraphToKuzu: Map<number, string>,
-  algorithmResult: any
+  nodesMap: Map<string, GraphNode>,
+  algorithmResult: WCCResult<number>
 ): WCCResult {
-  const mapIdBack = createMapIdBack(IgraphToKuzu);
+  const { mapIdBack, mapLabelBack } = createMapIdBack(IgraphToKuzu, nodesMap);
 
   const { data, mode, colorMap = {} } = algorithmResult;
 
@@ -32,15 +30,24 @@ function _parseResult(
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
-      components: data.components,
+      algorithm: data.algorithm,
+      components: data.components.map((componentGroup) =>
+        componentGroup.map((component) => mapLabelBack(component))
+      ),
     },
   };
 }
 
 export async function igraphWeaklyConnectedComponents(
-  igraphMod: any,
+  igraphMod: GraphModule,
   graphData: KuzuToIgraphParseResult
 ): Promise<WCCResult> {
-  const wasmResult = await _runIgraphAlgo(igraphMod);
-  return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
+  const wasmResult = await _runIgraphAlgo(igraphMod, (m) =>
+    m.weakly_connected_components()
+  );
+  return _parseResult(
+    graphData.IgraphToKuzuMap,
+    graphData.nodesMap,
+    wasmResult
+  );
 }

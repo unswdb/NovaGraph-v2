@@ -1,11 +1,11 @@
-import type { KuzuToIgraphParseResult } from "../types/types";
+import type { KuzuToIgraphParseResult } from "../types";
 
 import type { GraphEdge, GraphNode } from "~/features/visualizer/types";
 
 /**
  * Convert Kuzu input into Igraph input
  */
-export function KuzuToIgraphParsing(
+export function parseKuzuToIgraphInput(
   nodes: GraphNode[],
   edges: GraphEdge[],
   directed: boolean
@@ -26,6 +26,7 @@ export function KuzuToIgraphParsing(
 
   let weight: Float64Array | undefined; // allocate lazily when we see the first numeric weight
   let nextId = KuzuToIgraph.size;
+
   const getOrAssign = (label: string): number => {
     const existing = KuzuToIgraph.get(label);
     if (existing !== undefined) return existing;
@@ -57,11 +58,12 @@ export function KuzuToIgraphParsing(
       e.attributes &&
       Object.prototype.hasOwnProperty.call(e.attributes, "weight")
     ) {
-      const val = (e.attributes as any)["weight"];
+      const val = e.attributes["weight"];
       if (typeof val === "number" && Number.isFinite(val)) {
         if (!weight) weight = new Float64Array(E); // default zeros
         weight[i] = val;
       } else {
+        // eslint-disable-next-line no-console
         console.warn(
           `[KuzuToIgraphParsing] Non-numeric weight at edge ${i} (${e.source} -> ${e.target}); treated as 0.`
         );
@@ -77,21 +79,14 @@ export function KuzuToIgraphParsing(
   }
 
   // Build node map
-  const nodesMap: Map<string, GraphNode> = new Map();
-  nodes.forEach((n) => {
-    nodesMap.set(n.id, n);
-  });
-
-  // Construct labels for each node in igraph
-  const labels = Array.from({ length: nodesAssigned }, (_, id) => {
-    const kuzuId = IgraphToKuzu.get(id);
-    const node = nodesMap.get(kuzuId!);
-    return `${node!._primaryKeyValue} (${node!.tableName})`;
-  });
+  const nodesMap: Map<string, GraphNode> = new Map(
+    nodes.map((node) => [node.id, node])
+  );
 
   return {
-    IgraphInput: { nodes: nodesAssigned, src, dst, directed, weight, labels },
+    IgraphInput: { nodes: nodesAssigned, src, dst, directed, weight },
     KuzuToIgraphMap: KuzuToIgraph,
     IgraphToKuzuMap: IgraphToKuzu,
+    nodesMap,
   };
 }

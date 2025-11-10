@@ -1,94 +1,82 @@
-import type { KuzuToIgraphParseResult } from "../../types/types";
-import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
+import type {
+  BaseGraphAlgorithmResult,
+  GraphModule,
+  KuzuToIgraphParseResult,
+} from "../../types";
+import { createMapIdBack, mapColorMapIds } from "../../utils/mapIdBack";
+
+import type { GraphNode } from "~/features/visualizer/types";
+import { _runIgraphAlgo } from "~/igraph/utils/runIgraphAlgo";
 
 // Inferred from src/wasm/algorithms/path-finding.cpp (randomWalk)
-export type RandomWalkOutputData = {
+export type RandomWalkOutputData<T = string> = {
   algorithm: string;
-  source: string;
+  source: T;
   steps: number;
   weighted: boolean;
-  maxFrequencyNode: string;
+  maxFrequencyNode: T;
   maxFrequency: number;
   path: {
     step: number;
-    from: string;
-    to: string;
+    from: T;
+    to: T;
     weight?: number;
   }[];
 };
 
-export type RandomWalkResult = {
-  colorMap: Record<string, number>;
-  mode: number;
-  data: RandomWalkOutputData;
+export type RandomWalkResult<T = string> = BaseGraphAlgorithmResult & {
+  data: RandomWalkOutputData<T>;
 };
-
-async function _runIgraphAlgo(
-  igraphMod: any,
-  igraphStart: number,
-  steps: number
-): Promise<any> {
-  try {
-    return await igraphMod.random_walk(igraphStart, steps);
-  } catch (e) {
-    throw new Error(igraphMod.what_to_stderr(e));
-  }
-}
 
 function _parseResult(
   IgraphToKuzu: Map<number, string>,
-  algorithmResult: any
+  nodesMap: Map<string, GraphNode>,
+  algorithmResult: RandomWalkResult<number>
 ): RandomWalkResult {
-  const mapIdBack = createMapIdBack(IgraphToKuzu);
+  const { mapIdBack, mapLabelBack } = createMapIdBack(IgraphToKuzu, nodesMap);
 
   const { data, mode, colorMap = {} } = algorithmResult;
+
+  const path = data.path.map((p) => ({
+    step: p.step,
+    from: mapLabelBack(p.from),
+    to: mapLabelBack(p.to),
+    weight: p.weight,
+  }));
 
   return {
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
-      algorithm: data.algorithm ?? "Random Walk",
-      source: mapIdBack(data.source),
+      algorithm: data.algorithm,
+      source: mapLabelBack(data.source),
       steps: data.steps,
       weighted: data.weighted,
-      maxFrequencyNode: mapIdBack(data.maxFrequencyNode),
+      maxFrequencyNode: mapLabelBack(data.maxFrequencyNode),
       maxFrequency: data.maxFrequency,
-      path: data.path ?? [],
+      path,
     },
   };
 }
 
 export async function igraphRandomWalk(
-  igraphMod: any,
+  igraphMod: GraphModule,
   graphData: KuzuToIgraphParseResult,
   kuzuSourceID: string,
   steps: number
 ): Promise<RandomWalkResult> {
   const startIgraphId = graphData.KuzuToIgraphMap.get(kuzuSourceID);
 
-  if (startIgraphId === undefined) {
-    const weighted =
-      Array.isArray(graphData.IgraphInput?.weight) &&
-      graphData.IgraphInput.weight.length > 0;
-
-    const colorMapOut: Record<string, number> = {};
-    colorMapOut[String(kuzuSourceID)] = 1;
-
-    return {
-      mode: 2,
-      colorMap: colorMapOut,
-      data: {
-        algorithm: "Random Walk",
-        source: String(kuzuSourceID),
-        steps,
-        weighted,
-        maxFrequencyNode: String(kuzuSourceID),
-        maxFrequency: 0,
-        path: [],
-      },
-    };
+  if (startIgraphId == null) {
+    throw new Error(`Source node "${kuzuSourceID}" not found in graph data`);
   }
 
-  const wasmResult = await _runIgraphAlgo(igraphMod, startIgraphId, steps);
-  return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
+  const wasmResult = await _runIgraphAlgo(igraphMod, (m) =>
+    m.random_walk(startIgraphId, steps)
+  );
+  return _parseResult(
+    graphData.IgraphToKuzuMap,
+    graphData.nodesMap,
+    wasmResult
+  );
 }

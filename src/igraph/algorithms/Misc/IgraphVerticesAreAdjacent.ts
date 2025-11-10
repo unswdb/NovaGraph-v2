@@ -1,36 +1,31 @@
-import type { KuzuToIgraphParseResult } from "../../types/types";
-import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
+import type {
+  BaseGraphAlgorithmResult,
+  GraphModule,
+  KuzuToIgraphParseResult,
+} from "../../types";
+import { createMapIdBack, mapColorMapIds } from "../../utils/mapIdBack";
 
-export type VerticesAreAdjacentOutputData = {
-  source: string;
-  target: string;
+import type { GraphNode } from "~/features/visualizer/types";
+import { _runIgraphAlgo } from "~/igraph/utils/runIgraphAlgo";
+
+export type VerticesAreAdjacentOutputData<T = string> = {
+  algorithm: string;
+  source: T;
+  target: T;
   adjacent: boolean;
   weight?: number; // only if edge exists AND weights present
 };
 
-export type VerticesAreAdjacentResult = {
-  colorMap: Record<string, number>;
-  mode: number;
-  data: VerticesAreAdjacentOutputData;
+export type VerticesAreAdjacentResult<T = string> = BaseGraphAlgorithmResult & {
+  data: VerticesAreAdjacentOutputData<T>;
 };
-
-async function _runIgraphAlgo(
-  igraphMod: any,
-  igraphSource: number,
-  igraphTarget: number
-): Promise<any> {
-  try {
-    return await igraphMod.vertices_are_adjacent(igraphSource, igraphTarget);
-  } catch (e) {
-    throw new Error(igraphMod.what_to_stderr(e));
-  }
-}
 
 function _parseResult(
   IgraphToKuzu: Map<number, string>,
-  algorithmResult: any
+  nodesMap: Map<string, GraphNode>,
+  algorithmResult: VerticesAreAdjacentResult<number>
 ): VerticesAreAdjacentResult {
-  const mapIdBack = createMapIdBack(IgraphToKuzu);
+  const { mapIdBack, mapLabelBack } = createMapIdBack(IgraphToKuzu, nodesMap);
 
   const { data, mode, colorMap = {} } = algorithmResult;
 
@@ -38,16 +33,17 @@ function _parseResult(
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
-      source: data.source,
-      target: data.target,
-      adjacent: data.adjacent ?? false,
+      algorithm: data.algorithm,
+      source: mapLabelBack(data.source),
+      target: mapLabelBack(data.target),
+      adjacent: data.adjacent,
       weight: data.weight,
     },
   };
 }
 
 export async function igraphVerticesAreAdjacent(
-  igraphMod: any,
+  igraphMod: GraphModule,
   graphData: KuzuToIgraphParseResult,
   kuzuSourceID: string,
   kuzuTargetID: string
@@ -55,26 +51,18 @@ export async function igraphVerticesAreAdjacent(
   const sourceIgraphId = graphData.KuzuToIgraphMap.get(kuzuSourceID);
   const targetIgraphId = graphData.KuzuToIgraphMap.get(kuzuTargetID);
 
-  if (sourceIgraphId === undefined || targetIgraphId === undefined) {
-    const colorMapOut: Record<string, number> = {};
-    colorMapOut[String(kuzuSourceID)] = 1;
-    colorMapOut[String(kuzuTargetID)] = 1;
-
-    return {
-      mode: 2,
-      colorMap: colorMapOut,
-      data: {
-        source: String(kuzuSourceID),
-        target: String(kuzuTargetID),
-        adjacent: false,
-      },
-    };
+  if (sourceIgraphId == null || targetIgraphId == null) {
+    throw new Error(
+      `Source node "${kuzuSourceID}" or target node "${kuzuTargetID}" not found in graph data`
+    );
   }
 
-  const wasmResult = await _runIgraphAlgo(
-    igraphMod,
-    sourceIgraphId,
-    targetIgraphId
+  const wasmResult = await _runIgraphAlgo(igraphMod, (m) =>
+    m.vertices_are_adjacent(sourceIgraphId, targetIgraphId)
   );
-  return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
+  return _parseResult(
+    graphData.IgraphToKuzuMap,
+    graphData.nodesMap,
+    wasmResult
+  );
 }

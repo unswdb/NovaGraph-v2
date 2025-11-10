@@ -1,35 +1,32 @@
-import type { KuzuToIgraphParseResult } from "../../types/types";
-import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
+import type {
+  BaseGraphAlgorithmResult,
+  GraphModule,
+  KuzuToIgraphParseResult,
+} from "../../types";
+import { createMapIdBack, mapColorMapIds } from "../../utils/mapIdBack";
 
-import type { CentralityItem } from "~/features/visualizer/algorithms/implementations/centrality/types";
+import { _parseCentralities, type CentralityItem } from "./util";
 
-export type EigenvectorCentralityOutputData = {
+import type { GraphNode } from "~/features/visualizer/types";
+import { _runIgraphAlgo } from "~/igraph/utils/runIgraphAlgo";
+
+export type EigenvectorCentralityOutputData<T = string> = {
   algorithm: string;
   eigenvalue: number;
-  centralities: CentralityItem[];
+  centralities: CentralityItem<T>[];
 };
 
-export type EigenvectorCentralityResult = {
-  colorMap: Record<string, number>;
-  sizeMap: Record<string, number>;
-  mode: number;
-  data: EigenvectorCentralityOutputData;
-};
-
-// Todo: investigate more about this algorithm and how does it work
-async function _runIgraphAlgo(igraphMod: any): Promise<any> {
-  try {
-    return await igraphMod.eigenvector_centrality();
-  } catch (e) {
-    throw new Error(igraphMod.what_to_stderr(e));
-  }
-}
+export type EigenvectorCentralityResult<T = string> =
+  BaseGraphAlgorithmResult & {
+    data: EigenvectorCentralityOutputData<T>;
+  };
 
 function _parseResult(
   IgraphToKuzu: Map<number, string>,
-  algorithmResult: any
+  nodesMap: Map<string, GraphNode>,
+  algorithmResult: EigenvectorCentralityResult<number>
 ): EigenvectorCentralityResult {
-  const mapIdBack = createMapIdBack(IgraphToKuzu);
+  const { mapIdBack, mapLabelBack } = createMapIdBack(IgraphToKuzu, nodesMap);
 
   const { data, mode, colorMap = {}, sizeMap = {} } = algorithmResult;
 
@@ -40,15 +37,21 @@ function _parseResult(
     data: {
       algorithm: data.algorithm ?? "Eigenvector Centrality",
       eigenvalue: data.eigenvalue ?? 0,
-      centralities: data.centralities ?? [],
+      centralities: _parseCentralities(data.centralities, mapLabelBack),
     },
   };
 }
 
 export async function igraphEigenvectorCentrality(
-  igraphMod: any,
+  igraphMod: GraphModule,
   graphData: KuzuToIgraphParseResult
 ): Promise<EigenvectorCentralityResult> {
-  const wasmResult = await _runIgraphAlgo(igraphMod);
-  return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
+  const wasmResult = await _runIgraphAlgo(igraphMod, (m) =>
+    m.eigenvector_centrality()
+  );
+  return _parseResult(
+    graphData.IgraphToKuzuMap,
+    graphData.nodesMap,
+    wasmResult
+  );
 }

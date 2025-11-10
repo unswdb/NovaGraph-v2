@@ -1,30 +1,28 @@
-import type { KuzuToIgraphParseResult } from "../../types/types";
-import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
+import type {
+  BaseGraphAlgorithmResult,
+  GraphModule,
+  KuzuToIgraphParseResult,
+} from "../../types";
+import { createMapIdBack, mapColorMapIds } from "../../utils/mapIdBack";
 
-export type LabelPropagationOutputData = {
-  communities: string[][]; // index = community id, value = node-name[]
+import type { GraphNode } from "~/features/visualizer/types";
+import { _runIgraphAlgo } from "~/igraph/utils/runIgraphAlgo";
+
+export type LabelPropagationOutputData<T = string> = {
+  algorithm: string;
+  communities: T[][]; // index = community id, value = node-name[]
 };
 
-export type LabelPropagationResult = {
-  colorMap: Record<string, number>;
-  mode: number;
-  data: LabelPropagationOutputData;
+export type LabelPropagationResult<T = string> = BaseGraphAlgorithmResult & {
+  data: LabelPropagationOutputData<T>;
 };
-
-// TODO: more comprehensive testing
-async function _runIgraphAlgo(igraphMod: any): Promise<any> {
-  try {
-    return await igraphMod.label_propagation();
-  } catch (e) {
-    throw new Error(igraphMod.what_to_stderr(e));
-  }
-}
 
 function _parseResult(
   IgraphToKuzu: Map<number, string>,
-  algorithmResult: any
+  nodesMap: Map<string, GraphNode>,
+  algorithmResult: LabelPropagationResult<number>
 ): LabelPropagationResult {
-  const mapIdBack = createMapIdBack(IgraphToKuzu);
+  const { mapIdBack, mapLabelBack } = createMapIdBack(IgraphToKuzu, nodesMap);
 
   const { data, mode, colorMap = {} } = algorithmResult;
 
@@ -32,15 +30,24 @@ function _parseResult(
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
-      communities: data.communities,
+      algorithm: data.algorithm,
+      communities: data.communities.map((communityGroup) =>
+        communityGroup.map((communityItem) => mapLabelBack(communityItem))
+      ),
     },
   };
 }
 
 export async function igraphLabelPropagation(
-  igraphMod: any,
+  igraphMod: GraphModule,
   graphData: KuzuToIgraphParseResult
 ): Promise<LabelPropagationResult> {
-  const wasmResult = await _runIgraphAlgo(igraphMod);
-  return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
+  const wasmResult = await _runIgraphAlgo(igraphMod, (m) =>
+    m.label_propagation()
+  );
+  return _parseResult(
+    graphData.IgraphToKuzuMap,
+    graphData.nodesMap,
+    wasmResult
+  );
 }

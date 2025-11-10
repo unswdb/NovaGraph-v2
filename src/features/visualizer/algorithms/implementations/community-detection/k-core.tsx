@@ -65,7 +65,7 @@ function KCore(props: GraphAlgorithmResult<KCoreOutputData>) {
                   key={`${i}-${core}`}
                   className="px-3 py-1.5 rounded-md bg-primary-low max-w-96 truncate whitespace-nowrap"
                 >
-                  {core.node}
+                  {core}
                 </span>
               ))}
             </div>

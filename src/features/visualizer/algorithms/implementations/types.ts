@@ -3,25 +3,11 @@ import type { ReactNode } from "react";
 import type { InputType } from "../../inputs";
 
 import type { IgraphController } from "~/igraph/IgraphController";
+import type { BaseGraphAlgorithmResult as IgraphBaseGraphAlgorithmResult } from "~/igraph/types";
 
-type NodeId = string;
-type EdgeId = string; // Format: "fromNodeId-toNodeId"
-type ColorValue = number; // 0.5 for partial highlight, 1 for full highlight, or frequency-based values
-
-export type ColorMap = {
-  [key: NodeId | EdgeId]: ColorValue;
-};
-
-export type SizeMap = {
-  [key: NodeId]: number;
-};
-
-export interface BaseGraphAlgorithmResult {
+export type BaseGraphAlgorithmResult = {
   type: "algorithm";
-  colorMap: ColorMap;
-  sizeMap?: SizeMap;
-  mode: number;
-}
+} & IgraphBaseGraphAlgorithmResult;
 
 export interface GraphAlgorithmResult<TData = unknown>
   extends BaseGraphAlgorithmResult {

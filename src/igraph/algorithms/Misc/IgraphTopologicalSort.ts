@@ -1,34 +1,28 @@
-import type { KuzuToIgraphParseResult } from "../../types/types";
-import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
+import type {
+  BaseGraphAlgorithmResult,
+  GraphModule,
+  KuzuToIgraphParseResult,
+} from "../../types";
+import { createMapIdBack, mapColorMapIds } from "../../utils/mapIdBack";
 
-export type TopologicalSortOutputData = {
+import type { GraphNode } from "~/features/visualizer/types";
+import { _runIgraphAlgo } from "~/igraph/utils/runIgraphAlgo";
+
+export type TopologicalSortOutputData<T = string> = {
   algorithm: string;
-  order: {
-    id: string; // Kuzu vertex id
-    node: string; // vertex name
-  }[]; // in topological order
+  order: T[]; // node id in topological order
 };
 
-export type TopologicalSortResult = {
-  colorMap: Record<string, number>;
-  mode: number;
-  data: TopologicalSortOutputData;
+export type TopologicalSortResult<T = string> = BaseGraphAlgorithmResult & {
+  data: TopologicalSortOutputData<T>;
 };
-
-// Todo: more comprehensive testing
-async function _runIgraphAlgo(igraphMod: any): Promise<any> {
-  try {
-    return await igraphMod.topological_sort();
-  } catch (e) {
-    throw new Error(igraphMod.what_to_stderr(e));
-  }
-}
 
 function _parseResult(
   IgraphToKuzu: Map<number, string>,
-  algorithmResult: any
+  nodesMap: Map<string, GraphNode>,
+  algorithmResult: TopologicalSortResult<number>
 ): TopologicalSortResult {
-  const mapIdBack = createMapIdBack(IgraphToKuzu);
+  const { mapIdBack, mapLabelBack } = createMapIdBack(IgraphToKuzu, nodesMap);
 
   const { data, mode, colorMap = {} } = algorithmResult;
 
@@ -36,16 +30,22 @@ function _parseResult(
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
-      algorithm: data.algorithm ?? "Topological Sort",
-      order: data.order ?? [],
+      algorithm: data.algorithm,
+      order: data.order.map((o) => mapLabelBack(o)),
     },
   };
 }
 
 export async function igraphTopologicalSort(
-  igraphMod: any,
+  igraphMod: GraphModule,
   graphData: KuzuToIgraphParseResult
 ): Promise<TopologicalSortResult> {
-  const wasmResult = await _runIgraphAlgo(igraphMod);
-  return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
+  const wasmResult = await _runIgraphAlgo(igraphMod, (m) =>
+    m.topological_sort()
+  );
+  return _parseResult(
+    graphData.IgraphToKuzuMap,
+    graphData.nodesMap,
+    wasmResult
+  );
 }

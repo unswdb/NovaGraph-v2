@@ -1,35 +1,33 @@
-import type { KuzuToIgraphParseResult } from "../../types/types";
-import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
+import type {
+  BaseGraphAlgorithmResult,
+  GraphModule,
+  KuzuToIgraphParseResult,
+} from "../../types";
+import { createMapIdBack, mapColorMapIds } from "../../utils/mapIdBack";
 
-export type LocalClusteringCoefficientOutputData = {
+import type { GraphNode } from "~/features/visualizer/types";
+import { _runIgraphAlgo } from "~/igraph/utils/runIgraphAlgo";
+
+export type LocalClusteringCoefficientOutputData<T = string> = {
+  algorithm: string;
   global_coefficient: number; // 4 dp, avg-ignore-zeros
   coefficients: {
-    id: number; // vertex id
-    node: string; // vertex name
+    node: T; // vertex id
     value: number; // 4 dp (can be NaN when undefined)
   }[];
 };
 
-export type LocalClusteringCoefficientResult = {
-  colorMap: Record<string, number>;
-  mode: number;
-  data: LocalClusteringCoefficientOutputData;
-};
-
-// TODO: more comprehensive testing
-async function _runIgraphAlgo(igraphMod: any): Promise<any> {
-  try {
-    return await igraphMod.local_clustering_coefficient();
-  } catch (e) {
-    throw new Error(igraphMod.what_to_stderr(e));
-  }
-}
+export type LocalClusteringCoefficientResult<T = string> =
+  BaseGraphAlgorithmResult & {
+    data: LocalClusteringCoefficientOutputData<T>;
+  };
 
 function _parseResult(
   IgraphToKuzu: Map<number, string>,
-  algorithmResult: any
+  nodesMap: Map<string, GraphNode>,
+  algorithmResult: LocalClusteringCoefficientResult<number>
 ): LocalClusteringCoefficientResult {
-  const mapIdBack = createMapIdBack(IgraphToKuzu);
+  const { mapIdBack, mapLabelBack } = createMapIdBack(IgraphToKuzu, nodesMap);
 
   const { data, mode, colorMap = {} } = algorithmResult;
 
@@ -37,16 +35,26 @@ function _parseResult(
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
-      global_coefficient: data.global_coefficient ?? 0,
-      coefficients: data.coefficients,
+      algorithm: data.algorithm,
+      global_coefficient: data.global_coefficient,
+      coefficients: data.coefficients.map((coefficient) => ({
+        node: mapLabelBack(coefficient.node),
+        value: coefficient.value,
+      })),
     },
   };
 }
 
 export async function igraphLocalClusteringCoefficient(
-  igraphMod: any,
+  igraphMod: GraphModule,
   graphData: KuzuToIgraphParseResult
 ): Promise<LocalClusteringCoefficientResult> {
-  const wasmResult = await _runIgraphAlgo(igraphMod);
-  return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
+  const wasmResult = await _runIgraphAlgo(igraphMod, (m) =>
+    m.local_clustering_coefficient()
+  );
+  return _parseResult(
+    graphData.IgraphToKuzuMap,
+    graphData.nodesMap,
+    wasmResult
+  );
 }

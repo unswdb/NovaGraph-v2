@@ -1,33 +1,30 @@
-import type { KuzuToIgraphParseResult } from "../../types/types";
-import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
+import type {
+  BaseGraphAlgorithmResult,
+  GraphModule,
+  KuzuToIgraphParseResult,
+} from "../../types";
+import { createMapIdBack, mapColorMapIds } from "../../utils/mapIdBack";
 
-import type { CentralityItem } from "~/features/visualizer/algorithms/implementations/centrality/types";
+import { _parseCentralities, type CentralityItem } from "./util";
 
-export type HarmonicCentralityOutputData = {
+import { _runIgraphAlgo } from "~/igraph/utils/runIgraphAlgo";
+import type { GraphNode } from "~/features/visualizer/types";
+
+export type HarmonicCentralityOutputData<T = string> = {
   algorithm: string;
-  centralities: CentralityItem[];
+  centralities: CentralityItem<T>[];
 };
 
-export type HarmonicCentralityResult = {
-  colorMap: Record<string, number>;
-  sizeMap: Record<string, number>;
-  mode: number;
-  data: HarmonicCentralityOutputData;
+export type HarmonicCentralityResult<T = string> = BaseGraphAlgorithmResult & {
+  data: HarmonicCentralityOutputData<T>;
 };
-
-async function _runIgraphAlgo(igraphMod: any): Promise<any> {
-  try {
-    return await igraphMod.harmonic_centrality();
-  } catch (e) {
-    throw new Error(igraphMod.what_to_stderr(e));
-  }
-}
 
 function _parseResult(
   IgraphToKuzu: Map<number, string>,
-  algorithmResult: any
+  nodesMap: Map<string, GraphNode>,
+  algorithmResult: HarmonicCentralityResult<number>
 ): HarmonicCentralityResult {
-  const mapIdBack = createMapIdBack(IgraphToKuzu);
+  const { mapIdBack, mapLabelBack } = createMapIdBack(IgraphToKuzu, nodesMap);
 
   const { data, mode, colorMap = {}, sizeMap = {} } = algorithmResult;
 
@@ -36,16 +33,22 @@ function _parseResult(
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     sizeMap: mapColorMapIds(sizeMap, mapIdBack),
     data: {
-      algorithm: data.algorithm ?? "Harmonic Centrality",
-      centralities: data.centralities ?? [],
+      algorithm: data.algorithm,
+      centralities: _parseCentralities(data.centralities, mapLabelBack),
     },
   };
 }
 
 export async function igraphHarmonicCentrality(
-  igraphMod: any,
+  igraphMod: GraphModule,
   graphData: KuzuToIgraphParseResult
 ): Promise<HarmonicCentralityResult> {
-  const wasmResult = await _runIgraphAlgo(igraphMod);
-  return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
+  const wasmResult = await _runIgraphAlgo(igraphMod, (m) =>
+    m.harmonic_centrality()
+  );
+  return _parseResult(
+    graphData.IgraphToKuzuMap,
+    graphData.nodesMap,
+    wasmResult
+  );
 }

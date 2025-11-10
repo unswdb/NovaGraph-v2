@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AsyncFn<TArgs extends any[], TResult> = (
   ...args: TArgs
 ) => Promise<TResult>;
@@ -10,6 +11,7 @@ function getErrorMessage(error: unknown): string {
   return "An unknown error occurred";
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useAsyncFn<TArgs extends any[], TResult>(
   fn: AsyncFn<TArgs, TResult>,
   options: {

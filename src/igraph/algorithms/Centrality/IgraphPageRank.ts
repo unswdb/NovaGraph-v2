@@ -1,34 +1,31 @@
-import type { KuzuToIgraphParseResult } from "../../types/types";
-import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
+import type {
+  BaseGraphAlgorithmResult,
+  GraphModule,
+  KuzuToIgraphParseResult,
+} from "../../types";
+import { createMapIdBack, mapColorMapIds } from "../../utils/mapIdBack";
 
-import type { CentralityItem } from "~/features/visualizer/algorithms/implementations/centrality/types";
+import { _parseCentralities, type CentralityItem } from "./util";
 
-export type PageRankOutputData = {
+import { _runIgraphAlgo } from "~/igraph/utils/runIgraphAlgo";
+import type { GraphNode } from "~/features/visualizer/types";
+
+export type PageRankOutputData<T = string> = {
   algorithm: string;
   damping: string;
-  centralities: CentralityItem[];
+  centralities: CentralityItem<T>[];
 };
 
-export type PageRankResult = {
-  colorMap: Record<string, number>;
-  sizeMap: Record<string, number>;
-  mode: number;
-  data: PageRankOutputData;
+export type PageRankResult<T = string> = BaseGraphAlgorithmResult & {
+  data: PageRankOutputData<T>;
 };
-
-async function _runIgraphAlgo(igraphMod: any, damping: number): Promise<any> {
-  try {
-    return await igraphMod.pagerank(damping);
-  } catch (e) {
-    throw new Error(igraphMod.what_to_stderr(e));
-  }
-}
 
 function _parseResult(
   IgraphToKuzu: Map<number, string>,
-  algorithmResult: any
+  nodesMap: Map<string, GraphNode>,
+  algorithmResult: PageRankResult<number>
 ): PageRankResult {
-  const mapIdBack = createMapIdBack(IgraphToKuzu);
+  const { mapIdBack, mapLabelBack } = createMapIdBack(IgraphToKuzu, nodesMap);
 
   const { data, mode, colorMap = {}, sizeMap = {} } = algorithmResult;
 
@@ -37,18 +34,24 @@ function _parseResult(
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     sizeMap: mapColorMapIds(sizeMap, mapIdBack),
     data: {
-      algorithm: data.algorithm ?? "PageRank",
-      damping: data.damping ?? "0.85",
-      centralities: data.centralities ?? [],
+      algorithm: data.algorithm,
+      damping: data.damping,
+      centralities: _parseCentralities(data.centralities, mapLabelBack),
     },
   };
 }
 
 export async function igraphPageRank(
-  igraphMod: any,
+  igraphMod: GraphModule,
   graphData: KuzuToIgraphParseResult,
   damping: number
 ): Promise<PageRankResult> {
-  const wasmResult = await _runIgraphAlgo(igraphMod, damping);
-  return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
+  const wasmResult = await _runIgraphAlgo(igraphMod, (m) =>
+    m.pagerank(damping)
+  );
+  return _parseResult(
+    graphData.IgraphToKuzuMap,
+    graphData.nodesMap,
+    wasmResult
+  );
 }

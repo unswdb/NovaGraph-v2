@@ -1,55 +1,66 @@
-import type { KuzuToIgraphParseResult } from "../../types/types";
-import { createMapIdBack, mapColorMapIds } from "../../utils/mapColorMapIds";
+import type {
+  BaseGraphAlgorithmResult,
+  GraphModule,
+  KuzuToIgraphParseResult,
+} from "../../types";
+import { createMapIdBack, mapColorMapIds } from "../../utils/mapIdBack";
 
-export type MissingEdgePredictionOutputData = {
+import type { GraphNode } from "~/features/visualizer/types";
+import { _runIgraphAlgo } from "~/igraph/utils/runIgraphAlgo";
+
+export type MissingEdgePredictionOutputData<T = string> = {
+  algorithm: string;
   predictedEdges: Array<{
-    from: string; // name(src)
-    to: string; // name(tar)
+    from: T; // name(src)
+    to: T; // name(tar)
     probability: string; // e.g. "73.200%" (3 dp string)
   }>;
 };
 
-export type MissingEdgePredictionResult = {
-  colorMap: Record<string, number>;
-  mode: number;
-  data: MissingEdgePredictionOutputData;
-};
-
-async function _runIgraphAlgo(
-  igraphMod: any,
-  numSamples: number,
-  numBins: number
-): Promise<any> {
-  try {
-    return await igraphMod.missing_edge_prediction(numSamples, numBins);
-  } catch (e) {
-    throw new Error(igraphMod.what_to_stderr(e));
-  }
-}
+export type MissingEdgePredictionResult<T = string> =
+  BaseGraphAlgorithmResult & {
+    data: MissingEdgePredictionOutputData<T>;
+  };
 
 function _parseResult(
   IgraphToKuzu: Map<number, string>,
-  algorithmResult: any
+  nodesMap: Map<string, GraphNode>,
+  algorithmResult: MissingEdgePredictionResult<number>
 ): MissingEdgePredictionResult {
-  const mapIdBack = createMapIdBack(IgraphToKuzu);
+  const { mapIdBack, mapLabelBack } = createMapIdBack(IgraphToKuzu, nodesMap);
 
   const { data, mode, colorMap = {} } = algorithmResult;
+
+  const predictedEdges = data.predictedEdges.map(
+    ({ from, to, probability }) => ({
+      from: mapLabelBack(from),
+      to: mapLabelBack(to),
+      probability,
+    })
+  );
 
   return {
     mode,
     colorMap: mapColorMapIds(colorMap, mapIdBack),
     data: {
-      predictedEdges: data.predictedEdges,
+      algorithm: data.algorithm,
+      predictedEdges,
     },
   };
 }
 
 export async function igraphMissingEdgePrediction(
-  igraphMod: any,
+  igraphMod: GraphModule,
   graphData: KuzuToIgraphParseResult,
   sampleSize: number,
   numBins: number
 ): Promise<MissingEdgePredictionResult> {
-  const wasmResult = await _runIgraphAlgo(igraphMod, sampleSize, numBins);
-  return _parseResult(graphData.IgraphToKuzuMap, wasmResult);
+  const wasmResult = await _runIgraphAlgo(igraphMod, (m) =>
+    m.missing_edge_prediction(sampleSize, numBins)
+  );
+  return _parseResult(
+    graphData.IgraphToKuzuMap,
+    graphData.nodesMap,
+    wasmResult
+  );
 }

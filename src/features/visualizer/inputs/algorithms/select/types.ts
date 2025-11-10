@@ -39,6 +39,7 @@ type PropsForSelectDefault = Pick<
   "required" | "showLabel" | "disabled"
 >;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type DistributiveOmit<T, K extends PropertyKey> = T extends any
   ? Omit<T, K>
   : never;
