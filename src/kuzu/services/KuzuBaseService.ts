@@ -1,4 +1,4 @@
-import { snapshotGraphState } from "./KuzuQueryExecutor";
+import { snapshotGraphState, validateQuery } from "./KuzuQueryExecutor";
 
 import {
   queryResultColorMapExtraction,
@@ -51,6 +51,9 @@ export default class KuzuBaseService {
   }
 
   snapshotGraphState() {
+    if (!this.connection) {
+      throw new Error("Connection not initialized");
+    }
     return snapshotGraphState(this.connection);
   }
 
@@ -70,6 +73,11 @@ export default class KuzuBaseService {
     let allSuccess = true;
     let colorMap = {};
     let resultType = "graph";
+
+    const preflightResult = validateQuery(this.connection, query);
+    if (preflightResult != null && !preflightResult.success) {
+      return preflightResult;
+    }
 
     let currentResult = this.connection.query(query);
 
