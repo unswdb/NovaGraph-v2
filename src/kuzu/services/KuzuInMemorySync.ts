@@ -35,6 +35,14 @@ export default class KuzuInMemorySync extends KuzuBaseService {
     }
   }
 
+  /**
+   * Get the virtual file system for Kuzu WASM
+   * @returns File system object with mkdir, writeFile, unlink methods
+   */
+  protected getFileSystem() {
+    return kuzu.getFS();
+  }
+
   cleanup() {
     if (this.connection) {
       this.connection.close();

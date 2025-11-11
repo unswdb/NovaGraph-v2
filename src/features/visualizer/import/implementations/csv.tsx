@@ -168,223 +168,51 @@ export const ImportCSV: ImportOption = {
   handler: async ({ values }: { values: Record<string, any> }) => {
     const { name, nodes, edges, directed } = values;
 
-    // Get the database name
+    // Get the database name and file inputs
     const databaseName = name.value as string;
     const nodesFile = nodes.value as File;
     const edgesFile = edges.value as File;
     const isDirected = directed.value as boolean;
 
     try {
-      // Import using controller
+      // Import controller
       const { controller } = await import("~/MainController");
-      // @ts-ignore - Import kuzu for file system access
-      const kuzu = await import("kuzu-wasm/sync");
 
       console.log(`[CSV Import] Starting import for database: ${databaseName}`);
 
-      // Read files content
+      // Read CSV file contents
       const nodesText = await nodesFile.text();
       const edgesText = await edgesFile.text();
 
-      // Parse CSV to get structure
-      const nodesLines = nodesText.trim().split("\n");
-      const edgesLines = edgesText.trim().split("\n");
-
-      // Parse node CSV header to get all columns
-      const nodesHeader = nodesLines[0].trim();
-      const nodeColumns = nodesHeader.split(",").map(col => col.trim());
-
-      // Parse edge CSV header
-      const edgesHeader = edgesLines[0].trim();
-      const edgeColumns = edgesHeader.split(",").map(col => col.trim());
-      const hasWeight = edgeColumns.includes("weight");
-
-      // Step 1: Extract table names from filenames (without .csv extension)
+      // Extract table names from filenames (without .csv extension)
       const nodeTableName = nodesFile.name.replace(/\.csv$/i, '');
       const edgeTableName = edgesFile.name.replace(/\.csv$/i, '');
 
-      console.log(`[CSV Import] Node table name: ${nodeTableName}`);
-      console.log(`[CSV Import] Edge table name: ${edgeTableName}`);
+      console.log(`[CSV Import] Node table: ${nodeTableName}, Edge table: ${edgeTableName}`);
 
-      // Step 2: Write CSV files to Kuzu's virtual file system first
-      // We need the files in the VFS before we can infer types
-      const fs = kuzu.default.getFS();
-      const tempDir = '/tmp';
-
-      // Ensure temp directory exists
-      try {
-        fs.mkdir(tempDir);
-      } catch (e) {
-        // Directory might already exist, ignore error
-      }
-
-      const nodesPath = `${tempDir}/nodes_${Date.now()}.csv`;
-      const edgesPath = `${tempDir}/edges_${Date.now()}.csv`;
-
-      // Write files to virtual file system
-      fs.writeFile(nodesPath, nodesText);
-      fs.writeFile(edgesPath, edgesText);
-
-      // Step 3: Infer column types by using LOAD FROM to scan the CSV
-      // LOAD FROM will automatically infer types from the CSV data
-      // We'll use RETURN to get the types without creating nodes yet
-      const primaryKeyColumn = nodeColumns[0];
-      
-      console.log(`[CSV Import] Primary key: ${primaryKeyColumn}`);
-      console.log(`[CSV Import] Inferring types for columns:`, nodeColumns);
-
-      // Query to infer types - load one row and return it to see inferred types
-      const typeInferenceQuery = `
-        LOAD FROM '${nodesPath}' (header = true)
-        RETURN ${nodeColumns.join(', ')}
-        LIMIT 1
-      `;
-
-      console.log(`[CSV Import] Inferring types with query: ${typeInferenceQuery}`);
-      
-      // Use the getColumnTypes method from controller
-      const columnTypes = controller.db.getColumnTypes(typeInferenceQuery);
-      
-      // Extract column types from the query result
-      const inferredTypes: Record<string, "STRING" | "INT32" | "INT16" | "INT8" | "DOUBLE" | "FLOAT" | "BOOL" | "DATE"> = {};
-      
-      columnTypes.forEach((kuzuType: string, index: number) => {
-        const colName = nodeColumns[index];
-        // Map Kuzu types to schema types
-        let schemaType: "STRING" | "INT32" | "INT16" | "INT8" | "DOUBLE" | "FLOAT" | "BOOL" | "DATE" = "STRING";
-        
-        const typeUpper = kuzuType.toUpperCase();
-        if (typeUpper.includes("INT32")) {
-          schemaType = "INT32";
-        } else if (typeUpper.includes("INT16")) {
-          schemaType = "INT16";
-        } else if (typeUpper.includes("INT8")) {
-          schemaType = "INT8";
-        } else if (typeUpper.includes("INT64") || typeUpper.includes("INT")) {
-          // Map INT64 and generic INT to INT32 (closest available type)
-          schemaType = "INT32";
-        } else if (typeUpper.includes("DOUBLE")) {
-          schemaType = "DOUBLE";
-        } else if (typeUpper.includes("FLOAT")) {
-          schemaType = "FLOAT";
-        } else if (typeUpper.includes("BOOL")) {
-          schemaType = "BOOL";
-        } else if (typeUpper.includes("DATE")) {
-          schemaType = "DATE";
-        }
-        
-        inferredTypes[colName] = schemaType;
-      });
-
-      console.log(`[CSV Import] Inferred types:`, inferredTypes);
-
-      // Step 4: Create node table schema with inferred types
-      const primaryKeyType = inferredTypes[primaryKeyColumn] || "STRING";
-      const additionalProperties = nodeColumns.slice(1).map(col => ({
-        name: col,
-        type: inferredTypes[col] || "STRING"
-      }));
-
-      console.log(`[CSV Import] Creating node table with primary key: ${primaryKeyColumn} (${primaryKeyType})`);
-      console.log(`[CSV Import] Additional properties:`, additionalProperties);
-
-      await controller.db.createNodeSchema(
+      // Use the controller's CSV import method which handles:
+      // - VFS file writes
+      // - Type inference
+      // - Schema creation
+      // - Bulk COPY FROM operations
+      // - Cleanup
+      const result = await controller.db.importFromCSV(
+        nodesText,
+        edgesText,
         nodeTableName,
-        primaryKeyColumn,
-        primaryKeyType,
-        additionalProperties
+        edgeTableName,
+        isDirected
       );
 
-      // Step 5: Load nodes using COPY FROM for direct bulk loading
-      // COPY FROM directly loads data into the node table, which is much faster
-      // than LOAD FROM ... CREATE (which executes CREATE for each row)
-      const copyNodesQuery = `COPY ${nodeTableName} FROM '${nodesPath}' (header = true)`;
-
-      console.log(`[CSV Import] Loading nodes with COPY FROM: ${copyNodesQuery}`);
-      await controller.db.executeQuery(copyNodesQuery);
-
-      // Step 6: Create edge table schema using CREATE REL TABLE syntax
-      // Now that nodes are loaded, we can create the relationship table
-      const edgeTableQuery = hasWeight
-        ? `CREATE REL TABLE ${edgeTableName} (
-            FROM ${nodeTableName} TO ${nodeTableName},
-            weight DOUBLE
-          )`
-        : `CREATE REL TABLE ${edgeTableName} (
-            FROM ${nodeTableName} TO ${nodeTableName}
-          )`;
-
-      console.log(`[CSV Import] Creating edge table with query: ${edgeTableQuery}`);
-      await controller.db.executeQuery(edgeTableQuery);
-
-      // Step 7: Load edges using COPY FROM for direct table loading
-      // This is much more efficient than LOAD FROM + MATCH + CREATE
-      // COPY FROM directly loads data into the relationship table
-
-      if (isDirected) {
-        // For directed graphs, use COPY FROM directly
-        const copyEdgesQuery = `COPY ${edgeTableName} FROM '${edgesPath}' (header = true)`;
-
-        console.log(`[CSV Import] Loading directed edges with COPY FROM: ${copyEdgesQuery}`);
-        await controller.db.executeQuery(copyEdgesQuery);
-      } else {
-        // For undirected graphs, we need to create edges in both directions
-        // First, copy the original edges
-        const copyEdgesQuery1 = `COPY ${edgeTableName} FROM '${edgesPath}' (header = true)`;
-
-        console.log(`[CSV Import] Loading undirected edges (direction 1) with COPY FROM: ${copyEdgesQuery1}`);
-        await controller.db.executeQuery(copyEdgesQuery1);
-
-        // Then create a temporary file with reversed edges for the second direction
-        const reversedEdgesPath = `${tempDir}/reversed_edges_${Date.now()}.csv`;
-        const reversedEdgesContent = edgesLines.map((line, index) => {
-          if (index === 0) {
-            // Header line - keep as is
-            return line;
-          }
-          // Data lines - swap first two columns (source and target)
-          const parts = line.split(',');
-          if (parts.length >= 2) {
-            [parts[0], parts[1]] = [parts[1], parts[0]]; // Swap source and target
-          }
-          return parts.join(',');
-        }).join('\n');
-
-        fs.writeFile(reversedEdgesPath, reversedEdgesContent);
-
-        // Copy the reversed edges
-        const copyEdgesQuery2 = `COPY ${edgeTableName} FROM '${reversedEdgesPath}' (header = true)`;
-
-        console.log(`[CSV Import] Loading undirected edges (direction 2) with COPY FROM: ${copyEdgesQuery2}`);
-        await controller.db.executeQuery(copyEdgesQuery2);
-
-        // Clean up the temporary reversed edges file
-        try {
-          fs.unlink(reversedEdgesPath);
-        } catch (e) {
-          console.warn(`[CSV Import] Failed to clean up reversed edges file:`, e);
-        }
+      // Add database name to the success message
+      if (result.success && result.data) {
+        return {
+          ...result,
+          message: `Successfully imported graph "${databaseName}" with ${result.data.nodes.length} nodes and ${result.data.edges.length} edges!`,
+        };
       }
 
-      // Step 8: Clean up temporary files
-      try {
-        fs.unlink(nodesPath);
-        fs.unlink(edgesPath);
-        // Note: reversedEdgesPath is already cleaned up in the undirected case above
-      } catch (e) {
-        console.warn(`[CSV Import] Failed to clean up temporary files:`, e);
-      }
-
-      // Step 9: Refresh graph state
-      const graphState = await controller.db.snapshotGraphState();
-
-      console.log(`[CSV Import] Successfully bulk-imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges using optimized COPY FROM approach`);
-
-      return {
-        success: true,
-        message: `Successfully imported graph "${databaseName}" with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges!`,
-        data: graphState,
-      };
+      return result;
     } catch (error) {
       console.error("[CSV Import] Error:", error);
       return {

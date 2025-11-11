@@ -177,6 +177,33 @@ class MainController {
         kuzuController.updateEdge(node1, node2, edgeTableName, values)
       );
     },
+
+    /**
+     * Import graph data from CSV files
+     * @param nodesText - Content of the nodes CSV file
+     * @param edgesText - Content of the edges CSV file
+     * @param nodeTableName - Name for the node table
+     * @param edgeTableName - Name for the edge table
+     * @param isDirected - Whether the graph is directed
+     * @returns Import result with success status and graph state
+     */
+    async importFromCSV(
+      nodesText: string,
+      edgesText: string,
+      nodeTableName: string,
+      edgeTableName: string,
+      isDirected: boolean
+    ) {
+      return Promise.resolve(
+        kuzuController.importFromCSV(
+          nodesText,
+          edgesText,
+          nodeTableName,
+          edgeTableName,
+          isDirected
+        )
+      );
+    },
   };
 
   _internal = {

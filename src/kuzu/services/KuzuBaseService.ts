@@ -32,7 +32,7 @@ import type {
 import type Connection from "../types/kuzu_wasm_internal/connection";
 import { throwOnFailedQuery } from "./KuzuBaseService.util";
 
-export default class KuzuBaseService {
+export default abstract class KuzuBaseService {
   protected db: any;
   protected connection: Connection | null = null;
   protected helper: any = null;
@@ -44,6 +44,13 @@ export default class KuzuBaseService {
     this.helper = null;
     this.initialized = false;
   }
+
+  /**
+   * Get the virtual file system for the current Kuzu implementation
+   * Must be implemented by subclasses
+   * @returns File system object with mkdir, writeFile, unlink methods
+   */
+  protected abstract getFileSystem(): any;
 
   snapshotGraphState() {
     return snapshotGraphState(this.connection);
@@ -259,5 +266,219 @@ export default class KuzuBaseService {
     const { nodeTables, edgeTables } = this.getAllSchemaProperties();
     const tables = { ...nodeTables, ...edgeTables };
     return tables.find((t) => t.tableName === tableName) ?? null;
+  }
+
+  /**
+   * Import graph data from CSV files
+   * @param nodesText - Content of the nodes CSV file
+   * @param edgesText - Content of the edges CSV file
+   * @param nodeTableName - Name for the node table
+   * @param edgeTableName - Name for the edge table
+   * @param isDirected - Whether the graph is directed
+   * @returns Import result with success status and graph state
+   */
+  async importFromCSV(
+    nodesText: string,
+    edgesText: string,
+    nodeTableName: string,
+    edgeTableName: string,
+    isDirected: boolean
+  ) {
+    if (!this.connection) {
+      throw new Error("Kuzu service not initialized");
+    }
+
+    try {
+      console.log(`[CSV Import] Starting import for tables: ${nodeTableName}, ${edgeTableName}`);
+
+      // Parse CSV to get structure
+      const nodesLines = nodesText.trim().split("\n");
+      const edgesLines = edgesText.trim().split("\n");
+
+      // Parse node CSV header to get all columns
+      const nodesHeader = nodesLines[0].trim();
+      const nodeColumns = nodesHeader.split(",").map(col => col.trim());
+
+      // Parse edge CSV header
+      const edgesHeader = edgesLines[0].trim();
+      const edgeColumns = edgesHeader.split(",").map(col => col.trim());
+      const hasWeight = edgeColumns.includes("weight");
+
+      // Get filesystem access from subclass implementation
+      const fs = this.getFileSystem();
+      const tempDir = '/tmp';
+
+      // Ensure temp directory exists
+      try {
+        fs.mkdir(tempDir);
+      } catch (e) {
+        // Directory might already exist, ignore error
+      }
+
+      const nodesPath = `${tempDir}/nodes_${Date.now()}.csv`;
+      const edgesPath = `${tempDir}/edges_${Date.now()}.csv`;
+
+      // Write files to virtual file system
+      fs.writeFile(nodesPath, nodesText);
+      fs.writeFile(edgesPath, edgesText);
+
+      // Infer column types by using LOAD FROM to scan the CSV
+      const primaryKeyColumn = nodeColumns[0];
+      
+      console.log(`[CSV Import] Primary key: ${primaryKeyColumn}`);
+      console.log(`[CSV Import] Inferring types for columns:`, nodeColumns);
+
+      // Query to infer types - load one row and return it to see inferred types
+      const typeInferenceQuery = `
+        LOAD FROM '${nodesPath}' (header = true)
+        RETURN ${nodeColumns.join(', ')}
+        LIMIT 1
+      `;
+
+      console.log(`[CSV Import] Inferring types with query: ${typeInferenceQuery}`);
+      
+      // Use the getColumnTypes method to infer types
+      const columnTypes = this.getColumnTypes(typeInferenceQuery);
+      
+      // Extract column types from the query result
+      const inferredTypes: Record<string, PrimaryKeyType | NonPrimaryKeyType> = {};
+      
+      columnTypes.forEach((kuzuType: string, index: number) => {
+        const colName = nodeColumns[index];
+        // Map Kuzu types to schema types
+        let schemaType: PrimaryKeyType | NonPrimaryKeyType = "STRING";
+        
+        const typeUpper = kuzuType.toUpperCase();
+        if (typeUpper.includes("INT32")) {
+          schemaType = "INT32";
+        } else if (typeUpper.includes("INT16")) {
+          schemaType = "INT16";
+        } else if (typeUpper.includes("INT8")) {
+          schemaType = "INT8";
+        } else if (typeUpper.includes("INT64") || typeUpper.includes("INT")) {
+          // Map INT64 and generic INT to INT32 (closest available type)
+          schemaType = "INT32";
+        } else if (typeUpper.includes("DOUBLE")) {
+          schemaType = "DOUBLE";
+        } else if (typeUpper.includes("FLOAT")) {
+          schemaType = "FLOAT";
+        } else if (typeUpper.includes("BOOL")) {
+          schemaType = "BOOL";
+        } else if (typeUpper.includes("DATE")) {
+          schemaType = "DATE";
+        }
+        
+        inferredTypes[colName] = schemaType;
+      });
+
+      console.log(`[CSV Import] Inferred types:`, inferredTypes);
+
+      // Create node table schema with inferred types
+      const primaryKeyType = inferredTypes[primaryKeyColumn] as PrimaryKeyType;
+      const additionalProperties = nodeColumns.slice(1).map(col => ({
+        name: col,
+        type: (inferredTypes[col] || "STRING") as NonPrimaryKeyType
+      }));
+
+      console.log(`[CSV Import] Creating node table with primary key: ${primaryKeyColumn} (${primaryKeyType})`);
+      console.log(`[CSV Import] Additional properties:`, additionalProperties);
+
+      await this.createNodeSchema(
+        nodeTableName,
+        primaryKeyColumn,
+        primaryKeyType,
+        additionalProperties
+      );
+
+      // Load nodes using COPY FROM for direct bulk loading
+      const copyNodesQuery = `COPY ${nodeTableName} FROM '${nodesPath}' (header = true)`;
+
+      console.log(`[CSV Import] Loading nodes with COPY FROM: ${copyNodesQuery}`);
+      await this.executeQuery(copyNodesQuery);
+
+      // Create edge table schema using CREATE REL TABLE syntax
+      const edgeTableQuery = hasWeight
+        ? `CREATE REL TABLE ${edgeTableName} (
+            FROM ${nodeTableName} TO ${nodeTableName},
+            weight DOUBLE
+          )`
+        : `CREATE REL TABLE ${edgeTableName} (
+            FROM ${nodeTableName} TO ${nodeTableName}
+          )`;
+
+      console.log(`[CSV Import] Creating edge table with query: ${edgeTableQuery}`);
+      await this.executeQuery(edgeTableQuery);
+
+      // Load edges using COPY FROM for direct table loading
+      if (isDirected) {
+        // For directed graphs, use COPY FROM directly
+        const copyEdgesQuery = `COPY ${edgeTableName} FROM '${edgesPath}' (header = true)`;
+
+        console.log(`[CSV Import] Loading directed edges with COPY FROM: ${copyEdgesQuery}`);
+        await this.executeQuery(copyEdgesQuery);
+      } else {
+        // For undirected graphs, we need to create edges in both directions
+        // First, copy the original edges
+        const copyEdgesQuery1 = `COPY ${edgeTableName} FROM '${edgesPath}' (header = true)`;
+
+        console.log(`[CSV Import] Loading undirected edges (direction 1) with COPY FROM: ${copyEdgesQuery1}`);
+        await this.executeQuery(copyEdgesQuery1);
+
+        // Then create a temporary file with reversed edges for the second direction
+        const reversedEdgesPath = `${tempDir}/reversed_edges_${Date.now()}.csv`;
+        const reversedEdgesContent = edgesLines.map((line, index) => {
+          if (index === 0) {
+            // Header line - keep as is
+            return line;
+          }
+          // Data lines - swap first two columns (source and target)
+          const parts = line.split(',');
+          if (parts.length >= 2) {
+            [parts[0], parts[1]] = [parts[1], parts[0]]; // Swap source and target
+          }
+          return parts.join(',');
+        }).join('\n');
+
+        fs.writeFile(reversedEdgesPath, reversedEdgesContent);
+
+        // Copy the reversed edges
+        const copyEdgesQuery2 = `COPY ${edgeTableName} FROM '${reversedEdgesPath}' (header = true)`;
+
+        console.log(`[CSV Import] Loading undirected edges (direction 2) with COPY FROM: ${copyEdgesQuery2}`);
+        await this.executeQuery(copyEdgesQuery2);
+
+        // Clean up the temporary reversed edges file
+        try {
+          fs.unlink(reversedEdgesPath);
+        } catch (e) {
+          console.warn(`[CSV Import] Failed to clean up reversed edges file:`, e);
+        }
+      }
+
+      // Clean up temporary files
+      try {
+        fs.unlink(nodesPath);
+        fs.unlink(edgesPath);
+      } catch (e) {
+        console.warn(`[CSV Import] Failed to clean up temporary files:`, e);
+      }
+
+      // Refresh graph state
+      const graphState = await this.snapshotGraphState();
+
+      console.log(`[CSV Import] Successfully bulk-imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges`);
+
+      return {
+        success: true,
+        message: `Successfully imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges!`,
+        data: graphState,
+      };
+    } catch (error) {
+      console.error("[CSV Import] Error:", error);
+      return {
+        success: false,
+        message: `Failed to import CSV: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
   }
 }
