@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import chroma from "chroma-js";
 
-import type { ColorMap, SizeMap } from "../../algorithms/implementations";
 import type { GraphEdge } from "../../types";
-import { MODE } from "../constant";
+
+import { MODE, type ColorMap, type SizeMap } from "~/igraph/types";
 
 const DEFAULT_NODE_SIZE = 7;
 const INACTIVE_NODE_SIZE = 7;
@@ -28,7 +28,7 @@ export const useGraphRendererHelpers = ({
 }) => {
   const getNodeSize = useMemo(
     () =>
-      (index: number): number => {
+      (index: string): number => {
         if (mode === MODE.COLOR_SHADE_DEFAULT && isNaN(colors[index])) {
           return INACTIVE_NODE_SIZE;
         }
@@ -39,15 +39,15 @@ export const useGraphRendererHelpers = ({
 
   const getNodeColor = useMemo(
     () =>
-      (index: number): string => {
+      (index: string): string => {
         const value = colors[index];
         switch (mode) {
           case MODE.COLOR_IMPORTANT:
             return value > 0
               ? GRADIENT_COLOR(1).hex()
               : value < 0
-              ? CRITICAL_COLOR
-              : NEUTRAL_COLOR;
+                ? CRITICAL_COLOR
+                : NEUTRAL_COLOR;
           case MODE.COLOR_SHADE_DEFAULT:
             return isNaN(value) ? DISABLED_COLOR : GRADIENT_COLOR(value).hex();
           case MODE.COLOR_SHADE_ERROR:

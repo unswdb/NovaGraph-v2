@@ -1,8 +1,8 @@
 import { cloneElement, useMemo, useState } from "react";
-import { toast } from "sonner";
 
-import type { GraphEdge, GraphModule, GraphNode } from "../types";
+import type { GraphNode } from "../types";
 import InputComponent, { createEmptyInputResults } from "../inputs";
+import type VisualizerStore from "../store";
 
 import type {
   BaseGraphAlgorithm,
@@ -25,20 +25,18 @@ import { Button } from "~/components/ui/button";
 import { useLoading } from "~/components/ui/loading";
 
 export default function InputDialog({
-  module,
+  controller,
   algorithm,
   nodes,
-  edges,
   setActiveAlgorithm,
   setActiveResponse,
   separator = false,
   className,
   ...props
 }: React.ComponentProps<"button"> & {
-  module: GraphModule | null;
+  controller: VisualizerStore["controller"];
   algorithm: BaseGraphAlgorithm;
   nodes: GraphNode[];
-  edges: GraphEdge[];
   setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
   separator?: boolean;
@@ -59,7 +57,7 @@ export default function InputDialog({
   );
 
   const handleSubmit = async () => {
-    if (!module) return;
+    if (!controller) return;
 
     // Don't run when there's no nodes
     if (nodes.length === 0) {
@@ -72,21 +70,20 @@ export default function InputDialog({
     setInputResults(createEmptyInputResults(algorithm.inputs));
     startLoading("Running Algorithm...");
 
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
         const args = algorithm.inputs.map(
           (input) => inputResults[input.key].value
         );
-
-        const algorithmResponse = algorithm.wasmFunction(module, args);
+        const algorithmResponse = await algorithm.wasmFunction(
+          controller.getAlgorithm(),
+          args
+        );
         setActiveAlgorithm(algorithm);
         setActiveResponse(algorithmResponse);
       } catch (err) {
         throw new Error(
-          module && typeof err == "number"
-            ? module.what_to_stderr(err)
-            : String(err) ??
-              "An unexpected error occurred. Please try again later."
+          String(err) ?? "An unexpected error occurred. Please try again later."
         );
       } finally {
         stopLoading();

@@ -8,16 +8,15 @@ import { observer } from "mobx-react-lite";
 
 import type { GraphEdge, GraphNode } from "../types";
 import { useStore } from "../hooks/use-store";
-import type { ColorMap, SizeMap } from "../algorithms/implementations";
 
 import GraphRendererHeader from "./header";
 import GraphRendererFooter from "./footer";
 import { useGraphRendererHelpers } from "./hooks/use-graph-renderer-helpers";
 import { useZoomControls } from "./hooks/use-zoom-controls";
 import NodeMetadata from "./node-metadata";
-import { MODE } from "./constant";
 
 import { cn } from "~/lib/utils";
+import { MODE, type ColorMap, type SizeMap } from "~/igraph/types";
 
 const INITIAL_ZOOM_LEVEL = 1;
 const SIMULATION_LINK_DISTANCE = 20;
@@ -126,8 +125,8 @@ const GraphRenderer = observer(({ className }: { className?: string }) => {
           ref={cosmographRef}
           onClick={selectNode}
           initialZoomLevel={INITIAL_ZOOM_LEVEL}
-          nodeSize={(_, id) => getNodeSize(id)}
-          nodeColor={(_, id) => getNodeColor(id)}
+          nodeSize={(node) => getNodeSize(node.id)}
+          nodeColor={(node) => getNodeColor(node.id)}
           nodeGreyoutOpacity={0.1}
           nodeLabelAccessor={(node) => String(node._primaryKeyValue)}
           nodeSizeScale={nodeSizeScale}

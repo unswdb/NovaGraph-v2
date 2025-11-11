@@ -119,11 +119,8 @@ val topological_sort(void)
     int current_fm_value = order.size();
     for (igraph_integer_t v = 0; v < order.size(); v++)
     {
-        val n = val::object();
         igraph_integer_t nodeId = order.at(v);
-        n.set("id", nodeId);
-        n.set("node", igraph_get_name(nodeId));
-        nodeOrder.set(v, n);
+        nodeOrder.set(v, nodeId);
         fm[nodeId] = current_fm_value--;
     }
     frequenciesToColorMap(fm, colorMap);

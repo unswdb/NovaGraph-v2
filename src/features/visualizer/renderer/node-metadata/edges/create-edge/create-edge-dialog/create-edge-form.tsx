@@ -1,4 +1,5 @@
 import { Loader } from "lucide-react";
+import { observer } from "mobx-react-lite";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -12,106 +13,111 @@ import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
 import { useAsyncFn } from "~/hooks/use-async-fn";
 import { capitalize } from "~/lib/utils";
 
-export default function CreateEdgeDialogForm({
-  source,
-  target,
-  selectedEdgeSchema,
-  edgeTablesMap,
-  onClose,
-}: {
-  source: GraphNode;
-  target: GraphNode;
-  selectedEdgeSchema: string;
-  edgeTablesMap: Map<string, EdgeSchema>;
-  onClose: () => void;
-}) {
-  const { controller, setGraphState } = useStore();
+const CreateEdgeDialogForm = observer(
+  ({
+    source,
+    target,
+    selectedEdgeSchema,
+    onClose,
+  }: {
+    source: GraphNode;
+    target: GraphNode;
+    selectedEdgeSchema: string;
+    onClose: () => void;
+  }) => {
+    const { database, controller, setGraphState } = useStore();
+    const { edgeTablesMap } = database.graph;
 
-  const inputs = useMemo(() => {
-    const { properties } = edgeTablesMap.get(selectedEdgeSchema) as EdgeSchema;
+    const inputs = useMemo(() => {
+      const { properties } = edgeTablesMap.get(
+        selectedEdgeSchema
+      ) as EdgeSchema;
 
-    const propertyInputs = Object.entries(properties).map(([key, type]) =>
-      createSchemaInput(type, {
-        id: `${selectedEdgeSchema}-${key}`,
-        key: key,
-        displayName: capitalize(key),
-        placeholder: `Enter ${key}...`,
-        required: false,
-      })
+      const propertyInputs = Object.entries(properties).map(([key, type]) =>
+        createSchemaInput(type, {
+          id: `${selectedEdgeSchema}-${key}`,
+          key: key,
+          displayName: capitalize(key),
+          placeholder: `Enter ${key}...`,
+          required: false,
+        })
+      );
+
+      return propertyInputs;
+    }, [selectedEdgeSchema]);
+
+    const [values, setValues] = useState(createEmptyInputResults(inputs));
+
+    useEffect(() => {
+      setValues(createEmptyInputResults(inputs));
+    }, [inputs]);
+
+    const isReadyToSubmit = useMemo(
+      () => Object.values(values).every((v) => v.success),
+      [values]
     );
 
-    return propertyInputs;
-  }, [selectedEdgeSchema]);
+    const {
+      run: createEdge,
+      isLoading,
+      getErrorMessage,
+    } = useAsyncFn(controller.db.createEdge.bind(controller.db), {
+      onSuccess: (result) => {
+        setGraphState({
+          nodes: result.nodes,
+          edges: result.edges,
+          nodeTables: result.nodeTables,
+          edgeTables: result.edgeTables,
+        });
+        toast.success("Edge schema created successfully!");
+        onClose();
+      },
+      onError: (err) => {
+        toast.error(getErrorMessage(err));
+      },
+    });
 
-  const [values, setValues] = useState(createEmptyInputResults(inputs));
+    const handleSubmit = async () => {
+      if (edgeTablesMap === undefined) {
+        throw Error("Missing edge table when adding edge");
+      }
+      const edgeSchema = edgeTablesMap.get(selectedEdgeSchema);
+      if (edgeSchema === undefined) {
+        throw Error(`Edge schema '${selectedEdgeSchema}' not found`);
+      }
+      await createEdge(source, target, edgeSchema, values);
+    };
 
-  useEffect(() => {
-    setValues(createEmptyInputResults(inputs));
-  }, [inputs]);
+    return (
+      <>
+        <div className="space-y-3 flex-1">
+          {inputs.map((input, index) => (
+            <InputComponent
+              key={index}
+              input={input}
+              value={values[input.key].value}
+              onChange={(value) =>
+                setValues((prev) => ({
+                  ...prev,
+                  [input.key]: value,
+                }))
+              }
+            />
+          ))}
+        </div>
+        <div className="ml-auto">
+          <Button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={!isReadyToSubmit}
+            className="flex-1"
+          >
+            {isLoading ? <Loader className="animate-spin" /> : "Create Edge"}
+          </Button>
+        </div>
+      </>
+    );
+  }
+);
 
-  const isReadyToSubmit = useMemo(
-    () => Object.values(values).every((v) => v.success),
-    [values]
-  );
-
-  const {
-    run: createEdge,
-    isLoading,
-    getErrorMessage,
-  } = useAsyncFn(controller.db.createEdge.bind(controller.db), {
-    onSuccess: (result) => {
-      setGraphState({
-        nodes: result.nodes,
-        edges: result.edges,
-        nodeTables: result.nodeTables,
-        edgeTables: result.edgeTables,
-      });
-      toast.success("Edge schema created successfully!");
-      onClose();
-    },
-    onError: (err) => {
-      toast.error(getErrorMessage(err));
-    },
-  });
-
-  const handleSubmit = async () => {
-    if (edgeTablesMap === undefined) {
-      throw Error("Missing edge table when adding edge");
-    }
-    const edgeSchema = edgeTablesMap.get(selectedEdgeSchema);
-    if (edgeSchema === undefined) {
-      throw Error(`Edge schema '${selectedEdgeSchema}' not found`);
-    }
-    await createEdge(source, target, edgeSchema, values);
-  };
-
-  return (
-    <>
-      <div className="space-y-3 flex-1">
-        {inputs.map((input, index) => (
-          <InputComponent
-            key={index}
-            input={input}
-            value={values[input.key].value}
-            onChange={(value) =>
-              setValues((prev) => ({
-                ...prev,
-                [input.key]: value,
-              }))
-            }
-          />
-        ))}
-      </div>
-      <div className="ml-auto">
-        <Button
-          type="submit"
-          onClick={handleSubmit}
-          disabled={!isReadyToSubmit}
-          className="flex-1"
-        >
-          {isLoading ? <Loader className="animate-spin" /> : "Create Edge"}
-        </Button>
-      </div>
-    </>
-  );
-}
+export default CreateEdgeDialogForm;

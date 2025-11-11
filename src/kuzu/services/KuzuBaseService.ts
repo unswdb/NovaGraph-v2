@@ -1,10 +1,8 @@
-import { snapshotGraphState } from "./KuzuQueryExecutor";
-
+import { snapshotGraphState } from "../helpers/KuzuQueryExecutor";
 import {
   queryResultColorMapExtraction,
   processQueryResult,
-} from "./KuzuQueryResultExtractor";
-
+} from "../helpers/KuzuQueryResultExtractor";
 import {
   createSchemaQuery,
   createNodeQuery,
@@ -17,25 +15,22 @@ import {
   updateNodeQuery,
   deleteEdgeQuery,
 } from "../helpers/KuzuQueryBuilder";
-
-import type { CompositeType, ValueWithType } from "~/kuzu/types/KuzuDBTypes";
 import type {
-  EdgeSchema,
-  GraphEdge,
-  GraphNode,
-  GraphSchema,
-} from "~/features/visualizer/types";
+  ErrorQueryResult,
+  SuccessQueryResult,
+} from "../helpers/KuzuQueryResultExtractor.types";
+import type Connection from "../types/kuzu_wasm_internal/connection";
+
+import { throwOnFailedQuery } from "./KuzuBaseService.util";
+
+import type { CompositeType } from "~/kuzu/types/KuzuDBTypes";
+import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
 import type {
   NonPrimaryKeyType,
   PrimaryKeyType,
 } from "~/features/visualizer/schema-inputs";
 import type { InputChangeResult } from "~/features/visualizer/inputs";
-import type {
-  ErrorQueryResult,
-  SuccessQueryResult,
-} from "./KuzuQueryResultExtractor.types";
-import type Connection from "../types/kuzu_wasm_internal/connection";
-import { throwOnFailedQuery } from "./KuzuBaseService.util";
+import type { ColorMap } from "~/igraph/types";
 
 export default class KuzuBaseService {
   protected db: any;
@@ -71,7 +66,7 @@ export default class KuzuBaseService {
     const successQueries: SuccessQueryResult[] = [];
     const failedQueries: ErrorQueryResult[] = [];
     let allSuccess = true;
-    let colorMap = {};
+    let colorMap: ColorMap = {};
     let resultType = "graph";
 
     // Disallow unsupported numeric types up-front
@@ -124,7 +119,7 @@ export default class KuzuBaseService {
       edges: edges,
       nodeTables,
       edgeTables,
-      colorMap: colorMap,
+      colorMap,
       resultType: resultType,
     };
   }

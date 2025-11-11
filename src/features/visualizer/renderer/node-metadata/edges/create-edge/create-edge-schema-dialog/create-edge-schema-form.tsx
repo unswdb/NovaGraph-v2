@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
-import { Key, Loader, Plus, X } from "lucide-react";
+import { Loader, Plus, X } from "lucide-react";
 import { toast } from "sonner";
+import { observer } from "mobx-react-lite";
 
 import { Button } from "~/components/ui/button";
 import { useAsyncFn } from "~/hooks/use-async-fn";
 import {
   NON_PK_SCHEMA_TYPES,
-  PK_SCHEMA_TYPES,
   type NonPrimaryKeyType,
   type PrimaryKeyType,
 } from "~/features/visualizer/schema-inputs";
@@ -29,174 +29,178 @@ type EdgeSchemaField =
       type: PrimaryKeyType;
     };
 
-export default function CreateEdgeSchemaForm({
-  source,
-  target,
-  onSubmit,
-}: {
-  source: GraphNode;
-  target: GraphNode;
-  onSubmit: () => void;
-}) {
-  const { controller, database, setGraphState } = useStore();
-  const { edgeTables } = database.graph;
+const CreateEdgeSchemaForm = observer(
+  ({
+    source,
+    target,
+    onSubmit,
+  }: {
+    source: GraphNode;
+    target: GraphNode;
+    onSubmit: () => void;
+  }) => {
+    const { controller, database, setGraphState } = useStore();
+    const { edgeTables } = database.graph;
 
-  const { run: createEdgeSchema, isLoading } = useAsyncFn(
-    controller.db.createEdgeSchema.bind(controller.db),
-    {
-      onSuccess: (result) => {
-        setGraphState({
-          nodes: result.nodes,
-          edges: result.edges,
-          nodeTables: result.nodeTables,
-          edgeTables: result.edgeTables,
-        });
-        toast.success("Edge schema created successfully!");
-        onSubmit();
-      },
-    }
-  );
-
-  const tableNameInput = createTextInput({
-    id: "schema-edge-table-name",
-    key: "table_name",
-    displayName: "Schema/Table Name",
-    placeholder: "Enter schema/table name (e.g., Directed, ActedIn)...",
-    required: true,
-    validator: (value) => {
-      if (/^[0-9]/.test(value)) {
-        return {
-          success: false,
-          message: "Table name cannot start with a number",
-        };
+    const { run: createEdgeSchema, isLoading } = useAsyncFn(
+      controller.db.createEdgeSchema.bind(controller.db),
+      {
+        onSuccess: (result) => {
+          setGraphState({
+            nodes: result.nodes,
+            edges: result.edges,
+            nodeTables: result.nodeTables,
+            edgeTables: result.edgeTables,
+          });
+          toast.success("Edge schema created successfully!");
+          onSubmit();
+        },
       }
-
-      if (!/^[A-Za-z0-9]+$/.test(value)) {
-        return {
-          success: false,
-          message:
-            "Table name can only contain alphanumeric characters (letters and numbers)",
-        };
-      }
-      const doesTableNameExist = edgeTables.some((s) => s.tableName === value);
-      if (doesTableNameExist) {
-        return {
-          success: false,
-          message:
-            "An edge schema with this name already exists. Please choose a different name.",
-        };
-      }
-      return { success: true };
-    },
-  });
-
-  const [tableName, setTableName] = useState(
-    createEmptyInputResult(tableNameInput)
-  );
-  const [fields, setFields] = useState<EdgeSchemaField[]>([]);
-
-  const allFieldNamesUnique = useMemo(
-    () => new Set(fields.map((f) => f.name.trim())).size === fields.length,
-    [fields]
-  );
-
-  const isReadyToSubmit = useMemo(
-    () =>
-      !!tableName.success &&
-      fields.every((f) => !!f.name.trim()) &&
-      allFieldNamesUnique,
-    [tableName, fields, allFieldNamesUnique]
-  );
-
-  const addNewField = () => {
-    const newField: EdgeSchemaField = {
-      name: "",
-      type: NON_PK_SCHEMA_TYPES[0],
-    };
-    setFields((prev) => [...prev, newField]);
-  };
-
-  const deleteField = (index: number) => {
-    setFields((prev) => {
-      return [...prev.slice(0, index), ...prev.slice(index + 1)];
-    });
-  };
-
-  const updateField = (index: number, updates: Partial<EdgeSchemaField>) => {
-    setFields((prev) =>
-      prev.map((field, i) => (i === index ? { ...field, ...updates } : field))
     );
-  };
 
-  const handleOnSubmit = async () => {
-    if (isReadyToSubmit) {
-      if (tableName.value === undefined) {
-        throw Error("Empty or undefined table name");
-      }
-      await createEdgeSchema(
-        tableName.value,
-        [[source.tableName, target.tableName]],
-        fields
+    const tableNameInput = createTextInput({
+      id: "schema-edge-table-name",
+      key: "table_name",
+      displayName: "Schema/Table Name",
+      placeholder: "Enter schema/table name (e.g., Directed, ActedIn)...",
+      required: true,
+      validator: (value) => {
+        if (/^[0-9]/.test(value)) {
+          return {
+            success: false,
+            message: "Table name cannot start with a number",
+          };
+        }
+
+        if (!/^[A-Za-z0-9]+$/.test(value)) {
+          return {
+            success: false,
+            message:
+              "Table name can only contain alphanumeric characters (letters and numbers)",
+          };
+        }
+        const doesTableNameExist = edgeTables.some(
+          (s) => s.tableName === value
+        );
+        if (doesTableNameExist) {
+          return {
+            success: false,
+            message:
+              "An edge schema with this name already exists. Please choose a different name.",
+          };
+        }
+        return { success: true };
+      },
+    });
+
+    const [tableName, setTableName] = useState(
+      createEmptyInputResult(tableNameInput)
+    );
+    const [fields, setFields] = useState<EdgeSchemaField[]>([]);
+
+    const allFieldNamesUnique = useMemo(
+      () => new Set(fields.map((f) => f.name.trim())).size === fields.length,
+      [fields]
+    );
+
+    const isReadyToSubmit = useMemo(
+      () =>
+        !!tableName.success &&
+        fields.every((f) => !!f.name.trim()) &&
+        allFieldNamesUnique,
+      [tableName, fields, allFieldNamesUnique]
+    );
+
+    const addNewField = () => {
+      const newField: EdgeSchemaField = {
+        name: "",
+        type: NON_PK_SCHEMA_TYPES[0],
+      };
+      setFields((prev) => [...prev, newField]);
+    };
+
+    const deleteField = (index: number) => {
+      setFields((prev) => {
+        return [...prev.slice(0, index), ...prev.slice(index + 1)];
+      });
+    };
+
+    const updateField = (index: number, updates: Partial<EdgeSchemaField>) => {
+      setFields((prev) =>
+        prev.map((field, i) => (i === index ? { ...field, ...updates } : field))
       );
-    }
-  };
+    };
 
-  const SchemaFormError = () => {
-    let errorMsg = "";
+    const handleOnSubmit = async () => {
+      if (isReadyToSubmit) {
+        if (tableName.value === undefined) {
+          throw Error("Empty or undefined table name");
+        }
+        await createEdgeSchema(
+          tableName.value,
+          [[source.tableName, target.tableName]],
+          fields
+        );
+      }
+    };
 
-    if (!allFieldNamesUnique) {
-      errorMsg = "Field names must be unique.";
-    }
+    const SchemaFormError = () => {
+      let errorMsg = "";
 
-    return errorMsg ? (
-      <p className="text-sm text-critical">{errorMsg}</p>
-    ) : null;
-  };
+      if (!allFieldNamesUnique) {
+        errorMsg = "Field names must be unique.";
+      }
 
-  return (
-    <div className="space-y-4">
-      <InputComponent<TextInput>
-        input={tableNameInput}
-        value={tableName.value}
-        onChange={setTableName}
-      />
+      return errorMsg ? (
+        <p className="text-sm text-critical">{errorMsg}</p>
+      ) : null;
+    };
 
-      <div className="space-y-2">
-        <p className="small-title">Fields</p>
-        {/* Error */}
-        <SchemaFormError />
-        {fields.map((field, index) => (
-          <SchemaFieldInputs
-            key={index}
-            field={field}
-            onChangeName={(name) => updateField(index, { name })}
-            onChangeType={(type) => updateField(index, { type })}
-            onDelete={() => deleteField(index)}
-          />
-        ))}
+    return (
+      <div className="space-y-4">
+        <InputComponent<TextInput>
+          input={tableNameInput}
+          value={tableName.value}
+          onChange={setTableName}
+        />
+
+        <div className="space-y-2">
+          <p className="small-title">Fields</p>
+          {/* Error */}
+          <SchemaFormError />
+          {fields.map((field, index) => (
+            <SchemaFieldInputs
+              key={index}
+              field={field}
+              onChangeName={(name) => updateField(index, { name })}
+              onChangeType={(type) => updateField(index, { type })}
+              onDelete={() => deleteField(index)}
+            />
+          ))}
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={addNewField}
+            className="w-full"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Field
+          </Button>
+        </div>
 
         <Button
           type="button"
-          variant="outline"
-          onClick={addNewField}
+          onClick={handleOnSubmit}
+          disabled={!isReadyToSubmit || isLoading}
           className="w-full"
         >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Field
+          {isLoading ? <Loader className="animate-spin" /> : "Create Schema"}
         </Button>
       </div>
-
-      <Button
-        type="button"
-        onClick={handleOnSubmit}
-        disabled={!isReadyToSubmit || isLoading}
-        className="w-full"
-      >
-        {isLoading ? <Loader className="animate-spin" /> : "Create Schema"}
-      </Button>
-    </div>
-  );
-}
+    );
+  }
+);
 
 function SchemaFieldInputs({
   field,
@@ -284,3 +288,5 @@ function SchemaFieldInputs({
     </div>
   );
 }
+
+export default CreateEdgeSchemaForm;

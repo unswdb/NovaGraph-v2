@@ -14,14 +14,14 @@ export default function CodeTabContent({
   runQuery,
   onSuccessQuery,
   onErrorQuery,
-  tabControls,
+  enableOutput,
 }: {
   code: string;
   setCode: (s: string) => void;
   runQuery: (query: string) => Promise<ExecuteQueryResult>;
   onSuccessQuery: (r: ExecuteQueryResult) => void;
   onErrorQuery: (r: ExecuteQueryResult) => void;
-  tabControls: { problemsLen: number; enableOutput: boolean };
+  enableOutput: boolean;
 }) {
   // Memoised value
   const isReadyToSubmit = useMemo(() => !!code, [code]);
@@ -44,7 +44,7 @@ export default function CodeTabContent({
         className="flex-1 basis-0 min-h-0"
       />
       <div className="flex flex-wrap-reverse justify-between gap-2">
-        <CodeOutputTabs {...tabControls} />
+        <CodeOutputTabs enableOutput={enableOutput} />
         <div className="flex items-center gap-2">
           <CopyButton variant="ghost" value={code} />
           <Button

@@ -9,7 +9,7 @@ igraph_t globalGraph;
 igraph_vector_t globalWeights;
 
 // The first graph to be rendered on the screen
-val initGraph(void)
+val initRandomGraph(void)
 {
     igraph_set_attribute_table(&igraph_cattribute_table);
 
@@ -78,18 +78,133 @@ val what_to_stderr(intptr_t ptr)
     return val(error->what());
 }
 
+void create_graph_from_kuzu_to_igraph(
+    igraph_integer_t nodes,
+    val src_js, // Int32Array
+    val dst_js, // Int32Array
+    igraph_bool_t directed,
+    val weight_js // Float64Array or undefined
+)
+{
+    igraph_set_attribute_table(&igraph_cattribute_table);
+
+    static bool graph_initialized = false;
+    static bool weights_initialized = false;
+
+    if (graph_initialized)
+    {
+        igraph_destroy(&globalGraph);
+        graph_initialized = false;
+    }
+
+    igraph_error_t rc = igraph_empty(&globalGraph, nodes, directed ? IGRAPH_DIRECTED : IGRAPH_UNDIRECTED);
+    if (rc != IGRAPH_SUCCESS)
+    {
+        throw std::runtime_error(std::string("igraph_empty failed: ") + igraph_strerror(rc));
+    }
+    graph_initialized = true;
+
+    const int edge_count = src_js["length"].as<int>();
+
+    // Validate that source and destination arrays have the same length
+    const int dst_count = dst_js["length"].as<int>();
+    if (edge_count != dst_count)
+    {
+        igraph_destroy(&globalGraph);
+        graph_initialized = false;
+        throw std::runtime_error("Source and destination arrays must have the same length");
+    }
+
+    // Initialize edge vector for batch addition - USE igraph_vector_int_t
+    igraph_vector_int_t edge_vector;
+    rc = igraph_vector_int_init(&edge_vector, 0);
+    if (rc != IGRAPH_SUCCESS)
+    {
+        igraph_destroy(&globalGraph);
+        graph_initialized = false;
+        throw std::runtime_error(std::string("igraph_vector_int_init failed: ") + igraph_strerror(rc));
+    }
+
+    // Reserve space for all edges (2 * number of edges)
+    rc = igraph_vector_int_reserve(&edge_vector, 2 * edge_count);
+    if (rc != IGRAPH_SUCCESS)
+    {
+        igraph_vector_int_destroy(&edge_vector);
+        igraph_destroy(&globalGraph);
+        graph_initialized = false;
+        throw std::runtime_error(std::string("igraph_vector_int_reserve failed: ") + igraph_strerror(rc));
+    }
+
+    // Populate the edge vector with source and destination pairs
+    for (int i = 0; i < edge_count; i++)
+    {
+        const igraph_integer_t s = src_js[i].as<int>();
+        const igraph_integer_t t = dst_js[i].as<int>();
+
+        // Add bounds checking
+        if (s < 0 || s >= nodes || t < 0 || t >= nodes)
+        {
+            igraph_vector_int_destroy(&edge_vector);
+            igraph_destroy(&globalGraph);
+            graph_initialized = false;
+            throw std::runtime_error("Vertex index out of bounds");
+        }
+
+        igraph_vector_int_push_back(&edge_vector, s);
+        igraph_vector_int_push_back(&edge_vector, t);
+    }
+
+    // Add all edges to the graph in batch
+    rc = igraph_add_edges(&globalGraph, &edge_vector, 0);
+    if (rc != IGRAPH_SUCCESS)
+    {
+        igraph_vector_int_destroy(&edge_vector);
+        igraph_destroy(&globalGraph);
+        graph_initialized = false;
+        throw std::runtime_error(std::string("igraph_add_edges failed: ") + igraph_strerror(rc));
+    }
+    igraph_vector_int_destroy(&edge_vector);
+
+    if (weights_initialized)
+    {
+        igraph_vector_destroy(&globalWeights);
+        weights_initialized = false;
+    }
+
+    if (!weight_js.isUndefined() && !weight_js.isNull())
+    {
+        const int weight_count = weight_js["length"].as<int>();
+        rc = igraph_vector_init(&globalWeights, edge_count);
+        if (rc != IGRAPH_SUCCESS)
+        {
+            igraph_destroy(&globalGraph);
+            graph_initialized = false;
+            throw std::runtime_error(std::string("igraph_vector_init failed: ") + igraph_strerror(rc));
+        }
+        weights_initialized = true;
+
+        for (int i = 0; i < edge_count; i++)
+        {
+            double w = (i < weight_count) ? weight_js[i].as<double>() : 0.0;
+            VECTOR(globalWeights)
+            [i] = w;
+        }
+        igraph_cattribute_EAN_setv(&globalGraph, "weight", &globalWeights);
+    }
+}
+
 EMSCRIPTEN_BINDINGS(graph)
 {
     register_vector<uint8_t>("VectorUint8");
 
     // Expose the functions
-    function("initGraph", &initGraph);
+    function("initRandomGraph", &initRandomGraph);
     function("test", &test);
     function("what_to_stderr", &what_to_stderr);
 
     function("dijkstra_source_to_target", &dijkstra_source_to_target);
     function("dijkstra_source_to_all", &dijkstra_source_to_all);
-    function("yens_algorithm", &yen_source_to_target);
+    function("yen_source_to_target", &yen_source_to_target);
     function("bellman_ford_source_to_target", &bf_source_to_target);
     function("bellman_ford_source_to_all", &bf_source_to_all);
     function("cleanupGraph", &cleanupGraph);
@@ -124,6 +239,8 @@ EMSCRIPTEN_BINDINGS(graph)
     function("eulerian_circuit", &eulerian_circuit);
     function("missing_edge_prediction_default_values", &missing_edge_prediction_default_values);
     function("missing_edge_prediction", &missing_edge_prediction);
+
+    function("create_graph_from_kuzu_to_igraph", &create_graph_from_kuzu_to_igraph);
 }
 
 // emcc demo.cpp -O3 -s WASM=1 -s -sEXPORTED_FUNCTIONS=_sum,_subtract --no-entry -o demo.wasm
