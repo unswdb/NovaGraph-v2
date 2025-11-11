@@ -448,11 +448,16 @@ export class IgraphController {
 
   async leidenCommunities(resolution: number): Promise<LeidenResult> {
     this.checkInitialization();
-    const directed = this._getDirection();
-    if (directed) {
-      throw new Error("Leiden community detection requires an undirected graph");
+    const isDirected = this._getDirection();
+    
+    let graphData;
+    if (isDirected) {
+      console.warn("Converting directed graph to undirected for Leiden community detection");
+      graphData = await this._prepareGraphDataWithDirection(false);
+    } else {
+      graphData = await this._prepareGraphData();
     }
-    const graphData = await this._prepareGraphData();
+    
     return await igraphLeiden(this._wasmGraphModule, graphData, resolution);
   }
 
