@@ -526,11 +526,16 @@ export class IgraphController {
 
   async triangles(): Promise<TriangleCountResult> {
     this.checkInitialization();
-    const directed = this._getDirection();
-    if (directed) {
-      throw new Error("Triangle counting requires an undirected graph");
+    const isDirected = this._getDirection();
+    
+    let graphData;
+    if (isDirected) {
+      console.warn("Converting directed graph to undirected for Triangle counting");
+      graphData = await this._prepareGraphDataWithDirection(false);
+    } else {
+      graphData = await this._prepareGraphData();
     }
-    const graphData = await this._prepareGraphData();
+    
     return await igraphTriangles(this._wasmGraphModule, graphData);
   }
 
