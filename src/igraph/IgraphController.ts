@@ -463,11 +463,16 @@ export class IgraphController {
 
   async fastGreedyCommunities(): Promise<FastGreedyResult> {
     this.checkInitialization();
-    const directed = this._getDirection();
-    if (directed) {
-      throw new Error("Fast Greedy community detection requires an undirected graph");
+    const isDirected = this._getDirection();
+    
+    let graphData;
+    if (isDirected) {
+      console.warn("Converting directed graph to undirected for Fast Greedy community detection");
+      graphData = await this._prepareGraphDataWithDirection(false);
+    } else {
+      graphData = await this._prepareGraphData();
     }
-    const graphData = await this._prepareGraphData();
+    
     return await igraphFastGreedy(this._wasmGraphModule, graphData);
   }
 
