@@ -433,11 +433,16 @@ export class IgraphController {
 
   async louvainCommunities(resolution: number): Promise<LouvainResult> {
     this.checkInitialization();
-    const directed = this._getDirection();
-    if (directed) {
-      throw new Error("Louvain community detection requires an undirected graph");
+    const isDirected = this._getDirection();
+    
+    let graphData;
+    if (isDirected) {
+      console.warn("Converting directed graph to undirected for Louvain community detection");
+      graphData = await this._prepareGraphDataWithDirection(false);
+    } else {
+      graphData = await this._prepareGraphData();
     }
-    const graphData = await this._prepareGraphData();
+    
     return await igraphLouvain(this._wasmGraphModule, graphData, resolution);
   }
 
