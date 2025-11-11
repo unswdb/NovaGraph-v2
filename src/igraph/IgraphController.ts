@@ -193,6 +193,29 @@ export class IgraphController {
     return parseResult;
   }
 
+
+  private async _prepareGraphDataWithDirection(isDirected: boolean): Promise<KuzuToIgraphParseResult> {
+    this.checkInitialization();
+
+    const kuzuData = await this._getKuzuData();
+    const parseResult = parseKuzuToIgraphInput(
+      kuzuData.nodes,
+      kuzuData.edges,
+      isDirected
+    );
+
+    const igraphInput = parseResult.IgraphInput;
+    await this._wasmGraphModule.cleanupGraph();
+    await this._wasmGraphModule.create_graph_from_kuzu_to_igraph(
+      igraphInput.nodes,
+      igraphInput.src,
+      igraphInput.dst,
+      igraphInput.directed,
+      igraphInput.weight
+    );
+    return parseResult;
+  }
+
   // ==========================================
   // TRAVERSAL & CONNECTIVITY ALGORITHMS
   // ==========================================
@@ -323,11 +346,16 @@ export class IgraphController {
 
   async minimumSpanningTree(): Promise<MSTResult> {
     this.checkInitialization();
-    const directed = this._getDirection();
-    if (directed) {
-      throw new Error("Minimum Spanning Tree requires an undirected graph");
+    const isDirected = this._getDirection();
+    
+    let graphData;
+    if (isDirected) {
+      console.warn("Converting directed graph to undirected for Minimum Spanning Tree algorithm");
+      graphData = await this._prepareGraphDataWithDirection(false);
+    } else {
+      graphData = await this._prepareGraphData();
     }
-    const graphData = await this._prepareGraphData();
+    
     return await igraphMST(this._wasmGraphModule, graphData);
   }
 
