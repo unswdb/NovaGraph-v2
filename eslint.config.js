@@ -14,8 +14,6 @@ export default [
       "**/node_modules/**",
       "dist/**",
       "build/**",
-      "src/wasm/**",
-      "src/kuzu/**",
       ".react-router/**",
       "**/graph.js",
       "**/graph.d.ts",

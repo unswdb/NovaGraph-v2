@@ -41,6 +41,10 @@
 
 /* TAILWIND THEMES */
 @theme {
+  --font-sans:
+    "Inter", system-ui, "Segoe UI", "Segoe UI Emoji", "Segoe UI Symbol", Arial,
+    sans-serif;
+  --color-black: var(--black);
   --color-primary: var(--primary);
   --color-primary-low: var(--primary-low);
   --color-primary-hover: var(--primary-hover);
@@ -143,44 +147,44 @@
 }
 
 @utility medium-title {
-  font-size: 20px;
-  font-weight: var(--semi-bold);
+  font-size: 18px;
+  font-weight: var(--regular);
 }
 
 @utility small-title {
   font-size: 16px;
-  font-weight: var(--bold);
+  font-weight: var(--regular);
 }
 
 @utility xsmall-title {
   font-size: 14px;
-  font-weight: var(--semi-bold);
+  font-weight: var(--regular);
 }
 
 /* BODY TEXT */
 @utility large-body {
   font-size: 20px;
-  font-weight: var(--regular);
+  font-weight: var(--light);
 }
 
 @utility medium-body {
   font-size: 16px;
-  font-weight: var(--regular);
+  font-weight: var(--light);
 }
 
 @utility small-body {
   font-size: 14px;
-  font-weight: var(--regular);
+  font-weight: var(--light);
 }
 
 @utility xsmall-body {
   font-size: 12px;
-  font-weight: var(--regular);
+  font-weight: var(--light);
 }
 
 html,
 body {
-  @apply bg-page text-typography-primary medium-body;
+  @apply bg-page text-typography-primary medium-body font-sans antialiased scroll-smooth;
 
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
@@ -191,6 +195,8 @@ body {
 *:before,
 *:after {
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-neutral) transparent;
 }
 
 /* PRIMITIVES */
@@ -266,6 +272,7 @@ body {
   --yellow-8: rgba(117, 66, 11, 1);
   --yellow-9: rgba(86, 55, 21, 1);
   --yellow-10: rgba(62, 42, 20, 1);
+  --light: 300;
   --regular: 400;
   --semi-bold: 500;
   --bold: 700;

@@ -21,6 +21,7 @@ export default function SwitchInputComponent({
     <Switch
       id={input.id}
       checked={!!value}
+      disabled={input.disabled}
       onCheckedChange={(checked) => onChange({ value: checked, success: true })}
       defaultChecked={input.defaultValue}
     />

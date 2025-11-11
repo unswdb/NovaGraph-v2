@@ -201,8 +201,7 @@ val local_clustering_coefficient(void)
         stream << std::fixed << std::setprecision(4) << transitivity;
 
         dm[v] = transitivity;
-        t.set("id", v);
-        t.set("node", igraph_get_name(v));
+        t.set("node", v);
         t.set("value", std::stod(stream.str()));
         transitivities.set(v, t);
     }
@@ -264,10 +263,7 @@ val k_core(int k)
     for (igraph_integer_t i = 0; i < vertices_to_keep.size(); ++i)
     {
         igraph_integer_t v = vertices_to_keep.at(i);
-        val node = val::object();
-        node.set("id", v);
-        node.set("node", igraph_get_name(v));
-        cores.set(v, node);
+        cores.set(v, v);
     }
     data.set("cores", cores);
     data.set("k", k);

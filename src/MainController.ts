@@ -7,41 +7,49 @@ import type {
   PrimaryKeyType,
 } from "./features/visualizer/schema-inputs";
 import type { InputChangeResult } from "./features/visualizer/inputs";
+import { IgraphController } from "./igraph/IgraphController";
 
 class MainController {
-  // Graph method starts here
-  private wasmGraphModule: any = null;
+  // Private sector
+  private _IgraphController: undefined | IgraphController;
+  private async _initKuzu() {
+    return kuzuController.initialize("inmemory", "sync", {});
+  }
+  private async _initIgraph() {
+    return await this._IgraphController?.initIgraph();
+  }
+
+  // Public sector
+  constructor() {
+    this._IgraphController = new IgraphController(
+      this.db.snapshotGraphState,
+      this.db.getGraphDirection
+    );
+  }
 
   async getGraphModule() {
-    if (!this.wasmGraphModule) {
-      try {
-        this.wasmGraphModule = await createModule();
-      } catch (err) {
-        console.error("Failed to load WASM module", err);
-        throw err;
-      }
+    return this._IgraphController?.getIgraphModule();
+  }
+
+  async initSystem() {
+    await this._initKuzu();
+    await this._initIgraph();
+  }
+
+  getAlgorithm() {
+    if (this._IgraphController === undefined) {
+      throw Error("IgraphController is undefinned");
     }
-    return this.wasmGraphModule;
-  }
-
-  // Kuzu db initialization
-  async initKuzu(
-    type: string = "inmemory",
-    mode: string = "sync",
-    options: any = {}
-  ) {
-    return kuzuController.initialize(type, mode);
-  }
-
-  // Graph initialization
-  async initGraph() {
-    const mod = await this.getGraphModule();
-    const graph = mod.initGraph();
-    return graph;
+    return this._IgraphController;
   }
 
   // Database operations namespace
   db = {
+    getGraphDirection() {
+      // Todo: fix this later once implement graph direction
+      return true;
+    },
+
     async createNodeSchema(
       tableName: string,
       primaryKey: string,
@@ -91,16 +99,6 @@ class MainController {
     ) {
       return Promise.resolve(kuzuController.createNode(label, properties));
     },
-
-    // async deleteNodeWithPrimary(tableName: string,
-    //   primaryKey: string,
-    //   primaryValue: any) {
-    //   return Promise.resolve(kuzuController.deleteNode(tableName, primaryKey, primaryValue));
-    // },
-
-    // async deleteNodeWithoutPrimary(tableName: string, primaryValue: any) {
-    //   return Promise.resolve(kuzuController.deleteNodeWithoutPrimary(tableName, primaryValue));
-    // },
 
     async updateNode(
       node: GraphNode,
@@ -201,8 +199,6 @@ class MainController {
       return Promise.resolve(kuzuController.getAllSchemaProperties());
     },
   };
-
-  algorithms = {};
 }
 
 // Singleton instance

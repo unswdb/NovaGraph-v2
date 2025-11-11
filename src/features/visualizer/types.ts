@@ -1,3 +1,5 @@
+import type { BaseGraphAlgorithmResult } from "./algorithms/implementations";
+import type { QueryVisualizationResult } from "./queries";
 import type {
   NonPrimaryKeyType,
   NonPrimaryKeyValueType,
@@ -25,7 +27,7 @@ export type GraphEdge = {
   attributes?: Record<string, NonPrimaryKeyValueType>; // Additional attributes for the edge
 };
 
-type BaseGraphSchema = {
+export type BaseGraphSchema = {
   tableName: string;
   primaryKey: string;
   primaryKeyType: PrimaryKeyType;
@@ -39,12 +41,21 @@ export function isNodeSchema(s: GraphSchema): s is NodeSchema {
   return s.tableType === "NODE";
 }
 
-export type EdgeSchema = BaseGraphSchema & { tableType: "REL" };
+export type EdgeSchema = BaseGraphSchema & { tableType: "REL" } & {
+  sourceTableName: string;
+  targetTableName: string;
+};
 export function isEdgeSchema(s: GraphSchema): s is EdgeSchema {
   return s.tableType === "REL";
 }
 
 export type GraphSchema = NodeSchema | EdgeSchema;
+
+export function createSchema(s: NodeSchema): NodeSchema;
+export function createSchema(s: EdgeSchema): EdgeSchema;
+export function createSchema(s: GraphSchema): GraphSchema {
+  return s;
+}
 
 export type GraphDatabase = {
   label: string;
@@ -62,5 +73,18 @@ export type GraphDatabase = {
 };
 
 export type ExecuteQueryResult = ReturnType<KuzuBaseService["executeQuery"]>;
+export type VisualizationResponse =
+  | BaseGraphAlgorithmResult
+  | QueryVisualizationResult;
 
-export { type MainModule as GraphModule } from "~/graph";
+export function isQueryVisualizationResult(
+  response: VisualizationResponse
+): response is QueryVisualizationResult {
+  return response.type === "query";
+}
+
+export function isAlgorithmVisualizationResult(
+  response: VisualizationResponse
+): response is BaseGraphAlgorithmResult {
+  return response.type === "algorithm";
+}

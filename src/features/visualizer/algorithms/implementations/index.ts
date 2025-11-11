@@ -1,4 +1,4 @@
-import { GitBranch, Puzzle, Route, Star, Users, Waypoints } from "lucide-react";
+import { GitBranch, Puzzle, Route, Star, Users } from "lucide-react";
 import type { ElementType } from "react";
 
 import * as TRAVERSAL_CONNECTIVITY from "./traversal-connectivity";
@@ -17,31 +17,27 @@ const ALL_ALGORITHMS: {
   {
     label: "Traversal & Connectivity",
     icon: GitBranch,
-    algorithms: Object.values(TRAVERSAL_CONNECTIVITY) as BaseGraphAlgorithm[],
+    algorithms: Object.values(TRAVERSAL_CONNECTIVITY),
   },
   {
     label: "Path & Reachability",
     icon: Route,
-    algorithms: Object.values(PATH_REACHABILITY) as BaseGraphAlgorithm[],
+    algorithms: Object.values(PATH_REACHABILITY),
   },
   {
     label: "Centrality",
     icon: Star,
-    algorithms: Object.values(
-      CENTRALITY_NODE_IMPORTANCE
-    ) as BaseGraphAlgorithm[],
+    algorithms: Object.values(CENTRALITY_NODE_IMPORTANCE),
   },
   {
     label: "Community Detection",
     icon: Users,
-    algorithms: Object.values(COMMUNITY_DETECTION) as BaseGraphAlgorithm[],
+    algorithms: Object.values(COMMUNITY_DETECTION),
   },
   {
     label: "Graph Similarity & Matching",
     icon: Puzzle,
-    algorithms: Object.values(
-      GRAPH_SIMILARITY_MATCHING
-    ) as BaseGraphAlgorithm[],
+    algorithms: Object.values(GRAPH_SIMILARITY_MATCHING),
   },
 ];
 export default ALL_ALGORITHMS;
@@ -51,6 +47,4 @@ export {
   type BaseGraphAlgorithmResult,
   type BaseGraphAlgorithm,
   type GraphAlgorithm,
-  type SizeMap,
-  type ColorMap,
 } from "./types";

@@ -1,6 +1,9 @@
-import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
+import SyntaxHighlighterPkg from "react-syntax-highlighter";
 import { useState } from "react";
 import { Table as TableIcon } from "lucide-react";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const { Light: SyntaxHighlighter } = SyntaxHighlighterPkg as any;
 
 import type { ImportOption } from "./types";
 
@@ -63,7 +66,7 @@ const validateNodes = async (file: File | undefined) => {
     }
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: "Unable to read file content. Please try again.",
@@ -107,7 +110,7 @@ const validateEdges = async (file: File | undefined) => {
     }
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: "Unable to read file content. Please try again. ",

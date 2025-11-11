@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { Loader } from "lucide-react";
 
 import InputComponent, { createEmptyInputResults } from "../inputs";
 
@@ -14,6 +15,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Separator } from "~/components/ui/separator";
 import { Button } from "~/components/ui/button";
+import { useAsyncFn } from "~/hooks/use-async-fn";
 
 export default function ImportDialog() {
   return (
@@ -69,18 +71,21 @@ function ImportContent({ option }: { option: ImportOption }) {
     [inputResults]
   );
 
+  const {
+    run: importFile,
+    isLoading,
+    getErrorMessage,
+  } = useAsyncFn(option.handler.bind(option), {
+    onSuccess: (result) => {
+      toast.success(result.message);
+    },
+    onError: (err) => {
+      setError(getErrorMessage(err));
+    },
+  });
+
   const handleOnSubmit = async () => {
-    toast("Creating graph...");
-
-    const { success, message } = await option.handler({ values: inputResults });
-    if (!success) {
-      return setError(
-        message ??
-          "There's something wrong with creating the graph. Please try again."
-      );
-    }
-
-    toast(message);
+    await importFile({ values: inputResults });
   };
 
   return (
@@ -141,9 +146,9 @@ function ImportContent({ option }: { option: ImportOption }) {
           <Button
             type="submit"
             onClick={handleOnSubmit}
-            disabled={!isReadyToSubmit}
+            disabled={!isReadyToSubmit || isLoading}
           >
-            Create Graph
+            {isLoading ? <Loader className="animate-spin" /> : "Create Graph"}
           </Button>
           {!!error && <p className="text-critical">{error}</p>}
         </TabsContent>

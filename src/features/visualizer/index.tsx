@@ -2,6 +2,8 @@ import { observer } from "mobx-react-lite";
 import { useEffect, useMemo, useState } from "react";
 import { Loader } from "lucide-react";
 
+import { LS_KEY } from "../landing/use-navigate-app";
+
 import VisualizerStore from "./store";
 import Header from "./header";
 import AlgorithmSidebar from "./algorithms/sidebar";
@@ -15,12 +17,13 @@ const Visualizer = observer(() => {
 
   useEffect(() => {
     store.initialize();
+    localStorage.setItem(LS_KEY, "app");
     return () => store.cleanup();
   }, []);
 
   const isInitialized = useMemo(
-    () => !!store.wasmModule && !!store.database,
-    [store, store.wasmModule, store.database]
+    () => !!store.database,
+    [store, store.database]
   );
 
   if (!isInitialized) {

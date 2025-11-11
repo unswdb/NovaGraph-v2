@@ -6,10 +6,12 @@ import type {
 } from "~/features/visualizer/inputs";
 
 type ImportHandler = (data: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   values: Record<string, InputChangeResult<any>>;
 }) => Promise<{ success: boolean; message?: string }>;
 
 type ImportValidator = (data: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   values: Record<string, InputChangeResult<any>>;
 }) => {
   success: boolean;

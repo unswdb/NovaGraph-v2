@@ -1,6 +1,6 @@
 import { ChevronDown, Download } from "lucide-react";
 
-import type { BaseGraphAlgorithmResult } from "../algorithms/implementations";
+import type { VisualizationResponse } from "../types";
 
 import ALL_EXPORTS from "./implementations";
 
@@ -16,7 +16,7 @@ import { Separator } from "~/components/ui/separator";
 export default function ExportDropdownButton({
   activeResponse,
 }: {
-  activeResponse: BaseGraphAlgorithmResult;
+  activeResponse: VisualizationResponse;
 }) {
   return (
     <DropdownMenu>

@@ -1,13 +1,14 @@
 import { ChevronDown } from "lucide-react";
 import { useMemo } from "react";
 
-import type { GraphEdge, GraphModule, GraphNode } from "../../types";
+import type { GraphNode } from "../../types";
 import type {
   BaseGraphAlgorithm,
   BaseGraphAlgorithmResult,
 } from "../implementations";
 import ALL_ALGORITHMS from "../implementations";
 import InputDialog from "../input-dialog";
+import type VisualizerStore from "../../store";
 
 import {
   SidebarGroup,
@@ -29,16 +30,14 @@ import {
 } from "~/components/ui/tooltip";
 
 export function UnfilteredAlgorithmList({
-  module,
+  controller,
   nodes,
-  edges,
   setActiveAlgorithm,
   setActiveResponse,
   isCollapsed,
 }: {
-  module: GraphModule | null;
+  controller: VisualizerStore["controller"];
   nodes: GraphNode[];
-  edges: GraphEdge[];
   setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
   isCollapsed: boolean;
@@ -75,10 +74,9 @@ export function UnfilteredAlgorithmList({
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <InputDialog
-                              module={module}
+                              controller={controller}
                               algorithm={algo}
                               nodes={nodes}
-                              edges={edges}
                               setActiveAlgorithm={setActiveAlgorithm}
                               setActiveResponse={setActiveResponse}
                               inert={isCollapsed}
@@ -103,18 +101,16 @@ export function UnfilteredAlgorithmList({
 }
 
 export function FilteredAlgorithmList({
+  controller,
   searchText,
-  module,
   nodes,
-  edges,
   setActiveAlgorithm,
   setActiveResponse,
   isCollapsed,
 }: {
+  controller: VisualizerStore["controller"];
   searchText: string;
-  module: GraphModule | null;
   nodes: GraphNode[];
-  edges: GraphEdge[];
   setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
   isCollapsed: boolean;
@@ -144,10 +140,9 @@ export function FilteredAlgorithmList({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <InputDialog
-                    module={module}
+                    controller={controller}
                     algorithm={algo}
                     nodes={nodes}
-                    edges={edges}
                     setActiveAlgorithm={setActiveAlgorithm}
                     setActiveResponse={setActiveResponse}
                     inert={isCollapsed}

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { BaseInputType, PropsForInput } from "../inputs/types";
 
 import * as SCHEMA_RAW_INPUTS from "./implementations";
@@ -56,12 +57,14 @@ export type PrimaryKeyValueType = SchemaInputValueTypesByContext<"primary">;
 export type NonPrimaryKeyValueType =
   SchemaInputValueTypesByContext<"non-primary">;
 
-type InputTypeForSchemaKeyType<T extends SchemaKeyType> = Extract<
-  AllSchemaInputs,
-  SchemaInput<any, T, any>
-> extends SchemaInput<infer I, T, any>
-  ? I
-  : never;
+type InputTypeForSchemaKeyType<T extends SchemaKeyType> =
+  Extract<AllSchemaInputs, SchemaInput<any, T, any>> extends SchemaInput<
+    infer I,
+    T,
+    any
+  >
+    ? I
+    : never;
 
 type PropsForSchemaKeyType<T extends SchemaKeyType> = PropsForInput<
   InputTypeForSchemaKeyType<T>

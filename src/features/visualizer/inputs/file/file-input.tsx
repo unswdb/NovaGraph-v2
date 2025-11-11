@@ -28,7 +28,7 @@ export default function FileInputComponent({
       : true;
     const message = required
       ? validator && !!newValue
-        ? validator.message ?? ""
+        ? (validator.message ?? "")
         : "This field is required."
       : "";
 

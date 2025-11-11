@@ -5,12 +5,13 @@
  * Each function returns a Cypher query string that can be executed by any query executor.
  */
 
-import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
 import type {
   CompositeType,
   ScalarType,
   ValueWithType,
 } from "../types/KuzuDBTypes";
+
+import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
 import type {
   NonPrimaryKeyType,
   PrimaryKeyType,
@@ -24,20 +25,20 @@ export function createEdgeQuery(
   edgeTable: EdgeSchema,
   attributes?: Record<string, InputChangeResult<any>>
 ) {
-  let attributesMappingString = ""
+  let attributesMappingString = "";
   if (attributes !== undefined) {
-    let extractProp = ""; 
+    let extractProp = "";
     for (const [key, val] of Object.entries(attributes)) {
       if (val.value) {
         extractProp += `\`${key}\`: ${_formatQueryInput(val.value)} , `;
       }
     }
-    
+
     if (extractProp !== "") {
-      attributesMappingString += "{"
-      attributesMappingString += extractProp
-      attributesMappingString = attributesMappingString.slice(0, -2)
-      attributesMappingString += "}"
+      attributesMappingString += "{";
+      attributesMappingString += extractProp;
+      attributesMappingString = attributesMappingString.slice(0, -2);
+      attributesMappingString += "}";
     }
   }
 
@@ -64,7 +65,7 @@ export function deleteEdgeQuery(
   node1: GraphNode,
   node2: GraphNode,
   directed: boolean,
-  edgeTableName: string,
+  edgeTableName: string
 ) {
   // Todo: test
   if (directed) {
@@ -134,7 +135,7 @@ export function deleteEdgeQuery(
 }
 
 export function updateEdgeQuery(
-  node1: GraphNode, 
+  node1: GraphNode,
   node2: GraphNode,
   edgeTableName: string,
   values: Record<string, InputChangeResult<any>>
@@ -147,16 +148,14 @@ export function updateEdgeQuery(
   // Todo: update
   let query = `
   MATCH (u0:${node1.tableName})-[f:${edgeTableName}]-(u1:${node2.tableName})
-  WHERE u0.\`${(node1._primaryKey)}\` = ${_formatQueryInput(node1._primaryKeyValue)} 
+  WHERE u0.\`${node1._primaryKey}\` = ${_formatQueryInput(node1._primaryKeyValue)} 
   AND u1.\`${node2._primaryKey}\` = ${_formatQueryInput(node2._primaryKeyValue)}
   SET ${attriutesMappingString.slice(2)}
   RETURN f;
-  `
-  console.log(query)
-  return query
-} 
-
-
+  `;
+  // console.log(query);
+  return query;
+}
 
 export function createEdgeSchemaQuery(
   tableName: string,
@@ -196,7 +195,6 @@ export function createEdgeSchemaQuery(
   console.log("createEdgeSchemaQuery: " + query)
   return query;
 }
-
 
 /**
  * Generates a Cypher DDL query string for creating a simple node table.
@@ -343,7 +341,10 @@ export function createSchemaQuery(
  */
 export function createNodeQuery(
   tableName: string,
-  properties: Record<string, { value: any; success?: boolean; message?: string }>
+  properties: Record<
+    string,
+    { value: any; success?: boolean; message?: string }
+  >
 ): string {
   const entries = Object.entries(properties)
     .filter(([, obj]) => obj && obj.value !== undefined && obj.value !== "")
@@ -358,14 +359,15 @@ export function createNodeQuery(
       ) {
         value = `date("${value}")`;
 
-      // --- Handle TIMESTAMP (string with time or Date) ---
+        // --- Handle TIMESTAMP (string with time or Date) ---
       } else if (
         value instanceof Date ||
-        (inferredType === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value))
+        (inferredType === "string" &&
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value))
       ) {
         value = `timestamp("${_normalizeTimestamp(value)}")`;
-        
-      // --- Handle normal strings ---
+
+        // --- Handle normal strings ---
       } else if (inferredType === "string") {
         value = `"${value}"`;
       }
@@ -375,7 +377,7 @@ export function createNodeQuery(
     .join(", ");
 
   const q = `CREATE (n:\`${tableName}\` {${entries}});`;
-  console.log("q: " + q);
+  // console.log("q: " + q);
   return q;
 }
 
@@ -389,8 +391,7 @@ export function updateNodeQuery(
     if (key === node._primaryKey) continue;
     attriutesMappingString += `, n.${key} = ${_formatQueryInput(val.value)}`;
   }
-  const query = 
-  `
+  const query = `
     MATCH (n:${node.tableName})
     WHERE n.${node._primaryKey} = ${_formatQueryInput(node._primaryKeyValue)}
     SET ${attriutesMappingString.slice(2)};
@@ -443,6 +444,11 @@ export function findPrimaryKeyForNodeQuery(tableName: string) {
  */
 export function getSingleSchemaPropertiesQuery(tableName: string) {
   const query = `CALL TABLE_INFO('${tableName}') RETURN *;`;
+  return query;
+}
+
+export function getEdgeSchemaConnectionQuery(tableName: string) {
+  const query = `CALL show_connection('${tableName}') RETURN *;`;
   return query;
 }
 
@@ -642,18 +648,26 @@ function _normalizeTimestamp(value: string): string {
   if (/[\+\-]\d{2}:?\d{2}$/.test(v)) return v;
 
   // If input is invalid, return as-is or throw
-  throw new Error(`Unrecognized timestamp format: "${value}". Expected formats like "YYYY-MM-DD hh:mm:ss"`);
+  throw new Error(
+    `Unrecognized timestamp format: "${value}". Expected formats like "YYYY-MM-DD hh:mm:ss"`
+  );
 }
 
 function _formatQueryInput(value: any) {
   const inferredType = typeof value;
-  if (value instanceof Date || (inferredType === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value))) {
+  if (
+    value instanceof Date ||
+    (inferredType === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value))
+  ) {
     let isoDate = value;
     if (value && typeof value.toISOString === "function") {
       isoDate = value.toISOString().split("T")[0];
     }
     return `date("${isoDate}")`;
-  } else if (value instanceof Date || (inferredType === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value))) {
+  } else if (
+    value instanceof Date ||
+    (inferredType === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value))
+  ) {
     return `timestamp("${_normalizeTimestamp(value)}")`;
   } else if (inferredType === "string") {
     return `"${value}"`;
@@ -662,7 +676,7 @@ function _formatQueryInput(value: any) {
   } else if (inferredType === "boolean") {
     return value;
   } else if (inferredType === undefined) {
-    throw Error("Undefined!: " + inferredType)
+    throw Error("Undefined!: " + inferredType);
   }
-  throw Error("Unsupported type at: " + value)
+  throw Error("Unsupported type at: " + value);
 }

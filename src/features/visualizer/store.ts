@@ -6,9 +6,9 @@ import {
   type EdgeSchema,
   type GraphDatabase,
   type GraphEdge,
-  type GraphModule,
   type GraphNode,
   type NodeSchema,
+  type VisualizationResponse,
 } from "./types";
 import {
   GRAVITY,
@@ -16,15 +16,11 @@ import {
   type Gravity,
   type NodeSizeScale,
 } from "./renderer/constant";
-import type {
-  BaseGraphAlgorithm,
-  BaseGraphAlgorithmResult,
-} from "./algorithms/implementations";
+import type { BaseGraphAlgorithm } from "./algorithms/implementations";
 
 import { controller } from "~/MainController";
 
 export type InitializedVisualizerStore = VisualizerStore & {
-  wasmModule: NonNullable<VisualizerStore["wasmModule"]>;
   database: NonNullable<VisualizerStore["database"]>;
 };
 
@@ -37,7 +33,6 @@ export default class VisualizerStore {
       gravity: observable,
       nodeSizeScale: observable,
       code: observable,
-      problems: observable,
       activeAlgorithm: observable,
       activeResponse: observable,
       initialize: action,
@@ -48,7 +43,6 @@ export default class VisualizerStore {
       setGravity: action,
       setNodeSizeScale: action,
       setCode: action,
-      setProblems: action,
       setActiveAlgorithm: action,
       setActiveResponse: action,
     });
@@ -56,23 +50,18 @@ export default class VisualizerStore {
 
   // OBSERVABLES
   controller = controller;
-  wasmModule: GraphModule | null = null;
   database: GraphDatabase | null = null; // Currently active database
   databases: GraphDatabase[] = []; // List of database users owned
   gravity: Gravity = GRAVITY.ZERO_GRAVITY;
   nodeSizeScale: NodeSizeScale = NODE_SIZE_SCALE.MEDIUM;
   code: string = "";
-  problems: string[] = [];
   activeAlgorithm: BaseGraphAlgorithm | null = null;
-  activeResponse: BaseGraphAlgorithmResult | null = null;
+  activeResponse: VisualizationResponse | null = null; // Can be algorithm or query result
 
   // ACTIONS
   initialize = async () => {
     // Initialize Kuzu controller
-    await this.controller.initKuzu();
-
-    // Initialize WASM module
-    this.wasmModule = await this.controller.getGraphModule();
+    await this.controller.initSystem();
 
     // Define initial graph structure
     const graph = await this.controller.db.snapshotGraphState();
@@ -168,22 +157,18 @@ export default class VisualizerStore {
     this.code = code;
   };
 
-  setProblems = (problems: string[]) => {
-    this.problems = problems;
-  };
-
   setActiveAlgorithm = (activeAlgorithm: BaseGraphAlgorithm) => {
     this.activeAlgorithm = activeAlgorithm;
   };
 
-  setActiveResponse = (activeResponse: BaseGraphAlgorithmResult) => {
+  setActiveResponse = (activeResponse: VisualizationResponse) => {
     this.activeResponse = activeResponse;
   };
 
   // UTILITIES FUNCTION
   protected checkInitialization(): asserts this is InitializedVisualizerStore {
-    if (!this.wasmModule && !this.database) {
-      throw new Error("WASM module is not initialized");
+    if (!this.database) {
+      throw new Error("Database is not initialized");
     }
   }
 
@@ -220,6 +205,8 @@ export default class VisualizerStore {
         primaryKey: String(t.primaryKey),
         primaryKeyType: t.primaryKeyType,
         properties: t.properties,
+        sourceTableName: String(t.sourceTableName),
+        targetTableName: String(t.targetTableName),
       };
 
       if (isEdgeSchema(newTable)) {

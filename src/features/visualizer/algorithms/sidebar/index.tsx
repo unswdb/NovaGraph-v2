@@ -6,8 +6,9 @@ import {
   type BaseGraphAlgorithm,
   type BaseGraphAlgorithmResult,
 } from "../implementations";
-import type { GraphEdge, GraphModule, GraphNode } from "../../types";
+import type { GraphNode } from "../../types";
 import { useStore } from "../../hooks/use-store";
+import type VisualizerStore from "../../store";
 
 import {
   FilteredAlgorithmList,
@@ -38,17 +39,16 @@ const AlgorithmSidebarWrapper = observer(() => {
   const isMobile = useIsMobile();
   const { open, openMobile } = useSidebar();
 
-  const { wasmModule, database, setActiveAlgorithm, setActiveResponse } =
+  const { controller, database, setActiveAlgorithm, setActiveResponse } =
     useStore();
 
   return (
     <>
       <Sidebar side="left">
         <AlgorithmSidebarContent
+          controller={controller}
           open={isMobile ? openMobile : open}
-          module={wasmModule}
           nodes={database?.graph.nodes ?? []}
-          edges={database?.graph.edges ?? []}
           setActiveAlgorithm={setActiveAlgorithm}
           setActiveResponse={setActiveResponse}
         />
@@ -59,17 +59,15 @@ const AlgorithmSidebarWrapper = observer(() => {
 });
 
 function AlgorithmSidebarContent({
+  controller,
   open,
-  module,
   nodes,
-  edges,
   setActiveAlgorithm,
   setActiveResponse,
 }: {
+  controller: VisualizerStore["controller"];
   open: boolean;
-  module: GraphModule | null;
   nodes: GraphNode[];
-  edges: GraphEdge[];
   setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
 }) {
@@ -87,19 +85,17 @@ function AlgorithmSidebarContent({
       {/* Algorithm List */}
       {!!searchText ? (
         <FilteredAlgorithmList
+          controller={controller}
           searchText={searchText}
-          module={module}
           nodes={nodes}
-          edges={edges}
           setActiveAlgorithm={setActiveAlgorithm}
           setActiveResponse={setActiveResponse}
           isCollapsed={!open}
         />
       ) : (
         <UnfilteredAlgorithmList
-          module={module}
+          controller={controller}
           nodes={nodes}
-          edges={edges}
           setActiveAlgorithm={setActiveAlgorithm}
           setActiveResponse={setActiveResponse}
           isCollapsed={!open}

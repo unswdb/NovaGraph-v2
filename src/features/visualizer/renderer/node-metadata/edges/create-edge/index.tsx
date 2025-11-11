@@ -1,5 +1,6 @@
 import { Plus, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import { observer } from "mobx-react-lite";
 
 import CreateEdgeSchemaDialog from "./create-edge-schema-dialog";
 import CreateEdgeDialog from "./create-edge-dialog";
@@ -10,167 +11,183 @@ import InputComponent, {
   createEmptyInputResults,
 } from "~/features/visualizer/inputs";
 import type { GraphEdge, GraphNode } from "~/features/visualizer/types";
-import { useStore } from "~/features/visualizer/hooks/use-store";
 import { isNonEmpty } from "~/lib/utils";
+import { useStore } from "~/features/visualizer/hooks/use-store";
 
-export default function CreateEdge({
-  source,
-  outgoingEdges,
-  directed,
-  onClose,
-}: {
-  source: GraphNode;
-  outgoingEdges: [GraphNode, GraphEdge][];
-  directed: boolean;
-  onClose: () => void;
-}) {
-  const { database } = useStore();
+const CreateEdge = observer(
+  ({
+    source,
+    outgoingEdges,
+    directed,
+    onClose,
+  }: {
+    source: GraphNode;
+    outgoingEdges: [GraphNode, GraphEdge][];
+    directed: boolean;
+    onClose: () => void;
+  }) => {
+    const { database } = useStore();
+    const { nodesMap, edgeTables } = database.graph;
 
-  const createEdgeInput = createAlgorithmSelectInput({
-    id: "create-edge-target-node",
-    key: "target",
-    displayName: "Target Node",
-    source: "nodes",
-    blacklist: [source, ...outgoingEdges.map((e) => e[0])],
-    required: true,
-    showLabel: false,
-  });
+    const createEdgeInput = createAlgorithmSelectInput({
+      id: "create-edge-target-node",
+      key: "target",
+      displayName: "Target Node",
+      source: "nodes",
+      blacklist: [source, ...outgoingEdges.map((e) => e[0])],
+      required: true,
+      showLabel: false,
+    });
 
-  const [values, setValues] = useState(
-    createEmptyInputResults([createEdgeInput])
-  );
-  const [status, setStatus] = useState({
-    selectingEdge: false,
-    edgeSelected: false,
-  });
-  const [dialogStatus, setDialogStatus] = useState({
-    createEdge: false,
-    createEdgeSchema: false,
-  });
+    const [values, setValues] = useState(
+      createEmptyInputResults([createEdgeInput])
+    );
+    const [status, setStatus] = useState({
+      selectingEdge: false,
+      edgeSelected: false,
+    });
+    const [dialogStatus, setDialogStatus] = useState({
+      createEdge: false,
+      createEdgeSchema: false,
+    });
 
-  const isReadyToCreateEdge = useMemo(
-    () => Object.values(values).every((v) => v.success),
-    [values]
-  );
+    const isReadyToCreateEdge = useMemo(
+      () => Object.values(values).every((v) => v.success),
+      [values]
+    );
 
-  const target = useMemo(() => {
-    const id = values[createEdgeInput.key].value;
-    return database.graph.nodesMap.get(id) as GraphNode;
-  }, [database.graph.nodesMap, values[createEdgeInput.key].value]);
+    const target = useMemo(() => {
+      const id = values[createEdgeInput.key].value;
+      return nodesMap.get(id);
+    }, [nodesMap, values[createEdgeInput.key].value]);
 
-  const onEdgeSelected = () => {
-    setStatus((prev) => ({ ...prev, edgeSelected: true }));
-    openDialog();
-  };
+    const sourceTargetSchemas = useMemo(() => {
+      return (
+        edgeTables.filter(
+          (et) =>
+            et.sourceTableName === source.tableName &&
+            et.targetTableName === target?.tableName
+        ) ?? []
+      );
+    }, [edgeTables, source.tableName, target?.tableName]);
 
-  const openDialog = () => {
-    if (!isNonEmpty(database.graph.edgeTables)) {
-      setDialogStatus({ createEdge: false, createEdgeSchema: true });
-    } else {
-      setDialogStatus({ createEdge: true, createEdgeSchema: false });
-    }
-  };
+    const onEdgeSelected = () => {
+      setStatus((prev) => ({ ...prev, edgeSelected: true }));
+      openDialog();
+    };
 
-  const setCreateEdgeOpen = (open: boolean) => {
-    setDialogStatus({ createEdge: open, createEdgeSchema: false });
-    setStatus({ selectingEdge: true, edgeSelected: false });
-  };
+    const openDialog = () => {
+      if (!isNonEmpty(sourceTargetSchemas)) {
+        setDialogStatus({ createEdge: false, createEdgeSchema: true });
+      } else {
+        setDialogStatus({ createEdge: true, createEdgeSchema: false });
+      }
+    };
 
-  const onSubmitCreateEdgeSchema = () => {
-    if (dialogStatus.createEdgeSchema) {
-      setDialogStatus({ createEdge: true, createEdgeSchema: false });
-    }
-  };
-
-  const setCreateEdgeSchemaOpen = (open: boolean) => {
-    if (!isNonEmpty(database.graph.edgeTables)) {
-      setDialogStatus({ createEdge: false, createEdgeSchema: open });
+    const setCreateEdgeOpen = (open: boolean) => {
+      setDialogStatus({ createEdge: open, createEdgeSchema: false });
       setStatus({ selectingEdge: true, edgeSelected: false });
+    };
+
+    const onSubmitCreateEdgeSchema = () => {
+      if (dialogStatus.createEdgeSchema) {
+        setDialogStatus({ createEdge: true, createEdgeSchema: false });
+      }
+    };
+
+    const setCreateEdgeSchemaOpen = (open: boolean) => {
+      if (!isNonEmpty(sourceTargetSchemas)) {
+        setDialogStatus({ createEdge: false, createEdgeSchema: open });
+        setStatus({ selectingEdge: true, edgeSelected: false });
+      }
+    };
+
+    // User isn't selecting edge or have an edge selected
+    if (!status.selectingEdge && !status.edgeSelected) {
+      return (
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() =>
+            setStatus({
+              selectingEdge: true,
+              edgeSelected: false,
+            })
+          }
+        >
+          <Plus /> Create Edge
+        </Button>
+      );
     }
-  };
 
-  // User isn't selecting edge or have an edge selected
-  if (!status.selectingEdge && !status.edgeSelected) {
-    return (
-      <Button
-        variant="outline"
-        className="w-full"
-        onClick={() =>
-          setStatus({
-            selectingEdge: true,
-            edgeSelected: false,
-          })
-        }
-      >
-        <Plus /> Create Edge
-      </Button>
-    );
-  }
-
-  // User is selecting edge
-  if (!!status.selectingEdge) {
-    return (
-      <>
-        <div className="w-full flex items-end gap-2">
-          {/* Cancel inline selector */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => {
-              setStatus({ selectingEdge: false, edgeSelected: false });
-              setValues(createEmptyInputResults([createEdgeInput]));
-            }}
-          >
-            <X />
-          </Button>
-          {/* Node picker */}
-          <div className="flex-1 min-w-0">
-            <InputComponent
-              input={createEdgeInput}
-              value={values[createEdgeInput.key]?.value}
-              onChange={(value) =>
-                setValues((prev) => ({
-                  ...prev,
-                  [createEdgeInput.key]: value,
-                }))
-              }
-            />
+    // User is selecting edge
+    if (!!status.selectingEdge) {
+      return (
+        <>
+          <div className="w-full flex items-end gap-2">
+            {/* Cancel inline selector */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                setStatus({ selectingEdge: false, edgeSelected: false });
+                setValues(createEmptyInputResults([createEdgeInput]));
+              }}
+            >
+              <X />
+            </Button>
+            {/* Node picker */}
+            <div className="flex-1 min-w-0">
+              <InputComponent
+                input={createEdgeInput}
+                value={values[createEdgeInput.key]?.value}
+                onChange={(value) =>
+                  setValues((prev) => ({
+                    ...prev,
+                    [createEdgeInput.key]: value,
+                  }))
+                }
+              />
+            </div>
+            {/* Confirm + open dialog */}
+            <Button
+              size="icon"
+              disabled={!isReadyToCreateEdge}
+              onClick={onEdgeSelected}
+              className="flex items-center gap-1"
+            >
+              <Plus />
+            </Button>
           </div>
-          {/* Confirm + open dialog */}
-          <Button
-            size="icon"
-            disabled={!isReadyToCreateEdge}
-            onClick={onEdgeSelected}
-            className="flex items-center gap-1"
-          >
-            <Plus />
-          </Button>
-        </div>
-        {status.edgeSelected &&
-          // Todo: filter edge table of the current node
-          (!isNonEmpty(database.graph.edgeTables) ? (
-            <CreateEdgeSchemaDialog
-              source={source}
-              target={target}
-              directed={directed}
-              open={dialogStatus.createEdgeSchema}
-              setOpen={setCreateEdgeSchemaOpen}
-              onSubmit={onSubmitCreateEdgeSchema}
-              onClose={onClose}
-            />
-          ) : (
-            <CreateEdgeDialog
-              source={source}
-              target={target}
-              directed={directed}
+          {status.edgeSelected &&
+            !!target &&
+            // Todo: filter edge table of the current node
+          (!isNonEmpty(sourceTargetSchemas) ? (
+              <CreateEdgeSchemaDialog
+                source={source}
+                target={target}
+                directed={directed}
+                open={dialogStatus.createEdgeSchema}
+                setOpen={setCreateEdgeSchemaOpen}
+                onSubmit={onSubmitCreateEdgeSchema}
+              />
+            ) : (
+              <CreateEdgeDialog
+                source={source}
+                target={target}
+                schemas={sourceTargetSchemas}
+                directed={directed}
               open={dialogStatus.createEdge}
-              setOpen={setCreateEdgeOpen}
-              onClose={onClose}
-            />
-          ))}
-      </>
-    );
-  }
+                setOpen={setCreateEdgeOpen}
+                onClose={onClose}
+              />
+            ))}
+        </>
+      );
+    }
 
-  return null;
-}
+    return null;
+  }
+);
+
+export default CreateEdge;

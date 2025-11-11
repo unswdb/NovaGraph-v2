@@ -9,12 +9,13 @@ import InputComponent, {
   createAlgorithmSelectInput,
   createEmptyInputResult,
 } from "~/features/visualizer/inputs";
-import { useStore } from "~/features/visualizer/hooks/use-store";
-import type { GraphNode } from "~/features/visualizer/types";
+import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
+import type { NonEmpty } from "~/lib/utils";
 
 export default function CreateEdgeDialog({
   source,
   target,
+  schemas,
   directed,
   open,
   setOpen,
@@ -22,22 +23,21 @@ export default function CreateEdgeDialog({
 }: {
   source: GraphNode;
   target: GraphNode;
+  schemas: NonEmpty<EdgeSchema>;
   directed: boolean;
   open: boolean;
   setOpen: (b: boolean) => void;
   onClose: () => void;
 }) {
-  const { database } = useStore();
-  const { edgeTables, edgeTablesMap } = database.graph;
-
   const selectEdgeSchemaInput = createAlgorithmSelectInput({
     id: "select-schema",
     key: "selectedEdgeSchema",
     displayName: "Schema:",
     showLabel: false,
     source: "static",
-    options: edgeTables.map((n) => n.tableName),
-    defaultValue: edgeTables[0].tableName,
+    options: schemas.map((s) => s.tableName),
+    required: true,
+    defaultValue: schemas[0].tableName,
   });
 
   const [selectedEdgeSchema, setSelectedEdgeSchema] = useState(
@@ -66,7 +66,6 @@ export default function CreateEdgeDialog({
             target={target}
             directed={directed}
             selectedEdgeSchema={selectedEdgeSchema.value}
-            edgeTablesMap={edgeTablesMap}
             onClose={onClose}
           />
         )}

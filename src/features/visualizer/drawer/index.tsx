@@ -5,15 +5,14 @@ import { toast } from "sonner";
 
 import { useStore } from "../hooks/use-store";
 import type { ExecuteQueryResult } from "../types";
+import { convertQueryToVisualizationResult } from "../queries";
 
 import CodeTabContent from "./code";
 import OutputTabContent from "./output";
-import ProblemsTabContent from "./problems";
 
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import { Tabs, TabsContent } from "~/components/ui/tabs";
-import { controller } from "~/MainController";
 
 const DRAWER_HEIGHT = "18rem";
 
@@ -21,11 +20,10 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
   const {
     code,
     setCode,
-    problems,
-    setProblems,
     setGraphState,
     activeAlgorithm,
     activeResponse,
+    setActiveResponse,
     controller,
   } = useStore();
 
@@ -33,35 +31,44 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
   const [tabValue, setTabValue] = useState("code");
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Default to open when algorithm / response internal value
-  // is changed
+  // Default to open when response internal value is changed
   useEffect(() => {
-    if (!!activeAlgorithm && !!activeResponse) {
+    if (!!activeResponse) {
       setIsExpanded(true);
       setTabValue("output");
     }
-  }, [activeAlgorithm, activeResponse]);
+  }, [activeResponse, activeAlgorithm]);
+
+  const onQuery = (result: ExecuteQueryResult) => {
+    const visualizationResult = convertQueryToVisualizationResult(result);
+    setActiveResponse(visualizationResult);
+  };
 
   const onSuccessQuery = (result: ExecuteQueryResult) => {
-    setProblems([]);
     setGraphState({
       nodes: result.nodes,
       edges: result.edges,
       nodeTables: result.nodeTables,
       edgeTables: result.edgeTables,
     });
+    onQuery(result);
     toast.success("Query executed successfully!");
   };
 
   const onErrorQuery = (result: ExecuteQueryResult) => {
-    setProblems(result.failedQueries.map((q) => q.message));
+    setGraphState({
+      nodes: result.nodes,
+      edges: result.edges,
+      nodeTables: result.nodeTables,
+      edgeTables: result.edgeTables,
+    });
+    onQuery(result);
     toast.error("Some queries failed", {
       action: {
         label: "See problems",
         onClick: () => setTabValue("problems"),
       },
     });
-    return;
   };
 
   return (
@@ -119,20 +126,7 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
                 runQuery={controller.db.executeQuery.bind(controller.db)}
                 onSuccessQuery={onSuccessQuery}
                 onErrorQuery={onErrorQuery}
-                tabControls={{
-                  problemsLen: problems.length,
-                  enableOutput: !!activeAlgorithm && !!activeResponse,
-                }}
-              />
-            </TabsContent>
-            {/* TODO: Content for Problems */}
-            <TabsContent value="problems" className="flex flex-col">
-              <ProblemsTabContent
-                problems={problems}
-                tabControls={{
-                  problemsLen: problems.length,
-                  enableOutput: !!activeAlgorithm && !!activeResponse,
-                }}
+                enableOutput={!!activeResponse}
               />
             </TabsContent>
             {/* Content for Output */}
@@ -140,10 +134,7 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
               <OutputTabContent
                 activeAlgorithm={activeAlgorithm}
                 activeResponse={activeResponse}
-                tabControls={{
-                  problemsLen: problems.length,
-                  enableOutput: !!activeAlgorithm && !!activeResponse,
-                }}
+                enableOutput={!!activeResponse}
               />
             </TabsContent>
           </Tabs>
