@@ -15,15 +15,16 @@ import {
   parseEdgesResult,
   parseTablesResult,
   parseSingleTableResult,
-  processQueryResult,
 } from "./KuzuQueryResultExtractor";
-import type Connection from "../types/kuzu_wasm_internal/connection";
+// TODO: finish correct internal type of kuzu first 
+// import type Connection from "../types/kuzu_wasm_internal/connection";
 
 /**
  * Snapshot the current state of the graph (nodes and relationships)
  * @returns {Object} Result with all nodes and relationships
  */
-export function snapshotGraphState(connection: Connection): {
+// export function snapshotGraphState(connection: ConnectionSync) {
+export function snapshotGraphState(connection: any): {
   nodes: GraphNode[];
   edges: GraphEdge[];
   nodeTables: NodeSchema[];
