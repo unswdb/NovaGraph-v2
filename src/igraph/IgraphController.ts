@@ -211,6 +211,10 @@ export class IgraphController {
 
   async stronglyConnectedComponents(): Promise<SCCResult> {
     this.checkInitialization();
+    const directed = this._getDirection();
+    if (!directed) {
+      throw new Error("Strongly Connected Components require a directed graph");
+    }
     const graphData = await this._prepareGraphData();
     return await igraphStronglyConnectedComponents(
       this._wasmGraphModule,
@@ -243,6 +247,10 @@ export class IgraphController {
 
   async topologicalSort(): Promise<TopologicalSortResult> {
     this.checkInitialization();
+    const directed = this._getDirection();
+    if (!directed) {
+      throw new Error("Topological sort requires a directed graph");
+    }
     const graphData = await this._prepareGraphData();
     return await igraphTopologicalSort(this._wasmGraphModule, graphData);
   }
@@ -315,6 +323,10 @@ export class IgraphController {
 
   async minimumSpanningTree(): Promise<MSTResult> {
     this.checkInitialization();
+    const directed = this._getDirection();
+    if (directed) {
+      throw new Error("Minimum Spanning Tree requires an undirected graph");
+    }
     const graphData = await this._prepareGraphData();
     return await igraphMST(this._wasmGraphModule, graphData);
   }
@@ -379,6 +391,10 @@ export class IgraphController {
 
   async pageRank(damping: number): Promise<PageRankResult> {
     this.checkInitialization();
+    const directed = this._getDirection();
+    if (!directed) {
+      throw new Error("PageRank requires a directed graph");
+    }
     const graphData = await this._prepareGraphData();
     return await igraphPageRank(this._wasmGraphModule, graphData, damping);
   }
@@ -389,30 +405,50 @@ export class IgraphController {
 
   async louvainCommunities(resolution: number): Promise<LouvainResult> {
     this.checkInitialization();
+    const directed = this._getDirection();
+    if (directed) {
+      throw new Error("Louvain community detection requires an undirected graph");
+    }
     const graphData = await this._prepareGraphData();
     return await igraphLouvain(this._wasmGraphModule, graphData, resolution);
   }
 
   async leidenCommunities(resolution: number): Promise<LeidenResult> {
     this.checkInitialization();
+    const directed = this._getDirection();
+    if (directed) {
+      throw new Error("Leiden community detection requires an undirected graph");
+    }
     const graphData = await this._prepareGraphData();
     return await igraphLeiden(this._wasmGraphModule, graphData, resolution);
   }
 
   async fastGreedyCommunities(): Promise<FastGreedyResult> {
     this.checkInitialization();
+    const directed = this._getDirection();
+    if (directed) {
+      throw new Error("Fast Greedy community detection requires an undirected graph");
+    }
     const graphData = await this._prepareGraphData();
     return await igraphFastGreedy(this._wasmGraphModule, graphData);
   }
 
   async labelPropagation(): Promise<LabelPropagationResult> {
     this.checkInitialization();
+    const directed = this._getDirection();
+    if (directed) {
+      throw new Error("Label Propagation requires an undirected graph");
+    }
     const graphData = await this._prepareGraphData();
     return await igraphLabelPropagation(this._wasmGraphModule, graphData);
   }
 
   async localClusteringCoefficient(): Promise<LocalClusteringCoefficientResult> {
     this.checkInitialization();
+    const directed = this._getDirection();
+    if (directed) {
+      throw new Error("Local clustering coefficient requires an undirected graph");
+    }
     const graphData = await this._prepareGraphData();
     return await igraphLocalClusteringCoefficient(
       this._wasmGraphModule,
@@ -422,12 +458,20 @@ export class IgraphController {
 
   async kCore(k: number): Promise<KCoreResult> {
     this.checkInitialization();
+    const directed = this._getDirection();
+    if (directed) {
+      throw new Error("K-Core decomposition requires an undirected graph");
+    }
     const graphData = await this._prepareGraphData();
     return await igraphKCore(this._wasmGraphModule, graphData, k);
   }
 
   async triangles(): Promise<TriangleCountResult> {
     this.checkInitialization();
+    const directed = this._getDirection();
+    if (directed) {
+      throw new Error("Triangle counting requires an undirected graph");
+    }
     const graphData = await this._prepareGraphData();
     return await igraphTriangles(this._wasmGraphModule, graphData);
   }
@@ -451,6 +495,10 @@ export class IgraphController {
     numBins: number
   ): Promise<MissingEdgePredictionResult> {
     this.checkInitialization();
+    const directed = this._getDirection();
+    if (directed) {
+      throw new Error("Missing edge prediction requires an undirected graph");
+    }
     const graphData = await this._prepareGraphData();
     return await igraphMissingEdgePrediction(
       this._wasmGraphModule,
