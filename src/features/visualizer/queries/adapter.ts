@@ -1,8 +1,8 @@
 import type { ExecuteQueryResult } from "../types";
-import type { ColorMap } from "../algorithms/implementations";
-import { MODE } from "../renderer/constant";
 
 import type { QueryVisualizationResult } from "./types";
+
+import { MODE, type ColorMap } from "~/igraph/types";
 
 /**
  * Converts a Kuzu query result to a visualization result format

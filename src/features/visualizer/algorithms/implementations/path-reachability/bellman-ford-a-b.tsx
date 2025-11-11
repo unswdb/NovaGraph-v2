@@ -7,19 +7,7 @@ import {
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";
-
-// Infered from src/wasm/algorithms
-type BellmanFordAToBOutputData = {
-  source: string;
-  target: string;
-  weighted: boolean;
-  path: {
-    from: string;
-    to: string;
-    weight?: number;
-  }[];
-  totalWeight?: number;
-};
+import type { BellmanFordAToBOutputData } from "~/igraph/algorithms/PathFinding/IgraphBellmanFordAtoB";
 
 export const bellmanFordAToB = createGraphAlgorithm<BellmanFordAToBOutputData>({
   title: "Bellman-Ford (A to B)",
@@ -41,8 +29,8 @@ export const bellmanFordAToB = createGraphAlgorithm<BellmanFordAToBOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: async (controller, [arg1, arg2]) => {
-    // if (module) return module.bellman_ford_source_to_target(arg1, arg2);
+  wasmFunction: async (igraphController, [arg1, arg2]) => {
+    return await igraphController.bellmanFordAToB(arg1, arg2);
   },
   output: (props) => <BellmanFordAToB {...props} />,
 });
@@ -90,12 +78,16 @@ function BellmanFordAToB(
       <div className="space-y-3 border-t border-t-border pt-3 isolate">
         <h3 className="font-semibold">Step By Step</h3>
         <div className="max-h-80 overflow-y-auto">
-          <List
-            rowComponent={BFSinglePathRowComponent}
-            rowCount={path.length}
-            rowHeight={rowHeight}
-            rowProps={{ cumulative, path }}
-          />
+          {path.length > 0 ? (
+            <List
+              rowComponent={BFSinglePathRowComponent}
+              rowCount={path.length}
+              rowHeight={rowHeight}
+              rowProps={{ cumulative, path }}
+            />
+          ) : (
+            <p className="text-critical font-medium">Not reachable</p>
+          )}
         </div>
       </div>
 

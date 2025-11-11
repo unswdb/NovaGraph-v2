@@ -7,6 +7,7 @@ import type {
 import type { GraphNode, GraphEdge, NodeSchema, EdgeSchema } from "../../types";
 
 type ImportHandler = (data: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   values: Record<string, InputChangeResult<any>>;
 }) => Promise<{ 
   success: boolean; 
@@ -20,6 +21,7 @@ type ImportHandler = (data: {
 }>;
 
 type ImportValidator = (data: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   values: Record<string, InputChangeResult<any>>;
 }) => {
   success: boolean;

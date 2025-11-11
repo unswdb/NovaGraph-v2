@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 
 import type { ExecuteQueryResult } from "../types";
-import type { ColorMap, SizeMap } from "../algorithms/implementations";
+
+import type { ColorMap, SizeMap } from "~/igraph/types";
 
 /**
  * Query result that can be used for visualization

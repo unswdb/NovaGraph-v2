@@ -7,24 +7,19 @@ import { ChevronRight } from "lucide-react";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
+import type { FastGreedyOutputData } from "~/igraph/algorithms/Community/IgraphFastGreedy";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
 
-// Infered from src/wasm/algorithms
-type FastGreedyOutputData = {
-  modularity: number;
-  communities: string[][];
-};
-
 export const fastGreedy = createGraphAlgorithm<FastGreedyOutputData>({
   title: "Fast Greedy Algorithm",
   description: "Builds communities by greedily optimizing modularity.",
   inputs: [],
-  wasmFunction: async (controller, _) => {
-    // if (module) return module.fast_greedy();
+  wasmFunction: async (igraphController, _) => {
+    return await igraphController.fastGreedyCommunities();
   },
   output: (props) => <FastGreedy {...props} />,
 });
@@ -52,12 +47,16 @@ function FastGreedy(props: GraphAlgorithmResult<FastGreedyOutputData>) {
       <div className="space-y-3 pt-3 border-t border-t-border">
         <h3 className="font-semibold">Communities</h3>
         <div className="max-h-80 overflow-y-auto">
-          <List
-            rowComponent={FastGreedyCommunityRowComponent}
-            rowCount={communities.length}
-            rowHeight={rowHeight}
-            rowProps={{ communities }}
-          />
+          {communities.length > 0 ? (
+            <List
+              rowComponent={FastGreedyCommunityRowComponent}
+              rowCount={communities.length}
+              rowHeight={rowHeight}
+              rowProps={{ communities }}
+            />
+          ) : (
+            <p className="text-critical font-medium">No communities found</p>
+          )}
         </div>
       </div>
 

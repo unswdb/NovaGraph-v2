@@ -7,18 +7,13 @@ import { ChevronRight } from "lucide-react";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
+import type { LouvainOutputData } from "~/igraph/algorithms/Community/IgraphLouvain";
 import { createNumberInput } from "~/features/visualizer/inputs";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
-
-// Infered from src/wasm/algorithms
-type LouvainOutputData = {
-  modularity: number;
-  communities: string[][]; // index = community id, value = node-name[]
-};
 
 export const louvain = createGraphAlgorithm<LouvainOutputData>({
   title: "Louvain Algorithm",
@@ -36,8 +31,8 @@ export const louvain = createGraphAlgorithm<LouvainOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: async (controller, [arg1]) => {
-    // if (module) return module.louvain(arg1);
+  wasmFunction: async (igraphController, [arg1]) => {
+    return await igraphController.louvainCommunities(arg1);
   },
   output: (props) => <Louvain {...props} />,
 });
@@ -65,12 +60,16 @@ function Louvain(props: GraphAlgorithmResult<LouvainOutputData>) {
       <div className="space-y-3 pt-3 border-t border-t-border">
         <h3 className="font-semibold">Communities</h3>
         <div className="max-h-80 overflow-y-auto">
-          <List
-            rowComponent={LouvainCommunityRowComponent}
-            rowCount={communities.length}
-            rowHeight={rowHeight}
-            rowProps={{ communities }}
-          />
+          {communities.length > 0 ? (
+            <List
+              rowComponent={LouvainCommunityRowComponent}
+              rowCount={communities.length}
+              rowHeight={rowHeight}
+              rowProps={{ communities }}
+            />
+          ) : (
+            <p className="text-critical font-medium">No communities found</p>
+          )}
         </div>
       </div>
 

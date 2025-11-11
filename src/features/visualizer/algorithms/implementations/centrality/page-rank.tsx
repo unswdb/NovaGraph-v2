@@ -6,13 +6,8 @@ import {
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
-import type { CentralityOutputData } from "./types";
-
+import type { PageRankOutputData } from "~/igraph/algorithms/Centrality/IgraphPageRank";
 import { createNumberInput } from "~/features/visualizer/inputs";
-
-type PageRankOutputData = CentralityOutputData & {
-  damping: string;
-};
 
 export const pageRank = createGraphAlgorithm<PageRankOutputData>({
   title: "Page Rank",
@@ -29,8 +24,8 @@ export const pageRank = createGraphAlgorithm<PageRankOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: async (controller, [arg1]) => {
-    // if (module) return module.pagerank(arg1);
+  wasmFunction: async (igraphController, [arg1]) => {
+    return await igraphController.pageRank(arg1);
   },
   output: (props) => <PageRank {...props} />,
 });
@@ -105,10 +100,8 @@ function PageRank(props: GraphAlgorithmResult<PageRankOutputData>) {
         <ul className="text-typography-secondary text-sm list-disc list-inside space-y-1">
           <li>
             PageRank models a random surfer who follows links with probability{" "}
-            <span className="font-medium">
-              {(Number(damping) ?? 0.85) as any}
-            </span>{" "}
-            and “teleports” otherwise, nodes with more{" "}
+            <span className="font-medium">{Number(damping) ?? 0.85}</span> and
+            “teleports” otherwise, nodes with more{" "}
             <span className="font-medium">high-quality incoming links</span>{" "}
             score higher.
           </li>

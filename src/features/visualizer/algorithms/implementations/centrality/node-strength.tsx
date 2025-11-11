@@ -6,24 +6,22 @@ import {
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
-import type { CentralityOutputData } from "./types";
-
-type NodeStrengthCentralityOutputData = CentralityOutputData;
+import type { StrengthCentralityOutputData } from "~/igraph/algorithms/Centrality/IgraphStrengthCentrality";
 
 export const nodeStrengthCentrality =
-  createGraphAlgorithm<NodeStrengthCentralityOutputData>({
+  createGraphAlgorithm<StrengthCentralityOutputData>({
     title: "Node Strength",
     description:
       "Measures the sum of the weights of the edges connected to a node.",
     inputs: [],
-    wasmFunction: async (controller, _) => {
-      //   if (module) return module.strength_centrality();
+    wasmFunction: async (igraphController, _) => {
+      return await igraphController.strengthCentrality();
     },
     output: (props) => <NodeStrengthCentrality {...props} />,
   });
 
 function NodeStrengthCentrality(
-  props: GraphAlgorithmResult<NodeStrengthCentralityOutputData>
+  props: GraphAlgorithmResult<StrengthCentralityOutputData>
 ) {
   const { centralities } = props.data;
 
@@ -126,7 +124,7 @@ function NodeStrengthCentralityRowComponent({
   style,
   centralities,
 }: RowComponentProps<{
-  centralities: NodeStrengthCentralityOutputData["centralities"];
+  centralities: StrengthCentralityOutputData["centralities"];
 }>) {
   // Top header row
   if (index === 0) {

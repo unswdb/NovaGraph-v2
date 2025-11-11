@@ -6,22 +6,15 @@ import {
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
-// Infered from src/wasm/algorithms
-type EulerianCircuitOutputData = {
-  path: {
-    from: string;
-    to: string;
-    weight?: number;
-  }[]; // consecutive steps
-};
+import type { EulerianCircuitOutputData } from "~/igraph/algorithms/Misc/IgraphEulerianCircuit";
 
 export const eulerianCircuit = createGraphAlgorithm<EulerianCircuitOutputData>({
   title: "Eulerian Circuit",
   description:
     "Finds a path that visits every edge exactly once and returns to the starting node.",
   inputs: [],
-  wasmFunction: async (controller, _) => {
-    // if (module) return module.eulerian_circuit();
+  wasmFunction: async (igraphController, _) => {
+    return await igraphController.eulerianCircuit();
   },
   output: (props) => <EulerianCircuit {...props} />,
 });

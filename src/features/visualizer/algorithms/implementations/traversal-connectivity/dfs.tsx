@@ -7,13 +7,7 @@ import {
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";
-
-// Infered from src/wasm/algorithms
-type DFSOutputData = {
-  source: string;
-  nodesFound: number;
-  subtrees: { num: number; tree: string[] }[];
-};
+import type { DFSOutputData } from "~/igraph/algorithms/PathFinding/IgraphDFS";
 
 export const dfs = createGraphAlgorithm<DFSOutputData>({
   title: "Depth-First Search",
@@ -28,11 +22,17 @@ export const dfs = createGraphAlgorithm<DFSOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: async (controller, [args]) => {
-    // if (module) return module.dfs(args);
+  wasmFunction: async (igraphController, [arg1]) => {
+    return await igraphController.dfs(arg1);
   },
   output: (props) => <DFS {...props} />,
 });
+
+const isEmptySubtree = (tree: string[]) => {
+  if (!tree || tree.length === 0) return true;
+  if (tree.length === 1 && tree[0] === "") return true;
+  return false;
+};
 
 function DFS(props: GraphAlgorithmResult<DFSOutputData>) {
   const { source, nodesFound, subtrees } = props.data;
@@ -147,16 +147,26 @@ function DFSSubtreeRowComponent({
       {/* Layer Index */}
       <span className="font-semibold px-3 py-1.5">{subtree.num}</span>
       {/* Nodes */}
-      <span className="col-span-2 flex gap-1 overflow-x-auto font-semibold px-3 py-1.5">
-        {subtree.tree.map((tree, i) => (
-          <div key={`${index}-${i}-${tree}`} className="py-1.5">
-            <span className="px-3 py-1.5 rounded-md bg-primary-low">
-              {tree}
+      {isEmptySubtree(subtree.tree) ? (
+        <span className="col-span-2 flex gap-1 overflow-x-auto font-semibold px-3 py-1.5">
+          <div className="py-1.5">
+            <span className="px-3 py-1.5 rounded-md text-nowrap bg-critical-low">
+              Empty Subtree
             </span>
-            {i < subtree.tree.length - 1 && <span>→</span>}
           </div>
-        ))}
-      </span>
+        </span>
+      ) : (
+        <span className="col-span-2 flex gap-1 overflow-x-auto font-semibold px-3 py-1.5">
+          {subtree.tree.map((tree, i) => (
+            <div key={`${index}-${i}-${tree}`} className="py-1.5">
+              <span className="px-3 py-1.5 rounded-md text-nowrap bg-primary-low">
+                {tree}
+              </span>
+              {i < subtree.tree.length - 1 && <span>→</span>}
+            </div>
+          ))}
+        </span>
+      )}
     </div>
   );
 }

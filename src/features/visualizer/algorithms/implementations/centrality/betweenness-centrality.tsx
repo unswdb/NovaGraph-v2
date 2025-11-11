@@ -6,9 +6,7 @@ import {
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
-import type { CentralityOutputData } from "./types";
-
-type BetweennessCentralityOutputData = CentralityOutputData;
+import type { BetweennessCentralityOutputData } from "~/igraph/algorithms/Centrality/IgraphBetweenessCentrality";
 
 export const betweennessCentrality =
   createGraphAlgorithm<BetweennessCentralityOutputData>({
@@ -16,8 +14,8 @@ export const betweennessCentrality =
     description:
       "Count how often a node lies on shortest paths between others.",
     inputs: [],
-    wasmFunction: async (controller, _) => {
-      //   if (module) return module.betweenness_centrality();
+    wasmFunction: async (igraphController, _) => {
+      return await igraphController.betweennessCentrality();
     },
     output: (props) => <BetweennessCentrality {...props} />,
   });

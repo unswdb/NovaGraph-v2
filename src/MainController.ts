@@ -37,7 +37,6 @@ class MainController {
   }
 
   getAlgorithm() {
-    console.log("getAlgorithm should be here");
     if (this._IgraphController === undefined) {
       throw Error("IgraphController is undefinned");
     }
@@ -48,7 +47,7 @@ class MainController {
   db = {
     getGraphDirection() {
       // Todo: fix this later once implement graph direction
-      return false;
+      return true;
     },
 
     async createNodeSchema(

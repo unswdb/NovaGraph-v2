@@ -1,16 +1,16 @@
-import type { KuzuToIgraphParseResult } from "../types/types";
+import type { KuzuToIgraphParseResult } from "../types";
 
-import type { GraphEdge } from "~/features/visualizer/types";
+import type { GraphEdge, GraphNode } from "~/features/visualizer/types";
 
 /**
  * Convert Kuzu input into Igraph input
  */
-export function KuzuToIgraphParsing(
-  nodesNumber: number,
+export function parseKuzuToIgraphInput(
+  nodes: GraphNode[],
   edges: GraphEdge[],
   directed: boolean
 ): KuzuToIgraphParseResult {
-  if (nodesNumber > 0x80000000) {
+  if (nodes.length > 0x80000000) {
     throw new Error(
       "Vertex ID exceeds 32-bit signed range expected by igraph 32 bit (WASM)."
     );
@@ -26,6 +26,7 @@ export function KuzuToIgraphParsing(
 
   let weight: Float64Array | undefined; // allocate lazily when we see the first numeric weight
   let nextId = KuzuToIgraph.size;
+
   const getOrAssign = (label: string): number => {
     const existing = KuzuToIgraph.get(label);
     if (existing !== undefined) return existing;
@@ -40,6 +41,7 @@ export function KuzuToIgraphParsing(
     const id = nextId++;
     KuzuToIgraph.set(label, id);
     IgraphToKuzu.set(id, label);
+
     return id;
   };
 
@@ -56,11 +58,12 @@ export function KuzuToIgraphParsing(
       e.attributes &&
       Object.prototype.hasOwnProperty.call(e.attributes, "weight")
     ) {
-      const val = (e.attributes as any)["weight"];
+      const val = e.attributes["weight"];
       if (typeof val === "number" && Number.isFinite(val)) {
         if (!weight) weight = new Float64Array(E); // default zeros
         weight[i] = val;
       } else {
+        // eslint-disable-next-line no-console
         console.warn(
           `[KuzuToIgraphParsing] Non-numeric weight at edge ${i} (${e.source} -> ${e.target}); treated as 0.`
         );
@@ -69,15 +72,21 @@ export function KuzuToIgraphParsing(
   }
 
   const nodesAssigned = nextId;
-  if (nodesNumber < nodesAssigned) {
+  if (nodes.length < nodesAssigned) {
     throw new Error(
-      `Inconsistent graph: edge list references ${nodesAssigned} unique nodes, but only ${nodesNumber} declared.`
+      `Inconsistent graph: edge list references ${nodesAssigned} unique nodes, but only ${nodes.length} declared.`
     );
   }
-  const nodes = nodesAssigned;
+
+  // Build node map
+  const nodesMap: Map<string, GraphNode> = new Map(
+    nodes.map((node) => [node.id, node])
+  );
+
   return {
-    IgraphInput: { nodes, src, dst, directed, weight },
+    IgraphInput: { nodes: nodesAssigned, src, dst, directed, weight },
     KuzuToIgraphMap: KuzuToIgraph,
     IgraphToKuzuMap: IgraphToKuzu,
+    nodesMap,
   };
 }

@@ -2,21 +2,15 @@ import { List, type RowComponentProps } from "react-window";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
-// Infered from src/wasm/algorithms
-type TopologicalSortOutputData = {
-  order: {
-    id: number; // numeric vertex id
-    node: string; // vertex name
-  }[]; // in topological order
-};
+import type { TopologicalSortOutputData } from "~/igraph/algorithms/Misc/IgraphTopologicalSort";
 
 export const topologicalSort = createGraphAlgorithm<TopologicalSortOutputData>({
   title: "Topological Sort",
   description:
     "Orders nodes in a directed acyclic graph (DAG) such that all edges go from earlier to later nodes",
   inputs: [],
-  wasmFunction: async (controller, _) => {
-    // if (module) return module.topological_sort();
+  wasmFunction: async (igraphController, _) => {
+    return await igraphController.topologicalSort();
   },
   output: (props) => <TopologicalSort {...props} />,
 });
@@ -108,7 +102,7 @@ function TopologicalOrderRowComponent({
       style={style}
     >
       <span className="px-3 py-1.5">{index}</span>
-      <span className="px-3 py-1.5 truncate">{order.node}</span>
+      <span className="px-3 py-1.5 truncate">{order}</span>
     </div>
   );
 }

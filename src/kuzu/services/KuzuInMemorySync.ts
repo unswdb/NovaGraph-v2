@@ -1,5 +1,6 @@
 // @ts-ignore
 import kuzu from "kuzu-wasm/sync";
+
 import KuzuBaseService from "./KuzuBaseService";
 
 export default class KuzuInMemorySync extends KuzuBaseService {

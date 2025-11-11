@@ -12,24 +12,15 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
-
-// Infered from src/wasm/algorithms
-type TriangleCountOutputData = {
-  triangles: {
-    id: number; // 1-based triangle id
-    node1: string;
-    node2: string;
-    node3: string;
-  }[];
-};
+import type { TriangleCountOutputData } from "~/igraph/algorithms/Community/IgraphTriangles";
 
 export const triangleCount = createGraphAlgorithm<TriangleCountOutputData>({
   title: "Triangle Count",
   description:
     "Counts the number of triangles (groups of 3 connected nodes) in a graph.",
   inputs: [],
-  wasmFunction: async (controller, _) => {
-    // if (module) return module.triangle_count();
+  wasmFunction: async (igraphController, _) => {
+    return await igraphController.triangles();
   },
   output: (props) => <TriangleCount {...props} />,
 });
@@ -57,12 +48,16 @@ function TriangleCount(props: GraphAlgorithmResult<TriangleCountOutputData>) {
       <div className="space-y-3 pt-3 border-t border-t-border">
         <h3 className="font-semibold">Triangles</h3>
         <div className="max-h-80 overflow-y-auto">
-          <List
-            rowComponent={TriangleCountRowComponent}
-            rowCount={triangles.length}
-            rowHeight={rowHeight}
-            rowProps={{ triangles }}
-          />
+          {triangles.length > 0 ? (
+            <List
+              rowComponent={TriangleCountRowComponent}
+              rowCount={triangles.length}
+              rowHeight={rowHeight}
+              rowProps={{ triangles }}
+            />
+          ) : (
+            <p className="text-critical font-medium">No triangles found</p>
+          )}
         </div>
       </div>
 

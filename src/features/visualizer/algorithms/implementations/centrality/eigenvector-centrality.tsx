@@ -6,19 +6,15 @@ import {
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
-import type { CentralityOutputData } from "./types";
-
-type EigenvectorCentralityOutputData = CentralityOutputData & {
-  eigenvalue: number;
-};
+import type { EigenvectorCentralityOutputData } from "~/igraph/algorithms/Centrality/IgraphEigenvectorCentrality";
 
 export const eigenvectorCentrality =
   createGraphAlgorithm<EigenvectorCentralityOutputData>({
     title: "Eigenvector Centrality",
     description: "Measures the influence of a node in a network.",
     inputs: [],
-    wasmFunction: async (controller, _) => {
-      //   if (module) return module.eigenvector_centrality();
+    wasmFunction: async (igraphController, _) => {
+      return await igraphController.eigenvectorCentrality();
     },
     output: (props) => <EigenvectorCentrality {...props} />,
   });

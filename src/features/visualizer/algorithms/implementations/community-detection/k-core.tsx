@@ -1,16 +1,7 @@
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 import { createNumberInput } from "~/features/visualizer/inputs";
-
-// Infered from src/wasm/algorithms
-type KCoreOutputData = {
-  k: number;
-  max_coreness: number; // max over all vertices
-  cores: {
-    id: number; // vertex id (original graph)
-    node: string; // vertex name
-  }[];
-};
+import type { KCoreOutputData } from "~/igraph/algorithms/Community/IgraphKCore";
 
 export const kCore = createGraphAlgorithm<KCoreOutputData>({
   title: "K-Core Decomposition",
@@ -27,8 +18,8 @@ export const kCore = createGraphAlgorithm<KCoreOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: async (controller, [arg1]) => {
-    // if (module) return module.k_core(arg1);
+  wasmFunction: async (igraphController, [arg1]) => {
+    return await igraphController.kCore(arg1);
   },
   output: (props) => <KCore {...props} />,
 });
@@ -66,15 +57,23 @@ function KCore(props: GraphAlgorithmResult<KCoreOutputData>) {
       {/* Nodes in 2-Core */}
       <div className="space-y-3 pt-3 border-t border-t-border">
         <h3 className="font-semibold">Nodes in Core</h3>
-        <div className="flex flex-wrap gap-2 max-h-80 overflow-y-auto">
-          {cores.map((core, i) => (
-            <span
-              key={`${i}-${core}`}
-              className="px-3 py-1.5 rounded-md bg-primary-low max-w-96 truncate whitespace-nowrap"
-            >
-              {core.node}
-            </span>
-          ))}
+        <div className="max-h-80 overflow-auto">
+          {cores.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {cores.map((core, i) => (
+                <span
+                  key={`${i}-${core}`}
+                  className="px-3 py-1.5 rounded-md bg-primary-low max-w-96 truncate whitespace-nowrap"
+                >
+                  {core}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-critical font-medium">
+              No nodes in the graph has degree of {k}
+            </p>
+          )}
         </div>
       </div>
 

@@ -7,19 +7,13 @@ import { ChevronRight } from "lucide-react";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
+import type { LeidenOutputData } from "~/igraph/algorithms/Community/IgraphLeiden";
 import { createNumberInput } from "~/features/visualizer/inputs";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
-
-// Infered from src/wasm/algorithms
-type LeidenOutputData = {
-  modularity: number;
-  quality: number;
-  communities: string[][];
-};
 
 export const leiden = createGraphAlgorithm<LeidenOutputData>({
   title: "Leiden Algorithm",
@@ -37,8 +31,8 @@ export const leiden = createGraphAlgorithm<LeidenOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: async (controller, [arg1]) => {
-    // if (module) return module.leiden(arg1);
+  wasmFunction: async (igraphController, [arg1]) => {
+    return await igraphController.leidenCommunities(arg1);
   },
   output: (props) => <Leiden {...props} />,
 });
@@ -76,12 +70,16 @@ function Leiden(props: GraphAlgorithmResult<LeidenOutputData>) {
       <div className="space-y-3 pt-3 border-t border-t-border">
         <h3 className="font-semibold">Communities</h3>
         <div className="max-h-80 overflow-y-auto">
-          <List
-            rowComponent={LeidenCommunityRowComponent}
-            rowCount={communities.length}
-            rowHeight={rowHeight}
-            rowProps={{ communities }}
-          />
+          {communities.length > 0 ? (
+            <List
+              rowComponent={LeidenCommunityRowComponent}
+              rowCount={communities.length}
+              rowHeight={rowHeight}
+              rowProps={{ communities }}
+            />
+          ) : (
+            <p className="text-critical font-medium">No communities found</p>
+          )}
         </div>
       </div>
 

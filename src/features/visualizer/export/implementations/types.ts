@@ -8,5 +8,6 @@ export interface ExportOption {
 
   // For export functionality
   mimeType: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   export: (data: Record<string, any>) => void;
 }

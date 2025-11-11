@@ -1,18 +1,26 @@
+/* eslint-disable no-console */
+import type { GraphNode } from "~/features/visualizer/types";
+
 /**
- * Creates a function that maps Igraph IDs back to Kuzu IDs.
+ * Creates a function that maps Igraph IDs back to Kuzu IDs/Labels.
  *
  * @param IgraphToKuzu - Map from Igraph IDs to Kuzu IDs
+ * @param nodesMap - Map from Kuzu ID to Kuzu nodes
  * @param enableWarning - Whether to log a warning when a mapping is missing (default: true)
  * @returns A function that maps an Igraph ID to a Kuzu ID
  */
 export function createMapIdBack(
   IgraphToKuzu: Map<number, string>,
+  nodesMap: Map<string, GraphNode>,
   enableWarning: boolean = true
-): (id: string | number) => string {
-  return (id: string | number): string => {
+): {
+  mapIdBack: (id: string | number) => string;
+  mapLabelBack: (id: string | number) => string;
+} {
+  const mapIdBack = (id: string | number): string => {
     const num = typeof id === "string" ? parseInt(id, 10) : id;
     const mapped = IgraphToKuzu.get(num);
-    if (mapped === undefined) {
+    if (mapped == null) {
       if (enableWarning) {
         console.warn(`[IgraphTranslator] Missing reverse mapping for id ${id}`);
       }
@@ -20,6 +28,18 @@ export function createMapIdBack(
     }
     return mapped;
   };
+  const mapLabelBack = (id: string | number): string => {
+    const mapped = mapIdBack(id);
+    const mappedNode = nodesMap.get(mapped);
+    if (mappedNode == null) {
+      if (enableWarning) {
+        console.warn(`[IgraphTranslator] Missing node for kuzu id ${mapped}`);
+      }
+      return String(mapped);
+    }
+    return `${mappedNode._primaryKeyValue} (${mappedNode.tableName})`;
+  };
+  return { mapIdBack, mapLabelBack };
 }
 
 /**
@@ -39,9 +59,9 @@ export function mapColorMapIds(
       k.includes("-")
         ? (() => {
             const [fromId, toId] = k.split("-");
-            return [`${mapIdBack(fromId)}-${mapIdBack(toId)}`, v as number];
+            return [`${mapIdBack(fromId)}-${mapIdBack(toId)}`, v];
           })()
-        : [mapIdBack(k), v as number]
+        : [mapIdBack(k), v]
     )
   ) as Record<string, number>;
 }

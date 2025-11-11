@@ -1,6 +1,6 @@
 import { cloneElement, useMemo, useState } from "react";
 
-import type { GraphEdge, GraphNode } from "../types";
+import type { GraphNode } from "../types";
 import InputComponent, { createEmptyInputResults } from "../inputs";
 import type VisualizerStore from "../store";
 
@@ -28,7 +28,6 @@ export default function InputDialog({
   controller,
   algorithm,
   nodes,
-  edges,
   setActiveAlgorithm,
   setActiveResponse,
   separator = false,
@@ -38,7 +37,6 @@ export default function InputDialog({
   controller: VisualizerStore["controller"];
   algorithm: BaseGraphAlgorithm;
   nodes: GraphNode[];
-  edges: GraphEdge[];
   setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
   separator?: boolean;
@@ -77,9 +75,8 @@ export default function InputDialog({
         const args = algorithm.inputs.map(
           (input) => inputResults[input.key].value
         );
-
         const algorithmResponse = await algorithm.wasmFunction(
-          controller,
+          controller.getAlgorithm(),
           args
         );
         setActiveAlgorithm(algorithm);

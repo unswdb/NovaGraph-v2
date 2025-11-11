@@ -1,4 +1,17 @@
 import {
+  getAllSchemaPropertiesQuery,
+  getEdgeSchemaConnectionQuery,
+  getSingleSchemaPropertiesQuery,
+} from "./KuzuQueryBuilder";
+import {
+  parseNodesResult,
+  parseEdgesResult,
+  parseTablesResult,
+  parseSingleTableResult,
+  parseTableConnection,
+} from "./KuzuQueryResultExtractor";
+
+import {
   isEdgeSchema,
   isNodeSchema,
   type BaseGraphSchema,
@@ -8,18 +21,6 @@ import {
   type GraphSchema,
   type NodeSchema,
 } from "~/features/visualizer/types";
-import {
-  getAllSchemaPropertiesQuery,
-  getEdgeSchemaConnectionQuery,
-  getSingleSchemaPropertiesQuery,
-} from "../helpers/KuzuQueryBuilder";
-import {
-  parseNodesResult,
-  parseEdgesResult,
-  parseTablesResult,
-  parseSingleTableResult,
-  parseTableConnection,
-} from "./KuzuQueryResultExtractor";
 
 // type ConnectionSync = import("../../types/kuzu-wasm/sync/connection");
 
@@ -58,7 +59,7 @@ export function snapshotGraphState(connection: any): {
         const edgeSchemaConnectionResult = connection.query(
           getEdgeSchemaConnectionQuery(newTable.tableName)
         );
-        console.log(edgeSchemaConnectionResult, newTable.tableName, tablesResult);
+        // console.log(edgeSchemaConnectionResult, newTable.tableName, tablesResult);
         const edgeSchemaConnection = parseTableConnection(
           edgeSchemaConnectionResult
         );

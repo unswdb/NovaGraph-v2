@@ -9,6 +9,7 @@ export const ExportJSON: ExportOption = {
   value: "export-to-json",
   icon: FileCode2,
   mimeType: "application/json",
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   export: (data: Record<string, any>) => {
     // Handle BigInt serialization for query results
     const json = JSON.stringify(

@@ -1,22 +1,21 @@
+import type QueryResult from "../types/kuzu_wasm_internal/query_result";
+
+import { getSingleSchemaPropertiesQuery } from "./KuzuQueryBuilder";
+import type {
+  ErrorQueryResult,
+  SuccessQueryResult,
+} from "./KuzuQueryResultExtractor.types";
+
 import type {
   GraphEdge,
   GraphNode,
   GraphSchema,
 } from "~/features/visualizer/types";
-import { getSingleSchemaPropertiesQuery } from "../helpers/KuzuQueryBuilder";
 import type {
   NonPrimaryKeyType,
   PrimaryKeyType,
 } from "~/features/visualizer/schema-inputs";
-import type {
-  ErrorQueryResult,
-  SuccessQueryResult,
-} from "./KuzuQueryResultExtractor.types";
-import type QueryResult from "../types/kuzu_wasm_internal/query_result";
-import type {
-  ColorMap,
-  SizeMap,
-} from "~/features/visualizer/algorithms/implementations";
+import type { ColorMap } from "~/igraph/types";
 
 /**
  * Helper method to process a single query result (returns a single object)

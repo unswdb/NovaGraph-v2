@@ -48,7 +48,7 @@ export default function HowItWorks() {
 
       <FadeUpCopy
         stagger={0.25}
-        className="px-[10%] mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8"
+        className="px-[10%] mx-auto max-w-6xl 2xl:max-w-3/5 grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8"
       >
         {FEATURES.map((feature, i) => (
           <GlowBorderCard

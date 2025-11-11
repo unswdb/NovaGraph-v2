@@ -60,6 +60,7 @@ export interface BaseInputType<T> {
   validator?: (
     // Custom validator function to run on top of basic validation
     value: T,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ...props: any[]
   ) => InputResultType | Promise<InputResultType>;
 }

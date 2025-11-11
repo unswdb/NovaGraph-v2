@@ -1,4 +1,4 @@
-import { GitBranch, Puzzle, Route, Star, Users, Waypoints } from "lucide-react";
+import { GitBranch, Puzzle, Route, Star, Users } from "lucide-react";
 import type { ElementType } from "react";
 
 import * as TRAVERSAL_CONNECTIVITY from "./traversal-connectivity";
@@ -47,6 +47,4 @@ export {
   type BaseGraphAlgorithmResult,
   type BaseGraphAlgorithm,
   type GraphAlgorithm,
-  type SizeMap,
-  type ColorMap,
 } from "./types";
