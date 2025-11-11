@@ -1,3 +1,8 @@
+// @ts-ignore 'kuzu-wasm/sync' is a JS api file from kuzu-wasm node module
+import kuzu from "kuzu-wasm/sync";
+
+import type Connection from "../types/kuzu_wasm_internal/connection";
+
 import {
   getAllSchemaPropertiesQuery,
   getEdgeSchemaConnectionQuery,
@@ -9,7 +14,9 @@ import {
   parseTablesResult,
   parseSingleTableResult,
   parseTableConnection,
+  processQueryResult,
 } from "./KuzuQueryResultExtractor";
+import type { ErrorQueryResult } from "./KuzuQueryResultExtractor.types";
 
 import {
   type EdgeSchema,
@@ -17,8 +24,92 @@ import {
   type GraphNode,
   type NodeSchema,
 } from "~/features/visualizer/types";
+import {
+  NON_PK_SCHEMA_TYPES,
+  PK_SCHEMA_TYPES,
+} from "~/features/visualizer/schema-inputs";
 
-// TODO: finish correct internal type of kuzu first 
+export function validateSchemaPreflight(connection: Connection, query: string) {
+  const schemaCreationPattern = /\b(?:CREATE NODE TABLE|CREATE REL TABLE)\b/i;
+  if (!schemaCreationPattern.test(query)) {
+    return;
+  }
+
+  const tempDb = new kuzu.Database(":memory:");
+  const tempConnection = new kuzu.Connection(tempDb);
+
+  const result = tempConnection.query(query);
+  const processed = processQueryResult(result);
+
+  if (!processed.success) {
+    tempDb.close();
+    return;
+  }
+
+  const { nodeTables: tempNodeTables, edgeTables: tempEdgeTables } =
+    snapshotGraphState(tempConnection);
+
+  const failedQueries: ErrorQueryResult[] = [];
+
+  // Validate node tables
+  for (const t of tempNodeTables) {
+    if (!PK_SCHEMA_TYPES.includes(t.primaryKeyType)) {
+      failedQueries.push({
+        success: false,
+        message: `Unsupported primary-key type ${t.primaryKeyType} for field "${t.primaryKey}" in table ${t.tableName}. Supported types are: ${PK_SCHEMA_TYPES.join(", ")}`,
+      });
+    }
+    for (const [field, type] of Object.entries(t.properties)) {
+      if (!NON_PK_SCHEMA_TYPES.includes(type)) {
+        failedQueries.push({
+          success: false,
+          message: `Unsupported non-primary key type ${type} for field "${field}" in table ${t.tableName}. Supported types are: ${NON_PK_SCHEMA_TYPES.join(", ")}`,
+        });
+      }
+    }
+  }
+
+  // Validate edge tables
+  for (const t of tempEdgeTables) {
+    if (!!t.primaryKey && !PK_SCHEMA_TYPES.includes(t.primaryKeyType)) {
+      failedQueries.push({
+        success: false,
+        message: `Unsupported primary-key type ${t.primaryKeyType} for field "${t.primaryKey}" in table ${t.tableName}. Supported types are: ${PK_SCHEMA_TYPES.join(", ")}`,
+      });
+    }
+    for (const [field, type] of Object.entries(t.properties)) {
+      if (!NON_PK_SCHEMA_TYPES.includes(type)) {
+        failedQueries.push({
+          success: false,
+          message: `Unsupported non-primary key type ${type} for field "${field}" in table ${t.tableName}. Supported types are: ${NON_PK_SCHEMA_TYPES.join(", ")}`,
+        });
+      }
+    }
+  }
+
+  tempDb.close();
+
+  const { nodes, edges, nodeTables, edgeTables } =
+    snapshotGraphState(connection);
+
+  return {
+    successQueries: [],
+    failedQueries,
+    success: failedQueries.length === 0,
+    message:
+      failedQueries.length === 0
+        ? `All queries succeeded`
+        : `Some queries failed. Check results for details.`,
+    nodes,
+    edges,
+    nodeTables,
+    edgeTables,
+    colorMap: {},
+    resultType: "graph",
+  };
+}
+
+// TODO: finish correct internal type of kuzu first
 // type ConnectionSync = import("../../types/kuzu-wasm/sync/connection");
 
 /**
