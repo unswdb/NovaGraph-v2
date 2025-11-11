@@ -1,4 +1,4 @@
-import { snapshotGraphState, validateQuery } from "./KuzuQueryExecutor";
+import { snapshotGraphState } from "./KuzuQueryExecutor";
 
 import {
   queryResultColorMapExtraction,
@@ -74,9 +74,13 @@ export default class KuzuBaseService {
     let colorMap = {};
     let resultType = "graph";
 
-    const preflightResult = validateQuery(this.connection, query);
-    if (preflightResult != null && !preflightResult.success) {
-      return preflightResult;
+    // Disallow unsupported numeric types up-front
+    // TODO: support those type in the future
+    const disallowedTypePattern = /\b(?:INT64|UINT64|INT128|UINT128)\b/i;
+    if (disallowedTypePattern.test(query)) {
+      throw new Error(
+        "Unsupported schema types detected in query: INT64/UINT64/INT128/UINT128 are not supported yet - even in naming."
+      );
     }
 
     let currentResult = this.connection.query(query);
