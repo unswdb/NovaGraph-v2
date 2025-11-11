@@ -478,11 +478,16 @@ export class IgraphController {
 
   async labelPropagation(): Promise<LabelPropagationResult> {
     this.checkInitialization();
-    const directed = this._getDirection();
-    if (directed) {
-      throw new Error("Label Propagation requires an undirected graph");
+    const isDirected = this._getDirection();
+    
+    let graphData;
+    if (isDirected) {
+      console.warn("Converting directed graph to undirected for Label Propagation");
+      graphData = await this._prepareGraphDataWithDirection(false);
+    } else {
+      graphData = await this._prepareGraphData();
     }
-    const graphData = await this._prepareGraphData();
+    
     return await igraphLabelPropagation(this._wasmGraphModule, graphData);
   }
 
