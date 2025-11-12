@@ -8,6 +8,17 @@ using namespace emscripten;
 igraph_t globalGraph;
 igraph_vector_t globalWeights;
 
+static void igraph_error_handler(const char *reason, const char *file, int line, igraph_error_t igraph_errno)
+{
+    throw std::runtime_error(reason ? reason : "Unknown igraph error. Try again later.");
+}
+
+__attribute__((constructor)) static void init_igraph_error_handler()
+{
+    // Prints the same message igraph normally prints, but does NOT abort.
+    igraph_set_error_handler(igraph_error_handler);
+}
+
 // The first graph to be rendered on the screen
 val initRandomGraph(void)
 {

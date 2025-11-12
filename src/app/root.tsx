@@ -36,7 +36,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     function handleError(event: ErrorEvent) {
       const msg = String(event?.error?.message ?? event?.message ?? "");
+
       if (isNoise(msg)) return; // ignore harmless Cosmograph/WebGL/Resize noise
+
       // eslint-disable-next-line no-console
       console.error(msg);
       toast.error(msg);
@@ -47,6 +49,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         typeof event.reason === "string"
           ? event.reason
           : String(event.reason?.message ?? "");
+
       if (isNoise(msg)) return;
 
       // eslint-disable-next-line no-console
