@@ -5,7 +5,7 @@ import KuzuPersistentSync from "../services/KuzuPersistentSync";
 import KuzuPersistentAsync from "../services/KuzuPersistentAsync";
 
 import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
-import type { CompositeType, ValueWithType } from "~/kuzu/types/KuzuDBTypes";
+import type { CompositeType } from "~/kuzu/types/KuzuDBTypes";
 import type {
   NonPrimaryKeyType,
   PrimaryKeyType,

@@ -1,3 +1,5 @@
+import { toast } from "sonner";
+
 import createModule from "../graph";
 
 import type { GraphModule, KuzuToIgraphParseResult } from "./types";
@@ -193,24 +195,69 @@ export class IgraphController {
     return parseResult;
   }
 
+  // @ts-ignore: used via side-effecting calls
+  private _assertsDirected(): asserts this {
+    if (!this._getDirection()) {
+      throw new Error("This algorithm requires a directed graph");
+    }
+  }
+
+  private async _prepareGraphDataWithoutDirection(): Promise<KuzuToIgraphParseResult> {
+    this.checkInitialization();
+
+    const directed = this._getDirection();
+    if (directed) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        "Directed graph converted to undirected for this operation only"
+      );
+      toast.warning(
+        "Directed graph converted to undirected for this operation only"
+      );
+    }
+
+    const kuzuData = await this._getKuzuData();
+    const parseResult = parseKuzuToIgraphInput(
+      kuzuData.nodes,
+      kuzuData.edges,
+      false
+    );
+
+    const igraphInput = parseResult.IgraphInput;
+    await this._wasmGraphModule.cleanupGraph();
+    await this._wasmGraphModule.create_graph_from_kuzu_to_igraph(
+      igraphInput.nodes,
+      igraphInput.src,
+      igraphInput.dst,
+      igraphInput.directed,
+      igraphInput.weight
+    );
+    return parseResult;
+  }
+
   // ==========================================
   // TRAVERSAL & CONNECTIVITY ALGORITHMS
   // ==========================================
 
   async bfs(kuzuSourceID: string): Promise<BFSResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphBFS(this._wasmGraphModule, graphData, kuzuSourceID);
   }
 
   async dfs(kuzuSourceID: string): Promise<DFSResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphDFS(this._wasmGraphModule, graphData, kuzuSourceID);
   }
 
   async stronglyConnectedComponents(): Promise<SCCResult> {
     this.checkInitialization();
+
+    this._assertsDirected();
+
     const graphData = await this._prepareGraphData();
     return await igraphStronglyConnectedComponents(
       this._wasmGraphModule,
@@ -220,6 +267,7 @@ export class IgraphController {
 
   async weaklyConnectedComponents(): Promise<WCCResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphWeaklyConnectedComponents(
       this._wasmGraphModule,
@@ -232,6 +280,7 @@ export class IgraphController {
     target: string
   ): Promise<VerticesAreAdjacentResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphVerticesAreAdjacent(
       this._wasmGraphModule,
@@ -243,6 +292,9 @@ export class IgraphController {
 
   async topologicalSort(): Promise<TopologicalSortResult> {
     this.checkInitialization();
+
+    this._assertsDirected();
+
     const graphData = await this._prepareGraphData();
     return await igraphTopologicalSort(this._wasmGraphModule, graphData);
   }
@@ -253,6 +305,7 @@ export class IgraphController {
 
   async dijkstraAToB(start: string, end: string): Promise<DijkstraAToBResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphDijkstraAToB(
       this._wasmGraphModule,
@@ -264,6 +317,7 @@ export class IgraphController {
 
   async dijkstraAToAll(start: string): Promise<DijkstraAToAllResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphDijkstraAToAll(this._wasmGraphModule, graphData, start);
   }
@@ -273,6 +327,7 @@ export class IgraphController {
     end: string
   ): Promise<BellmanFordAToBResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphBellmanFordAToB(
       this._wasmGraphModule,
@@ -284,6 +339,7 @@ export class IgraphController {
 
   async bellmanFordAToAll(start: string): Promise<BellmanFordAToAllResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphBellmanFordAToAll(
       this._wasmGraphModule,
@@ -294,6 +350,7 @@ export class IgraphController {
 
   async randomWalk(start: string, steps: number): Promise<RandomWalkResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphRandomWalk(
       this._wasmGraphModule,
@@ -309,30 +366,35 @@ export class IgraphController {
     k: number
   ): Promise<YenResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphYen(this._wasmGraphModule, graphData, start, end, k);
   }
 
   async minimumSpanningTree(): Promise<MSTResult> {
     this.checkInitialization();
-    const graphData = await this._prepareGraphData();
+
+    const graphData = await this._prepareGraphDataWithoutDirection();
     return await igraphMST(this._wasmGraphModule, graphData);
   }
 
   async graphDiameter(): Promise<GraphDiameterResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphDiameter(this._wasmGraphModule, graphData);
   }
 
   async eulerianPath(): Promise<EulerianPathResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphEulerianPath(this._wasmGraphModule, graphData);
   }
 
   async eulerianCircuit(): Promise<EulerianCircuitResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphEulerianCircuit(this._wasmGraphModule, graphData);
   }
@@ -343,42 +405,51 @@ export class IgraphController {
 
   async betweennessCentrality(): Promise<BetweennessCentralityResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphBetweennessCentrality(this._wasmGraphModule, graphData);
   }
 
   async closenessCentrality(): Promise<ClosenessCentralityResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphClosenessCentrality(this._wasmGraphModule, graphData);
   }
 
   async degreeCentrality(): Promise<DegreeCentralityResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphDegreeCentrality(this._wasmGraphModule, graphData);
   }
 
   async eigenvectorCentrality(): Promise<EigenvectorCentralityResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphEigenvectorCentrality(this._wasmGraphModule, graphData);
   }
 
   async harmonicCentrality(): Promise<HarmonicCentralityResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphHarmonicCentrality(this._wasmGraphModule, graphData);
   }
 
   async strengthCentrality(): Promise<StrengthCentralityResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphStrengthCentrality(this._wasmGraphModule, graphData);
   }
 
   async pageRank(damping: number): Promise<PageRankResult> {
     this.checkInitialization();
+
+    this._assertsDirected();
+
     const graphData = await this._prepareGraphData();
     return await igraphPageRank(this._wasmGraphModule, graphData, damping);
   }
@@ -389,31 +460,36 @@ export class IgraphController {
 
   async louvainCommunities(resolution: number): Promise<LouvainResult> {
     this.checkInitialization();
-    const graphData = await this._prepareGraphData();
+
+    const graphData = await this._prepareGraphDataWithoutDirection();
     return await igraphLouvain(this._wasmGraphModule, graphData, resolution);
   }
 
   async leidenCommunities(resolution: number): Promise<LeidenResult> {
     this.checkInitialization();
-    const graphData = await this._prepareGraphData();
+
+    const graphData = await this._prepareGraphDataWithoutDirection();
     return await igraphLeiden(this._wasmGraphModule, graphData, resolution);
   }
 
   async fastGreedyCommunities(): Promise<FastGreedyResult> {
     this.checkInitialization();
-    const graphData = await this._prepareGraphData();
+
+    const graphData = await this._prepareGraphDataWithoutDirection();
     return await igraphFastGreedy(this._wasmGraphModule, graphData);
   }
 
   async labelPropagation(): Promise<LabelPropagationResult> {
     this.checkInitialization();
-    const graphData = await this._prepareGraphData();
+
+    const graphData = await this._prepareGraphDataWithoutDirection();
     return await igraphLabelPropagation(this._wasmGraphModule, graphData);
   }
 
   async localClusteringCoefficient(): Promise<LocalClusteringCoefficientResult> {
     this.checkInitialization();
-    const graphData = await this._prepareGraphData();
+
+    const graphData = await this._prepareGraphDataWithoutDirection();
     return await igraphLocalClusteringCoefficient(
       this._wasmGraphModule,
       graphData
@@ -422,13 +498,15 @@ export class IgraphController {
 
   async kCore(k: number): Promise<KCoreResult> {
     this.checkInitialization();
-    const graphData = await this._prepareGraphData();
+
+    const graphData = await this._prepareGraphDataWithoutDirection();
     return await igraphKCore(this._wasmGraphModule, graphData, k);
   }
 
   async triangles(): Promise<TriangleCountResult> {
     this.checkInitialization();
-    const graphData = await this._prepareGraphData();
+
+    const graphData = await this._prepareGraphDataWithoutDirection();
     return await igraphTriangles(this._wasmGraphModule, graphData);
   }
 
@@ -438,6 +516,7 @@ export class IgraphController {
 
   async jaccardSimilarity(nodes: string[]): Promise<JaccardSimilarityResult> {
     this.checkInitialization();
+
     const graphData = await this._prepareGraphData();
     return await igraphJaccardSimilarity(
       this._wasmGraphModule,
@@ -451,7 +530,8 @@ export class IgraphController {
     numBins: number
   ): Promise<MissingEdgePredictionResult> {
     this.checkInitialization();
-    const graphData = await this._prepareGraphData();
+
+    const graphData = await this._prepareGraphDataWithoutDirection();
     return await igraphMissingEdgePrediction(
       this._wasmGraphModule,
       graphData,

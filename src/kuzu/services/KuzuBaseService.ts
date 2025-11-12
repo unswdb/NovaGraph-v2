@@ -1,4 +1,3 @@
-import { snapshotGraphState } from "../helpers/KuzuQueryExecutor";
 import {
   queryResultColorMapExtraction,
   processQueryResult,
@@ -20,6 +19,10 @@ import type {
   SuccessQueryResult,
 } from "../helpers/KuzuQueryResultExtractor.types";
 import type Connection from "../types/kuzu_wasm_internal/connection";
+import {
+  snapshotGraphState,
+  validateSchemaPreflight,
+} from "../helpers/KuzuQueryExecutor";
 
 import { throwOnFailedQuery } from "./KuzuBaseService.util";
 
@@ -119,6 +122,11 @@ export default abstract class KuzuBaseService {
     let allSuccess = true;
     let colorMap: ColorMap = {};
     let resultType = "graph";
+
+    const preflightResult = validateSchemaPreflight(this.connection, query);
+    if (preflightResult != null && !preflightResult.success) {
+      return preflightResult;
+    }
 
     let currentResult = this.connection.query(query);
 

@@ -297,7 +297,7 @@ val triangles(void)
         t.set("node2", igraph_get_name(res.at(v + 1)));
         t.set("node3", igraph_get_name(res.at(v + 2)));
         t.set("id", id++);
-        triangles.set(v, t);
+        triangles.call<void>("push", t);
 
         colorMap.set(res.at(v), 0.5);
         colorMap.set(res.at(v + 1), 0.5);
