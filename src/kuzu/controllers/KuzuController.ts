@@ -352,6 +352,34 @@ class KuzuController {
     );
   }
 
+  /**
+   * Import graph data from JSON files
+   * @param nodesText - Content of the nodes JSON file
+   * @param edgesText - Content of the edges JSON file
+   * @param nodeTableName - Name for the node table
+   * @param edgeTableName - Name for the edge table
+   * @param isDirected - Whether the graph is directed
+   * @returns Import result with success status and graph state
+   */
+  async importFromJSON(
+    nodesText: string,
+    edgesText: string,
+    nodeTableName: string,
+    edgeTableName: string,
+    isDirected: boolean
+  ) {
+    if (!this.service) {
+      throw new Error("Kuzu service not initialized");
+    }
+    return this.service.importFromJSON(
+      nodesText,
+      edgesText,
+      nodeTableName,
+      edgeTableName,
+      isDirected
+    );
+  }
+
   // -- Exclusive for Kuzu Persistent --
 }
 

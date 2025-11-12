@@ -475,4 +475,245 @@ export default abstract class KuzuBaseService {
       data: graphState,
     };
   }
+
+  /**
+   * Import graph data from JSON files
+   * Throws error on failure - frontend will handle error catching
+   * @param nodesText - Content of the nodes JSON file
+   * @param edgesText - Content of the edges JSON file
+   * @param nodeTableName - Name for the node table
+   * @param edgeTableName - Name for the edge table
+   * @param isDirected - Whether the graph is directed
+   * @returns Import result with success status and graph state
+   * @throws Error if import fails at any step
+   */
+  async importFromJSON(
+    nodesText: string,
+    edgesText: string,
+    nodeTableName: string,
+    edgeTableName: string,
+    isDirected: boolean
+  ) {
+    if (!this.connection) {
+      throw new Error("Kuzu service not initialized");
+    }
+
+    console.log(
+      `[JSON Import] Starting import for tables: ${nodeTableName}, ${edgeTableName}`
+    );
+
+    // Parse JSON content
+    const nodesData = JSON.parse(nodesText);
+    const edgesData = JSON.parse(edgesText);
+
+    if (!Array.isArray(nodesData) || nodesData.length === 0) {
+      throw new Error("Nodes JSON must contain at least one object");
+    }
+
+    if (!Array.isArray(edgesData) || edgesData.length === 0) {
+      throw new Error("Edges JSON must contain at least one object");
+    }
+
+    const firstNode = nodesData[0];
+    if (typeof firstNode !== "object" || firstNode === null) {
+      throw new Error("Node entries must be JSON objects");
+    }
+
+    const nodeKeys = Object.keys(firstNode);
+    if (nodeKeys.length === 0) {
+      throw new Error("Node objects must have at least one property");
+    }
+
+    const primaryKeyColumn = nodeKeys[0];
+
+    const firstEdge = edgesData[0];
+    if (
+      typeof firstEdge !== "object" ||
+      firstEdge === null ||
+      !("from" in firstEdge) ||
+      !("to" in firstEdge)
+    ) {
+      throw new Error("Edge objects must contain 'from' and 'to' properties");
+    }
+
+    const edgeProperties = Object.keys(firstEdge).filter(
+      (key) => key !== "from" && key !== "to"
+    );
+
+    // Prepare filesystem paths
+    const fs = this.getFileSystem();
+    const tempDir = "/tmp";
+
+    try {
+      fs.mkdir(tempDir);
+    } catch (e) {
+      // Directory might already exist, ignore error
+    }
+
+    const timestamp = Date.now();
+    const nodesPath = `${tempDir}/nodes_${timestamp}.json`;
+    const edgesPath = `${tempDir}/edges_${timestamp}.json`;
+
+    fs.writeFile(nodesPath, nodesText);
+    fs.writeFile(edgesPath, edgesText);
+
+    // Install and load JSON extension (safe to retry)
+    try {
+      await this.executeQuery("INSTALL json");
+      await this.executeQuery("LOAD EXTENSION json");
+    } catch (error) {
+      console.log("[JSON Import] JSON extension load/install notice:", error);
+    }
+
+    // Infer column types by scanning JSON
+    const typeInferenceQuery = `
+      LOAD FROM '${nodesPath}'
+      RETURN ${nodeKeys.join(", ")}
+      LIMIT 1
+    `;
+
+    const columnTypes = this.getColumnTypes(typeInferenceQuery);
+    const inferredTypes: Record<string, string> = {};
+
+    columnTypes.forEach((kuzuType: string, index: number) => {
+      const colName = nodeKeys[index];
+      let schemaType = "STRING";
+      const typeUpper = kuzuType.toUpperCase();
+
+      if (typeUpper.includes("STRUCT")) {
+        schemaType = kuzuType;
+      } else if (typeUpper.includes("[]")) {
+        schemaType = kuzuType;
+      } else if (typeUpper.includes("INT32")) {
+        schemaType = "INT32";
+      } else if (typeUpper.includes("INT16")) {
+        schemaType = "INT16";
+      } else if (typeUpper.includes("INT8")) {
+        schemaType = "INT8";
+      } else if (typeUpper.includes("UINT8")) {
+        schemaType = "UINT8";
+      } else if (typeUpper.includes("UINT16")) {
+        schemaType = "UINT16";
+      } else if (typeUpper.includes("UINT32")) {
+        schemaType = "UINT32";
+      } else if (typeUpper.includes("DOUBLE")) {
+        schemaType = "DOUBLE";
+      } else if (typeUpper.includes("FLOAT")) {
+        schemaType = "FLOAT";
+      } else if (typeUpper.includes("BOOL")) {
+        schemaType = "BOOL";
+      } else if (typeUpper.includes("DATE")) {
+        schemaType = "DATE";
+      } else if (typeUpper.includes("INT64") || typeUpper.includes("INT")) {
+        schemaType = "INT32";
+      }
+
+      inferredTypes[colName] = schemaType;
+    });
+
+    console.log("[JSON Import] Inferred column types:", inferredTypes);
+
+    const propertyDefinitions = nodeKeys
+      .map((col) => `${col} ${inferredTypes[col] ?? "STRING"}`)
+      .join(", ");
+
+    const createNodeTableQuery = `
+      CREATE NODE TABLE ${nodeTableName} (
+        ${propertyDefinitions},
+        PRIMARY KEY(${primaryKeyColumn})
+      )
+    `;
+
+    await this.executeQuery(createNodeTableQuery);
+
+    const copyNodesQuery = `COPY ${nodeTableName} FROM '${nodesPath}'`;
+    await this.executeQuery(copyNodesQuery);
+
+    let edgeTableQuery: string;
+
+    if (edgeProperties.length > 0) {
+      const edgePropsDefinition = edgeProperties
+        .map((prop) => {
+          const value = (firstEdge as Record<string, unknown>)[prop];
+          let propType = "STRING";
+
+          if (typeof value === "number") {
+            propType = Number.isInteger(value) ? "INT32" : "DOUBLE";
+          } else if (typeof value === "boolean") {
+            propType = "BOOL";
+          }
+
+          return `${prop} ${propType}`;
+        })
+        .join(", ");
+
+      edgeTableQuery = `CREATE REL TABLE ${edgeTableName} (
+        FROM ${nodeTableName} TO ${nodeTableName},
+        ${edgePropsDefinition}
+      )`;
+    } else {
+      edgeTableQuery = `CREATE REL TABLE ${edgeTableName} (
+        FROM ${nodeTableName} TO ${nodeTableName}
+      )`;
+    }
+
+    await this.executeQuery(edgeTableQuery);
+
+    if (isDirected) {
+      const copyEdgesQuery = `COPY ${edgeTableName} FROM '${edgesPath}'`;
+      await this.executeQuery(copyEdgesQuery);
+    } else {
+      const copyEdgesQuery = `COPY ${edgeTableName} FROM '${edgesPath}'`;
+      await this.executeQuery(copyEdgesQuery);
+
+      const reversedEdgesPath = `${tempDir}/reversed_edges_${Date.now()}.json`;
+      const reversedEdgesData = edgesData.map(
+        (edge: Record<string, unknown>) => {
+          const extraProps = Object.fromEntries(
+            Object.entries(edge).filter(
+              ([key]) => key !== "from" && key !== "to"
+            )
+          );
+          return {
+            from: edge["to"],
+            to: edge["from"],
+            ...extraProps,
+          };
+        }
+      );
+
+      fs.writeFile(reversedEdgesPath, JSON.stringify(reversedEdgesData));
+
+      const copyReversedEdgesQuery = `COPY ${edgeTableName} FROM '${reversedEdgesPath}'`;
+      await this.executeQuery(copyReversedEdgesQuery);
+
+      try {
+        fs.unlink(reversedEdgesPath);
+      } catch (e) {
+        console.warn(
+          "[JSON Import] Failed to clean up reversed edges file:",
+          e
+        );
+      }
+    }
+
+    try {
+      fs.unlink(nodesPath);
+      fs.unlink(edgesPath);
+    } catch (e) {
+      console.warn("[JSON Import] Failed to clean up temporary files:", e);
+    }
+
+    const graphState = await this.snapshotGraphState();
+
+    console.log(
+      `[JSON Import] Successfully imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges`
+    );
+
+    return {
+      success: true,
+      message: `Successfully imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges!`,
+      data: graphState,
+    };
+  }
 }
