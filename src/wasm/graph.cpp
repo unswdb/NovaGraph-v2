@@ -204,7 +204,7 @@ EMSCRIPTEN_BINDINGS(graph)
 
     function("dijkstra_source_to_target", &dijkstra_source_to_target);
     function("dijkstra_source_to_all", &dijkstra_source_to_all);
-    function("yens_algorithm", &yen_source_to_target);
+    function("yen_source_to_target", &yen_source_to_target);
     function("bellman_ford_source_to_target", &bf_source_to_target);
     function("bellman_ford_source_to_all", &bf_source_to_all);
     function("cleanupGraph", &cleanupGraph);

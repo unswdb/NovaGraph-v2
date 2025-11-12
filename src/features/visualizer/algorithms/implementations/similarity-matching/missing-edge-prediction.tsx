@@ -6,16 +6,8 @@ import {
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
+import type { MissingEdgePredictionOutputData } from "~/igraph/algorithms/Misc/IgraphMissingEdgePrediction";
 import { createNumberInput } from "~/features/visualizer/inputs";
-
-// Infered from src/wasm/algorithms
-type MissingEdgePredictionOutputData = {
-  predictedEdges: Array<{
-    from: string; // name(src)
-    to: string; // name(tar)
-    probability: string; // e.g. "73.200%" (3 dp string)
-  }>;
-};
 
 export const missingEdgePrediction =
   createGraphAlgorithm<MissingEdgePredictionOutputData>({
@@ -42,8 +34,8 @@ export const missingEdgePrediction =
         required: true,
       }),
     ],
-    wasmFunction: async (controller, [arg1, arg2]) => {
-      //   if (module) return module.missing_edge_prediction(arg1, arg2);
+    wasmFunction: async (igraphController, [arg1, arg2]) => {
+      return await igraphController.missingEdgePrediction(arg1, arg2);
     },
     output: (props) => <MissingEdgePrediction {...props} />,
   });
@@ -72,13 +64,21 @@ function MissingEdgePrediction(
       {/* Predicted Edges */}
       <div className="space-y-3 border-t border-t-border pt-3 isolate">
         <h3 className="font-semibold">Predicted Edges</h3>
-        <div className="max-h-80 overflow-y-auto border border-border rounded-md">
-          <List
-            rowComponent={MissingEdgePredictionRowComponent}
-            rowCount={predictedEdges.length + 1} // Top header row
-            rowHeight={rowHeight}
-            rowProps={{ predictedEdges }}
-          />
+        <div className="max-h-80 overflow-y-auto">
+          {predictedEdges.length > 0 ? (
+            <div className="border border-border rounded-md">
+              <List
+                rowComponent={MissingEdgePredictionRowComponent}
+                rowCount={predictedEdges.length + 1} // Top header row
+                rowHeight={rowHeight}
+                rowProps={{ predictedEdges }}
+              />
+            </div>
+          ) : (
+            <p className="text-critical font-medium">
+              No edges can be predicted
+            </p>
+          )}
         </div>
       </div>
 

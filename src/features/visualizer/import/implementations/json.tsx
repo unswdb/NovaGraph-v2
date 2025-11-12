@@ -167,13 +167,16 @@ export const ImportJSON: ImportOption = {
 
     // Get the database name
     const databaseName = name.value as string;
+    const trimmedDatabaseName = (databaseName ?? "").trim();
     const nodesFile = nodes.value as File;
     const edgesFile = edges.value as File;
     const isDirected = directed.value as boolean;
 
-    const trimmedDatabaseName = (databaseName || "").trim();
     if (!trimmedDatabaseName) {
-      throw new Error("Please provide a name for the new database.");
+      return {
+        success: false,
+        message: "Please provide a name for the new database.",
+      };
     }
 
     const { controller } = await import("~/MainController");
@@ -183,58 +186,9 @@ export const ImportJSON: ImportOption = {
     let createdDatabase = false;
 
     try {
-      console.log(`[JSON Import] Starting import for database: ${trimmedDatabaseName}`);
-
-      // Read files content
-      const nodesText = await nodesFile.text();
-      const edgesText = await edgesFile.text();
-
-      // Parse JSON to get structure
-      const nodesData = JSON.parse(nodesText);
-      const edgesData = JSON.parse(edgesText);
-
-      // Validate that we have arrays
-      if (!Array.isArray(nodesData) || !Array.isArray(edgesData)) {
-        throw new Error("JSON files must contain arrays");
-      }
-
-      if (nodesData.length === 0) {
-        throw new Error("Nodes JSON must have at least one node");
-      }
-
-      if (edgesData.length === 0) {
-        throw new Error("Edges JSON must have at least one edge");
-      }
-
-      // Get first node to determine schema
-      const firstNode = nodesData[0];
-      const nodeKeys = Object.keys(firstNode);
-      
-      if (nodeKeys.length === 0) {
-        throw new Error("Node objects must have at least one property");
-      }
-
-      // First key is the primary key
-      const primaryKeyColumn = nodeKeys[0];
-
-      // Get first edge to determine edge properties
-      const firstEdge = edgesData[0];
-      if (!("from" in firstEdge) || !("to" in firstEdge)) {
-        throw new Error("Edge objects must have 'from' and 'to' properties");
-      }
-
-      // Extract edge properties (everything except 'from' and 'to')
-      const edgeProperties = Object.keys(firstEdge).filter(
-        (key) => key !== "from" && key !== "to"
+      console.log(
+        `[JSON Import] Starting import for database: ${databaseName}`
       );
-      const hasWeight = edgeProperties.includes("weight");
-
-      // Step 1: Extract table names from filenames (without .json extension)
-      const nodeTableName = nodesFile.name.replace(/\.json$/i, '');
-      const edgeTableName = edgesFile.name.replace(/\.json$/i, '');
-
-      console.log(`[JSON Import] Node table name: ${nodeTableName}`);
-      console.log(`[JSON Import] Edge table name: ${edgeTableName}`);
 
       const createResult = await controller.db.createDatabase(
         trimmedDatabaseName
@@ -259,189 +213,40 @@ export const ImportJSON: ImportOption = {
         );
       }
 
-      // Step 2: Write JSON files to Kuzu's virtual file system via controller
-      const tempDir = '/tmp';
-      const nodesPath = `${tempDir}/nodes_${Date.now()}.json`;
-      const edgesPath = `${tempDir}/edges_${Date.now()}.json`;
+      const nodesText = await nodesFile.text();
+      const edgesText = await edgesFile.text();
 
-      await controller.db.writeVirtualFile(nodesPath, nodesText);
-      await controller.db.writeVirtualFile(edgesPath, edgesText);
+      const nodeTableName = nodesFile.name.replace(/\.json$/i, "");
+      const edgeTableName = edgesFile.name.replace(/\.json$/i, "");
 
-      // Step 3: Install JSON extension (if not already installed)
-      try {
-        await controller.db.executeQuery("INSTALL json");
-        await controller.db.executeQuery("LOAD EXTENSION json");
-      } catch (e) {
-        // Extension might already be installed, log and continue
-        console.log(`[JSON Import] JSON extension installation: ${e}`);
+      console.log(
+        `[JSON Import] Node table: ${nodeTableName}, Edge table: ${edgeTableName}`
+      );
+
+      const result = await controller.db.importFromJSON(
+        nodesText,
+        edgesText,
+        nodeTableName,
+        edgeTableName,
+        isDirected
+      );
+
+      if (result.success && result.data) {
+        await controller.db.saveDatabase().catch(() => {});
+        return {
+          ...result,
+          databaseName: trimmedDatabaseName,
+          message: `Successfully imported graph "${trimmedDatabaseName}" with ${result.data.nodes.length} nodes and ${result.data.edges.length} edges!`,
+        };
       }
 
-      // Step 4: Infer column types by using LOAD FROM to scan the JSON
-      // Query to infer types - load one row and return it to see inferred types
-      const typeInferenceQuery = `
-        LOAD FROM '${nodesPath}'
-        RETURN ${nodeKeys.join(', ')}
-        LIMIT 1
-      `;
-
-      // Use the getColumnTypes method from controller
-      const columnTypes = await controller.db.getColumnTypes(typeInferenceQuery);
-      
-      // Extract column types from the query result
-      const inferredTypes: Record<string, string> = {};
-      
-      columnTypes.forEach((kuzuType: string, index: number) => {
-        const colName = nodeKeys[index];
-        // Map Kuzu types to schema types
-        let schemaType: string = "STRING";
-        
-        const typeUpper = kuzuType.toUpperCase();
-        
-        // Handle complex types (STRUCT, ARRAY, etc.)
-        if (typeUpper.includes("STRUCT")) {
-          schemaType = kuzuType; // Keep the full STRUCT definition
-        } else if (typeUpper.includes("[]")) {
-          schemaType = kuzuType; // Keep array type definition
-        } else if (typeUpper.includes("INT32")) {
-          schemaType = "INT32";
-        } else if (typeUpper.includes("INT16")) {
-          schemaType = "INT16";
-        } else if (typeUpper.includes("INT8")) {
-          schemaType = "INT8";
-        } else if (typeUpper.includes("UINT8")) {
-          schemaType = "UINT8";
-        } else if (typeUpper.includes("UINT16")) {
-          schemaType = "UINT16";
-        } else if (typeUpper.includes("INT64") || typeUpper.includes("INT")) {
-          schemaType = "INT32";
-        } else if (typeUpper.includes("DOUBLE")) {
-          schemaType = "DOUBLE";
-        } else if (typeUpper.includes("FLOAT")) {
-          schemaType = "FLOAT";
-        } else if (typeUpper.includes("BOOL")) {
-          schemaType = "BOOL";
-        } else if (typeUpper.includes("DATE")) {
-          schemaType = "DATE";
-        }
-        
-        inferredTypes[colName] = schemaType;
-      });
-
-      // Step 5: Create node table schema with inferred types
-      // For JSON, always use raw SQL CREATE NODE TABLE to support all types
-      const propertyDefinitions = nodeKeys.map(col => {
-        return `${col} ${inferredTypes[col]}`;
-      }).join(', ');
-      
-      const createNodeTableQuery = `
-        CREATE NODE TABLE ${nodeTableName} (
-          ${propertyDefinitions},
-          PRIMARY KEY(${primaryKeyColumn})
-        )
-      `;
-
-      await controller.db.executeQuery(createNodeTableQuery);
-
-      // Step 6: Load nodes using COPY FROM
-      const copyNodesQuery = `COPY ${nodeTableName} FROM '${nodesPath}'`;
-
-      await controller.db.executeQuery(copyNodesQuery);
-
-      // Step 7: Create edge table schema using CREATE REL TABLE syntax
-      let edgeTableQuery: string;
-      
-      if (edgeProperties.length > 0) {
-        // Build properties string for edges
-        const edgePropsDefinition = edgeProperties.map(prop => {
-          // For edge properties, try to infer type from first edge
-          const value = firstEdge[prop];
-          let propType = "STRING";
-          
-          if (typeof value === "number") {
-            propType = Number.isInteger(value) ? "INT32" : "DOUBLE";
-          } else if (typeof value === "boolean") {
-            propType = "BOOL";
-          }
-          
-          return `${prop} ${propType}`;
-        }).join(', ');
-        
-        edgeTableQuery = `CREATE REL TABLE ${edgeTableName} (
-          FROM ${nodeTableName} TO ${nodeTableName},
-          ${edgePropsDefinition}
-        )`;
-      } else {
-        edgeTableQuery = `CREATE REL TABLE ${edgeTableName} (
-          FROM ${nodeTableName} TO ${nodeTableName}
-        )`;
-      }
-
-      await controller.db.executeQuery(edgeTableQuery);
-
-      // Step 8: Load edges using COPY FROM
-      if (isDirected) {
-        // For directed graphs, use COPY FROM directly
-        const copyEdgesQuery = `COPY ${edgeTableName} FROM '${edgesPath}'`;
-
-        await controller.db.executeQuery(copyEdgesQuery);
-      } else {
-        // For undirected graphs, we need to create edges in both directions
-        // First, copy the original edges
-        const copyEdgesQuery1 = `COPY ${edgeTableName} FROM '${edgesPath}'`;
-        await controller.db.executeQuery(copyEdgesQuery1);
-
-        // Then create a temporary file with reversed edges
-        const reversedEdgesPath = `${tempDir}/reversed_edges_${Date.now()}.json`;
-        const reversedEdgesData = edgesData.map((edge: any) => {
-          return {
-            from: edge.to,
-            to: edge.from,
-            ...Object.fromEntries(
-              Object.entries(edge).filter(([key]) => key !== "from" && key !== "to")
-            ),
-          };
-        });
-
-        await controller.db.writeVirtualFile(
-          reversedEdgesPath,
-          JSON.stringify(reversedEdgesData)
-        );
-
-        // Copy the reversed edges
-        const copyEdgesQuery2 = `COPY ${edgeTableName} FROM '${reversedEdgesPath}'`;
-        await controller.db.executeQuery(copyEdgesQuery2);
-
-        // Clean up the temporary reversed edges file
-        await controller.db.deleteVirtualFile(reversedEdgesPath);
-      }
-
-      // Step 9: Clean up temporary files
-      await controller.db.deleteVirtualFile(nodesPath);
-      await controller.db.deleteVirtualFile(edgesPath);
-
-      await controller.db.saveDatabase().catch(() => {});
-
-      // Step 10: Refresh graph state
-      const graphState = await controller.db.snapshotGraphState();
-
-      console.log(`[JSON Import] Successfully imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges`);
-
-      return {
-        success: true,
-        message: `Successfully imported graph "${trimmedDatabaseName}" with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges!`,
-        databaseName: trimmedDatabaseName,
-        data: {
-          nodes: graphState.nodes,
-          edges: graphState.edges,
-          nodeTables: graphState.nodeTables,
-          edgeTables: graphState.edgeTables,
-          directed: isDirected,
-        },
-      };
+      return result;
     } catch (error) {
       console.error("[JSON Import] Error:", error);
-
-      if (previousDatabaseName) {
+      if (
+        previousDatabaseName &&
+        previousDatabaseName !== trimmedDatabaseName
+      ) {
         try {
           await controller.db.connectToDatabase(previousDatabaseName);
         } catch (reconnectError) {
@@ -451,19 +256,22 @@ export const ImportJSON: ImportOption = {
           );
         }
       }
-
       if (createdDatabase) {
-        try {
-          await controller.db.deleteDatabase(trimmedDatabaseName);
-        } catch (cleanupError) {
-          console.error(
-            `[JSON Import] Failed to clean up database "${trimmedDatabaseName}" after error:`,
-            cleanupError
+        await controller.db
+          .deleteDatabase(trimmedDatabaseName)
+          .catch((cleanupError: unknown) =>
+            console.warn(
+              `[JSON Import] Failed to delete database "${trimmedDatabaseName}" after error`,
+              cleanupError
+            )
           );
-        }
       }
-
-      throw error instanceof Error ? error : new Error(String(error));
+      return {
+        success: false,
+        message: `Failed to import JSON: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      };
     }
   },
 };

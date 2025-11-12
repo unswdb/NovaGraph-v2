@@ -36,8 +36,7 @@ val betweenness_centrality(void)
 
         sizeMap.set(v, scaled_centrality);
         colorMap.set(v, 1);
-        c.set("id", v);
-        c.set("node", igraph_get_name(v));
+        c.set("node", v);
         c.set("centrality", std::stod(stream.str()));
         centralities.set(v, c);
     }
@@ -75,8 +74,7 @@ val closeness_centrality(void)
 
         sizeMap.set(v, scaled_centrality);
         colorMap.set(v, 1);
-        c.set("id", v);
-        c.set("node", igraph_get_name(v));
+        c.set("node", v);
         c.set("centrality", std::stod(stream.str()));
         centralities.set(v, c);
     }
@@ -115,8 +113,7 @@ val degree_centrality(void)
 
         sizeMap.set(v, scaled_centrality);
         colorMap.set(v, 1);
-        c.set("id", v);
-        c.set("node", igraph_get_name(v));
+        c.set("node", v);
         c.set("centrality", std::stod(stream.str()));
         centralities.set(v, c);
     }
@@ -159,8 +156,7 @@ val eigenvector_centrality(void)
 
         sizeMap.set(v, scaled_centrality);
         colorMap.set(v, 1);
-        c.set("id", v);
-        c.set("node", igraph_get_name(v));
+        c.set("node", v);
         c.set("centrality", std::stod(stream.str()));
         centralities.set(v, c);
     }
@@ -198,8 +194,7 @@ val harmonic_centrality(void)
 
         sizeMap.set(v, scaled_centrality);
         colorMap.set(v, 1);
-        c.set("id", v);
-        c.set("node", igraph_get_name(v));
+        c.set("node", v);
         c.set("centrality", std::stod(stream.str()));
         centralities.set(v, c);
     }
@@ -237,8 +232,7 @@ val strength(void)
 
         sizeMap.set(v, scaled_centrality);
         colorMap.set(v, 1);
-        c.set("id", v);
-        c.set("node", igraph_get_name(v));
+        c.set("node", v);
         c.set("centrality", std::stod(stream.str()));
         centralities.set(v, c);
     }
@@ -282,8 +276,7 @@ val pagerank(igraph_real_t damping)
 
         sizeMap.set(v, scaled_centrality);
         colorMap.set(v, 1);
-        c.set("id", v);
-        c.set("node", igraph_get_name(v));
+        c.set("node", v);
         c.set("centrality", std::stod(stream.str()));
         centralities.set(v, c);
     }

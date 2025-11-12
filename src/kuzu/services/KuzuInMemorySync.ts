@@ -1,5 +1,6 @@
 // @ts-ignore
 import kuzu from "kuzu-wasm/sync";
+
 import KuzuBaseService from "./KuzuBaseService";
 
 export default class KuzuInMemorySync extends KuzuBaseService {
@@ -33,6 +34,14 @@ export default class KuzuInMemorySync extends KuzuBaseService {
       console.error("Failed Kuzu initialization:", err);
       throw err;
     }
+  }
+
+  /**
+   * Get the virtual file system for Kuzu WASM
+   * @returns File system object with mkdir, writeFile, unlink methods
+   */
+  protected getFileSystem() {
+    return kuzu.getFS();
   }
 
   cleanup() {

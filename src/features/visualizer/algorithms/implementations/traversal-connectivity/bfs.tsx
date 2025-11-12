@@ -22,22 +22,9 @@ export const bfs = createGraphAlgorithm<BFSOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: async (controller, [args]) => {
-    const algorithm = controller.getAlgorithm();
-    if (algorithm === undefined) {
-      throw new Error("Algorithm controller not initialized");
-    }
-
-    // Direct call - no optional chaining, proper error handling
-    const result = await algorithm.bfs(args);
-
-    // Result already has correct structure from IgraphBFS
-    return {
-      ...result,
-      type: "algorithm" as const,
-    };
+  wasmFunction: async (igraphController, [arg1]) => {
+    return await igraphController.bfs(arg1);
   },
-
   output: (props) => <BFS {...props} />,
 });
 

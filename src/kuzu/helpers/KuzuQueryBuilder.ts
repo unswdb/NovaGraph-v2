@@ -5,12 +5,13 @@
  * Each function returns a Cypher query string that can be executed by any query executor.
  */
 
-import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
 import type {
   CompositeType,
   ScalarType,
   ValueWithType,
 } from "../types/KuzuDBTypes";
+
+import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
 import type {
   NonPrimaryKeyType,
   PrimaryKeyType,
@@ -59,7 +60,7 @@ export function deleteEdgeQuery(
   DELETE f;
   `;
 
-  console.log("query: " + query);
+  // console.log("query: " + query);
   return query;
 }
 
@@ -69,7 +70,7 @@ export function updateEdgeQuery(
   edgeTableName: string,
   values: Record<string, InputChangeResult<any>>
 ) {
-  console.log("updateEdgeQuery Here\n");
+  // console.log("updateEdgeQuery Here\n");
   let attriutesMappingString = "";
   for (const [key, val] of Object.entries(values)) {
     attriutesMappingString += `, f.\`${key}\` = ${_formatQueryInput(val.value)}`;
@@ -82,7 +83,7 @@ export function updateEdgeQuery(
   SET ${attriutesMappingString.slice(2)}
   RETURN f;
   `;
-  console.log(query);
+  // console.log(query);
   return query;
 }
 
@@ -296,7 +297,7 @@ export function createNodeQuery(
     .join(", ");
 
   const q = `CREATE (n:\`${tableName}\` {${entries}});`;
-  console.log("q: " + q);
+  // console.log("q: " + q);
   return q;
 }
 

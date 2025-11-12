@@ -6,9 +6,7 @@ import {
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
-import type { CentralityOutputData } from "./types";
-
-type HarmonicCentralityOutputData = CentralityOutputData;
+import type { HarmonicCentralityOutputData } from "~/igraph/algorithms/Centrality/IgraphHarmonicCentrality";
 
 export const harmonicCentrality =
   createGraphAlgorithm<HarmonicCentralityOutputData>({
@@ -16,8 +14,8 @@ export const harmonicCentrality =
     description:
       "Measures the average harmonic mean of the shortest paths between a node to all other nodes.",
     inputs: [],
-    wasmFunction: async (controller, _) => {
-      //   if (module) return module.harmonic_centrality();
+    wasmFunction: async (igraphController, _) => {
+      return await igraphController.harmonicCentrality();
     },
     output: (props) => <HarmonicCentrality {...props} />,
   });

@@ -1,7 +1,7 @@
 import { ChevronDown } from "lucide-react";
 import { useMemo } from "react";
 
-import type { GraphEdge, GraphNode } from "../../types";
+import type { GraphNode } from "../../types";
 import type {
   BaseGraphAlgorithm,
   BaseGraphAlgorithmResult,
@@ -32,14 +32,12 @@ import {
 export function UnfilteredAlgorithmList({
   controller,
   nodes,
-  edges,
   setActiveAlgorithm,
   setActiveResponse,
   isCollapsed,
 }: {
   controller: VisualizerStore["controller"];
   nodes: GraphNode[];
-  edges: GraphEdge[];
   setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
   isCollapsed: boolean;
@@ -79,7 +77,6 @@ export function UnfilteredAlgorithmList({
                               controller={controller}
                               algorithm={algo}
                               nodes={nodes}
-                              edges={edges}
                               setActiveAlgorithm={setActiveAlgorithm}
                               setActiveResponse={setActiveResponse}
                               inert={isCollapsed}
@@ -107,7 +104,6 @@ export function FilteredAlgorithmList({
   controller,
   searchText,
   nodes,
-  edges,
   setActiveAlgorithm,
   setActiveResponse,
   isCollapsed,
@@ -115,7 +111,6 @@ export function FilteredAlgorithmList({
   controller: VisualizerStore["controller"];
   searchText: string;
   nodes: GraphNode[];
-  edges: GraphEdge[];
   setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
   isCollapsed: boolean;
@@ -148,7 +143,6 @@ export function FilteredAlgorithmList({
                     controller={controller}
                     algorithm={algo}
                     nodes={nodes}
-                    edges={edges}
                     setActiveAlgorithm={setActiveAlgorithm}
                     setActiveResponse={setActiveResponse}
                     inert={isCollapsed}

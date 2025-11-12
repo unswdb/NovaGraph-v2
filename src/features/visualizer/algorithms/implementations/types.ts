@@ -1,26 +1,13 @@
 import type { ReactNode } from "react";
 
 import type { InputType } from "../../inputs";
-import type VisualizerStore from "../../store";
 
-type NodeId = string;
-type EdgeId = string; // Format: "fromNodeId-toNodeId"
-type ColorValue = number; // 0.5 for partial highlight, 1 for full highlight, or frequency-based values
+import type { IgraphController } from "~/igraph/IgraphController";
+import type { BaseGraphAlgorithmResult as IgraphBaseGraphAlgorithmResult } from "~/igraph/types";
 
-export type ColorMap = {
-  [key: NodeId | EdgeId]: ColorValue;
-};
-
-export type SizeMap = {
-  [key: NodeId]: number;
-};
-
-export interface BaseGraphAlgorithmResult {
+export type BaseGraphAlgorithmResult = {
   type: "algorithm";
-  colorMap: ColorMap;
-  sizeMap?: SizeMap;
-  mode: number;
-}
+} & IgraphBaseGraphAlgorithmResult;
 
 export interface GraphAlgorithmResult<TData = unknown>
   extends BaseGraphAlgorithmResult {
@@ -36,10 +23,8 @@ export interface BaseGraphAlgorithm<TResult = BaseGraphAlgorithmResult> {
   title: string;
   description: string;
   inputs: InputType[];
-  wasmFunction: (
-    controller: VisualizerStore["controller"],
-    args: any[]
-  ) => Promise<TResult>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  wasmFunction: (controller: IgraphController, args: any[]) => Promise<TResult>;
   output: BivariantHandler<TResult>;
 }
 
@@ -56,17 +41,16 @@ export function createGraphAlgorithm<TData>(config: {
   description: string;
   inputs: InputType[];
   wasmFunction: (
-    controller: VisualizerStore["controller"],
+    controller: IgraphController,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     args: any[]
   ) => Promise<Omit<GraphAlgorithmResult<TData>, "type">>;
   output: (props: GraphAlgorithmResult<TData>) => ReactNode;
 }): GraphAlgorithm<TData> {
-  const algorithmWasmFn = async (
-    controller: VisualizerStore["controller"],
-    args: any[]
-  ) => {
-    const res = await config.wasmFunction(controller, args);
-    return { ...res, type: "algorithm" } as const;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const algorithmWasmFn = async (controller: IgraphController, args: any[]) => {
+    const rawResult = await config.wasmFunction(controller, args);
+    return { ...rawResult, type: "algorithm" } as const;
   };
   return { ...config, wasmFunction: algorithmWasmFn };
 }

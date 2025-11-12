@@ -29,6 +29,7 @@ type ImportHandler = (data: {
 }) => Promise<ImportHandlerResult>;
 
 type ImportValidator = (data: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   values: Record<string, InputChangeResult<any>>;
 }) => {
   success: boolean;

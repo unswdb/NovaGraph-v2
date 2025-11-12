@@ -15,11 +15,3 @@ export const NODE_SIZE_SCALE = {
 } as const;
 export type NodeSizeScale =
   (typeof NODE_SIZE_SCALE)[keyof typeof NODE_SIZE_SCALE];
-
-export const MODE = {
-  COLOR_IMPORTANT: 1,
-  COLOR_SHADE_DEFAULT: 2,
-  COLOR_SHADE_ERROR: 3,
-  SIZE_SCALAR: 4,
-  RAINBOW: 5,
-} as const;

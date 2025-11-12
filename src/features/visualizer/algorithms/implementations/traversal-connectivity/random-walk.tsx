@@ -10,22 +10,9 @@ import {
   createAlgorithmSelectInput,
   createNumberInput,
 } from "~/features/visualizer/inputs";
+import type { RandomWalkOutputData } from "~/igraph/algorithms/PathFinding/IgraphRandomWalk";
 
-// Infered from src/wasm/algorithms
-type RandomWalkOutputData = {
-  source: string;
-  steps: number; // requested steps
-  weighted: boolean;
-  maxFrequencyNode: string; // node name with highest visits
-  maxFrequency: number; // its visit count
-  path: {
-    step: number; // 1..N
-    from: string;
-    to: string;
-    weight?: number; // edge weight used on that hop (if weighted)
-  }[];
-};
-
+// Todo : more extensive testing
 export const randomWalk = createGraphAlgorithm<RandomWalkOutputData>({
   title: "Random Walk",
   description:
@@ -48,8 +35,8 @@ export const randomWalk = createGraphAlgorithm<RandomWalkOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: async (controller, [arg1, arg2]) => {
-    // if (module) return module.random_walk(arg1, arg2);
+  wasmFunction: async (igraphController, [arg1, arg2]) => {
+    return await igraphController.randomWalk(arg1, arg2);
   },
   output: (props) => <RandomWalk {...props} />,
 });

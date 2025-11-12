@@ -1,9 +1,10 @@
-import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
 import KuzuInMemorySync from "../services/KuzuInMemorySync";
 import KuzuInMemoryAsync from "../services/KuzuInMemoryAsync";
 // @ts-ignore - KuzuPersistentSync is a JS file
 import KuzuPersistentSync from "../services/KuzuPersistentSync";
 import KuzuPersistentAsync from "../services/KuzuPersistentAsync";
+
+import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
 import type { CompositeType, ValueWithType } from "~/kuzu/types/KuzuDBTypes";
 import type {
   NonPrimaryKeyType,
@@ -341,12 +342,7 @@ class KuzuController {
     if (!this.service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.createEdge(
-      node1,
-      node2,
-      edgeTable,
-      attributes
-    );
+    return this.service.createEdge(node1, node2, edgeTable, attributes);
   }
 
   updateNode(node: GraphNode, values: Record<string, InputChangeResult<any>>) {
@@ -420,6 +416,62 @@ class KuzuController {
       throw new Error("Kuzu service not initialized");
     }
     return this.service.getSingleSchemaProperties(tableName);
+  }
+
+  /**
+   * Import graph data from CSV files
+   * @param nodesText - Content of the nodes CSV file
+   * @param edgesText - Content of the edges CSV file
+   * @param nodeTableName - Name for the node table
+   * @param edgeTableName - Name for the edge table
+   * @param isDirected - Whether the graph is directed
+   * @returns Import result with success status and graph state
+   */
+  async importFromCSV(
+    nodesText: string,
+    edgesText: string,
+    nodeTableName: string,
+    edgeTableName: string,
+    isDirected: boolean
+  ) {
+    if (!this.service) {
+      throw new Error("Kuzu service not initialized");
+    }
+    return this.service.importFromCSV(
+      nodesText,
+      edgesText,
+      nodeTableName,
+      edgeTableName,
+      isDirected
+    );
+  }
+
+  /**
+   * Import graph data from JSON files
+   * @param nodesText - Content of the nodes JSON file
+   * @param edgesText - Content of the edges JSON file
+   * @param nodeTableName - Name for the node table
+   * @param edgeTableName - Name for the edge table
+   * @param isDirected - Whether the graph is directed
+   * @returns Import result with success status and graph state
+   */
+  async importFromJSON(
+    nodesText: string,
+    edgesText: string,
+    nodeTableName: string,
+    edgeTableName: string,
+    isDirected: boolean
+  ) {
+    if (!this.service) {
+      throw new Error("Kuzu service not initialized");
+    }
+    return this.service.importFromJSON(
+      nodesText,
+      edgesText,
+      nodeTableName,
+      edgeTableName,
+      isDirected
+    );
   }
 
   // -- Exclusive for Kuzu Persistent --

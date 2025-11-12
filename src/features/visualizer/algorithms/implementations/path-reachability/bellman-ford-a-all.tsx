@@ -12,17 +12,7 @@ import InputComponent, {
   createEmptyInputResult,
   createSwitchInput,
 } from "~/features/visualizer/inputs";
-
-// Infered from src/wasm/algorithms
-type BellmanFordAToAllOutputData = {
-  source: string;
-  weighted: boolean;
-  paths: {
-    target: string;
-    path: string[];
-    weight?: number;
-  }[];
-};
+import type { BellmanFordAToAllOutputData } from "~/igraph/algorithms/PathFinding/IgraphBellmanFordAToAll";
 
 export const bellmanFordAToAll =
   createGraphAlgorithm<BellmanFordAToAllOutputData>({
@@ -38,8 +28,8 @@ export const bellmanFordAToAll =
         required: true,
       }),
     ],
-    wasmFunction: async (controller, [args]) => {
-      //   if (module) return module.bellman_ford_source_to_all(args);
+    wasmFunction: async (igraphController, [arg1]) => {
+      return await igraphController.bellmanFordAToAll(arg1);
     },
     output: (props) => <BellmanFordAToAll {...props} />,
   });
@@ -198,7 +188,9 @@ function BFSingleSourcePathRowComponent({
       >
         {path.path.map((p, i) => (
           <div key={`${index}-${i}-${p}`} className="flex items-center">
-            <span className="px-3 py-1.5 rounded-md bg-primary-low">{p}</span>
+            <span className="px-3 py-1.5 rounded-md text-nowrap bg-primary-low">
+              {p}
+            </span>
             {i < path.path.length - 1 && <span>→</span>}
           </div>
         ))}

@@ -40,7 +40,6 @@ class MainController {
   }
 
   getAlgorithm() {
-    console.log("getAlgorithm should be here");
     if (this._IgraphController === undefined) {
       throw Error("IgraphController is undefinned");
     }
@@ -51,7 +50,7 @@ class MainController {
   db = {
     getGraphDirection() {
       // Todo: fix this later once implement graph direction
-      return false;
+      return true;
     },
 
     async createNodeSchema(
@@ -220,6 +219,60 @@ class MainController {
 
     async loadDatabase() {
       return Promise.resolve(kuzuController.loadDatabase());
+    },
+
+    /**
+     * Import graph data from CSV files
+     * @param nodesText - Content of the nodes CSV file
+     * @param edgesText - Content of the edges CSV file
+     * @param nodeTableName - Name for the node table
+     * @param edgeTableName - Name for the edge table
+     * @param isDirected - Whether the graph is directed
+     * @returns Import result with success status and graph state
+     */
+    async importFromCSV(
+      nodesText: string,
+      edgesText: string,
+      nodeTableName: string,
+      edgeTableName: string,
+      isDirected: boolean
+    ) {
+      return Promise.resolve(
+        kuzuController.importFromCSV(
+          nodesText,
+          edgesText,
+          nodeTableName,
+          edgeTableName,
+          isDirected
+        )
+      );
+    },
+
+    /**
+     * Import graph data from JSON files
+     * @param nodesText - Content of the nodes JSON file
+     * @param edgesText - Content of the edges JSON file
+     * @param nodeTableName - Name for the node table
+     * @param edgeTableName - Name for the edge table
+     * @param isDirected - Whether the graph is directed
+     * @returns Import result with success status and graph state
+     */
+    async importFromJSON(
+      nodesText: string,
+      edgesText: string,
+      nodeTableName: string,
+      edgeTableName: string,
+      isDirected: boolean
+    ) {
+      return Promise.resolve(
+        kuzuController.importFromJSON(
+          nodesText,
+          edgesText,
+          nodeTableName,
+          edgeTableName,
+          isDirected
+        )
+      );
     },
   };
 

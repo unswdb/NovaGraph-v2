@@ -5,8 +5,8 @@
 
 // @ts-ignore
 import kuzu from "kuzu-wasm/sync";
-import { snapshotGraphState } from "../KuzuQueryExecutor";
-import { queryResultColorMapExtraction } from "../KuzuQueryResultExtractor";
+import { snapshotGraphState } from "../../helpers/KuzuQueryExecutor";
+import { queryResultColorMapExtraction } from "../../helpers/KuzuQueryResultExtractor";
 
 let db: any = null;
 let connection: any = null;

@@ -6,15 +6,7 @@ import {
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
-// Infered from src/wasm/algorithms
-type LocalClusteringCoefficientOutputData = {
-  global_coefficient: number; // 4 dp, avg-ignore-zeros
-  coefficients: {
-    id: number; // vertex id
-    node: string; // vertex name
-    value: number; // 4 dp (can be NaN when undefined)
-  }[];
-};
+import type { LocalClusteringCoefficientOutputData } from "~/igraph/algorithms/Community/IgraphLocalClusteringCoefficient";
 
 export const localClusteringCoefficient =
   createGraphAlgorithm<LocalClusteringCoefficientOutputData>({
@@ -22,8 +14,8 @@ export const localClusteringCoefficient =
     description:
       "Measures the number of triangles that pass through a node. Any nodes with a clustering coefficient of 0 are not part of any triangles.",
     inputs: [],
-    wasmFunction: async (controller, _) => {
-      //   if (module) return module.local_clustering_coefficient();
+    wasmFunction: async (igraphController, _) => {
+      return await igraphController.localClusteringCoefficient();
     },
     output: (props) => <LocalClusteringCoefficient {...props} />,
   });

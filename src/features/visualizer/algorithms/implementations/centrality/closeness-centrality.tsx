@@ -6,9 +6,7 @@ import {
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
-import type { CentralityOutputData } from "./types";
-
-type ClosenessCentralityOutputData = CentralityOutputData;
+import type { ClosenessCentralityOutputData } from "~/igraph/algorithms/Centrality/IgraphCloseCentrality";
 
 export const closenessCentrality =
   createGraphAlgorithm<ClosenessCentralityOutputData>({
@@ -16,8 +14,8 @@ export const closenessCentrality =
     description:
       "Measures the average shortest path between a node and all other nodes.",
     inputs: [],
-    wasmFunction: async (controller, _) => {
-      //   if (module) return module.closeness_centrality();
+    wasmFunction: async (igraphController, _) => {
+      return await igraphController.closenessCentrality();
     },
     output: (props) => <ClosenessCentrality {...props} />,
   });

@@ -11,27 +11,15 @@ import InputComponent, {
   createEmptyInputResult,
   createSwitchInput,
 } from "~/features/visualizer/inputs";
-
-// Infered from src/wasm/algorithms
-type MinimalSpanningTreeOutputData = {
-  weighted: boolean;
-  maxEdges: number; // ecount of original graph
-  totalWeight?: number; // only if weighted (sum over MST edges)
-  edges: {
-    num: number; // 1-based order in returned MST list
-    from: string;
-    to: string;
-    weight?: number;
-  }[];
-};
+import type { MinimalSpanningTreeOutputData } from "~/igraph/algorithms/PathFinding/IgraphMST";
 
 export const mst = createGraphAlgorithm<MinimalSpanningTreeOutputData>({
   title: "Minimum Spanning Tree",
   description:
     "Finds the subset of edges that connects all nodes in the graph with the minimum possible total edge weight.",
   inputs: [],
-  wasmFunction: async (controller, _) => {
-    // if (module) return module.min_spanning_tree();
+  wasmFunction: async (igraphController, _) => {
+    return await igraphController.minimumSpanningTree();
   },
   output: (props) => <MinimalSpanningTree {...props} />,
 });

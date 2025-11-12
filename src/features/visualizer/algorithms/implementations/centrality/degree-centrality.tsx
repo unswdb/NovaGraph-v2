@@ -6,17 +6,15 @@ import {
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
-import type { CentralityOutputData } from "./types";
-
-type DegreeCentralityOutputData = CentralityOutputData;
+import type { DegreeCentralityOutputData } from "~/igraph/algorithms/Centrality/IgraphDegreeCentrality";
 
 export const degreeCentrality =
   createGraphAlgorithm<DegreeCentralityOutputData>({
     title: "Degree Centrality",
     description: "Measures the number of edges connected to a node.",
     inputs: [],
-    wasmFunction: async (controller, _) => {
-      //   if (module) return module.degree_centrality();
+    wasmFunction: async (igraphController, _) => {
+      return await igraphController.degreeCentrality();
     },
     output: (props) => <DegreeCentrality {...props} />,
   });

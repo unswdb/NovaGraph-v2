@@ -6,7 +6,7 @@ import {
   type BaseGraphAlgorithm,
   type BaseGraphAlgorithmResult,
 } from "../implementations";
-import type { GraphEdge, GraphNode } from "../../types";
+import type { GraphNode } from "../../types";
 import { useStore } from "../../hooks/use-store";
 import type VisualizerStore from "../../store";
 
@@ -49,7 +49,6 @@ const AlgorithmSidebarWrapper = observer(() => {
           controller={controller}
           open={isMobile ? openMobile : open}
           nodes={database?.graph.nodes ?? []}
-          edges={database?.graph.edges ?? []}
           setActiveAlgorithm={setActiveAlgorithm}
           setActiveResponse={setActiveResponse}
         />
@@ -63,14 +62,12 @@ function AlgorithmSidebarContent({
   controller,
   open,
   nodes,
-  edges,
   setActiveAlgorithm,
   setActiveResponse,
 }: {
   controller: VisualizerStore["controller"];
   open: boolean;
   nodes: GraphNode[];
-  edges: GraphEdge[];
   setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
   setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
 }) {
@@ -91,7 +88,6 @@ function AlgorithmSidebarContent({
           controller={controller}
           searchText={searchText}
           nodes={nodes}
-          edges={edges}
           setActiveAlgorithm={setActiveAlgorithm}
           setActiveResponse={setActiveResponse}
           isCollapsed={!open}
@@ -100,7 +96,6 @@ function AlgorithmSidebarContent({
         <UnfilteredAlgorithmList
           controller={controller}
           nodes={nodes}
-          edges={edges}
           setActiveAlgorithm={setActiveAlgorithm}
           setActiveResponse={setActiveResponse}
           isCollapsed={!open}

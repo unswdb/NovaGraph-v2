@@ -7,23 +7,19 @@ import { ChevronRight } from "lucide-react";
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
+import type { WCCOutputData } from "~/igraph/algorithms/Community/IgraphWeaklyConnectedComponents";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
 
-// Infered from src/wasm/algorithms
-type WCCOutputData = {
-  components: string[][]; // index = component id, value = node-name[]
-};
-
 export const wcc = createGraphAlgorithm<WCCOutputData>({
   title: "Weakly Connected (WCC)",
   description: "Finds the weakly connected components in a graph.",
   inputs: [],
-  wasmFunction: async (controller, _) => {
-    // if (module) return module.weakly_connected_components();
+  wasmFunction: async (igraphController, _) => {
+    return await igraphController.weaklyConnectedComponents();
   },
   output: (props) => <WCC {...props} />,
 });

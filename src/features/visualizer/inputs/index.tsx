@@ -16,6 +16,7 @@ export type InputComponentProps<I extends InputType> = {
   onChange: (result: InputChangeResult<ValueForInput<I> | undefined>) => void;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const INPUT_COMPONENTS: Record<InputType["type"], React.ComponentType<any>> = {
   text: TextInputComponent,
   number: NumberInputComponent,
@@ -79,6 +80,7 @@ export function createEmptyInputResult<I extends InputType>(
 }
 
 export function createEmptyInputResults(inputs: InputType[]) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return inputs.reduce<Record<string, InputChangeResult<any>>>((acc, input) => {
     acc[input.key] = createEmptyInputResult(input);
     return acc;

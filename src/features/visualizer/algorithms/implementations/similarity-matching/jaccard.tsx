@@ -3,17 +3,7 @@ import { Grid, type CellComponentProps } from "react-window";
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";
-
-// Infered from src/wasm/algorithms
-type JaccardSimilarityOutputData = {
-  nodes: string[]; // names of queried nodes, input order
-  similarityMatrix: number[][]; // 2 dp numbers
-  maxSimilarity: {
-    node1: string;
-    node2: string;
-    similarity: number; // also 2 dp
-  };
-};
+import type { JaccardSimilarityOutputData } from "~/igraph/algorithms/Misc/IgraphJaccardSimilarity";
 
 export const jaccardSimilarity =
   createGraphAlgorithm<JaccardSimilarityOutputData>({
@@ -40,8 +30,8 @@ export const jaccardSimilarity =
         },
       }),
     ],
-    wasmFunction: async (controller, [args]) => {
-      //   if (module) return module.jaccard_similarity(args);
+    wasmFunction: async (igraphController, [arg1]) => {
+      return await igraphController.jaccardSimilarity(arg1);
     },
     output: (props) => <Jaccard {...props} />,
   });
@@ -85,7 +75,7 @@ function Jaccard(props: GraphAlgorithmResult<JaccardSimilarityOutputData>) {
             columnCount={nodes.length + 1} // for left header col
             rowCount={nodes.length + 1} // for top header row
             rowHeight={32}
-            columnWidth={150}
+            columnWidth={200}
             cellProps={{ nodes, similarityMatrix }}
           />
         </div>
@@ -162,7 +152,9 @@ function JaccardSimilarityCellComponent({
         style={style}
         className="bg-neutral-low border border-border flex items-center justify-center text-xs font-semibold"
       >
-        <span>{nodes[columnIndex - 1]}</span>
+        <span title={nodes[columnIndex - 1]} className="truncate">
+          {nodes[columnIndex - 1]}
+        </span>
       </div>
     );
   }
@@ -175,7 +167,9 @@ function JaccardSimilarityCellComponent({
         style={style}
         className="bg-neutral-low border border-border flex items-center justify-center text-xs font-semibold"
       >
-        <span>{nodes[rowIndex - 1]}</span>
+        <span title={nodes[rowIndex - 1]} className="truncate">
+          {nodes[rowIndex - 1]}
+        </span>
       </div>
     );
   }
@@ -193,7 +187,10 @@ function JaccardSimilarityCellComponent({
       className="border border-border flex items-center justify-center text-xs"
       title={`${nodes[r]} ↔ ${nodes[c]} = ${v.toFixed(2)}`}
     >
-      <span className={isDiagonal ? "font-semibold text-primary" : ""}>
+      <span
+        title={v.toFixed(2)}
+        className={isDiagonal ? "font-semibold text-primary" : ""}
+      >
         {v.toFixed(2)}
       </span>
     </div>

@@ -27,7 +27,7 @@ export function createAlgorithmSelectInput(
     showLabel: true,
     disabled: false,
     ...input,
-  } as any;
+  };
 }
 
 export type {

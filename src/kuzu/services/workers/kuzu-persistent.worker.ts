@@ -6,8 +6,8 @@
 // @ts-ignore
 // Use sync version for filesystem operations
 import kuzu from "kuzu-wasm/sync";
-import { snapshotGraphState } from "../KuzuQueryExecutor";
-import { queryResultColorMapExtraction } from "../KuzuQueryResultExtractor";
+import { snapshotGraphState } from "../../helpers/KuzuQueryExecutor";
+import { queryResultColorMapExtraction } from "../../helpers/KuzuQueryResultExtractor";
 
 const DATABASES_DIR = 'kuzu_databases';
 const DB_FILE_NAME = 'database.kuzu';

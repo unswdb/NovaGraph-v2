@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { BaseInputType, PropsForInput } from "../inputs/types";
 
 import * as SCHEMA_RAW_INPUTS from "./implementations";

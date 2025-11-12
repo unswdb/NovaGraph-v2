@@ -6,25 +6,14 @@ import {
 
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
-// Infered from src/wasm/algorithms
-type GraphDiameterOutputData = {
-  source: string;
-  target: string;
-  weighted: boolean;
-  diameter: number;
-  path: {
-    from: string;
-    to: string;
-    weight?: number; // per-edge, only if weighted
-  }[];
-};
+import type { GraphDiameterOutputData } from "~/igraph/algorithms/Misc/IgraphDiameter";
 
 export const graphDiameter = createGraphAlgorithm<GraphDiameterOutputData>({
   title: "Graph Diameter",
   description: "Calculates the longest shortest path between any two nodes.",
   inputs: [],
-  wasmFunction: async (controller, _) => {
-    // if (module) return module.diameter();
+  wasmFunction: async (igraphController, _) => {
+    return await igraphController.graphDiameter();
   },
   output: (props) => <GraphDiameter {...props} />,
 });
