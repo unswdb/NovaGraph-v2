@@ -71,6 +71,15 @@ export default class VisualizerStore {
   activeAlgorithm: BaseGraphAlgorithm | null = null;
   activeResponse: VisualizationResponse | null = null; // Can be algorithm or query result
 
+  private viewStateByDatabase = new Map<
+    string,
+    {
+      code: string;
+      activeAlgorithm: BaseGraphAlgorithm | null;
+      activeResponse: VisualizationResponse | null;
+    }
+  >();
+
   // ACTIONS
   initialize = async () => {
     // Initialize Kuzu controller
@@ -117,6 +126,7 @@ export default class VisualizerStore {
       } else {
         this.database = null;
       }
+      this.restoreViewStateForDatabase(activeName);
     });
   };
 
@@ -149,6 +159,7 @@ export default class VisualizerStore {
     name: string,
     snapshot: GraphSnapshotInput
   ) => {
+    this.persistCurrentViewState();
     const graph = this.buildGraphFromSnapshot(snapshot);
     const option = this.makeDatabaseOption(name);
 
@@ -162,6 +173,7 @@ export default class VisualizerStore {
       ...this.databases.filter((db) => db.name !== name),
       option,
     ]);
+    this.restoreViewStateForDatabase(name);
   };
 
   addDatabase = (database: DatabaseOption) => {
@@ -190,6 +202,7 @@ export default class VisualizerStore {
   };
 
   switchDatabase = async (name: string) => {
+    this.persistCurrentViewState();
     const result = await this.controller.db.connectToDatabase(name);
 
     if (!result.success) {
@@ -217,6 +230,7 @@ export default class VisualizerStore {
         label: this.formatDatabaseLabel(name),
         graph,
       };
+      this.restoreViewStateForDatabase(name);
     });
 
     await this.refreshDatabases();
@@ -239,6 +253,7 @@ export default class VisualizerStore {
 
     if (result.success) {
       await this.refreshDatabases();
+      this.viewStateByDatabase.delete(name);
     }
 
     return result;
@@ -254,14 +269,17 @@ export default class VisualizerStore {
 
   setCode = (code: string) => {
     this.code = code;
+    this.persistCurrentViewState();
   };
 
-  setActiveAlgorithm = (activeAlgorithm: BaseGraphAlgorithm) => {
+  setActiveAlgorithm = (activeAlgorithm: BaseGraphAlgorithm | null) => {
     this.activeAlgorithm = activeAlgorithm;
+    this.persistCurrentViewState();
   };
 
-  setActiveResponse = (activeResponse: VisualizationResponse) => {
+  setActiveResponse = (activeResponse: VisualizationResponse | null) => {
     this.activeResponse = activeResponse;
+    this.persistCurrentViewState();
   };
 
   // UTILITIES FUNCTION
@@ -439,5 +457,28 @@ export default class VisualizerStore {
 
   private sortDatabaseOptions(options: DatabaseOption[]) {
     return [...options].sort((a, b) => a.label.localeCompare(b.label));
+  }
+
+  private persistCurrentViewState() {
+    if (!this.database) return;
+    this.viewStateByDatabase.set(this.database.name, {
+      code: this.code,
+      activeAlgorithm: this.activeAlgorithm,
+      activeResponse: this.activeResponse,
+    });
+  }
+
+  private restoreViewStateForDatabase(name: string | null) {
+    if (!name) {
+      this.code = "";
+      this.activeAlgorithm = null;
+      this.activeResponse = null;
+      return;
+    }
+
+    const state = this.viewStateByDatabase.get(name);
+    this.code = state?.code ?? "";
+    this.activeAlgorithm = state?.activeAlgorithm ?? null;
+    this.activeResponse = state?.activeResponse ?? null;
   }
 }

@@ -68,8 +68,8 @@ function AlgorithmSidebarContent({
   controller: VisualizerStore["controller"];
   open: boolean;
   nodes: GraphNode[];
-  setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
-  setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
+  setActiveAlgorithm: (a: BaseGraphAlgorithm | null) => void;
+  setActiveResponse: (a: BaseGraphAlgorithmResult | null) => void;
 }) {
   const [searchText, setSearchText] = useState("");
 
