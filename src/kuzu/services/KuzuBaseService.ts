@@ -207,13 +207,15 @@ export default class KuzuBaseService {
       | { name: string; type: NonPrimaryKeyType }
       | { name: string; type: PrimaryKeyType }
     )[],
-    relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE"
+    relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE",
+    isDirected: boolean = true
   ) {
     const query = createEdgeSchemaQuery(
       tableName,
       tablePairs,
       properties,
-      relationshipType
+      relationshipType,
+      isDirected
     );
     return throwOnFailedQuery(this.executeQuery(query));
   }
@@ -222,14 +224,15 @@ export default class KuzuBaseService {
     node1: GraphNode,
     node2: GraphNode,
     edgeTable: EdgeSchema,
-    attributes?: Record<string, InputChangeResult<any>>
+    attributes?: Record<string, InputChangeResult<any>>,
+    isDirected: boolean = true
   ) {
-    const query = createEdgeQuery(node1, node2, edgeTable, attributes);
+    const query = createEdgeQuery(node1, node2, edgeTable, attributes, isDirected);
     return throwOnFailedQuery(this.executeQuery(query));
   }
 
-  deleteEdge(node1: GraphNode, node2: GraphNode, edgeTableName: string) {
-    const query = deleteEdgeQuery(node1, node2, edgeTableName);
+  deleteEdge(node1: GraphNode, node2: GraphNode, edgeTableName: string, isDirected: boolean = true) {
+    const query = deleteEdgeQuery(node1, node2, edgeTableName, isDirected);
     return throwOnFailedQuery(this.executeQuery(query));
   }
 
@@ -237,9 +240,10 @@ export default class KuzuBaseService {
     node1: GraphNode,
     node2: GraphNode,
     edgeTableName: string,
-    values: Record<string, InputChangeResult<any>>
+    values: Record<string, InputChangeResult<any>>,
+    isDirected: boolean = true
   ) {
-    const query = updateEdgeQuery(node1, node2, edgeTableName, values);
+    const query = updateEdgeQuery(node1, node2, edgeTableName, values, isDirected);
     return throwOnFailedQuery(this.executeQuery(query));
   }
 

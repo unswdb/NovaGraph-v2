@@ -13,9 +13,20 @@ import type { InputChangeResult } from "~/features/visualizer/inputs";
  */
 class KuzuController {
   // Store current Kuzu type, i.e InMemorySync, Persistence Sync
-  private service: KuzuInMemorySync | null = null;
+  // TODO: decide on where to store directed data later
+  private _service: KuzuInMemorySync | null = null;
+  private _isDirected: boolean = true;
+
+  setDirection(isDirected: boolean) {
+    this._isDirected = isDirected;
+  }
+
+  getDirection() {
+    return this._isDirected;
+  }
+
   constructor() {
-    this.service = null;
+    this._service = null;
   }
 
   // -- General function for all types of Kuzu db --
@@ -31,38 +42,17 @@ class KuzuController {
    * @returns The initialized service.
    */
   async initialize(type: string, mode: string, options = {}) {
-    if (this.service) {
+    if (this._service) {
       await this.cleanup();
     }
 
     if (type === "inmemory" && mode === "sync") {
-      this.service = new KuzuInMemorySync();
-      await this.service.initialize();
+      this._service = new KuzuInMemorySync();
+      await this._service.initialize();
     } else {
       throw Error("Other version of Kuzu not implemented yet");
     }
-
-    // const serviceKey = `${type}_${mode}`;
-
-    // if (serviceKey === "inmemory_sync") {
-    //   this.service = new KuzuInMemorySync();
-    //   await this.service.initialize();
-    // }
-    // else if (serviceKey === "persistent_sync") {
-    //   this.service = new KuzuPersistentSync();
-    //   await this.service.initialize();
-    // }
-    // else if (serviceKey === "inmemory_async") {
-    //   throw new Error("In-memory async mode not yet implemented");
-    // }
-    // else if (serviceKey === "persistent_async") {
-    //   throw new Error("Persistent async mode not yet implemented");
-    // }
-    // else {
-    //   throw new Error("Invalid Kuzu type or mode");
-    // }
-
-    return this.service;
+    return this._service;
   }
 
   /**
@@ -72,75 +62,28 @@ class KuzuController {
    * @returns Query results.
    */
   executeQuery(query: string) {
-    if (!this.service) {
+    if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.executeQuery(query);
+    return this._service.executeQuery(query);
   }
 
   snapshotGraphState() {
-    if (!this.service) {
+    if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.snapshotGraphState();
+    return this._service.snapshotGraphState();
   }
-
-  // /**
-  //  * Execute a helper method
-  //  * @param {string} operation - The helper method to call
-  //  * @param {...any} args - Arguments to pass to the helper method
-  //  * @returns {Object} Operation results
-  //  */
-  // executeHelper(operation, ...args) {
-  //   if (!this.service) {
-  //     throw new Error("Kuzu service not initialized");
-  //   }
-  //   return this.service.executeHelper(operation, ...args);
-  // }
-
-  // /**
-  //  * Set up schema from statements
-  //  * @param {Array<string>} schemaStatements - Schema creation statements
-  //  * @returns {Object} Result of operation
-  //  */
-  // setupSchema(schemaStatements) {
-  //   if (!this.service) {
-  //     throw new Error("Kuzu service not initialized");
-  //   }
-  //   return this.service.setupSchema(schemaStatements);
-  // }
-
-  // /**
-  //  * Delete all data
-  //  * @returns {Object} Result of operation
-  //  */
-  // deleteAllData() {
-  //   if (!this.service) {
-  //     throw new Error("Kuzu service not initialized");
-  //   }
-  //   return this.service.deleteAllData();
-  // }
 
   /**
    * Clean up resources
    */
   async cleanup() {
-    if (this.service) {
-      await this.service.cleanup();
-      this.service = null;
+    if (this._service) {
+      await this._service.cleanup();
+      this._service = null;
     }
   }
-
-  // /**
-  //  * Get available helper functions
-  //  * @returns {Object} List of available helper methods
-  //  */
-  // getHelperFunctions() {
-  //   if (!this.service) {
-  //     throw new Error("Kuzu service not initialized");
-  //   }
-  //   return this.service.getHelperFunctions();
-  // }
 
   /**
    * Create a node or relationship schema in the database.
@@ -158,10 +101,10 @@ class KuzuController {
     properties: Record<string, CompositeType>,
     relInfo: { from: string; to: string } | null = null
   ) {
-    if (!this.service) {
+    if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.createSchema(
+    return this._service.createSchema(
       type,
       tableName,
       primaryKey,
@@ -181,10 +124,10 @@ class KuzuController {
     }[] = [],
     relInfo: { from: string; to: string } | null = null
   ) {
-    if (!this.service) {
+    if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.createNodeSchema(
+    return this._service.createNodeSchema(
       tableName,
       primaryKey,
       primaryKeyType,
@@ -200,10 +143,10 @@ class KuzuController {
       { value: any; success?: boolean; message?: string }
     >
   ) {
-    if (!this.service) {
+    if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.createNode(tableName, properties);
+    return this._service.createNode(tableName, properties);
   }
 
   createEdgeSchema(
@@ -213,16 +156,18 @@ class KuzuController {
       | { name: string; type: NonPrimaryKeyType }
       | { name: string; type: PrimaryKeyType }
     )[],
-    relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE"
+    relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE",
+    isDirected: boolean = true
   ) {
-    if (!this.service) {
+    if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.createEdgeSchema(
+    return this._service.createEdgeSchema(
       tableName,
       tablePairs,
       properties,
-      relationshipType
+      relationshipType,
+      isDirected
     );
   }
 
@@ -230,85 +175,60 @@ class KuzuController {
     node1: GraphNode,
     node2: GraphNode,
     edgeTable: EdgeSchema,
-    attributes?: Record<string, InputChangeResult<any>>
+    attributes?: Record<string, InputChangeResult<any>>,
+    isDirected: boolean = true
   ) {
-    if (!this.service) {
+    if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.createEdge(node1, node2, edgeTable, attributes);
+    return this._service.createEdge(node1, node2, edgeTable, attributes, isDirected);
   }
 
   updateNode(node: GraphNode, values: Record<string, InputChangeResult<any>>) {
-    if (!this.service) {
+    if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.updateNode(node, values);
+    return this._service.updateNode(node, values);
   }
 
-  async deleteEdge(node1: GraphNode, node2: GraphNode, edgeTableName: string) {
-    if (!this.service) {
+  async deleteEdge(node1: GraphNode, node2: GraphNode, edgeTableName: string, isDirected: boolean = true) {
+    if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.deleteEdge(node1, node2, edgeTableName);
+    return this._service.deleteEdge(node1, node2, edgeTableName, isDirected);
   }
-  // /**
-  //  * Builds a Cypher query to delete a node (and all its relationships) by primary key.
-  //  *
-  //  * @param tableName - Node label (table) to match.
-  //  * @param primaryKey - Property name used as primary key.
-  //  * @param primaryValue - Primary key value. Supported types:
-  //  *   INT, UINT, FLOAT, DOUBLE, DECIMAL, SERIAL,
-  //  *   STRING, UUID, DATE, TIMESTAMP, BLOB.
-  //  *   (Booleans/JSON not allowed as primary keys.)
-  //  *
-  //  * @returns Cypher `MATCH … DETACH DELETE` query string.
-  //  */
-  // deleteNode(tableName: string,
-  //   primaryKey: string,
-  //   primaryValue: any) {
-  //   if (!this.service) {
-  //     throw new Error("Kuzu service not initialized");
-  //   }
-  //   return this.service.deleteNode(tableName, primaryKey, primaryValue);
-  // }
-
-  // deleteNodeWithoutPrimary(tableName: string, primaryValue: any) {
-  //   if (!this.service) {
-  //     throw new Error("Kuzu service not initialized");
-  //   }
-  //   return this.service.deleteNodeWithoutPrimary(tableName, primaryValue)
-  // }
 
   updateEdge(
     node1: GraphNode,
     node2: GraphNode,
     edgeTableName: string,
-    values: Record<string, InputChangeResult<any>>
+    values: Record<string, InputChangeResult<any>>,
+    isDirected: boolean = true
   ) {
-    if (!this.service) {
+    if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.updateEdge(node1, node2, edgeTableName, values);
+    return this._service.updateEdge(node1, node2, edgeTableName, values, isDirected);
   }
   deleteNode(node: GraphNode) {
-    if (!this.service) {
+    if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.deleteNode(node);
+    return this._service.deleteNode(node);
   }
 
   getAllSchemaProperties() {
-    if (!this.service) {
+    if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.getAllSchemaProperties();
+    return this._service.getAllSchemaProperties();
   }
 
   getSingleSchemaProperties(tableName: string) {
-    if (!this.service) {
+    if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this.service.getSingleSchemaProperties(tableName);
+    return this._service.getSingleSchemaProperties(tableName);
   }
   // -- Exclusive for Kuzu Persistent --
 }

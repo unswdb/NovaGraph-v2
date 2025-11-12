@@ -1,5 +1,4 @@
 import kuzuController from "./kuzu/controllers/KuzuController";
-import createModule from "./graph";
 import type { CompositeType } from "./kuzu/types/KuzuDBTypes";
 import type { EdgeSchema, GraphNode } from "./features/visualizer/types";
 import type {
@@ -45,10 +44,13 @@ class MainController {
 
   // Database operations namespace
   db = {
-    getGraphDirection() {
-      // Todo: fix this later once implement graph direction
-      return true;
+    getGraphDirection() : boolean {
+      return kuzuController.getDirection();
     },
+
+    // setGraphDirection(isDirected: boolean) : void {
+    //   kuzuController.setDirection(isDirected);
+    // },
 
     async createNodeSchema(
       tableName: string,

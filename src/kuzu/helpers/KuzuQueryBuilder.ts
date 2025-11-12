@@ -8,7 +8,6 @@
 import type {
   CompositeType,
   ScalarType,
-  ValueWithType,
 } from "../types/KuzuDBTypes";
 
 import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
@@ -22,8 +21,13 @@ export function createEdgeQuery(
   node1: GraphNode,
   node2: GraphNode,
   edgeTable: EdgeSchema,
-  attributes?: Record<string, InputChangeResult<any>>
+  attributes?: Record<string, InputChangeResult<any>>,
+  isDirected: boolean = true
 ) {
+  // TODO: remove testing
+  isDirected = false;
+
+
   let attributesMappingString = "";
   if (attributes !== undefined) {
     let extractProp = "";
@@ -40,51 +44,97 @@ export function createEdgeQuery(
       attributesMappingString += "}";
     }
   }
-  const query = `
+  
+  // For directed graphs, create single edge u1 -> u2
+  const forwardQuery = `
   MATCH (u1:\`${node1.tableName}\` { \`${node1._primaryKey}\`: ${_formatQueryInput(node1._primaryKeyValue)} }),
         (u2:\`${node2.tableName}\` { \`${node2._primaryKey}\`: ${_formatQueryInput(node2._primaryKeyValue)} })
   CREATE (u1)-[:\`${edgeTable.tableName}\` ${attributesMappingString}]->(u2);
   `;
-  return query;
+  
+  // For undirected graphs, also create reverse edge u2 -> u1
+  if (!isDirected) {
+    const reverseQuery = `
+  MATCH (u1:\`${node1.tableName}\` { \`${node1._primaryKey}\`: ${_formatQueryInput(node1._primaryKeyValue)} }),
+        (u2:\`${node2.tableName}\` { \`${node2._primaryKey}\`: ${_formatQueryInput(node2._primaryKeyValue)} })
+  CREATE (u2)-[:\`${edgeTable.tableName}\` ${attributesMappingString}]->(u1);
+  `;
+    return forwardQuery + reverseQuery;
+  }
+  
+  return forwardQuery;
 }
 
 export function deleteEdgeQuery(
   node1: GraphNode,
   node2: GraphNode,
-  edgeTableName: string
+  edgeTableName: string,
+  isDirected: boolean = true
 ) {
-  const query = `
+  // TODO: remove testing
+  isDirected = false;
+
+  // For directed graphs, delete single edge u1 -> u2
+  const forwardQuery = `
   MATCH (u:${node1.tableName})-[f:${edgeTableName}]->(u1:${node2.tableName})
   WHERE u.\`${node1._primaryKey}\` = '${node1._primaryKeyValue}' 
   AND u1.\`${node2._primaryKey}\` = '${node2._primaryKeyValue}'
   DELETE f;
   `;
 
-  // console.log("query: " + query);
-  return query;
+  // For undirected graphs, also delete reverse edge u2 -> u1
+  if (!isDirected) {
+    const reverseQuery = `
+  MATCH (u:${node2.tableName})-[f:${edgeTableName}]->(u1:${node1.tableName})
+  WHERE u.\`${node2._primaryKey}\` = '${node2._primaryKeyValue}' 
+  AND u1.\`${node1._primaryKey}\` = '${node1._primaryKeyValue}'
+  DELETE f;
+  `;
+    return forwardQuery + reverseQuery;
+  }
+
+  return forwardQuery;
 }
 
 export function updateEdgeQuery(
   node1: GraphNode,
   node2: GraphNode,
   edgeTableName: string,
-  values: Record<string, InputChangeResult<any>>
+  values: Record<string, InputChangeResult<any>>,
+  isDirected: boolean = true
 ) {
+  // TODO: remove testing
+  isDirected = false;
+
+
   // console.log("updateEdgeQuery Here\n");
   let attriutesMappingString = "";
   for (const [key, val] of Object.entries(values)) {
     attriutesMappingString += `, f.\`${key}\` = ${_formatQueryInput(val.value)}`;
   }
 
-  let query = `
+  // For directed graphs, update single edge u1 -> u2
+  const forwardQuery = `
   MATCH (u0:${node1.tableName})-[f:${edgeTableName}]->(u1:${node2.tableName})
   WHERE u0.\`${node1._primaryKey}\` = ${_formatQueryInput(node1._primaryKeyValue)} 
   AND u1.\`${node2._primaryKey}\` = ${_formatQueryInput(node2._primaryKeyValue)}
   SET ${attriutesMappingString.slice(2)}
   RETURN f;
   `;
-  // console.log(query);
-  return query;
+  
+  // For undirected graphs, also update reverse edge u2 -> u1 to maintain consistency
+  if (!isDirected) {
+    const reverseQuery = `
+  MATCH (u0:${node2.tableName})-[f:${edgeTableName}]->(u1:${node1.tableName})
+  WHERE u0.\`${node2._primaryKey}\` = ${_formatQueryInput(node2._primaryKeyValue)} 
+  AND u1.\`${node1._primaryKey}\` = ${_formatQueryInput(node1._primaryKeyValue)}
+  SET ${attriutesMappingString.slice(2)}
+  RETURN f;
+  `;
+    return forwardQuery + reverseQuery;
+  }
+  
+  return forwardQuery;
 }
 
 export function createEdgeSchemaQuery(
@@ -94,14 +144,29 @@ export function createEdgeSchemaQuery(
     | { name: string; type: NonPrimaryKeyType }
     | { name: string; type: PrimaryKeyType }
   )[],
-  relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE"
+  relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE",
+  isDirected: boolean = true
 ) {
+  // TODO: remove testing
+  isDirected = false;
+
+  
   const q = (v: string | number) => `\`${String(v)}\``;
 
   // Build the FROM...TO parts
-  const pairParts = tablePairs.map(([fromTable, toTable]) => {
+  let pairParts = tablePairs.map(([fromTable, toTable]) => {
     return `FROM ${q(fromTable)} TO ${q(toTable)}`;
   });
+
+  // For undirected graphs, add reverse pairs (FROM B TO A) for cross-table edges
+  if (!isDirected) {
+    const reversePairs = tablePairs
+      .filter(([fromTable, toTable]) => fromTable !== toTable) // Only add reverse for cross-table edges
+      .map(([fromTable, toTable]) => {
+        return `FROM ${q(toTable)} TO ${q(fromTable)}`;
+      });
+    pairParts = [...pairParts, ...reversePairs];
+  }
 
   // Build property parts (if any)
   const propParts =
