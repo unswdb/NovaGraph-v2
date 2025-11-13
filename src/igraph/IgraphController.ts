@@ -193,6 +193,29 @@ export class IgraphController {
     return parseResult;
   }
 
+
+  private async _prepareGraphDataWithDirection(isDirected: boolean): Promise<KuzuToIgraphParseResult> {
+    this.checkInitialization();
+
+    const kuzuData = await this._getKuzuData();
+    const parseResult = parseKuzuToIgraphInput(
+      kuzuData.nodes,
+      kuzuData.edges,
+      isDirected
+    );
+
+    const igraphInput = parseResult.IgraphInput;
+    await this._wasmGraphModule.cleanupGraph();
+    await this._wasmGraphModule.create_graph_from_kuzu_to_igraph(
+      igraphInput.nodes,
+      igraphInput.src,
+      igraphInput.dst,
+      igraphInput.directed,
+      igraphInput.weight
+    );
+    return parseResult;
+  }
+
   // ==========================================
   // TRAVERSAL & CONNECTIVITY ALGORITHMS
   // ==========================================
@@ -211,6 +234,10 @@ export class IgraphController {
 
   async stronglyConnectedComponents(): Promise<SCCResult> {
     this.checkInitialization();
+    const directed = this._getDirection();
+    if (!directed) {
+      throw new Error("Strongly Connected Components require a directed graph");
+    }
     const graphData = await this._prepareGraphData();
     return await igraphStronglyConnectedComponents(
       this._wasmGraphModule,
@@ -243,6 +270,10 @@ export class IgraphController {
 
   async topologicalSort(): Promise<TopologicalSortResult> {
     this.checkInitialization();
+    const directed = this._getDirection();
+    if (!directed) {
+      throw new Error("Topological sort requires a directed graph");
+    }
     const graphData = await this._prepareGraphData();
     return await igraphTopologicalSort(this._wasmGraphModule, graphData);
   }
@@ -315,7 +346,16 @@ export class IgraphController {
 
   async minimumSpanningTree(): Promise<MSTResult> {
     this.checkInitialization();
-    const graphData = await this._prepareGraphData();
+    const isDirected = this._getDirection();
+    
+    let graphData;
+    if (isDirected) {
+      console.warn("Converting directed graph to undirected for Minimum Spanning Tree algorithm");
+      graphData = await this._prepareGraphDataWithDirection(false);
+    } else {
+      graphData = await this._prepareGraphData();
+    }
+    
     return await igraphMST(this._wasmGraphModule, graphData);
   }
 
@@ -379,6 +419,10 @@ export class IgraphController {
 
   async pageRank(damping: number): Promise<PageRankResult> {
     this.checkInitialization();
+    const directed = this._getDirection();
+    if (!directed) {
+      throw new Error("PageRank requires a directed graph");
+    }
     const graphData = await this._prepareGraphData();
     return await igraphPageRank(this._wasmGraphModule, graphData, damping);
   }
@@ -389,31 +433,76 @@ export class IgraphController {
 
   async louvainCommunities(resolution: number): Promise<LouvainResult> {
     this.checkInitialization();
-    const graphData = await this._prepareGraphData();
+    const isDirected = this._getDirection();
+    
+    let graphData;
+    if (isDirected) {
+      console.warn("Converting directed graph to undirected for Louvain community detection");
+      graphData = await this._prepareGraphDataWithDirection(false);
+    } else {
+      graphData = await this._prepareGraphData();
+    }
+    
     return await igraphLouvain(this._wasmGraphModule, graphData, resolution);
   }
 
   async leidenCommunities(resolution: number): Promise<LeidenResult> {
     this.checkInitialization();
-    const graphData = await this._prepareGraphData();
+    const isDirected = this._getDirection();
+    
+    let graphData;
+    if (isDirected) {
+      console.warn("Converting directed graph to undirected for Leiden community detection");
+      graphData = await this._prepareGraphDataWithDirection(false);
+    } else {
+      graphData = await this._prepareGraphData();
+    }
+    
     return await igraphLeiden(this._wasmGraphModule, graphData, resolution);
   }
 
   async fastGreedyCommunities(): Promise<FastGreedyResult> {
     this.checkInitialization();
-    const graphData = await this._prepareGraphData();
+    const isDirected = this._getDirection();
+    
+    let graphData;
+    if (isDirected) {
+      console.warn("Converting directed graph to undirected for Fast Greedy community detection");
+      graphData = await this._prepareGraphDataWithDirection(false);
+    } else {
+      graphData = await this._prepareGraphData();
+    }
+    
     return await igraphFastGreedy(this._wasmGraphModule, graphData);
   }
 
   async labelPropagation(): Promise<LabelPropagationResult> {
     this.checkInitialization();
-    const graphData = await this._prepareGraphData();
+    const isDirected = this._getDirection();
+    
+    let graphData;
+    if (isDirected) {
+      console.warn("Converting directed graph to undirected for Label Propagation");
+      graphData = await this._prepareGraphDataWithDirection(false);
+    } else {
+      graphData = await this._prepareGraphData();
+    }
+    
     return await igraphLabelPropagation(this._wasmGraphModule, graphData);
   }
 
   async localClusteringCoefficient(): Promise<LocalClusteringCoefficientResult> {
     this.checkInitialization();
-    const graphData = await this._prepareGraphData();
+    const isDirected = this._getDirection();
+    
+    let graphData;
+    if (isDirected) {
+      console.warn("Converting directed graph to undirected for Local Clustering Coefficient");
+      graphData = await this._prepareGraphDataWithDirection(false);
+    } else {
+      graphData = await this._prepareGraphData();
+    }
+    
     return await igraphLocalClusteringCoefficient(
       this._wasmGraphModule,
       graphData
@@ -422,13 +511,31 @@ export class IgraphController {
 
   async kCore(k: number): Promise<KCoreResult> {
     this.checkInitialization();
-    const graphData = await this._prepareGraphData();
+    const isDirected = this._getDirection();
+    
+    let graphData;
+    if (isDirected) {
+      console.warn("Converting directed graph to undirected for K-Core decomposition");
+      graphData = await this._prepareGraphDataWithDirection(false);
+    } else {
+      graphData = await this._prepareGraphData();
+    }
+    
     return await igraphKCore(this._wasmGraphModule, graphData, k);
   }
 
   async triangles(): Promise<TriangleCountResult> {
     this.checkInitialization();
-    const graphData = await this._prepareGraphData();
+    const isDirected = this._getDirection();
+    
+    let graphData;
+    if (isDirected) {
+      console.warn("Converting directed graph to undirected for Triangle counting");
+      graphData = await this._prepareGraphDataWithDirection(false);
+    } else {
+      graphData = await this._prepareGraphData();
+    }
+    
     return await igraphTriangles(this._wasmGraphModule, graphData);
   }
 
@@ -451,7 +558,16 @@ export class IgraphController {
     numBins: number
   ): Promise<MissingEdgePredictionResult> {
     this.checkInitialization();
-    const graphData = await this._prepareGraphData();
+    const isDirected = this._getDirection();
+    
+    let graphData;
+    if (isDirected) {
+      console.warn("Converting directed graph to undirected for Missing Edge Prediction");
+      graphData = await this._prepareGraphDataWithDirection(false);
+    } else {
+      graphData = await this._prepareGraphData();
+    }
+    
     return await igraphMissingEdgePrediction(
       this._wasmGraphModule,
       graphData,
