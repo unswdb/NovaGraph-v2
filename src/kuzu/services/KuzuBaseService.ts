@@ -258,15 +258,15 @@ export default abstract class KuzuBaseService {
       | { name: string; type: NonPrimaryKeyType }
       | { name: string; type: PrimaryKeyType }
     )[],
+    isDirected: boolean,
     relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE",
-    isDirected: boolean = true
   ) {
     const query = createEdgeSchemaQuery(
       tableName,
       tablePairs,
       properties,
+      isDirected,
       relationshipType,
-      isDirected
     );
     return throwOnFailedQuery(this.executeQuery(query));
   }
@@ -282,7 +282,7 @@ export default abstract class KuzuBaseService {
     return throwOnFailedQuery(this.executeQuery(query));
   }
 
-  deleteEdge(node1: GraphNode, node2: GraphNode, edgeTableName: string, isDirected: boolean = true) {
+  deleteEdge(node1: GraphNode, node2: GraphNode, edgeTableName: string, isDirected: boolean) {
     const query = deleteEdgeQuery(node1, node2, edgeTableName, isDirected);
     return throwOnFailedQuery(this.executeQuery(query));
   }

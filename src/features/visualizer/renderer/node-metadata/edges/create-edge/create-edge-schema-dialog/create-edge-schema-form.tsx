@@ -33,10 +33,12 @@ const CreateEdgeSchemaForm = observer(
   ({
     source,
     target,
+  directed,
     onSubmit,
   }: {
     source: GraphNode;
     target: GraphNode;
+  directed: boolean;
     onSubmit: () => void;
   }) => {
     const { controller, database, setGraphState } = useStore();
@@ -139,6 +141,7 @@ const CreateEdgeSchemaForm = observer(
         await createEdgeSchema(
           tableName.value,
           [[source.tableName, target.tableName]],
+        directed,
           fields
         );
       }

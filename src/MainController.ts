@@ -140,7 +140,8 @@ class MainController {
           tableName,
           tablePairs,
           properties,
-          relationshipType
+          this.getGraphDirection(),
+          relationshipType,
         )
       );
     },
@@ -152,17 +153,18 @@ class MainController {
       attributes?: Record<string, InputChangeResult<any>>
     ) {
       return Promise.resolve(
-        kuzuController.createEdge(node1, node2, edgeTable, attributes)
+        kuzuController.createEdge(node1, node2,  edgeTable, this.getGraphDirection(), attributes)
       );
     },
 
     async deleteEdge(
       node1: GraphNode,
       node2: GraphNode,
+      isDirected: boolean,
       edgeTableName: string
     ) {
       return Promise.resolve(
-        kuzuController.deleteEdge(node1, node2, edgeTableName)
+        kuzuController.deleteEdge(node1, node2, edgeTableName, isDirected)
       );
     },
 

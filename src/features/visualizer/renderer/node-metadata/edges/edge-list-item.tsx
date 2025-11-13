@@ -92,8 +92,8 @@ const EdgeListItem = observer(
       }
     );
 
-    const handleDeleteEdge = async (node1: GraphNode, node2: GraphNode) => {
-      await deleteEdge(node1, node2, edgeSchema.tableName);
+    const handleDeleteEdge = async (node1: GraphNode, node2: GraphNode, directed: boolean) => {
+      await deleteEdge(node1, node2, directed, edgeSchema.tableName);
     };
 
     const { run: updateEdge } = useAsyncFn(
@@ -195,7 +195,7 @@ const EdgeListItem = observer(
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
-                onClick={() => handleDeleteEdge(source, target)}
+                onClick={() => handleDeleteEdge(source, target, directed)}
               >
                 Continue
               </AlertDialogAction>

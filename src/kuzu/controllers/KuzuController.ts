@@ -273,8 +273,8 @@ class KuzuController {
       | { name: string; type: NonPrimaryKeyType }
       | { name: string; type: PrimaryKeyType }
     )[],
+    isDirected: boolean,
     relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE",
-    isDirected: boolean = true
   ) {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
@@ -292,8 +292,8 @@ class KuzuController {
     node1: GraphNode,
     node2: GraphNode,
     edgeTable: EdgeSchema,
+    isDirected: boolean,
     attributes?: Record<string, InputChangeResult<any>>,
-    isDirected: boolean = true
   ) {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");

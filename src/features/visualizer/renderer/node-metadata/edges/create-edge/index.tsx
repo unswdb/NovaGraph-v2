@@ -161,7 +161,8 @@ const CreateEdge = observer(
           </div>
           {status.edgeSelected &&
             !!target &&
-            (!isNonEmpty(sourceTargetSchemas) ? (
+            // Todo: filter edge table of the current node
+          (!isNonEmpty(sourceTargetSchemas) ? (
               <CreateEdgeSchemaDialog
                 source={source}
                 target={target}
@@ -175,7 +176,8 @@ const CreateEdge = observer(
                 source={source}
                 target={target}
                 schemas={sourceTargetSchemas}
-                open={dialogStatus.createEdge}
+                directed={directed}
+              open={dialogStatus.createEdge}
                 setOpen={setCreateEdgeOpen}
                 onClose={onClose}
               />

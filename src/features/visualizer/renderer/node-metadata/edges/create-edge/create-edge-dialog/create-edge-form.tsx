@@ -17,12 +17,14 @@ const CreateEdgeDialogForm = observer(
   ({
     source,
     target,
-    selectedEdgeSchema,
+    directed,
+  selectedEdgeSchema,
     onClose,
   }: {
     source: GraphNode;
     target: GraphNode;
-    selectedEdgeSchema: string;
+    directed: boolean;
+  selectedEdgeSchema: string;
     onClose: () => void;
   }) => {
     const { database, controller, setGraphState } = useStore();
@@ -85,7 +87,7 @@ const CreateEdgeDialogForm = observer(
       if (edgeSchema === undefined) {
         throw Error(`Edge schema '${selectedEdgeSchema}' not found`);
       }
-      await createEdge(source, target, edgeSchema, values);
+      await createEdge(source, target, directed, edgeSchema, values);
     };
 
     return (

@@ -16,6 +16,7 @@ export default function CreateEdgeDialog({
   source,
   target,
   schemas,
+  directed,
   open,
   setOpen,
   onClose,
@@ -23,6 +24,7 @@ export default function CreateEdgeDialog({
   source: GraphNode;
   target: GraphNode;
   schemas: NonEmpty<EdgeSchema>;
+  directed: boolean;
   open: boolean;
   setOpen: (b: boolean) => void;
   onClose: () => void;
@@ -62,6 +64,7 @@ export default function CreateEdgeDialog({
             key={selectedEdgeSchema.value}
             source={source}
             target={target}
+            directed={directed}
             selectedEdgeSchema={selectedEdgeSchema.value}
             onClose={onClose}
           />

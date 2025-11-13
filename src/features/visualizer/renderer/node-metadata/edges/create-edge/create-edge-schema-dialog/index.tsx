@@ -43,6 +43,7 @@ export default function CreateEdgeSchemaDialog({
         <CreateEdgeSchemaForm
           source={source}
           target={target}
+          directed={directed}
           onSubmit={onSubmit}
         />
       </DialogContent>

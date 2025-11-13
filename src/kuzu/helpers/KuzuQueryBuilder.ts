@@ -69,7 +69,7 @@ export function deleteEdgeQuery(
   node1: GraphNode,
   node2: GraphNode,
   edgeTableName: string,
-  isDirected: boolean = true
+  isDirected: boolean
 ) {
   // TODO: remove testing
   isDirected = false;
@@ -101,7 +101,7 @@ export function updateEdgeQuery(
   node2: GraphNode,
   edgeTableName: string,
   values: Record<string, InputChangeResult<any>>,
-  isDirected: boolean = true
+  isDirected: boolean
 ) {
   // TODO: remove testing
   isDirected = false;
@@ -144,8 +144,8 @@ export function createEdgeSchemaQuery(
     | { name: string; type: NonPrimaryKeyType }
     | { name: string; type: PrimaryKeyType }
   )[],
+  isDirected: boolean,
   relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE",
-  isDirected: boolean = true
 ) {
   // TODO: remove testing
   isDirected = false;
@@ -178,6 +178,7 @@ export function createEdgeSchemaQuery(
   const tailParts = relationshipType ? [relationshipType] : [];
   const inner = [...pairParts, ...propParts, ...tailParts].join(", ");
   const query = `CREATE REL TABLE ${q(tableName)} (${inner});`;
+  console.log("createEdgeSchemaQuery: " + query)
   return query;
 }
 
