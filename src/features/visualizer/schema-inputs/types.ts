@@ -17,7 +17,7 @@ export interface SchemaInput<
   readonly contexts: C;
 
   /** Function that builds the input */
-  readonly build: (args: PropsForInput<I>) => I;
+  readonly build: (args: PropsForInput<I>, context: FieldContextKind) => I;
 }
 
 export function defineSchemaInput<

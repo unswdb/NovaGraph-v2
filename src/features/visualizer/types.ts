@@ -24,6 +24,7 @@ export type GraphEdge = {
   source: string; // Unique identifier of the node
   target: string; // Unique identifier of the node
   tableName: string; // The table the egde belongs to
+  // Edge attributes only allow non primary key value type
   attributes?: Record<string, NonPrimaryKeyValueType>; // Additional attributes for the edge
 };
 

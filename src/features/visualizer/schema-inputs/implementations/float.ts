@@ -3,15 +3,16 @@ import {
   type NumberInput,
   type PropsForInput,
 } from "../../inputs";
-import { defineSchemaInput } from "../types";
+import { defineSchemaInput, type FieldContextKind } from "../types";
 
 export const FloatSchemaInput = defineSchemaInput({
   type: "FLOAT" as const,
   displayName: "FLOAT",
   contexts: ["primary", "non-primary"],
-  build: (args: PropsForInput<NumberInput>) => {
+  build: (args: PropsForInput<NumberInput>, context: FieldContextKind) => {
     return createNumberInput({
       ...args,
+      nullable: context === "non-primary",
       min: -3.4028235e38,
       max: 3.4028235e38,
       validator: (n) => {

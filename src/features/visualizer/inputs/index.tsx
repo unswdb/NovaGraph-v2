@@ -9,6 +9,7 @@ import { DateInputComponent } from "./date";
 import { UUIDInputComponent } from "./uuid";
 
 import { Label } from "~/components/form/label";
+import { Button } from "~/components/ui/button";
 
 export type InputComponentProps<I extends InputType> = {
   input: I;
@@ -44,12 +45,24 @@ export default function InputComponent<T extends InputType>({
       {!!input.showLabel && (
         <Label htmlFor={input.id}>{input.displayName}</Label>
       )}
-      <InputComponent
-        id={input.id}
-        input={input}
-        value={value}
-        onChange={onChange}
-      />
+      <div className="flex items-center gap-2">
+        <div className="flex-1">
+          <InputComponent
+            id={input.id}
+            input={input}
+            value={value}
+            onChange={onChange}
+          />
+        </div>
+        {!!input.nullable && (
+          <Button
+            variant="outline"
+            onClick={() => onChange({ value: undefined, success: true })}
+          >
+            Set NULL
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

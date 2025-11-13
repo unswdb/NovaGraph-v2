@@ -63,4 +63,5 @@ export interface BaseInputType<T> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ...props: any[]
   ) => InputResultType | Promise<InputResultType>;
+  nullable?: boolean;
 }

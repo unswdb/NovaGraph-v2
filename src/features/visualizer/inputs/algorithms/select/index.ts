@@ -26,6 +26,7 @@ export function createAlgorithmSelectInput(
     required: true,
     showLabel: true,
     disabled: false,
+    nullable: false,
     ...input,
   };
 }

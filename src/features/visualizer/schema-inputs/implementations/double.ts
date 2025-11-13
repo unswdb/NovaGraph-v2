@@ -3,15 +3,16 @@ import {
   type NumberInput,
   type PropsForInput,
 } from "../../inputs";
-import { defineSchemaInput } from "../types";
+import { defineSchemaInput, type FieldContextKind } from "../types";
 
 export const DoubleSchemaInput = defineSchemaInput({
   type: "DOUBLE" as const,
   displayName: "DOUBLE",
   contexts: ["primary", "non-primary"],
-  build: (args: PropsForInput<NumberInput>) => {
+  build: (args: PropsForInput<NumberInput>, context: FieldContextKind) => {
     return createNumberInput({
       ...args,
+      nullable: context === "non-primary",
       min: -Number.MAX_VALUE,
       max: Number.MAX_VALUE,
       validator: (n) => {

@@ -45,6 +45,7 @@ const CreateNodeDialogForm = observer(
           }
           return { success: true };
         },
+        context: "primary",
       });
 
       const nonPrimaryKeyInputs = Object.entries(properties).map(
@@ -55,6 +56,7 @@ const CreateNodeDialogForm = observer(
             displayName: capitalize(key),
             placeholder: `Enter ${key}...`,
             required: false,
+            context: "non-primary",
           })
       );
 

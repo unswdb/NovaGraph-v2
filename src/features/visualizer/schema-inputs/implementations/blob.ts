@@ -3,15 +3,16 @@ import {
   type FileInput,
   type PropsForInput,
 } from "../../inputs";
-import { defineSchemaInput } from "../types";
+import { defineSchemaInput, type FieldContextKind } from "../types";
 
 export const BlobSchemaInput = defineSchemaInput({
   type: "BLOB" as const,
   displayName: "BLOB",
   contexts: ["non-primary"] as const,
-  build: (args: PropsForInput<FileInput>) => {
+  build: (args: PropsForInput<FileInput>, context: FieldContextKind) => {
     return createFileInput({
       ...args,
+      nullable: context === "non-primary",
       validator: (value: File) => {
         const maxLimit = 4 * 1024; // 4 Kb
         if (value.size > maxLimit) {

@@ -3,15 +3,16 @@ import {
   type NumberInput,
   type PropsForInput,
 } from "../../inputs";
-import { defineSchemaInput } from "../types";
+import { defineSchemaInput, type FieldContextKind } from "../types";
 
 export const Int32SchemaInput = defineSchemaInput({
   type: "INT32" as const,
   displayName: "INT32",
   contexts: ["primary", "non-primary"],
-  build: (args: PropsForInput<NumberInput>) => {
+  build: (args: PropsForInput<NumberInput>, context: FieldContextKind) => {
     return createNumberInput({
       ...args,
+      nullable: context === "non-primary",
       min: -2147483648,
       max: 2147483647,
       step: 1,

@@ -42,6 +42,7 @@ const CreateEdgeDialogForm = observer(
           displayName: capitalize(key),
           placeholder: `Enter ${key}...`,
           required: false,
+          context: "non-primary",
         })
       );
 

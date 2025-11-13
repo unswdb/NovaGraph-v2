@@ -68,12 +68,15 @@ type InputTypeForSchemaKeyType<T extends SchemaKeyType> =
 
 type PropsForSchemaKeyType<T extends SchemaKeyType> = PropsForInput<
   InputTypeForSchemaKeyType<T>
->;
+> & { context: FieldContextKind };
 
 export function createSchemaInput<T extends SchemaKeyType>(
   schemaType: T,
   props: PropsForSchemaKeyType<T>
 ): InputTypeForSchemaKeyType<T> {
+  // eslint-disable-next-line no-explicit-any
+  const { context, ...restProps } = props as any;
+
   const schemaInput = SCHEMA_INPUT_MAP[schemaType];
-  return schemaInput.build(props as any) as InputTypeForSchemaKeyType<T>;
+  return schemaInput.build(restProps, context) as InputTypeForSchemaKeyType<T>;
 }

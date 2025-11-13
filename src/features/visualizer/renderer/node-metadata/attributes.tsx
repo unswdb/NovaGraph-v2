@@ -35,6 +35,7 @@ const AttributesForm = observer(
         displayName: capitalize(nodeSchema.primaryKey),
         defaultValue: node._primaryKeyValue,
         disabled: true,
+        context: "primary",
       }),
       ...Object.entries(nodeSchema.properties).map(([key, type]) =>
         createSchemaInput(type, {
@@ -43,6 +44,7 @@ const AttributesForm = observer(
           displayName: capitalize(key),
           defaultValue: (node.attributes ?? {})[key],
           required: false,
+          context: "non-primary",
         })
       ),
     ].flat();

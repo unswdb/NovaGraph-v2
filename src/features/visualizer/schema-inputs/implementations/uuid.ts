@@ -3,15 +3,16 @@ import {
   type PropsForInput,
   type UUIDInput,
 } from "../../inputs";
-import { defineSchemaInput } from "../types";
+import { defineSchemaInput, type FieldContextKind } from "../types";
 
 export const UUIDSchemaInput = defineSchemaInput({
   type: "UUID" as const,
   displayName: "UUID",
   contexts: ["primary"],
-  build: (args: PropsForInput<UUIDInput>) => {
+  build: (args: PropsForInput<UUIDInput>, context: FieldContextKind) => {
     return createUUIDInput({
       ...args,
+      nullable: context === "non-primary",
     });
   },
 });

@@ -65,6 +65,7 @@ const EdgeListItem = observer(
           placeholder: `Enter ${key}...`,
           defaultValue: edge.attributes?.[key] ?? undefined,
           required: false,
+          context: "non-primary",
         })
       ),
     ].flat();
