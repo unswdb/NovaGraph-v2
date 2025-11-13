@@ -141,8 +141,7 @@ const CreateEdgeSchemaForm = observer(
         await createEdgeSchema(
           tableName.value,
           [[source.tableName, target.tableName]],
-        directed,
-          fields
+          fields,
         );
       }
     };

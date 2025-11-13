@@ -283,8 +283,8 @@ class KuzuController {
       tableName,
       tablePairs,
       properties,
-      relationshipType,
-      isDirected
+      isDirected,
+      relationshipType
     );
   }
 
@@ -293,12 +293,12 @@ class KuzuController {
     node2: GraphNode,
     edgeTable: EdgeSchema,
     isDirected: boolean,
-    attributes?: Record<string, InputChangeResult<any>>,
+    attributes?: Record<string, InputChangeResult<any>>
   ) {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this._service.createEdge(node1, node2, edgeTable, attributes, isDirected);
+    return this._service.createEdge(node1, node2, edgeTable, isDirected, attributes);
   }
 
   updateNode(node: GraphNode, values: Record<string, InputChangeResult<any>>) {
@@ -308,7 +308,7 @@ class KuzuController {
     return this._service.updateNode(node, values);
   }
 
-  async deleteEdge(node1: GraphNode, node2: GraphNode, edgeTableName: string, isDirected: boolean = true) {
+  async deleteEdge(node1: GraphNode, node2: GraphNode, edgeTableName: string, isDirected: boolean) {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
@@ -320,7 +320,7 @@ class KuzuController {
     node2: GraphNode,
     edgeTableName: string,
     values: Record<string, InputChangeResult<any>>,
-    isDirected: boolean = true
+    isDirected: boolean
   ) {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");

@@ -221,19 +221,47 @@ export default abstract class KuzuBaseService {
     return throwOnFailedQuery(this.executeQuery(query));
   }
 
-  createNode(
+  async createNode(
     tableName: string,
     properties: Record<
       string,
       { value: any; success?: boolean; message?: string }
     >
   ) {
-    const query = createNodeQuery(tableName, properties);
+    // Convert File objects to Uint8Array for BLOB fields
+    const processedProperties: typeof properties = {};
+    for (const [key, obj] of Object.entries(properties)) {
+      if (obj.value instanceof File) {
+        const arrayBuffer = await obj.value.arrayBuffer();
+        processedProperties[key] = {
+          ...obj,
+          value: new Uint8Array(arrayBuffer),
+        };
+      } else {
+        processedProperties[key] = obj;
+      }
+    }
+    
+    const query = createNodeQuery(tableName, processedProperties);
     return throwOnFailedQuery(this.executeQuery(query));
   }
 
-  updateNode(node: GraphNode, values: Record<string, InputChangeResult<any>>) {
-    const query = updateNodeQuery(node, values);
+  async updateNode(node: GraphNode, values: Record<string, InputChangeResult<any>>) {
+    // Convert File objects to Uint8Array for BLOB fields
+    const processedValues: typeof values = {};
+    for (const [key, obj] of Object.entries(values)) {
+      if (obj.value instanceof File) {
+        const arrayBuffer = await obj.value.arrayBuffer();
+        processedValues[key] = {
+          ...obj,
+          value: new Uint8Array(arrayBuffer),
+        };
+      } else {
+        processedValues[key] = obj;
+      }
+    }
+    
+    const query = updateNodeQuery(node, processedValues);
     return throwOnFailedQuery(this.executeQuery(query));
   }
 
@@ -271,14 +299,31 @@ export default abstract class KuzuBaseService {
     return throwOnFailedQuery(this.executeQuery(query));
   }
 
-  createEdge(
+  async createEdge(
     node1: GraphNode,
     node2: GraphNode,
     edgeTable: EdgeSchema,
-    attributes?: Record<string, InputChangeResult<any>>,
-    isDirected: boolean = true
+    isDirected: boolean,
+    attributes?: Record<string, InputChangeResult<any>>
   ) {
-    const query = createEdgeQuery(node1, node2, edgeTable, attributes, isDirected);
+    // Convert File objects to Uint8Array for BLOB fields in attributes
+    let processedAttributes = attributes;
+    if (attributes) {
+      processedAttributes = {};
+      for (const [key, obj] of Object.entries(attributes)) {
+        if (obj.value instanceof File) {
+          const arrayBuffer = await obj.value.arrayBuffer();
+          processedAttributes[key] = {
+            ...obj,
+            value: new Uint8Array(arrayBuffer),
+          };
+        } else {
+          processedAttributes[key] = obj;
+        }
+      }
+    }
+    
+    const query = createEdgeQuery(node1, node2, edgeTable, isDirected, processedAttributes);
     return throwOnFailedQuery(this.executeQuery(query));
   }
 
@@ -287,14 +332,28 @@ export default abstract class KuzuBaseService {
     return throwOnFailedQuery(this.executeQuery(query));
   }
 
-  updateEdge(
+  async updateEdge(
     node1: GraphNode,
     node2: GraphNode,
     edgeTableName: string,
     values: Record<string, InputChangeResult<any>>,
-    isDirected: boolean = true
+    isDirected: boolean
   ) {
-    const query = updateEdgeQuery(node1, node2, edgeTableName, values, isDirected);
+    // Convert File objects to Uint8Array for BLOB fields
+    const processedValues: typeof values = {};
+    for (const [key, obj] of Object.entries(values)) {
+      if (obj.value instanceof File) {
+        const arrayBuffer = await obj.value.arrayBuffer();
+        processedValues[key] = {
+          ...obj,
+          value: new Uint8Array(arrayBuffer),
+        };
+      } else {
+        processedValues[key] = obj;
+      }
+    }
+    
+    const query = updateEdgeQuery(node1, node2, edgeTableName, processedValues, isDirected);
     return throwOnFailedQuery(this.executeQuery(query));
   }
 

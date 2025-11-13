@@ -153,7 +153,7 @@ class MainController {
       attributes?: Record<string, InputChangeResult<any>>
     ) {
       return Promise.resolve(
-        kuzuController.createEdge(node1, node2,  edgeTable, this.getGraphDirection(), attributes)
+        kuzuController.createEdge(node1, node2, edgeTable, this.getGraphDirection(), attributes)
       );
     },
 
@@ -175,7 +175,7 @@ class MainController {
       values: Record<string, InputChangeResult<any>>
     ) {
       return Promise.resolve(
-        kuzuController.updateEdge(node1, node2, edgeTableName, values)
+        kuzuController.updateEdge(node1, node2, edgeTableName, values, this.getGraphDirection())
       );
     },
 

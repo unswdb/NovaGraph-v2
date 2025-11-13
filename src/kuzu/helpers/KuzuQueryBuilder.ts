@@ -21,13 +21,9 @@ export function createEdgeQuery(
   node1: GraphNode,
   node2: GraphNode,
   edgeTable: EdgeSchema,
-  attributes?: Record<string, InputChangeResult<any>>,
-  isDirected: boolean = true
+  isDirected: boolean,
+  attributes?: Record<string, InputChangeResult<any>>
 ) {
-  // TODO: remove testing
-  isDirected = false;
-
-
   let attributesMappingString = "";
   if (attributes !== undefined) {
     let extractProp = "";
@@ -71,9 +67,6 @@ export function deleteEdgeQuery(
   edgeTableName: string,
   isDirected: boolean
 ) {
-  // TODO: remove testing
-  isDirected = false;
-
   // For directed graphs, delete single edge u1 -> u2
   const forwardQuery = `
   MATCH (u:\`${node1.tableName}\`)-[f:\`${edgeTableName}\`]->(u1:\`${node2.tableName}\`)
@@ -103,10 +96,6 @@ export function updateEdgeQuery(
   values: Record<string, InputChangeResult<any>>,
   isDirected: boolean
 ) {
-  // TODO: remove testing
-  isDirected = false;
-
-
   // console.log("updateEdgeQuery Here\n");
   let attriutesMappingString = "";
   for (const [key, val] of Object.entries(values)) {
@@ -147,10 +136,6 @@ export function createEdgeSchemaQuery(
   isDirected: boolean,
   relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE",
 ) {
-  // TODO: remove testing
-  isDirected = false;
-
-  
   const q = (v: string | number) => `\`${String(v)}\``;
 
   // Build the FROM...TO parts
@@ -178,7 +163,7 @@ export function createEdgeSchemaQuery(
   const tailParts = relationshipType ? [relationshipType] : [];
   const inner = [...pairParts, ...propParts, ...tailParts].join(", ");
   const query = `CREATE REL TABLE ${q(tableName)} (${inner});`;
-  console.log("createEdgeSchemaQuery: " + query)
+  
   return query;
 }
 
@@ -300,22 +285,24 @@ export function createSchemaQuery(
     }
   };
 
+  const qid = (s: string) => `\`${String(s).replace(/`/g, "``")}\``;
+  
   const cols = Object.entries(properties).map(
-    ([name, spec]) => `${name} ${typeToDDL(spec)}`
+    ([name, spec]) => `${qid(name)} ${typeToDDL(spec)}`
   );
 
   if (kind === "node") {
-    const pkClause = primaryKey ? `, PRIMARY KEY (${primaryKey})` : "";
-    return `CREATE NODE TABLE ${label} (${cols.join(", ")}${pkClause});`;
+    const pkClause = primaryKey ? `, PRIMARY KEY (${qid(primaryKey)})` : "";
+    return `CREATE NODE TABLE ${qid(label)} (${cols.join(", ")}${pkClause});`;
   } else {
     if (!relInfo) {
       throw new Error(`Relationship "${label}" requires relInfo { from, to }`);
     }
     return cols.length
-      ? `CREATE REL TABLE ${label} (FROM ${relInfo.from} TO ${
+      ? `CREATE REL TABLE ${qid(label)} (FROM ${qid(relInfo.from)} TO ${qid(
           relInfo.to
-        }, ${cols.join(", ")});`
-      : `CREATE REL TABLE ${label} (FROM ${relInfo.from} TO ${relInfo.to});`;
+        )}, ${cols.join(", ")});`
+      : `CREATE REL TABLE ${qid(label)} (FROM ${qid(relInfo.from)} TO ${qid(relInfo.to)});`;
   }
 }
 
@@ -510,10 +497,7 @@ function _serializeScalar(type: ScalarType, value: any): string {
       return `interval("${_esc(String(value))}")`;
 
     case "BLOB":
-      // Todo: implement
-      throw new Error(
-        "BLOB serialization not implemented yet. Consider base64 + blob() wrapper."
-      );
+      return _formatBlob(value);
 
     case "JSON":
       // Todo: implement
@@ -609,7 +593,7 @@ function _normalizeTimestamp(value: string): string {
   // If it has only hours and minutes, add seconds
   if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(v)) return v + ":00";
 
-  // If it includes timezone info, don’t modify the time part
+  // If it includes timezone info, don't modify the time part
   if (/[\+\-]\d{2}:?\d{2}$/.test(v)) return v;
 
   // If input is invalid, return as-is or throw
@@ -618,9 +602,49 @@ function _normalizeTimestamp(value: string): string {
   );
 }
 
+/**
+ * Converts JavaScript File object or Uint8Array to Kùzu BLOB format.
+ * 
+ * BLOB (Binary Large Object) supports up to 4KB of arbitrary binary data.
+ * Converts binary data into Kùzu's hex format: BLOB('\\xHH\\xHH...')
+ * 
+ * Note: This function is synchronous. For File objects, you must convert them
+ * to Uint8Array first using: new Uint8Array(await file.arrayBuffer())
+ * 
+ * @param value - Uint8Array containing binary data
+ * @returns BLOB literal in format: BLOB('\\xHH\\xHH...')
+ * 
+ * @throws Error if BLOB size exceeds 4KB (4096 bytes)
+ * 
+ * @example
+ * // From Uint8Array
+ * _formatBlob(new Uint8Array([188, 189, 186, 170])); 
+ * // Returns: BLOB('\\xBC\\xBD\\xBA\\xAA')
+ */
+function _formatBlob(value: Uint8Array): string {
+  const bytes = value;
+  
+  // Check 4KB limit (4096 bytes)
+  if (bytes.length > 4096) {
+    throw new Error(`BLOB size exceeds 4KB limit: ${bytes.length} bytes`);
+  }
+  
+  // Convert bytes to \\xHH\\xHH format
+  let hexString = '';
+  for (let i = 0; i < bytes.length; i++) {
+    hexString += '\\\\x' + bytes[i].toString(16).padStart(2, '0').toUpperCase();
+  }
+  
+  return `BLOB('${hexString}')`;
+}
+
 function _formatQueryInput(value: any) {
   const inferredType = typeof value;
-  if (
+  
+  // Handle BLOB type (Uint8Array from File.arrayBuffer())
+  if (value instanceof Uint8Array) {
+    return _formatBlob(value);
+  } else if (
     value instanceof Date ||
     (inferredType === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value))
   ) {
