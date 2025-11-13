@@ -117,8 +117,6 @@ const validateEdgesJSON = async (file: File | undefined) => {
   }
 };
 
-type JSONInputType = {};
-
 export const ImportJSON: ImportOption = {
   label: "Import as JSON",
   value: "json",
