@@ -1,8 +1,7 @@
 import SyntaxHighlighterPkg from "react-syntax-highlighter";
 import { useState } from "react";
-import { Table as TableIcon } from "lucide-react";
+import { FileJson } from "lucide-react";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const { Light: SyntaxHighlighter } = SyntaxHighlighterPkg as any;
 
 import type { ImportOption } from "./types";
@@ -24,7 +23,7 @@ import {
   createTextInput,
 } from "~/features/visualizer/inputs";
 
-const validateNodes = async (file: File | undefined) => {
+const validateNodesJSON = async (file: File | undefined) => {
   if (!file)
     return {
       success: false,
@@ -33,133 +32,128 @@ const validateNodes = async (file: File | undefined) => {
 
   try {
     const text = await file.text();
-    const lines = text.trim().split("\n");
+    const data = JSON.parse(text);
 
-    // Check lines has at least two lines (one header and 1 node)
-    if (lines.length < 2) {
+    // Check if data is an array
+    if (!Array.isArray(data)) {
       return {
         success: false,
-        message:
-          "Nodes file must have at least two lines (one header, one node)",
+        message: "JSON file must contain an array of objects",
       };
     }
 
-    // Check header - now supports multiple columns
-    const header = lines[0].trim();
-    const columns = header.split(",").map(col => col.trim());
-    
-    if (columns.length === 0) {
+    // Check if array has at least one element
+    if (data.length === 0) {
       return {
         success: false,
-        message: "Nodes file must have at least one column in the header",
+        message: "JSON array must have at least one node",
       };
     }
 
-    // Check if every line has the same number of columns as header
-    const expectedColumns = columns.length;
-    const isValid = lines
-      .slice(1)
-      .every((line) => line.split(",").length === expectedColumns);
-
-    if (!isValid) {
+    // Check if all elements are objects
+    const allObjects = data.every((item) => typeof item === "object" && item !== null);
+    if (!allObjects) {
       return {
         success: false,
-        message: `Every line should have exactly ${expectedColumns} column(s) to match the header`,
+        message: "All elements in the JSON array must be objects",
       };
     }
 
     return { success: true };
-  } catch {
+  } catch (error) {
     return {
       success: false,
-      message: "Unable to read file content. Please try again.",
+      message: error instanceof Error ? `Invalid JSON: ${error.message}` : "Unable to parse JSON file",
     };
   }
 };
 
-const validateEdges = async (file: File | undefined) => {
+const validateEdgesJSON = async (file: File | undefined) => {
   if (!file)
     return {
-      value: file,
       success: false,
       message: "Unable to read file content. Please try again.",
     };
 
   try {
     const text = await file.text();
-    const lines = text.trim().split("\n");
+    const data = JSON.parse(text);
 
-    // Check header
-    const header = lines[0].trim();
-    if (!["source,target,weight", "source,target"].includes(header)) {
+    // Check if data is an array
+    if (!Array.isArray(data)) {
       return {
         success: false,
-        message:
-          "Nodes file must have 'source,target,weight' or 'source,target' as the header (first line)",
+        message: "JSON file must contain an array of objects",
       };
     }
 
-    // Check if every line has exactly two or three node
-    const validLength = header.split(",").length;
-    const isValid = lines
-      .slice(1)
-      .every((line) => line.split(",").length === validLength);
-
-    if (!isValid) {
+    // Check if array has at least one element
+    if (data.length === 0) {
       return {
         success: false,
-        message: "Number of values don't match with the header",
+        message: "JSON array must have at least one edge",
+      };
+    }
+
+    // Check if all elements are objects with 'from' and 'to' keys
+    const validEdges = data.every((item) => {
+      if (typeof item !== "object" || item === null) return false;
+      return "from" in item && "to" in item;
+    });
+
+    if (!validEdges) {
+      return {
+        success: false,
+        message: "All edge objects must have 'from' and 'to' properties",
       };
     }
 
     return { success: true };
-  } catch {
+  } catch (error) {
     return {
       success: false,
-      message: "Unable to read file content. Please try again. ",
+      message: error instanceof Error ? `Invalid JSON: ${error.message}` : "Unable to parse JSON file",
     };
   }
 };
 
-type CSVInputType = {};
-
-export const ImportCSV: ImportOption = {
-  label: "Import as CSV",
-  value: "csv",
-  icon: TableIcon,
-  title: "Import CSV Files",
+export const ImportJSON: ImportOption = {
+  label: "Import as JSON",
+  value: "json",
+  icon: FileJson,
+  title: "Import JSON Files",
   description:
-    "Upload your graph data by selecting two CSV files: one for nodes and one for edges. The node table name will be taken from the filename (without .csv). The first column in nodes.csv will be the primary key, and all columns will be imported as node properties. Edges.csv should have source and target columns (matching the node primary key), with optional weight column.",
-  previewTitle: "CSV Format Preview",
-  previewDescription: "Expected format for nodes.csv and edges.csv files",
-  preview: CSVPreview,
-  note: "The 'weight' column in edges.csv is **optional**! Novagraph assumes the presence of 'weight' signifies a weighted graph. Edges in a directed graph have directions. Edges in an undirected graph are bi-directional.",
+    "Upload your graph data by selecting two JSON files: one for nodes and one for edges. The node table name will be taken from the filename (without .json). The first property in the JSON objects will be used as the primary key. For edges, 'from' and 'to' properties are required and should match the node primary key values.",
+  previewTitle: "JSON Format Preview",
+  previewDescription: "Expected format for nodes.json and edges.json files",
+  preview: JSONPreview,
+  note: "The JSON extension must be installed in Kuzu to use this feature. Edges must have 'from' and 'to' properties. Any additional properties (besides 'from' and 'to') in edges.json will be treated as edge properties. The 'weight' property is **optional**!",
   inputs: [
     createTextInput({
-      id: "database-name-csv",
+      id: "database-name-json",
       key: "name",
       displayName: "Name of the database",
       required: true,
       placeholder: "Enter a name for the database...",
     }),
     createFileInput({
-      id: "nodes-csv",
+      id: "nodes-json",
       key: "nodes",
-      displayName: "nodes.csv",
+      displayName: "nodes.json",
       required: true,
-      accept: ".csv",
-      validator: validateNodes,
+      accept: ".json",
+      validator: validateNodesJSON,
     }),
     createFileInput({
-      id: "edges-csv",
+      id: "edges-json",
       key: "edges",
-      displayName: "edges.csv",
+      displayName: "edges.json",
       required: true,
-      accept: ".csv",
-      validator: validateEdges,
+      accept: ".json",
+      validator: validateEdgesJSON,
     }),
     createSwitchInput({
-      id: "directed-csv",
+      id: "directed-json",
       key: "directed",
       displayName: "Directed Graph",
       required: true,
@@ -169,6 +163,7 @@ export const ImportCSV: ImportOption = {
   handler: async ({ values }: { values: Record<string, any> }) => {
     const { name, nodes, edges, directed } = values;
 
+    // Get the database name
     const databaseName = name.value as string;
     const trimmedDatabaseName = (databaseName ?? "").trim();
     const nodesFile = nodes.value as File;
@@ -190,7 +185,7 @@ export const ImportCSV: ImportOption = {
 
     try {
       console.log(
-        `[CSV Import] Starting import for database: ${databaseName}, isDirected: ${isDirected}`
+        `[JSON Import] Starting import for database: ${databaseName}, isDirected: ${isDirected}`
       );
 
       const createResult = await controller.db.createDatabase(
@@ -206,7 +201,7 @@ export const ImportCSV: ImportOption = {
       }
       createdDatabase = true;
       
-      console.log(`[CSV Import] Database created with metadata:`, createResult.metadata);
+      console.log(`[JSON Import] Database created with metadata:`, createResult.metadata);
 
       const connectResult = await controller.db.connectToDatabase(
         trimmedDatabaseName
@@ -222,14 +217,14 @@ export const ImportCSV: ImportOption = {
       const nodesText = await nodesFile.text();
       const edgesText = await edgesFile.text();
 
-      const nodeTableName = nodesFile.name.replace(/\.csv$/i, "");
-      const edgeTableName = edgesFile.name.replace(/\.csv$/i, "");
+      const nodeTableName = nodesFile.name.replace(/\.json$/i, "");
+      const edgeTableName = edgesFile.name.replace(/\.json$/i, "");
 
       console.log(
-        `[CSV Import] Node table: ${nodeTableName}, Edge table: ${edgeTableName}`
+        `[JSON Import] Node table: ${nodeTableName}, Edge table: ${edgeTableName}`
       );
 
-      const result = await controller.db.importFromCSV(
+      const result = await controller.db.importFromJSON(
         nodesText,
         edgesText,
         nodeTableName,
@@ -248,7 +243,7 @@ export const ImportCSV: ImportOption = {
 
       return result;
     } catch (error) {
-      console.error("[CSV Import] Error:", error);
+      console.error("[JSON Import] Error:", error);
       if (
         previousDatabaseName &&
         previousDatabaseName !== trimmedDatabaseName
@@ -257,7 +252,7 @@ export const ImportCSV: ImportOption = {
           await controller.db.connectToDatabase(previousDatabaseName);
         } catch (reconnectError) {
           console.error(
-            "[CSV Import] Failed to reconnect to previous database:",
+            "[JSON Import] Failed to reconnect to previous database:",
             reconnectError
           );
         }
@@ -267,14 +262,14 @@ export const ImportCSV: ImportOption = {
           .deleteDatabase(trimmedDatabaseName)
           .catch((cleanupError: unknown) =>
             console.warn(
-              `[CSV Import] Failed to delete database "${trimmedDatabaseName}" after error`,
+              `[JSON Import] Failed to delete database "${trimmedDatabaseName}" after error`,
               cleanupError
             )
           );
       }
       return {
         success: false,
-        message: `Failed to import CSV: ${
+        message: `Failed to import JSON: ${
           error instanceof Error ? error.message : String(error)
         }`,
       };
@@ -282,15 +277,51 @@ export const ImportCSV: ImportOption = {
   },
 };
 
-function CSVPreview() {
+function JSONPreview() {
   const [isTableView, setIsTableView] = useState(true);
+
+  const nodesJSONExample = [
+    {
+      id: "p1",
+      name: "John",
+      age: 35,
+    },
+    {
+      id: "p2",
+      name: "Michael",
+      age: 28,
+    },
+    {
+      id: "p3",
+      name: "Sarah",
+      age: 32,
+    },
+  ];
+
+  const edgesJSONExample = [
+    {
+      from: "p1",
+      to: "p2",
+      weight: 1,
+    },
+    {
+      from: "p1",
+      to: "p3",
+      weight: 1,
+    },
+    {
+      from: "p3",
+      to: "p2",
+      weight: 2,
+    },
+  ];
 
   return (
     <div className="flex flex-col items-end gap-6">
       <div className="flex items-center gap-2">
-        <Label htmlFor="toggle-table-view">Table View</Label>
+        <Label htmlFor="toggle-table-view-json">Table View</Label>
         <Switch
-          id="toggle-table-view"
+          id="toggle-table-view-json"
           checked={isTableView}
           onCheckedChange={setIsTableView}
         />
@@ -300,57 +331,41 @@ function CSVPreview() {
           <>
             {/* Table view */}
             <Table className="max-h-56">
-              <TableCaption>nodes.csv</TableCaption>
+              <TableCaption>nodes.json</TableCaption>
               <TableHeader>
                 <TableRow>
-                  <TableHead>node</TableHead>
+                  <TableHead>id</TableHead>
+                  <TableHead>name</TableHead>
+                  <TableHead>age</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <TableRow>
-                  <TableCell>John</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Michael</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Sarah</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Tina</TableCell>
-                </TableRow>
+                {nodesJSONExample.map((node) => (
+                  <TableRow key={node.id}>
+                    <TableCell>{node.id}</TableCell>
+                    <TableCell>{node.name}</TableCell>
+                    <TableCell>{node.age}</TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
             <Table className="max-h-56">
-              <TableCaption>edges.csv</TableCaption>
+              <TableCaption>edges.json</TableCaption>
               <TableHeader>
                 <TableRow>
-                  <TableHead>source</TableHead>
-                  <TableHead>target</TableHead>
+                  <TableHead>from</TableHead>
+                  <TableHead>to</TableHead>
                   <TableHead>weight</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <TableRow>
-                  <TableCell>John</TableCell>
-                  <TableCell>Michael</TableCell>
-                  <TableCell>1</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>John</TableCell>
-                  <TableCell>Sarah</TableCell>
-                  <TableCell>1</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Sarah</TableCell>
-                  <TableCell>Tina</TableCell>
-                  <TableCell>2</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Sarah</TableCell>
-                  <TableCell>Michael</TableCell>
-                  <TableCell>2</TableCell>
-                </TableRow>
+                {edgesJSONExample.map((edge, idx) => (
+                  <TableRow key={idx}>
+                    <TableCell>{edge.from}</TableCell>
+                    <TableCell>{edge.to}</TableCell>
+                    <TableCell>{edge.weight}</TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </>
@@ -359,38 +374,32 @@ function CSVPreview() {
             {/* Syntax highlighted code block */}
             <div className="flex flex-col items-center w-full">
               <SyntaxHighlighter
-                language="csv"
+                language="json"
                 customStyle={{
                   width: "100%",
                   padding: "1rem",
                   background: "transparent",
                 }}
               >
-                {["node", "John", "Michael", "Sarah", "Tina"].join("\n")}
+                {JSON.stringify(nodesJSONExample, null, 2)}
               </SyntaxHighlighter>
               <p className="text-typography-primary mt-4 small-body">
-                nodes.csv
+                nodes.json
               </p>
             </div>
             <div className="flex flex-col items-center w-full">
               <SyntaxHighlighter
-                language="csv"
+                language="json"
                 customStyle={{
                   width: "100%",
                   padding: "1rem",
                   background: "transparent",
                 }}
               >
-                {[
-                  "source,target,weight",
-                  "John,Michael,1",
-                  "John,Sarah,1",
-                  "Sarah,Tina,2",
-                  "Sarah,Michael,2",
-                ].join("\n")}
+                {JSON.stringify(edgesJSONExample, null, 2)}
               </SyntaxHighlighter>
               <p className="text-typography-primary mt-4 small-body">
-                edges.csv
+                edges.json
               </p>
             </div>
           </>

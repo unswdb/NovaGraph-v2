@@ -16,8 +16,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Separator } from "~/components/ui/separator";
 import { Button } from "~/components/ui/button";
 import { useAsyncFn } from "~/hooks/use-async-fn";
+import { useStore } from "../hooks/use-store";
 
-export default function ImportDialog() {
+export default function ImportDialog({ onClose }: { onClose: () => void }) {
+  const store = useStore();
   return (
     <DialogContent className="flex flex-col gap-2 max-h-[80vh] !max-w-[min(100%,calc(80vw))]">
       <DialogHeader>
@@ -50,7 +52,7 @@ export default function ImportDialog() {
           {/* Right Content - Tabbed Interface with separate overflow */}
           <div className="flex-1 flex flex-col min-h-0">
             {ALL_IMPORTS.map((option) => (
-              <ImportContent key={option.value} option={option} />
+              <ImportContent key={option.value} option={option} store={store} onClose={onClose} />
             ))}
           </div>
         </div>
@@ -59,7 +61,7 @@ export default function ImportDialog() {
   );
 }
 
-function ImportContent({ option }: { option: ImportOption }) {
+function ImportContent({ option, store, onClose }: { option: ImportOption; store: any; onClose: () => void }) {
   const [inputResults, setInputResults] = useState(
     createEmptyInputResults(option.inputs)
   );
@@ -76,8 +78,31 @@ function ImportContent({ option }: { option: ImportOption }) {
     isLoading,
     getErrorMessage,
   } = useAsyncFn(option.handler.bind(option), {
-    onSuccess: (result) => {
-      toast.success(result.message);
+    onSuccess: async (result: any) => {
+      if (result?.message) {
+        toast.success(result.message);
+      }
+
+      if (result?.databaseName && result?.data) {
+        store.setActiveDatabaseFromSnapshot(result.databaseName, {
+          nodes: result.data.nodes,
+          edges: result.data.edges,
+          nodeTables: result.data.nodeTables,
+          edgeTables: result.data.edgeTables,
+          directed: result.data.directed,
+        });
+        await store.refreshDatabases();
+      } else if (result?.data) {
+        store.setGraphState({
+          nodes: result.data.nodes,
+          edges: result.data.edges,
+          nodeTables: result.data.nodeTables,
+          edgeTables: result.data.edgeTables,
+          directed: result.data.directed,
+        });
+      }
+
+      onClose();
     },
     onError: (err) => {
       setError(getErrorMessage(err));

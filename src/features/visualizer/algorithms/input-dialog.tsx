@@ -37,8 +37,8 @@ export default function InputDialog({
   controller: VisualizerStore["controller"];
   algorithm: BaseGraphAlgorithm;
   nodes: GraphNode[];
-  setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
-  setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
+  setActiveAlgorithm: (a: BaseGraphAlgorithm | null) => void;
+  setActiveResponse: (a: BaseGraphAlgorithmResult | null) => void;
   separator?: boolean;
 }) {
   // Hooks
@@ -56,7 +56,7 @@ export default function InputDialog({
     [inputResults, algorithm]
   );
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!controller) return;
 
     // Don't run when there's no nodes

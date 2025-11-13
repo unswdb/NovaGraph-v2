@@ -12,7 +12,7 @@ class MainController {
   // Private sector
   private _IgraphController: undefined | IgraphController;
   private async _initKuzu() {
-    return kuzuController.initialize("inmemory", "sync", {});
+    return kuzuController.initialize("persistent", "async", {});
   }
   private async _initIgraph() {
     return await this._IgraphController?.initIgraph();
@@ -44,13 +44,11 @@ class MainController {
 
   // Database operations namespace
   db = {
-    getGraphDirection() : boolean {
-      return kuzuController.getDirection();
+    getGraphDirection() {
+      // Get the current database metadata to determine graph direction
+      const metadata = kuzuController.getCurrentDatabaseMetadata?.();
+      return metadata?.isDirected;
     },
-
-    // setGraphDirection(isDirected: boolean) : void {
-    //   kuzuController.setDirection(isDirected);
-    // },
 
     async createNodeSchema(
       tableName: string,
@@ -118,6 +116,11 @@ class MainController {
       return Promise.resolve(kuzuController.executeQuery(query));
     },
 
+    // Get column types from query
+    async getColumnTypes(query: string) {
+      return kuzuController.getColumnTypes(query);
+    },
+
     // snapshotGraphState
     async snapshotGraphState() {
       return Promise.resolve(kuzuController.snapshotGraphState());
@@ -173,6 +176,101 @@ class MainController {
         kuzuController.updateEdge(node1, node2, edgeTableName, values)
       );
     },
+
+    async writeVirtualFile(path: string, content: string) {
+      return kuzuController.writeVirtualFile(path, content);
+    },
+
+    async deleteVirtualFile(path: string) {
+      return kuzuController.deleteVirtualFile(path);
+    },
+
+    async createDatabase(dbName: string, metadata?: { isDirected?: boolean }) {
+      return Promise.resolve(kuzuController.createDatabase(dbName, metadata));
+    },
+
+    async deleteDatabase(dbName: string) {
+      return Promise.resolve(kuzuController.deleteDatabase(dbName));
+    },
+
+    async listDatabases() {
+      return Promise.resolve(kuzuController.listDatabases());
+    },
+
+    async connectToDatabase(
+      dbName: string,
+      options: Record<string, any> = {}
+    ) {
+      return Promise.resolve(
+        kuzuController.connectToDatabase(dbName, options)
+      );
+    },
+
+    async getCurrentDatabaseName() {
+      return Promise.resolve(kuzuController.getCurrentDatabaseName());
+    },
+
+    async saveDatabase() {
+      return Promise.resolve(kuzuController.saveDatabase());
+    },
+
+    async loadDatabase() {
+      return Promise.resolve(kuzuController.loadDatabase());
+    },
+
+    /**
+     * Import graph data from CSV files
+     * @param nodesText - Content of the nodes CSV file
+     * @param edgesText - Content of the edges CSV file
+     * @param nodeTableName - Name for the node table
+     * @param edgeTableName - Name for the edge table
+     * @param isDirected - Whether the graph is directed
+     * @returns Import result with success status and graph state
+     */
+    async importFromCSV(
+      nodesText: string,
+      edgesText: string,
+      nodeTableName: string,
+      edgeTableName: string,
+      isDirected: boolean
+    ) {
+      return Promise.resolve(
+        kuzuController.importFromCSV(
+          nodesText,
+          edgesText,
+          nodeTableName,
+          edgeTableName,
+          isDirected
+        )
+      );
+    },
+
+    /**
+     * Import graph data from JSON files
+     * @param nodesText - Content of the nodes JSON file
+     * @param edgesText - Content of the edges JSON file
+     * @param nodeTableName - Name for the node table
+     * @param edgeTableName - Name for the edge table
+     * @param isDirected - Whether the graph is directed
+     * @returns Import result with success status and graph state
+     */
+    async importFromJSON(
+      nodesText: string,
+      edgesText: string,
+      nodeTableName: string,
+      edgeTableName: string,
+      isDirected: boolean
+    ) {
+      return Promise.resolve(
+        kuzuController.importFromJSON(
+          nodesText,
+          edgesText,
+          nodeTableName,
+          edgeTableName,
+          isDirected
+        )
+      );
+    },
   };
 
   _internal = {
@@ -196,6 +294,7 @@ class MainController {
     async getAllSchemaProperties() {
       return Promise.resolve(kuzuController.getAllSchemaProperties());
     },
+
   };
 }
 

@@ -1,4 +1,4 @@
-import { ChevronDown, Loader, Plus } from "lucide-react";
+import { ChevronDown, Loader, Plus, Trash } from "lucide-react";
 import {
   Suspense,
   useMemo,
@@ -7,7 +7,7 @@ import {
   type ComponentProps,
 } from "react";
 
-import type { GraphDatabase } from "../types";
+import type { DatabaseOption, GraphDatabase } from "../types";
 
 import ImportDialog from "./import-dialog";
 
@@ -27,18 +27,27 @@ import {
 } from "~/components/ui/popover";
 import { Dialog, DialogTrigger } from "~/components/ui/dialog";
 import { cn } from "~/lib/utils";
+import { toast } from "sonner";
 
 export default function ImportDropdown({
   database,
   databases,
-  setDatabase,
-  addDatabase,
+  onSelectDatabase,
+  onDeleteDatabase,
   className,
 }: ComponentProps<"button"> & {
   database: GraphDatabase | null;
-  databases: GraphDatabase[];
-  setDatabase: (g: GraphDatabase) => void;
-  addDatabase: (g: GraphDatabase) => void;
+  databases: DatabaseOption[];
+  onSelectDatabase: (
+    name: string
+  ) =>
+    | Promise<{ success: boolean; message?: string; error?: string }>
+    | { success: boolean; message?: string; error?: string };
+  onDeleteDatabase: (
+    name: string
+  ) =>
+    | Promise<{ success: boolean; message?: string; error?: string }>
+    | { success: boolean; message?: string; error?: string };
 }) {
   // Refs
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -76,8 +85,8 @@ export default function ImportDropdown({
             setOpen={setOpen}
             database={database}
             databases={databases}
-            setDatabase={setDatabase}
-            addDatabase={addDatabase}
+            onSelectDatabase={onSelectDatabase}
+            onDeleteDatabase={onDeleteDatabase}
           />
         </Suspense>
       </PopoverContent>
@@ -89,39 +98,104 @@ function ImportListSelector({
   setOpen,
   database,
   databases,
-  setDatabase,
-  addDatabase,
+  onSelectDatabase,
+  onDeleteDatabase,
 }: {
   setOpen: (b: boolean) => void;
   database: GraphDatabase | null;
-  databases: GraphDatabase[];
-  setDatabase: (g: GraphDatabase) => void;
-  addDatabase: (g: GraphDatabase) => void;
+  databases: DatabaseOption[];
+  onSelectDatabase: (
+    name: string
+  ) =>
+    | Promise<{ success: boolean; message?: string; error?: string }>
+    | { success: boolean; message?: string; error?: string };
+  onDeleteDatabase: (
+    name: string
+  ) =>
+    | Promise<{ success: boolean; message?: string; error?: string }>
+    | { success: boolean; message?: string; error?: string };
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  const handleSelect = (name: string) => {
+    void (async () => {
+      if (database?.name === name) {
+        setOpen(false);
+        return;
+      }
+
+      try {
+        const result = await onSelectDatabase(name);
+        if (result.success) {
+          if (result.message) {
+            toast.success(result.message);
+          }
+          setOpen(false);
+        } else if (result.error) {
+          toast.error(result.error);
+        }
+      } catch (err) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to switch database"
+        );
+      }
+    })();
+  };
+
+  const handleDelete = (name: string) => {
+    void (async () => {
+      try {
+        const result = await onDeleteDatabase(name);
+        if (result.success) {
+          toast.success(result.message ?? `Deleted database "${name}"`);
+          setOpen(false);
+        } else if (result.error) {
+          toast.error(result.error);
+        }
+      } catch (err) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to delete database"
+        );
+      }
+    })();
+  };
+
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <Command value={database?.label}>
+      <Command value={database?.name}>
         <CommandInput placeholder="Filter database..." />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
           <CommandGroup heading="Existing Databases">
-            {/* List of databases */}
-            {databases.map((database) => (
+            {databases.map((entry) => (
               <CommandItem
-                key={database.label}
-                value={database.label}
-                onSelect={(value) => {
-                  const selected = databases.find(
-                    (database) => database.label === value
-                  );
-                  if (!selected) return;
-                  setDatabase(database);
-                  setOpen(false);
-                }}
+                key={entry.name}
+                value={entry.name}
+                onSelect={() => handleSelect(entry.name)}
               >
-                {database.label}
+                <div className="flex w-full items-center justify-between gap-2">
+                  <span className="truncate">
+                    {entry.label}
+                    {database?.name === entry.name && (
+                      <span className="ml-2 text-xs text-typography-secondary">
+                        Active
+                      </span>
+                    )}
+                  </span>
+                  {database?.name !== entry.name && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        handleDelete(entry.name);
+                      }}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </CommandItem>
             ))}
           </CommandGroup>
@@ -136,7 +210,12 @@ function ImportListSelector({
           </CommandGroup>
         </CommandList>
       </Command>
-      <ImportDialog />
+      <ImportDialog
+        onClose={() => {
+          setDialogOpen(false);
+          setOpen(false);
+        }}
+      />
     </Dialog>
   );
 }

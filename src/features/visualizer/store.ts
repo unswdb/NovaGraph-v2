@@ -3,6 +3,7 @@ import { action, makeObservable, observable, runInAction } from "mobx";
 import {
   isEdgeSchema,
   isNodeSchema,
+  type DatabaseOption,
   type EdgeSchema,
   type GraphDatabase,
   type GraphEdge,
@@ -24,6 +25,14 @@ export type InitializedVisualizerStore = VisualizerStore & {
   database: NonNullable<VisualizerStore["database"]>;
 };
 
+type GraphSnapshotInput = {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  nodeTables: NodeSchema[];
+  edgeTables: EdgeSchema[];
+  directed?: boolean;
+};
+
 export default class VisualizerStore {
   // CONSTRUCTORS
   constructor() {
@@ -39,7 +48,11 @@ export default class VisualizerStore {
       cleanup: action,
       setDatabase: action,
       setGraphState: action,
+      setActiveDatabaseFromSnapshot: action,
       addDatabase: action,
+      refreshDatabases: action,
+      switchDatabase: action,
+      deleteDatabase: action,
       setGravity: action,
       setNodeSizeScale: action,
       setCode: action,
@@ -51,49 +64,69 @@ export default class VisualizerStore {
   // OBSERVABLES
   controller = controller;
   database: GraphDatabase | null = null; // Currently active database
-  databases: GraphDatabase[] = []; // List of database users owned
+  databases: DatabaseOption[] = []; // List of database options available
   gravity: Gravity = GRAVITY.ZERO_GRAVITY;
   nodeSizeScale: NodeSizeScale = NODE_SIZE_SCALE.MEDIUM;
   code: string = "";
   activeAlgorithm: BaseGraphAlgorithm | null = null;
   activeResponse: VisualizationResponse | null = null; // Can be algorithm or query result
 
+  private viewStateByDatabase = new Map<
+    string,
+    {
+      code: string;
+      activeAlgorithm: BaseGraphAlgorithm | null;
+      activeResponse: VisualizationResponse | null;
+    }
+  >();
+
   // ACTIONS
   initialize = async () => {
     // Initialize Kuzu controller
     await this.controller.initSystem();
 
-    // Define initial graph structure
-    const graph = await this.controller.db.snapshotGraphState();
+    const [rawGraph, listResult, currentDbName] = await Promise.all([
+      this.controller.db.snapshotGraphState(),
+      this.controller.db
+        .listDatabases()
+        .catch(() => ({ success: false, databases: [] as string[] })),
+      this.controller.db.getCurrentDatabaseName().catch(() => null),
+    ]);
+
+    const graphSnapshot: GraphSnapshotInput = {
+      nodes: rawGraph?.nodes ?? [],
+      edges: rawGraph?.edges ?? [],
+      nodeTables: rawGraph?.nodeTables ?? [],
+      edgeTables: rawGraph?.edgeTables ?? [],
+      directed: (rawGraph as GraphSnapshotInput)?.directed ?? false,
+    };
+
+    const availableNames =
+      listResult && listResult.success && Array.isArray(listResult.databases)
+        ? listResult.databases
+        : [];
+
+    const fallbackName = availableNames.length > 0 ? availableNames[0] : null;
+    const activeName = currentDbName ?? fallbackName ?? null;
+
+    const options = this.buildDatabaseOptions(availableNames, activeName);
+    const graph = this.buildGraphFromSnapshot({
+      ...graphSnapshot,
+      directed: graphSnapshot.directed ?? false,
+    });
 
     runInAction(() => {
-      // TODO: Change to controller helper function that retrieves
-      // all the database list
-      const { nodes, nodesMap } = this.buildNodesWithMap(graph.nodes);
-      const { edges, edgesMap } = this.buildEdgesWithMap(graph.edges);
-      const { nodeTables, nodeTablesMap } = this.buildNodeTablesWithMap(
-        graph.nodeTables
-      );
-      const { edgeTables, edgeTablesMap } = this.buildEdgeTablesWithMap(
-        graph.edgeTables
-      );
-      this.databases = [
-        {
-          label: "Default",
-          graph: {
-            nodes,
-            nodesMap,
-            edges,
-            edgesMap,
-            nodeTables,
-            nodeTablesMap,
-            edgeTables,
-            edgeTablesMap,
-            directed: true, // TODO: Distinguish between directed/non-directed in Kuzu
-          },
-        },
-      ];
-      this.database = this.databases[0];
+      this.databases = options;
+      if (activeName) {
+        this.database = {
+          name: activeName,
+          label: this.formatDatabaseLabel(activeName),
+          graph,
+        };
+      } else {
+        this.database = null;
+      }
+      this.restoreViewStateForDatabase(activeName);
     });
   };
 
@@ -105,44 +138,125 @@ export default class VisualizerStore {
     this.database = database;
   };
 
-  setGraphState = ({
-    nodes: newNodes,
-    edges: newEdges,
-    nodeTables: newNodeTables,
-    edgeTables: newEdgeTables,
-  }: {
-    nodes: GraphNode[];
-    edges: GraphEdge[];
-    nodeTables: NodeSchema[];
-    edgeTables: EdgeSchema[];
-  }) => {
+  setGraphState = (snapshot: GraphSnapshotInput) => {
     this.checkInitialization();
 
-    const { nodes, nodesMap } = this.buildNodesWithMap(newNodes);
-    const { edges, edgesMap } = this.buildEdgesWithMap(newEdges);
-    const { nodeTables, nodeTablesMap } =
-      this.buildNodeTablesWithMap(newNodeTables);
-    const { edgeTables, edgeTablesMap } =
-      this.buildEdgeTablesWithMap(newEdgeTables);
+    const directed =
+      snapshot.directed ?? this.database.graph.directed ?? false;
+
+    const graph = this.buildGraphFromSnapshot({
+      ...snapshot,
+      directed,
+    });
 
     this.database = {
       ...this.database,
-      graph: {
-        ...this.database.graph,
-        nodes,
-        edges,
-        nodesMap,
-        edgesMap,
-        nodeTables,
-        nodeTablesMap,
-        edgeTables,
-        edgeTablesMap,
-      },
+      graph,
     };
   };
 
-  addDatabase = (database: GraphDatabase) => {
-    this.databases = [...this.databases, database];
+  setActiveDatabaseFromSnapshot = (
+    name: string,
+    snapshot: GraphSnapshotInput
+  ) => {
+    this.persistCurrentViewState();
+    const graph = this.buildGraphFromSnapshot(snapshot);
+    const option = this.makeDatabaseOption(name);
+
+    this.database = {
+      name,
+      label: option.label,
+      graph,
+    };
+
+    this.databases = this.sortDatabaseOptions([
+      ...this.databases.filter((db) => db.name !== name),
+      option,
+    ]);
+    this.restoreViewStateForDatabase(name);
+  };
+
+  addDatabase = (database: DatabaseOption) => {
+    const exists = this.databases.some((db) => db.name === database.name);
+    if (exists) {
+      return;
+    }
+    this.databases = this.sortDatabaseOptions([...this.databases, database]);
+  };
+
+  refreshDatabases = async () => {
+    const listResult = await this.controller.db
+      .listDatabases()
+      .catch(() => ({ success: false, databases: [] as string[] }));
+
+    const options = this.buildDatabaseOptions(
+      listResult.success ? listResult.databases : [],
+      this.database?.name
+    );
+
+    runInAction(() => {
+      this.databases = options;
+    });
+
+    return options;
+  };
+
+  switchDatabase = async (name: string) => {
+    this.persistCurrentViewState();
+    const result = await this.controller.db.connectToDatabase(name);
+
+    if (!result.success) {
+      return {
+        success: false,
+        error:
+          result.error ||
+          result.message ||
+          "Failed to connect to the selected database",
+      };
+    }
+
+    const rawGraph = await this.controller.db.snapshotGraphState();
+    const graph = this.buildGraphFromSnapshot({
+      nodes: rawGraph?.nodes ?? [],
+      edges: rawGraph?.edges ?? [],
+      nodeTables: rawGraph?.nodeTables ?? [],
+      edgeTables: rawGraph?.edgeTables ?? [],
+      directed: (rawGraph as GraphSnapshotInput)?.directed ?? false,
+    });
+
+    runInAction(() => {
+      this.database = {
+        name,
+        label: this.formatDatabaseLabel(name),
+        graph,
+      };
+      this.restoreViewStateForDatabase(name);
+    });
+
+    await this.refreshDatabases();
+
+    return {
+      success: true,
+      message: result.message,
+    };
+  };
+
+  deleteDatabase = async (name: string) => {
+    if (this.database?.name === name) {
+      return {
+        success: false,
+        error: "Cannot delete the active database",
+      };
+    }
+
+    const result = await this.controller.db.deleteDatabase(name);
+
+    if (result.success) {
+      await this.refreshDatabases();
+      this.viewStateByDatabase.delete(name);
+    }
+
+    return result;
   };
 
   setGravity = (gravity: Gravity) => {
@@ -155,14 +269,17 @@ export default class VisualizerStore {
 
   setCode = (code: string) => {
     this.code = code;
+    this.persistCurrentViewState();
   };
 
-  setActiveAlgorithm = (activeAlgorithm: BaseGraphAlgorithm) => {
+  setActiveAlgorithm = (activeAlgorithm: BaseGraphAlgorithm | null) => {
     this.activeAlgorithm = activeAlgorithm;
+    this.persistCurrentViewState();
   };
 
-  setActiveResponse = (activeResponse: VisualizationResponse) => {
+  setActiveResponse = (activeResponse: VisualizationResponse | null) => {
     this.activeResponse = activeResponse;
+    this.persistCurrentViewState();
   };
 
   // UTILITIES FUNCTION
@@ -261,5 +378,107 @@ export default class VisualizerStore {
     });
 
     return { edges: builtEdges, edgesMap };
+  }
+
+  private buildGraphFromSnapshot(snapshot: GraphSnapshotInput) {
+    const { nodes, nodesMap } = this.buildNodesWithMap(snapshot.nodes);
+    const { edges, edgesMap } = this.buildEdgesWithMap(snapshot.edges);
+    const { nodeTables, nodeTablesMap } = this.buildNodeTablesWithMap(
+      snapshot.nodeTables
+    );
+    const { edgeTables, edgeTablesMap } = this.buildEdgeTablesWithMap(
+      snapshot.edgeTables
+    );
+
+    return {
+      nodes,
+      nodesMap,
+      edges,
+      edgesMap,
+      nodeTables,
+      nodeTablesMap,
+      edgeTables,
+      edgeTablesMap,
+      directed: snapshot.directed ?? false,
+    };
+  }
+
+  private buildDatabaseOptions(
+    names: string[],
+    activeName?: string | null
+  ): DatabaseOption[] {
+    const uniqueNames = new Set<string>();
+
+    names
+      .filter(
+        (name): name is string => typeof name === "string" && name.length > 0
+      )
+      .forEach((name) => uniqueNames.add(name));
+
+    if (activeName && activeName.length > 0) {
+      uniqueNames.add(activeName);
+    }
+
+    const options = Array.from(uniqueNames).map((name) =>
+      this.makeDatabaseOption(name)
+    );
+
+    return this.sortDatabaseOptions(options);
+  }
+
+  private makeDatabaseOption(name: string): DatabaseOption {
+    return {
+      name,
+      label: this.formatDatabaseLabel(name),
+    };
+  }
+
+  private formatDatabaseLabel(name: string) {
+    if (!name) return "Default";
+
+    const normalized = name.trim();
+    if (
+      normalized.toLowerCase() === "default" ||
+      normalized.toLowerCase() === "default_async_db"
+    ) {
+      return "Default";
+    }
+
+    return normalized
+      .replace(/[_-]+/g, " ")
+      .split(" ")
+      .map((part) =>
+        part.length > 0
+          ? part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+          : part
+      )
+      .join(" ");
+  }
+
+  private sortDatabaseOptions(options: DatabaseOption[]) {
+    return [...options].sort((a, b) => a.label.localeCompare(b.label));
+  }
+
+  private persistCurrentViewState() {
+    if (!this.database) return;
+    this.viewStateByDatabase.set(this.database.name, {
+      code: this.code,
+      activeAlgorithm: this.activeAlgorithm,
+      activeResponse: this.activeResponse,
+    });
+  }
+
+  private restoreViewStateForDatabase(name: string | null) {
+    if (!name) {
+      this.code = "";
+      this.activeAlgorithm = null;
+      this.activeResponse = null;
+      return;
+    }
+
+    const state = this.viewStateByDatabase.get(name);
+    this.code = state?.code ?? "";
+    this.activeAlgorithm = state?.activeAlgorithm ?? null;
+    this.activeResponse = state?.activeResponse ?? null;
   }
 }

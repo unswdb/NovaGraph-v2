@@ -4,11 +4,29 @@ import type {
   InputChangeResult,
   InputType,
 } from "~/features/visualizer/inputs";
+import type {
+  GraphNode,
+  GraphEdge,
+  NodeSchema,
+  EdgeSchema,
+} from "../../types";
+
+type ImportHandlerResult = {
+  success: boolean;
+  message?: string;
+  databaseName?: string;
+  data?: {
+    nodes: GraphNode[];
+    edges: GraphEdge[];
+    nodeTables: NodeSchema[];
+    edgeTables: EdgeSchema[];
+    directed?: boolean;
+  };
+};
 
 type ImportHandler = (data: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   values: Record<string, InputChangeResult<any>>;
-}) => Promise<{ success: boolean; message?: string }>;
+}) => Promise<ImportHandlerResult>;
 
 type ImportValidator = (data: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -3,10 +3,45 @@ import KuzuGraphHelper from '../helpers/KuzuGraphHelper';
 import KuzuBaseService from './KuzuBaseService';
 
 const DATABASES_DIR = 'kuzu_databases';
+const DB_FILE_NAME = 'database.kuzu';
+
+const normalizePath = (filePath) =>
+  filePath.startsWith('/') ? filePath : `/${filePath}`;
+
+const ensureParentDirectory = (fs, filePath) => {
+  const normalized = normalizePath(filePath);
+  const lastSlash = normalized.lastIndexOf('/');
+  const dirPath = lastSlash <= 0 ? '/' : normalized.slice(0, lastSlash);
+
+  if (dirPath === '/') {
+    return;
+  }
+
+  const segments = dirPath.split('/').filter(Boolean);
+  let currentPath = '';
+
+  for (const segment of segments) {
+    currentPath += `/${segment}`;
+    try {
+      fs.mkdir(currentPath);
+    } catch (error) {
+      // Ignore already-exists errors
+    }
+  }
+};
 
 export default class KuzuPersistentSync extends KuzuBaseService {
   constructor() {
     super();
+    this.currentDatabaseName = null;
+  }
+
+  getDatabaseDir(dbName) {
+    return `${DATABASES_DIR}/${dbName}`;
+  }
+
+  getDatabaseFilePath(dbName) {
+    return `${this.getDatabaseDir(dbName)}/${DB_FILE_NAME}`;
   }
 
   // Helper
@@ -84,7 +119,7 @@ export default class KuzuPersistentSync extends KuzuBaseService {
         } else {
           return {
             success: false,
-            error: `Failed to delete directory: ${path}. ${error.message}`
+            error: `Failed to delete directory entry at ${fullPath}`
           };
         }
       }
@@ -110,7 +145,10 @@ export default class KuzuPersistentSync extends KuzuBaseService {
      */
   async deleteDatabase(dbName) {
     try {
-      const path =`${DATABASES_DIR}/${dbName}`;
+      if (this.currentDatabaseName === dbName) {
+        this.currentDatabaseName = null;
+      }
+      const path = this.getDatabaseDir(dbName);
 
       // Check if database exists
       if (!this.directoryExists(path)) {
@@ -122,9 +160,10 @@ export default class KuzuPersistentSync extends KuzuBaseService {
 
       // Remove all files and directories
 
-      // TODO: check
-      // this.removeDirectoryRecursive(path);
-      kuzu.getFS().rmdir(path);
+      const removal = this.removeDirectoryRecursive(path);
+      if (!removal.success) {
+        return removal;
+      }
 
       return {
         success: true,
@@ -144,12 +183,42 @@ export default class KuzuPersistentSync extends KuzuBaseService {
 	 */
   async createDatabase(dbName) {
     try {
-      await kuzu.getFS().mkdir(`${DATABASES_DIR}/${dbName}`);
+      const dbDir = this.getDatabaseDir(dbName);
+      const dbFile = this.getDatabaseFilePath(dbName);
+      
+      // Check if database already exists
+      if (this.directoryExists(dbDir)) {
+        return {
+          success: false,
+          error: `Database '${dbName}' already exists`,
+        };
+      }
+      
+      // Create directory first
+      await kuzu.getFS().mkdir(dbDir);
+      
+      // Initialize the database by creating a Database instance
+      // This creates the necessary database files
+      const tempDb = new kuzu.Database(dbFile);
+      const tempConn = new kuzu.Connection(tempDb);
+      tempConn.close();
+      tempDb.close();
+      
+      // Save to IndexedDB
+      await this.saveIDBFS();
+      
       return {
         success: true,
         message: 'Successfully created database: ' + dbName ,
       };
     } catch (e) {
+      // If it's a "file exists" error, treat it as already exists
+      if (e.message && e.message.includes('File exists')) {
+        return {
+          success: false,
+          error: `Database '${dbName}' already exists`,
+        };
+      }
       return {
         success: false,
         error: 'Failed creating database with error: ' + e,
@@ -192,6 +261,9 @@ export default class KuzuPersistentSync extends KuzuBaseService {
       // Rename the directory
       const fs = kuzu.getFS();
       fs.rename(oldPath, newPath);
+      if (this.currentDatabaseName === oldName) {
+        this.currentDatabaseName = newName;
+      }
 			
       return {
         success: true,
@@ -212,10 +284,11 @@ export default class KuzuPersistentSync extends KuzuBaseService {
 	 */
   async connectToDatabase(dbName, options = {}) {
     try {
-      const path = `${DATABASES_DIR}/${dbName}`;
+      const dirPath = this.getDatabaseDir(dbName);
+      const filePath = this.getDatabaseFilePath(dbName);
 			
       // Check if database exists
-      if (!this.directoryExists(path)) {
+      if (!this.directoryExists(dirPath) || !this.fileExists(filePath)) {
         return {
           success: false,
           error: `Failed to connectToDatabase: Database '${dbName}' does not exist`
@@ -223,11 +296,12 @@ export default class KuzuPersistentSync extends KuzuBaseService {
       }
 			
       // Create database connection
-      const db = new kuzu.Database(`${DATABASES_DIR}/${path}`);
+      const db = new kuzu.Database(filePath);
       const conn = new kuzu.Connection(db);
-      this.setConnection(conn);
-      this.setHelper(new KuzuGraphHelper(conn));
-      this.setDatabase(db);
+      this.connection = conn;
+      this.helper = new KuzuGraphHelper(conn);
+      this.db = db;
+      this.currentDatabaseName = dbName;
 
       return {
         success: true,
@@ -255,9 +329,10 @@ export default class KuzuPersistentSync extends KuzuBaseService {
           error: 'Failed to disconnectFromDatabase: Invalid database connection'
         };
       }
-		
+			
       db.close();
-      this.setDatabase(null);
+      this.db = null;
+      this.currentDatabaseName = null;
 
       return {
         success: true,
@@ -374,6 +449,52 @@ export default class KuzuPersistentSync extends KuzuBaseService {
     }
   }
 
+  getCurrentDatabaseName() {
+    return this.currentDatabaseName;
+  }
+
+  async ensureDefaultDatabase(dbName = "default") {
+    if (this.currentDatabaseName) {
+      return {
+        success: true,
+        message: `Already connected to ${this.currentDatabaseName}`,
+      };
+    }
+
+    const listResult = this.listDatabases();
+    if (!listResult.success) {
+      return {
+        success: false,
+        error: listResult.error || "Failed to list databases",
+      };
+    }
+
+    const databases = listResult.databases || [];
+
+    if (!databases.includes(dbName)) {
+      const createResult = await this.createDatabase(dbName);
+      if (!createResult.success) {
+        return createResult;
+      }
+    }
+
+    const connectResult = await this.connectToDatabase(dbName);
+    if (!connectResult.success) {
+      return {
+        success: false,
+        error:
+          connectResult.error ||
+          connectResult.message ||
+          "Failed to connect to database",
+      };
+    }
+
+    return {
+      success: true,
+      message: `Connected to ${dbName}`,
+    };
+  }
+
   /**
 	 * Clears all database directories from the designated storage location.
 	 * 
@@ -417,6 +538,7 @@ export default class KuzuPersistentSync extends KuzuBaseService {
           console.warn(`Error accessing entry "${entry}": ${entryError.message}`);
         }
       }
+      this.currentDatabaseName = null;
       return {
         success: true,
         message: 'Successfully clear all databases',
@@ -477,6 +599,61 @@ export default class KuzuPersistentSync extends KuzuBaseService {
     } catch (error) {
       console.error('Failed Kuzu initialization:', error); 
       throw error;
+    }
+  }
+
+  writeVirtualFile(path, content) {
+    if (!this.initialized) {
+      throw new Error("Kuzu service not initialized");
+    }
+    const fs = kuzu.getFS();
+    const normalized = normalizePath(path);
+    ensureParentDirectory(fs, normalized);
+    fs.writeFile(normalized, content);
+  }
+
+  deleteVirtualFile(path) {
+    if (!this.initialized) {
+      throw new Error("Kuzu service not initialized");
+    }
+    const fs = kuzu.getFS();
+    const normalized = normalizePath(path);
+    try {
+      fs.unlink(normalized);
+    } catch (error) {
+      // Ignore if file already removed
+    }
+  }
+
+  /**
+   * Clean up resources and close connections
+   */
+  async cleanup() {
+    try {
+      // Disconnect from database if connected
+      if (this.db) {
+        await this.disconnectFromDatabase();
+      }
+      
+      // Save any pending changes to IndexedDB
+      if (this.initialized) {
+        await this.saveIDBFS();
+      }
+      
+      this.connection = null;
+      this.helper = null;
+      this.initialized = false;
+      
+      return {
+        success: true,
+        message: 'Successfully cleaned up KuzuPersistentSync'
+      };
+    } catch (error) {
+      console.error('Error during cleanup:', error);
+      return {
+        success: false,
+        error: `Failed to cleanup: ${error.message}`
+      };
     }
   }
 }

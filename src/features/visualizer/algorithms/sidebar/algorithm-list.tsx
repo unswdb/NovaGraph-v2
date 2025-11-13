@@ -38,8 +38,8 @@ export function UnfilteredAlgorithmList({
 }: {
   controller: VisualizerStore["controller"];
   nodes: GraphNode[];
-  setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
-  setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
+  setActiveAlgorithm: (a: BaseGraphAlgorithm | null) => void;
+  setActiveResponse: (a: BaseGraphAlgorithmResult | null) => void;
   isCollapsed: boolean;
 }) {
   return (
@@ -111,8 +111,8 @@ export function FilteredAlgorithmList({
   controller: VisualizerStore["controller"];
   searchText: string;
   nodes: GraphNode[];
-  setActiveAlgorithm: (a: BaseGraphAlgorithm) => void;
-  setActiveResponse: (a: BaseGraphAlgorithmResult) => void;
+  setActiveAlgorithm: (a: BaseGraphAlgorithm | null) => void;
+  setActiveResponse: (a: BaseGraphAlgorithmResult | null) => void;
   isCollapsed: boolean;
 }) {
   const allAlgorithms: BaseGraphAlgorithm[] = ALL_ALGORITHMS.reduce(
