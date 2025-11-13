@@ -152,13 +152,13 @@ export const ImportJSON: ImportOption = {
       accept: ".json",
       validator: validateEdgesJSON,
     }),
-    createSwitchInput({
-      id: "directed-json",
-      key: "directed",
-      displayName: "Directed Graph",
-      required: true,
-      defaultValue: false,
-    }),
+    // createSwitchInput({
+    //   id: "directed-json",
+    //   key: "directed",
+    //   displayName: "Directed Graph",
+    //   required: true,
+    //   defaultValue: false,
+    // }),
   ],
   handler: async ({ values }: { values: Record<string, any> }) => {
     const { name, nodes, edges, directed } = values;

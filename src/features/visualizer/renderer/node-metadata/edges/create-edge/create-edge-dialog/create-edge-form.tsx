@@ -87,7 +87,7 @@ const CreateEdgeDialogForm = observer(
       if (edgeSchema === undefined) {
         throw Error(`Edge schema '${selectedEdgeSchema}' not found`);
       }
-      await createEdge(source, target, directed, edgeSchema, values);
+      await createEdge(source, target, edgeSchema, values);
     };
 
     return (

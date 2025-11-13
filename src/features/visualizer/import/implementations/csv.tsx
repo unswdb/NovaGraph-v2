@@ -158,13 +158,13 @@ export const ImportCSV: ImportOption = {
       accept: ".csv",
       validator: validateEdges,
     }),
-    createSwitchInput({
-      id: "directed-csv",
-      key: "directed",
-      displayName: "Directed Graph",
-      required: true,
-      defaultValue: false,
-    }),
+    // createSwitchInput({
+    //   id: "directed-csv",
+    //   key: "directed",
+    //   displayName: "Directed Graph",
+    //   required: true,
+    //   defaultValue: false,
+    // }),
   ],
   handler: async ({ values }: { values: Record<string, any> }) => {
     const { name, nodes, edges, directed } = values;
