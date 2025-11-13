@@ -7,7 +7,7 @@ import {
 import { createGraphAlgorithm, type GraphAlgorithmResult } from "../types";
 
 import { createAlgorithmSelectInput } from "~/features/visualizer/inputs";
-import type { BFSData as BFSOutputData } from "~/igraph/algorithms/PathFinding/IgraphBFS";
+import type { BFSOutputData } from "~/igraph/algorithms/PathFinding/IgraphBFS";
 
 export const bfs = createGraphAlgorithm<BFSOutputData>({
   title: "Breadth-First Search",

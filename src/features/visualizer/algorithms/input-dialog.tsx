@@ -56,7 +56,7 @@ export default function InputDialog({
     [inputResults, algorithm]
   );
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!controller) return;
 
     // Don't run when there's no nodes
