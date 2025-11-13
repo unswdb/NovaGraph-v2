@@ -49,8 +49,9 @@ class MainController {
   // Database operations namespace
   db = {
     getGraphDirection() {
-      // Todo: fix this later once implement graph direction
-      return true;
+      // Get the current database metadata to determine graph direction
+      const metadata = kuzuController.getCurrentDatabaseMetadata?.();
+      return metadata?.isDirected; // Default to directed (true) if no metadata
     },
 
     async createNodeSchema(
@@ -188,8 +189,8 @@ class MainController {
       return kuzuController.deleteVirtualFile(path);
     },
 
-    async createDatabase(dbName: string) {
-      return Promise.resolve(kuzuController.createDatabase(dbName));
+    async createDatabase(dbName: string, metadata?: { isDirected?: boolean }) {
+      return Promise.resolve(kuzuController.createDatabase(dbName, metadata));
     },
 
     async deleteDatabase(dbName: string) {

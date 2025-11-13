@@ -23,12 +23,19 @@ type GraphSnapshot = {
   edgeTables: EdgeSchema[];
 };
 
+export interface DatabaseMetadata {
+  isDirected: boolean;
+  createdAt?: string;
+  lastModified?: string;
+}
+
 export default class KuzuPersistentAsync extends KuzuBaseService {
   private worker: Worker | null = null;
   private messageId = 0;
   private pendingRequests = new Map<number, PendingRequest>();
   private currentDatabaseName: string | null = null;
   private isConnected = false;
+  private currentDatabaseMetadata: DatabaseMetadata | null = null;
   private graphStateCache: GraphSnapshot = {
     nodes: [],
     edges: [],
@@ -38,6 +45,16 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
 
   constructor() {
     super();
+  }
+
+  /**
+   * Get the file system for this service
+   * Note: In worker-based implementation, file system operations are proxied through the worker
+   */
+  protected getFileSystem(): any {
+    // Since we're using a worker-based implementation, we don't have direct access to the file system
+    // File system operations should be done through writeVirtualFile/deleteVirtualFile methods
+    return null;
   }
 
   /**
@@ -129,12 +146,24 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
   /**
    * Create a new database
    */
-  async createDatabase(dbName: string) {
+  async createDatabase(dbName: string, metadata?: Partial<DatabaseMetadata>) {
     try {
-      const result = await this.sendMessage('createDatabase', { dbName });
+      const result = await this.sendMessage('createDatabase', { 
+        dbName,
+        metadata: {
+          isDirected: metadata?.isDirected ?? true, // Hardcoded to true for now
+        },
+      });
+      
+      // Store metadata from result
+      if (result.metadata) {
+        console.log(`[KuzuPersistentAsync] Database created with metadata:`, result.metadata);
+      }
+      
       return {
         success: result.success,
         message: result.message,
+        metadata: result.metadata,
       };
     } catch (error) {
       return {
@@ -154,11 +183,24 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
         await this.refreshGraphState();
         this.currentDatabaseName = dbName;
         this.isConnected = true;
+        
+        // Store metadata from result
+        if (result.metadata) {
+          this.currentDatabaseMetadata = result.metadata;
+          console.log(`[KuzuPersistentAsync] Connected to database with metadata:`, result.metadata);
+        } else {
+          // If no metadata in result, try to fetch it
+          const metadataResult = await this.getMetadata(dbName);
+          if (metadataResult.success && metadataResult.metadata) {
+            this.currentDatabaseMetadata = metadataResult.metadata;
+          }
+        }
       }
       return {
         success: result.success,
         message: result.message,
         error: result.error,
+        metadata: result.metadata,
       };
     } catch (error) {
       return {
@@ -182,6 +224,7 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
           edgeTables: [],
         };
         this.currentDatabaseName = null;
+        this.currentDatabaseMetadata = null;
         this.isConnected = false;
       }
       return {
@@ -374,6 +417,7 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
       }
 
       this.currentDatabaseName = null;
+      this.currentDatabaseMetadata = null;
       this.isConnected = false;
 
       return {
@@ -414,6 +458,7 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
         edgeTables: [],
       };
       this.currentDatabaseName = null;
+      this.currentDatabaseMetadata = null;
       this.isConnected = false;
 
       this.initialized = false;
@@ -480,6 +525,58 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
       throw new Error("Worker not initialized");
     }
     await this.sendMessage('deleteFile', { path });
+  }
+
+  /**
+   * Get metadata for a specific database
+   */
+  async getMetadata(dbName: string) {
+    try {
+      const result = await this.sendMessage('getMetadata', { dbName });
+      return {
+        success: result.success,
+        metadata: result.metadata as DatabaseMetadata,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+        metadata: undefined as DatabaseMetadata | undefined,
+      };
+    }
+  }
+
+  /**
+   * Set metadata for a specific database
+   */
+  async setMetadata(dbName: string, metadata: Partial<DatabaseMetadata>) {
+    try {
+      const result = await this.sendMessage('setMetadata', { dbName, metadata });
+      
+      // Update cache if this is the currently connected database
+      if (this.currentDatabaseName === dbName && result.metadata) {
+        this.currentDatabaseMetadata = result.metadata;
+        console.log(`[KuzuPersistentAsync] Updated metadata for ${dbName}:`, result.metadata);
+      }
+      
+      return {
+        success: result.success,
+        metadata: result.metadata as DatabaseMetadata,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+        metadata: undefined as DatabaseMetadata | undefined,
+      };
+    }
+  }
+
+  /**
+   * Get metadata for the currently connected database
+   */
+  getCurrentDatabaseMetadata(): DatabaseMetadata | null {
+    return this.currentDatabaseMetadata;
   }
 
   async ensureDefaultDatabase(dbName = "default_async_db") {

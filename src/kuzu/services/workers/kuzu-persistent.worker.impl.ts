@@ -11,10 +11,17 @@ import { queryResultColorMapExtraction } from "../../helpers/KuzuQueryResultExtr
 
 const DATABASES_DIR = 'kuzu_databases';
 const DB_FILE_NAME = 'database.kuzu';
+const METADATA_FILE_NAME = 'metadata.json';
 
 let db: any = null;
 let connection: any = null;
 let initialized = false;
+
+interface DatabaseMetadata {
+  isDirected: boolean;
+  createdAt?: string;
+  lastModified?: string;
+}
 
 const normalizePath = (filePath: string) =>
   filePath.startsWith('/') ? filePath : `/${filePath}`;
@@ -82,6 +89,40 @@ function getDatabaseDir(dbName: string): string {
 
 function getDatabaseFilePath(dbName: string): string {
   return `${getDatabaseDir(dbName)}/${DB_FILE_NAME}`;
+}
+
+function getMetadataFilePath(dbName: string): string {
+  return `${getDatabaseDir(dbName)}/${METADATA_FILE_NAME}`;
+}
+
+/**
+ * Save metadata for a database
+ */
+function saveMetadata(dbName: string, metadata: DatabaseMetadata) {
+  const metadataPath = getMetadataFilePath(dbName);
+  const metadataJson = JSON.stringify(metadata, null, 2);
+  kuzu.getFS().writeFile(metadataPath, metadataJson);
+}
+
+/**
+ * Load metadata for a database
+ */
+function loadMetadata(dbName: string): DatabaseMetadata {
+  const metadataPath = getMetadataFilePath(dbName);
+  
+  try {
+    if (fileExists(metadataPath)) {
+      const metadataContent = kuzu.getFS().readFile(metadataPath, { encoding: 'utf8' });
+      return JSON.parse(metadataContent) as DatabaseMetadata;
+    }
+  } catch (error) {
+    console.warn(`[Worker] Failed to load metadata for ${dbName}:`, error);
+  }
+  
+  // Return default metadata if file doesn't exist or fails to load
+  return {
+    isDirected: true,
+  };
 }
 
 function removeDirectoryRecursive(path: string) {
@@ -264,12 +305,24 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
         tempConn.close();
         tempDb.close();
         
+        // Save metadata (hardcoded to isDirected: true for now)
+        const metadata: DatabaseMetadata = {
+          isDirected: data.metadata?.isDirected ?? true,
+          createdAt: new Date().toISOString(),
+          lastModified: new Date().toISOString(),
+        };
+        saveMetadata(data.dbName, metadata);
+        
         await saveIDBFS();
         
         self.postMessage({
           id,
           type,
-          data: { success: true, message: `Database ${data.dbName} created` },
+          data: { 
+            success: true, 
+            message: `Database ${data.dbName} created`,
+            metadata,
+          },
         } as WorkerResponse);
         break;
 
@@ -288,10 +341,17 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
         db = new kuzu.Database(dbFile);
         connection = new kuzu.Connection(db);
         
+        // Load metadata
+        const loadedMetadata = loadMetadata(data.dbName);
+        
         self.postMessage({
           id,
           type,
-          data: { success: true, message: `Connected to ${data.dbName}` },
+          data: { 
+            success: true, 
+            message: `Connected to ${data.dbName}`,
+            metadata: loadedMetadata,
+          },
         } as WorkerResponse);
         break;
 
@@ -526,6 +586,61 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
             data: snapshotGraphState(connection),
           } as WorkerResponse);
         }
+        break;
+
+      case 'getMetadata':
+        const getMetaDbName = data.dbName;
+        if (!getMetaDbName) {
+          throw new Error('Database name is required for getMetadata');
+        }
+        
+        const getMetaDbDir = getDatabaseDir(getMetaDbName);
+        if (!directoryExists(getMetaDbDir)) {
+          throw new Error(`Database '${getMetaDbName}' does not exist`);
+        }
+        
+        const retrievedMetadata = loadMetadata(getMetaDbName);
+        
+        self.postMessage({
+          id,
+          type,
+          data: { 
+            success: true,
+            metadata: retrievedMetadata,
+          },
+        } as WorkerResponse);
+        break;
+
+      case 'setMetadata':
+        const setMetaDbName = data.dbName;
+        if (!setMetaDbName) {
+          throw new Error('Database name is required for setMetadata');
+        }
+        
+        const setMetaDbDir = getDatabaseDir(setMetaDbName);
+        if (!directoryExists(setMetaDbDir)) {
+          throw new Error(`Database '${setMetaDbName}' does not exist`);
+        }
+        
+        // Load existing metadata and merge with new values
+        const existingMetadata = loadMetadata(setMetaDbName);
+        const updatedMetadata: DatabaseMetadata = {
+          ...existingMetadata,
+          ...data.metadata,
+          lastModified: new Date().toISOString(),
+        };
+        
+        saveMetadata(setMetaDbName, updatedMetadata);
+        await saveIDBFS();
+        
+        self.postMessage({
+          id,
+          type,
+          data: { 
+            success: true,
+            metadata: updatedMetadata,
+          },
+        } as WorkerResponse);
         break;
 
       case 'cleanup':

@@ -185,11 +185,12 @@ export const ImportJSON: ImportOption = {
 
     try {
       console.log(
-        `[JSON Import] Starting import for database: ${databaseName}`
+        `[JSON Import] Starting import for database: ${databaseName}, isDirected: ${isDirected}`
       );
 
       const createResult = await controller.db.createDatabase(
-        trimmedDatabaseName
+        trimmedDatabaseName,
+        { isDirected }
       );
       if (!createResult.success) {
         throw new Error(
@@ -199,6 +200,8 @@ export const ImportJSON: ImportOption = {
         );
       }
       createdDatabase = true;
+      
+      console.log(`[JSON Import] Database created with metadata:`, createResult.metadata);
 
       const connectResult = await controller.db.connectToDatabase(
         trimmedDatabaseName

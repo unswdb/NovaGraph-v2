@@ -190,11 +190,12 @@ export const ImportCSV: ImportOption = {
 
     try {
       console.log(
-        `[CSV Import] Starting import for database: ${databaseName}`
+        `[CSV Import] Starting import for database: ${databaseName}, isDirected: ${isDirected}`
       );
 
       const createResult = await controller.db.createDatabase(
-        trimmedDatabaseName
+        trimmedDatabaseName,
+        { isDirected }
       );
       if (!createResult.success) {
         throw new Error(
@@ -204,6 +205,8 @@ export const ImportCSV: ImportOption = {
         );
       }
       createdDatabase = true;
+      
+      console.log(`[CSV Import] Database created with metadata:`, createResult.metadata);
 
       const connectResult = await controller.db.connectToDatabase(
         trimmedDatabaseName

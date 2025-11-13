@@ -480,14 +480,14 @@ class KuzuController {
    * Create a new persistent database
    * Only available for KuzuPersistentSync and KuzuPersistentAsync
    */
-  async createDatabase(dbName: string) {
+  async createDatabase(dbName: string, metadata?: { isDirected?: boolean }) {
     if (!this.service) {
       throw new Error("Kuzu service not initialized");
     }
     if (!isPersistentService(this.service)) {
       throw new Error("createDatabase is only available for persistent mode");
     }
-    return await this.service.createDatabase(dbName);
+    return await this.service.createDatabase(dbName, metadata);
   }
 
   /**
@@ -547,6 +547,7 @@ class KuzuController {
 
     // Type is now narrowed to KuzuPersistentSync | KuzuPersistentAsync
     const result = await this.service.connectToDatabase(dbPath.trim(), dbOptions);
+    // console.log("here: " + result.metadata.isDirected);
     
     // Normalize return type
     return {
@@ -596,6 +597,24 @@ class KuzuController {
       return null;
     }
     return this.service.getCurrentDatabaseName();
+  }
+
+  /**
+   * Get metadata for the currently connected persistent database
+   * Only available for persistent modes
+   */
+  getCurrentDatabaseMetadata() {
+    if (!this.service) {
+      return null;
+    }
+    if (!isPersistentService(this.service)) {
+      return null;
+    }
+    // Type guard ensures service has getCurrentDatabaseMetadata
+    if (typeof (this.service as any).getCurrentDatabaseMetadata === 'function') {
+      return (this.service as any).getCurrentDatabaseMetadata();
+    }
+    return null;
   }
 
   /**
