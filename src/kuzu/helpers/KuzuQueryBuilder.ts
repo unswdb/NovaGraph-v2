@@ -76,18 +76,18 @@ export function deleteEdgeQuery(
 
   // For directed graphs, delete single edge u1 -> u2
   const forwardQuery = `
-  MATCH (u:${node1.tableName})-[f:${edgeTableName}]->(u1:${node2.tableName})
-  WHERE u.\`${node1._primaryKey}\` = '${node1._primaryKeyValue}' 
-  AND u1.\`${node2._primaryKey}\` = '${node2._primaryKeyValue}'
+  MATCH (u:\`${node1.tableName}\`)-[f:\`${edgeTableName}\`]->(u1:\`${node2.tableName}\`)
+  WHERE u.\`${node1._primaryKey}\` = ${_formatQueryInput(node1._primaryKeyValue)} 
+  AND u1.\`${node2._primaryKey}\` = ${_formatQueryInput(node2._primaryKeyValue)}
   DELETE f;
   `;
 
   // For undirected graphs, also delete reverse edge u2 -> u1
   if (!isDirected) {
     const reverseQuery = `
-  MATCH (u:${node2.tableName})-[f:${edgeTableName}]->(u1:${node1.tableName})
-  WHERE u.\`${node2._primaryKey}\` = '${node2._primaryKeyValue}' 
-  AND u1.\`${node1._primaryKey}\` = '${node1._primaryKeyValue}'
+  MATCH (u:\`${node2.tableName}\`)-[f:\`${edgeTableName}\`]->(u1:\`${node1.tableName}\`)
+  WHERE u.\`${node2._primaryKey}\` = ${_formatQueryInput(node2._primaryKeyValue)} 
+  AND u1.\`${node1._primaryKey}\` = ${_formatQueryInput(node1._primaryKeyValue)}
   DELETE f;
   `;
     return forwardQuery + reverseQuery;
@@ -335,30 +335,7 @@ export function createNodeQuery(
   const entries = Object.entries(properties)
     .filter(([, obj]) => obj && obj.value !== undefined && obj.value !== "")
     .map(([key, obj]) => {
-      let { value } = obj;
-      const inferredType = typeof value;
-
-      // --- Handle DATE ---
-      if (
-        value instanceof Date ||
-        (inferredType === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value))
-      ) {
-        value = `date("${value}")`;
-
-        // --- Handle TIMESTAMP (string with time or Date) ---
-      } else if (
-        value instanceof Date ||
-        (inferredType === "string" &&
-          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value))
-      ) {
-        value = `timestamp("${_normalizeTimestamp(value)}")`;
-
-        // --- Handle normal strings ---
-      } else if (inferredType === "string") {
-        value = `"${value}"`;
-      }
-
-      return `${key}: ${value}`;
+      return `${key}: ${_formatQueryInput(obj.value)}`;
     })
     .join(", ");
 
@@ -405,7 +382,9 @@ export function deleteNodeQuery(
   primaryKey: string,
   primaryValue: any
 ) {
-  const query = `MATCH (n:\`${tableName}\`) WHERE n.\`${primaryKey}\` = "${primaryValue}" DETACH DELETE n`;
+  const query = `MATCH (n:\`${tableName}\`) WHERE n.\`${primaryKey}\` = ${_formatQueryInput(
+    primaryValue
+  )} DETACH DELETE n`;
   return query;
 }
 
@@ -662,7 +641,7 @@ function _formatQueryInput(value: any) {
   } else if (inferredType === "boolean") {
     return value;
   } else if (inferredType === undefined) {
-    throw Error("Undefined!: " + inferredType);
+    return "NULL";
   }
   throw Error("Unsupported type at: " + value);
 }
