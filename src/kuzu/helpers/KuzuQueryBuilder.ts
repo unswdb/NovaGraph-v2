@@ -115,7 +115,7 @@ export function updateEdgeQuery(
 
   // For directed graphs, update single edge u1 -> u2
   const forwardQuery = `
-  MATCH (u0:${node1.tableName})-[f:${edgeTableName}]->(u1:${node2.tableName})
+  MATCH (u0:\`${node1.tableName}\`)-[f:\`${edgeTableName}\`]->(u1:\`${node2.tableName}\`)
   WHERE u0.\`${node1._primaryKey}\` = ${_formatQueryInput(node1._primaryKeyValue)} 
   AND u1.\`${node2._primaryKey}\` = ${_formatQueryInput(node2._primaryKeyValue)}
   SET ${attriutesMappingString.slice(2)}
@@ -125,7 +125,7 @@ export function updateEdgeQuery(
   // For undirected graphs, also update reverse edge u2 -> u1 to maintain consistency
   if (!isDirected) {
     const reverseQuery = `
-  MATCH (u0:${node2.tableName})-[f:${edgeTableName}]->(u1:${node1.tableName})
+  MATCH (u0:\`${node2.tableName}\`)-[f:\`${edgeTableName}\`]->(u1:\`${node1.tableName}\`)
   WHERE u0.\`${node2._primaryKey}\` = ${_formatQueryInput(node2._primaryKeyValue)} 
   AND u1.\`${node1._primaryKey}\` = ${_formatQueryInput(node1._primaryKeyValue)}
   SET ${attriutesMappingString.slice(2)}
@@ -352,11 +352,11 @@ export function updateNodeQuery(
   for (const [key, val] of Object.entries(values)) {
     if (key === "tableName") continue;
     if (key === node._primaryKey) continue;
-    attriutesMappingString += `, n.${key} = ${_formatQueryInput(val.value)}`;
+    attriutesMappingString += `, n.\`${key}\` = ${_formatQueryInput(val.value)}`;
   }
   const query = `
-    MATCH (n:${node.tableName})
-    WHERE n.${node._primaryKey} = ${_formatQueryInput(node._primaryKeyValue)}
+    MATCH (n:\`${node.tableName}\`)
+    WHERE n.\`${node._primaryKey}\` = ${_formatQueryInput(node._primaryKeyValue)}
     SET ${attriutesMappingString.slice(2)};
   `;
   return query;
@@ -628,14 +628,14 @@ function _formatQueryInput(value: any) {
     if (value && typeof value.toISOString === "function") {
       isoDate = value.toISOString().split("T")[0];
     }
-    return `date("${isoDate}")`;
+    return `date("${_esc(isoDate)}")`;
   } else if (
     value instanceof Date ||
     (inferredType === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value))
   ) {
-    return `timestamp("${_normalizeTimestamp(value)}")`;
+    return `timestamp("${_esc(_normalizeTimestamp(value))}")`;
   } else if (inferredType === "string") {
-    return `"${value}"`;
+    return `"${_esc(value)}"`;
   } else if (inferredType === "number") {
     return value;
   } else if (inferredType === "boolean") {
