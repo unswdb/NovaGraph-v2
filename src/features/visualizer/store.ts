@@ -294,9 +294,9 @@ export default class VisualizerStore {
 
     nodeTables.forEach((t) => {
       const newTable = {
-        tableName: String(t.tableName),
+        tableName: t.tableName,
         tableType: t.tableType,
-        primaryKey: String(t.primaryKey),
+        primaryKey: t.primaryKey,
         primaryKeyType: t.primaryKeyType,
         properties: t.properties,
       };
@@ -316,13 +316,13 @@ export default class VisualizerStore {
 
     edgeTables.forEach((t) => {
       const newTable = {
-        tableName: String(t.tableName),
+        tableName: t.tableName,
         tableType: t.tableType,
-        primaryKey: String(t.primaryKey),
+        primaryKey: t.primaryKey,
         primaryKeyType: t.primaryKeyType,
         properties: t.properties,
-        sourceTableName: String(t.sourceTableName),
-        targetTableName: String(t.targetTableName),
+        sourceTableName: t.sourceTableName,
+        targetTableName: t.targetTableName,
       };
 
       if (isEdgeSchema(newTable)) {
@@ -343,10 +343,10 @@ export default class VisualizerStore {
 
     nodes.forEach((n) => {
       const builtNode = {
-        id: String(n.id),
-        _primaryKey: String(n._primaryKey),
-        _primaryKeyValue: String(n._primaryKeyValue),
-        tableName: String(n.tableName),
+        id: n.id,
+        _primaryKey: n._primaryKey,
+        _primaryKeyValue: n._primaryKeyValue,
+        tableName: n.tableName,
         ...(n.attributes ? { attributes: n.attributes } : {}),
       };
       builtNodes.push(builtNode);
@@ -364,12 +364,12 @@ export default class VisualizerStore {
     const edgesMap: Map<[string, string], GraphEdge> = new Map();
 
     edges.forEach((e) => {
-      const source = String(e.source);
-      const target = String(e.target);
+      const source = e.source;
+      const target = e.target;
       const builtEdge = {
         source,
         target,
-        tableName: String(e.tableName),
+        tableName: e.tableName,
         ...(e.attributes ? { attributes: e.attributes } : {}),
       };
       builtEdges.push(builtEdge);
