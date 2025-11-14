@@ -100,6 +100,7 @@ function ImportListSelector({
   onSelectDatabase: (name: string) => Promise<void>;
   onDeleteDatabase: (name: string) => Promise<void>;
 }) {
+  const [selectingName, setSelectingName] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const { run: selectDatabase, isLoading: isSelecting } = useAsyncFn(
@@ -132,7 +133,9 @@ function ImportListSelector({
       setOpen(false);
       return;
     }
+    setSelectingName(name);
     await selectDatabase(name);
+    setSelectingName(null);
   };
 
   const handleDelete = async (name: string) => {
@@ -153,10 +156,12 @@ function ImportListSelector({
                 onSelect={() => handleSelect(entry)}
               >
                 <div className="flex w-full items-center justify-between gap-2 h-8">
-                  <span className="truncate">
-                    {isSelecting && <Loader className="w-4 h-4 animate-spin" />}
-                    {entry}
-                  </span>
+                  <div className="flex items-center gap-1">
+                    {isSelecting && selectingName === entry && (
+                      <Loader className="w-4 h-4 animate-spin" />
+                    )}
+                    <span className="truncate">{entry}</span>
+                  </div>
                   {database.name === entry ? (
                     <span className="px-2 py-1 text-xs text-typography-secondary border border-neutral rounded-full">
                       Active

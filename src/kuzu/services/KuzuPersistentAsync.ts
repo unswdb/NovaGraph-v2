@@ -19,6 +19,7 @@ export type DatabaseMetadata = {
   isDirected: boolean;
   createdAt?: string;
   lastModified?: string;
+  lastUsedAt?: string;
 };
 
 export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
@@ -34,7 +35,29 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
     await super.initialize("./workers/kuzu-persistent.worker.ts");
 
     const databases = await this.listDatabases().catch(() => [] as string[]);
-    this.currentDatabaseName = this.currentDatabaseName ?? databases[0] ?? null;
+    if (databases.length === 0) {
+      this.currentDatabaseName = null;
+      return;
+    }
+
+    if (this.currentDatabaseName) {
+      await this.connectToDatabase(this.currentDatabaseName);
+    }
+
+    const databasesWithMetadata = await Promise.all(
+      databases.map(async (name) => {
+        const metadata = await this.getMetadata(name).catch(() => null);
+        return { name, metadata };
+      })
+    );
+    const lastUsedDatabase = databasesWithMetadata
+      .filter((x) => x.metadata && x.metadata.lastUsedAt)
+      .sort(
+        (a, b) =>
+          new Date(b.metadata!.lastUsedAt!).getTime() -
+          new Date(a.metadata!.lastUsedAt!).getTime()
+      );
+    this.currentDatabaseName = lastUsedDatabase[0].name ?? databases[0];
     await this.connectToDatabase(this.currentDatabaseName);
   }
 

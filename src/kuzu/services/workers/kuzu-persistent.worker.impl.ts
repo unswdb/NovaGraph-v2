@@ -9,6 +9,7 @@ import kuzu from "kuzu-wasm/sync";
 
 import { snapshotGraphState } from "../../helpers/KuzuQueryExecutor";
 import { queryResultColorMapExtraction } from "../../helpers/KuzuQueryResultExtractor";
+import type { DatabaseMetadata } from "../KuzuPersistentAsync";
 
 const DATABASES_DIR = "kuzu_databases";
 const DB_FILE_NAME = "database.kuzu";
@@ -17,12 +18,6 @@ const METADATA_FILE_NAME = "metadata.json";
 let db: any = null;
 let connection: any = null;
 let initialized = false;
-
-interface DatabaseMetadata {
-  isDirected: boolean;
-  createdAt?: string;
-  lastModified?: string;
-}
 
 const normalizePath = (filePath: string) =>
   filePath.startsWith("/") ? filePath : `/${filePath}`;
@@ -321,6 +316,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
           isDirected: data.metadata?.isDirected ?? true,
           createdAt: new Date().toISOString(),
           lastModified: new Date().toISOString(),
+          lastUsedAt: new Date().toISOString(),
         };
         saveMetadata(data.dbName, metadata);
 
@@ -354,6 +350,13 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 
         // Load metadata
         const loadedMetadata = loadMetadata(data.dbName);
+        const newMetadata: DatabaseMetadata = {
+          ...loadedMetadata,
+          lastModified: new Date().toISOString(),
+          lastUsedAt: new Date().toISOString(), // 👈 mark as most recently used
+        };
+        saveMetadata(data.dbName, newMetadata);
+        await saveIDBFS();
 
         self.postMessage({
           id,
