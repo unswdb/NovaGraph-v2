@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { Loader } from "lucide-react";
 
 import InputComponent, { createEmptyInputResults } from "../inputs";
+import { useStore } from "../hooks/use-store";
 
 import ALL_IMPORTS, { type ImportOption } from "./implementations";
 
@@ -16,7 +17,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Separator } from "~/components/ui/separator";
 import { Button } from "~/components/ui/button";
 import { useAsyncFn } from "~/hooks/use-async-fn";
-import { useStore } from "../hooks/use-store";
 
 export default function ImportDialog({ onClose }: { onClose: () => void }) {
   const store = useStore();
@@ -52,7 +52,12 @@ export default function ImportDialog({ onClose }: { onClose: () => void }) {
           {/* Right Content - Tabbed Interface with separate overflow */}
           <div className="flex-1 flex flex-col min-h-0">
             {ALL_IMPORTS.map((option) => (
-              <ImportContent key={option.value} option={option} store={store} onClose={onClose} />
+              <ImportContent
+                key={option.value}
+                option={option}
+                store={store}
+                onClose={onClose}
+              />
             ))}
           </div>
         </div>
@@ -61,7 +66,15 @@ export default function ImportDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-function ImportContent({ option, store, onClose }: { option: ImportOption; store: any; onClose: () => void }) {
+function ImportContent({
+  option,
+  store,
+  onClose,
+}: {
+  option: ImportOption;
+  store: any;
+  onClose: () => void;
+}) {
   const [inputResults, setInputResults] = useState(
     createEmptyInputResults(option.inputs)
   );
@@ -110,7 +123,7 @@ function ImportContent({ option, store, onClose }: { option: ImportOption; store
   });
 
   const handleOnSubmit = async () => {
-    await importFile({ values: inputResults });
+    await importFile({ values: inputResults, controller: store.controller });
   };
 
   return (

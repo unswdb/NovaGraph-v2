@@ -11,8 +11,8 @@ export const ImportAuto: ImportOption = {
     "This function will generate a random graph based on the Erdős-Rényi model. Enter the number of nodes and a probability value between 0 and 1 to generate a graph. The probability value represents the likelihood of an edge existing between two nodes.",
   inputs: [],
   // TODO: Import handler
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handler: async ({ values }: { values: Record<string, any> }) => {
+
+  handler: async ({}: { values: Record<string, any>; controller: any }) => {
     return { success: true };
   },
 };

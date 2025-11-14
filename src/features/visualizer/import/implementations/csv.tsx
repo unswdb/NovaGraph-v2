@@ -20,7 +20,7 @@ import { Switch } from "~/components/form/switch";
 import { Label } from "~/components/form/label";
 import {
   createFileInput,
-  createSwitchInput,
+  // createSwitchInput,
   createTextInput,
 } from "~/features/visualizer/inputs";
 
@@ -46,8 +46,8 @@ const validateNodes = async (file: File | undefined) => {
 
     // Check header - now supports multiple columns
     const header = lines[0].trim();
-    const columns = header.split(",").map(col => col.trim());
-    
+    const columns = header.split(",").map((col) => col.trim());
+
     if (columns.length === 0) {
       return {
         success: false,
@@ -121,8 +121,6 @@ const validateEdges = async (file: File | undefined) => {
   }
 };
 
-type CSVInputType = {};
-
 export const ImportCSV: ImportOption = {
   label: "Import as CSV",
   value: "csv",
@@ -158,6 +156,7 @@ export const ImportCSV: ImportOption = {
       accept: ".csv",
       validator: validateEdges,
     }),
+    // Temporarily disabled - keeping logic intact with default value
     // createSwitchInput({
     //   id: "directed-csv",
     //   key: "directed",
@@ -166,14 +165,20 @@ export const ImportCSV: ImportOption = {
     //   defaultValue: false,
     // }),
   ],
-  handler: async ({ values }: { values: Record<string, any> }) => {
+  handler: async ({
+    values,
+    controller,
+  }: {
+    values: Record<string, any>;
+    controller: any;
+  }) => {
     const { name, nodes, edges, directed } = values;
 
     const databaseName = name.value as string;
     const trimmedDatabaseName = (databaseName ?? "").trim();
     const nodesFile = nodes.value as File;
     const edgesFile = edges.value as File;
-    const isDirected = directed.value as boolean;
+    const isDirected = (directed?.value as boolean) ?? true;
 
     if (!trimmedDatabaseName) {
       return {
@@ -182,103 +187,52 @@ export const ImportCSV: ImportOption = {
       };
     }
 
-    const { controller } = await import("~/MainController");
-    const previousDatabaseName = await controller.db
-      .getCurrentDatabaseName()
-      .catch(() => null);
-    let createdDatabase = false;
-
-    try {
-      console.log(
-        `[CSV Import] Starting import for database: ${databaseName}, isDirected: ${isDirected}`
+    const createResult = await controller.db.createDatabase(
+      trimmedDatabaseName,
+      { isDirected }
+    );
+    if (!createResult.success) {
+      throw new Error(
+        createResult.error ||
+          createResult.message ||
+          `Failed to create database "${trimmedDatabaseName}"`
       );
+    }
 
-      const createResult = await controller.db.createDatabase(
-        trimmedDatabaseName,
-        { isDirected }
+    const connectResult =
+      await controller.db.connectToDatabase(trimmedDatabaseName);
+    if (!connectResult.success) {
+      throw new Error(
+        connectResult.error ||
+          connectResult.message ||
+          `Failed to connect to database "${trimmedDatabaseName}"`
       );
-      if (!createResult.success) {
-        throw new Error(
-          createResult.error ||
-            createResult.message ||
-            `Failed to create database "${trimmedDatabaseName}"`
-        );
-      }
-      createdDatabase = true;
-      
-      console.log(`[CSV Import] Database created with metadata:`, createResult.metadata);
+    }
 
-      const connectResult = await controller.db.connectToDatabase(
-        trimmedDatabaseName
-      );
-      if (!connectResult.success) {
-        throw new Error(
-          connectResult.error ||
-            connectResult.message ||
-            `Failed to connect to database "${trimmedDatabaseName}"`
-        );
-      }
+    const nodesText = await nodesFile.text();
+    const edgesText = await edgesFile.text();
 
-      const nodesText = await nodesFile.text();
-      const edgesText = await edgesFile.text();
+    const nodeTableName = nodesFile.name.replace(/\.csv$/i, "");
+    const edgeTableName = edgesFile.name.replace(/\.csv$/i, "");
 
-      const nodeTableName = nodesFile.name.replace(/\.csv$/i, "");
-      const edgeTableName = edgesFile.name.replace(/\.csv$/i, "");
+    const result = await controller.db.importFromCSV(
+      nodesText,
+      edgesText,
+      nodeTableName,
+      edgeTableName,
+      isDirected
+    );
 
-      console.log(
-        `[CSV Import] Node table: ${nodeTableName}, Edge table: ${edgeTableName}`
-      );
-
-      const result = await controller.db.importFromCSV(
-        nodesText,
-        edgesText,
-        nodeTableName,
-        edgeTableName,
-        isDirected
-      );
-
-      if (result.success && result.data) {
-        await controller.db.saveDatabase().catch(() => {});
-        return {
-          ...result,
-          databaseName: trimmedDatabaseName,
-          message: `Successfully imported graph "${trimmedDatabaseName}" with ${result.data.nodes.length} nodes and ${result.data.edges.length} edges!`,
-        };
-      }
-
-      return result;
-    } catch (error) {
-      console.error("[CSV Import] Error:", error);
-      if (
-        previousDatabaseName &&
-        previousDatabaseName !== trimmedDatabaseName
-      ) {
-        try {
-          await controller.db.connectToDatabase(previousDatabaseName);
-        } catch (reconnectError) {
-          console.error(
-            "[CSV Import] Failed to reconnect to previous database:",
-            reconnectError
-          );
-        }
-      }
-      if (createdDatabase) {
-        await controller.db
-          .deleteDatabase(trimmedDatabaseName)
-          .catch((cleanupError: unknown) =>
-            console.warn(
-              `[CSV Import] Failed to delete database "${trimmedDatabaseName}" after error`,
-              cleanupError
-            )
-          );
-      }
+    if (result.success && result.data) {
+      await controller.db.saveDatabase();
       return {
-        success: false,
-        message: `Failed to import CSV: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        ...result,
+        databaseName: trimmedDatabaseName,
+        message: `Successfully imported graph "${trimmedDatabaseName}" with ${result.data.nodes.length} nodes and ${result.data.edges.length} edges!`,
       };
     }
+
+    return result;
   },
 };
 

@@ -1,15 +1,12 @@
 import type { ElementType } from "react";
 
+import type { GraphNode, GraphEdge, NodeSchema, EdgeSchema } from "../../types";
+import type VisualizerStore from "../../store";
+
 import type {
   InputChangeResult,
   InputType,
 } from "~/features/visualizer/inputs";
-import type {
-  GraphNode,
-  GraphEdge,
-  NodeSchema,
-  EdgeSchema,
-} from "../../types";
 
 type ImportHandlerResult = {
   success: boolean;
@@ -26,6 +23,7 @@ type ImportHandlerResult = {
 
 type ImportHandler = (data: {
   values: Record<string, InputChangeResult<any>>;
+  controller: VisualizerStore["controller"];
 }) => Promise<ImportHandlerResult>;
 
 type ImportValidator = (data: {

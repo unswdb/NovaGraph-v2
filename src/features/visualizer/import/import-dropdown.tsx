@@ -6,6 +6,7 @@ import {
   useState,
   type ComponentProps,
 } from "react";
+import { toast } from "sonner";
 
 import type { DatabaseOption, GraphDatabase } from "../types";
 
@@ -27,7 +28,6 @@ import {
 } from "~/components/ui/popover";
 import { Dialog, DialogTrigger } from "~/components/ui/dialog";
 import { cn } from "~/lib/utils";
-import { toast } from "sonner";
 
 export default function ImportDropdown({
   database,
