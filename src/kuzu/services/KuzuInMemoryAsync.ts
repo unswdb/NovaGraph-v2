@@ -8,6 +8,7 @@ import type {
   ErrorQueryResult,
   SuccessQueryResult,
 } from "./KuzuQueryResultExtractor.types";
+
 import type {
   EdgeSchema,
   GraphEdge,
@@ -56,8 +57,8 @@ export default class KuzuInMemoryAsync extends KuzuBaseService {
 
       // Create Web Worker
       this.worker = new Worker(
-        new URL('./workers/kuzu-inmemory.worker.ts', import.meta.url),
-        { type: 'module' }
+        new URL("./workers/kuzu-inmemory.worker.ts", import.meta.url),
+        { type: "module" }
       );
 
       // Set up message handler
@@ -86,13 +87,15 @@ export default class KuzuInMemoryAsync extends KuzuBaseService {
         });
         // Reject all pending requests
         this.pendingRequests.forEach((request) => {
-          request.reject(new Error(`Worker error: ${error.message || 'Unknown error'}`));
+          request.reject(
+            new Error(`Worker error: ${error.message || "Unknown error"}`)
+          );
         });
         this.pendingRequests.clear();
       };
 
       // Initialize the worker
-      const initResult = await this.sendMessage('init', {});
+      const initResult = await this.sendMessage("init", {});
       console.log("Kuzu async initialized:", initResult);
 
       await this.refreshGraphState();
@@ -110,7 +113,7 @@ export default class KuzuInMemoryAsync extends KuzuBaseService {
   private sendMessage(type: string, data: any): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!this.worker) {
-        reject(new Error('Worker not initialized'));
+        reject(new Error("Worker not initialized"));
         return;
       }
 
@@ -134,7 +137,7 @@ export default class KuzuInMemoryAsync extends KuzuBaseService {
       throw new Error("Worker not initialized");
     }
 
-    const result = await this.sendMessage('snapshotGraphState', {});
+    const result = await this.sendMessage("snapshotGraphState", {});
     const snapshot: GraphSnapshot = {
       nodes: result?.nodes || [],
       edges: result?.edges || [],
@@ -154,7 +157,7 @@ export default class KuzuInMemoryAsync extends KuzuBaseService {
     }
 
     try {
-      const result = await this.sendMessage('query', { query });
+      const result = await this.sendMessage("query", { query });
       const graphState = await this.refreshGraphState();
 
       const successQueries: SuccessQueryResult[] = Array.isArray(
@@ -186,7 +189,9 @@ export default class KuzuInMemoryAsync extends KuzuBaseService {
         edgeTables: graphState.edgeTables || [],
         colorMap: result.colorMap || {},
         resultType: result.resultType || "graph",
-        message: result.success ? "Query executed successfully" : failureMessage,
+        message: result.success
+          ? "Query executed successfully"
+          : failureMessage,
       };
     } catch (error) {
       console.error("Query execution error:", error);
@@ -202,7 +207,7 @@ export default class KuzuInMemoryAsync extends KuzuBaseService {
       throw new Error("Worker not initialized");
     }
 
-    const result = await this.sendMessage('getColumnTypes', { query });
+    const result = await this.sendMessage("getColumnTypes", { query });
     return result.columnTypes || [];
   }
 
@@ -219,14 +224,14 @@ export default class KuzuInMemoryAsync extends KuzuBaseService {
     if (!this.worker) {
       throw new Error("Worker not initialized");
     }
-    await this.sendMessage('writeFile', { path, content });
+    await this.sendMessage("writeFile", { path, content });
   }
 
   async deleteVirtualFile(path: string) {
     if (!this.worker) {
       throw new Error("Worker not initialized");
     }
-    await this.sendMessage('deleteFile', { path });
+    await this.sendMessage("deleteFile", { path });
   }
 
   /**
@@ -236,8 +241,8 @@ export default class KuzuInMemoryAsync extends KuzuBaseService {
     try {
       if (this.worker) {
         // Send cleanup message to worker
-        await this.sendMessage('cleanup', {});
-        
+        await this.sendMessage("cleanup", {});
+
         // Terminate the worker
         this.worker.terminate();
         this.worker = null;

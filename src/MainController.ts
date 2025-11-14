@@ -141,7 +141,7 @@ class MainController {
           tablePairs,
           properties,
           this.getGraphDirection(),
-          relationshipType,
+          relationshipType
         )
       );
     },
@@ -153,7 +153,13 @@ class MainController {
       attributes?: Record<string, InputChangeResult<any>>
     ) {
       return Promise.resolve(
-        kuzuController.createEdge(node1, node2, edgeTable, this.getGraphDirection(), attributes)
+        kuzuController.createEdge(
+          node1,
+          node2,
+          edgeTable,
+          this.getGraphDirection(),
+          attributes
+        )
       );
     },
 
@@ -175,7 +181,13 @@ class MainController {
       values: Record<string, InputChangeResult<any>>
     ) {
       return Promise.resolve(
-        kuzuController.updateEdge(node1, node2, edgeTableName, values, this.getGraphDirection())
+        kuzuController.updateEdge(
+          node1,
+          node2,
+          edgeTableName,
+          values,
+          this.getGraphDirection()
+        )
       );
     },
 
@@ -199,13 +211,8 @@ class MainController {
       return Promise.resolve(kuzuController.listDatabases());
     },
 
-    async connectToDatabase(
-      dbName: string,
-      options: Record<string, any> = {}
-    ) {
-      return Promise.resolve(
-        kuzuController.connectToDatabase(dbName, options)
-      );
+    async connectToDatabase(dbName: string, options: Record<string, any> = {}) {
+      return Promise.resolve(kuzuController.connectToDatabase(dbName, options));
     },
 
     async getCurrentDatabaseName() {
@@ -296,7 +303,6 @@ class MainController {
     async getAllSchemaProperties() {
       return Promise.resolve(kuzuController.getAllSchemaProperties());
     },
-
   };
 }
 

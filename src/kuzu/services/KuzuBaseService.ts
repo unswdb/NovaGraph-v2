@@ -102,7 +102,7 @@ export default abstract class KuzuBaseService {
     const result = this.connection.query(query);
     const columnTypes = result.getColumnTypes();
     result.close();
-    
+
     return columnTypes;
   }
 
@@ -241,12 +241,15 @@ export default abstract class KuzuBaseService {
         processedProperties[key] = obj;
       }
     }
-    
+
     const query = createNodeQuery(tableName, processedProperties);
     return throwOnFailedQuery(this.executeQuery(query));
   }
 
-  async updateNode(node: GraphNode, values: Record<string, InputChangeResult<any>>) {
+  async updateNode(
+    node: GraphNode,
+    values: Record<string, InputChangeResult<any>>
+  ) {
     // Convert File objects to Uint8Array for BLOB fields
     const processedValues: typeof values = {};
     for (const [key, obj] of Object.entries(values)) {
@@ -260,7 +263,7 @@ export default abstract class KuzuBaseService {
         processedValues[key] = obj;
       }
     }
-    
+
     const query = updateNodeQuery(node, processedValues);
     return throwOnFailedQuery(this.executeQuery(query));
   }
@@ -287,14 +290,14 @@ export default abstract class KuzuBaseService {
       | { name: string; type: PrimaryKeyType }
     )[],
     isDirected: boolean,
-    relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE",
+    relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE"
   ) {
     const query = createEdgeSchemaQuery(
       tableName,
       tablePairs,
       properties,
       isDirected,
-      relationshipType,
+      relationshipType
     );
     return throwOnFailedQuery(this.executeQuery(query));
   }
@@ -322,12 +325,23 @@ export default abstract class KuzuBaseService {
         }
       }
     }
-    
-    const query = createEdgeQuery(node1, node2, edgeTable, isDirected, processedAttributes);
+
+    const query = createEdgeQuery(
+      node1,
+      node2,
+      edgeTable,
+      isDirected,
+      processedAttributes
+    );
     return throwOnFailedQuery(this.executeQuery(query));
   }
 
-  deleteEdge(node1: GraphNode, node2: GraphNode, edgeTableName: string, isDirected: boolean) {
+  deleteEdge(
+    node1: GraphNode,
+    node2: GraphNode,
+    edgeTableName: string,
+    isDirected: boolean
+  ) {
     const query = deleteEdgeQuery(node1, node2, edgeTableName, isDirected);
     return throwOnFailedQuery(this.executeQuery(query));
   }
@@ -352,8 +366,14 @@ export default abstract class KuzuBaseService {
         processedValues[key] = obj;
       }
     }
-    
-    const query = updateEdgeQuery(node1, node2, edgeTableName, processedValues, isDirected);
+
+    const query = updateEdgeQuery(
+      node1,
+      node2,
+      edgeTableName,
+      processedValues,
+      isDirected
+    );
     return throwOnFailedQuery(this.executeQuery(query));
   }
 
@@ -390,7 +410,9 @@ export default abstract class KuzuBaseService {
       throw new Error("Kuzu service not initialized");
     }
 
-    console.log(`[CSV Import] Starting import for tables: ${nodeTableName}, ${edgeTableName}`);
+    console.log(
+      `[CSV Import] Starting import for tables: ${nodeTableName}, ${edgeTableName}`
+    );
 
     // Parse CSV to get structure
     const nodesLines = nodesText.trim().split("\n");
@@ -398,16 +420,16 @@ export default abstract class KuzuBaseService {
 
     // Parse node CSV header to get all columns
     const nodesHeader = nodesLines[0].trim();
-    const nodeColumns = nodesHeader.split(",").map(col => col.trim());
+    const nodeColumns = nodesHeader.split(",").map((col) => col.trim());
 
     // Parse edge CSV header
     const edgesHeader = edgesLines[0].trim();
-    const edgeColumns = edgesHeader.split(",").map(col => col.trim());
+    const edgeColumns = edgesHeader.split(",").map((col) => col.trim());
     const hasWeight = edgeColumns.includes("weight");
 
     const virtualFS = hasVirtualFileSupport(this) ? this : null;
     const fs = virtualFS ? null : this.getFileSystem();
-    const tempDir = '/tmp';
+    const tempDir = "/tmp";
 
     if (fs) {
       try {
@@ -446,33 +468,36 @@ export default abstract class KuzuBaseService {
 
     // Infer column types by using LOAD FROM to scan the CSV
     const primaryKeyColumn = nodeColumns[0];
-    
+
     console.log(`[CSV Import] Primary key: ${primaryKeyColumn}`);
     console.log(`[CSV Import] Inferring types for columns:`, nodeColumns);
 
     // Query to infer types - load one row and return it to see inferred types
     const typeInferenceQuery = `
       LOAD FROM '${nodesPath}' (header = true)
-      RETURN ${nodeColumns.join(', ')}
+      RETURN ${nodeColumns.join(", ")}
       LIMIT 1
     `;
 
-    console.log(`[CSV Import] Inferring types with query: ${typeInferenceQuery}`);
-    
+    console.log(
+      `[CSV Import] Inferring types with query: ${typeInferenceQuery}`
+    );
+
     // Use the getColumnTypes method to infer types
     const columnTypesResult = this.getColumnTypes(typeInferenceQuery);
     const columnTypes = isPromiseLike(columnTypesResult)
       ? await columnTypesResult
       : columnTypesResult;
-    
+
     // Extract column types from the query result
-    const inferredTypes: Record<string, PrimaryKeyType | NonPrimaryKeyType> = {};
-    
+    const inferredTypes: Record<string, PrimaryKeyType | NonPrimaryKeyType> =
+      {};
+
     columnTypes.forEach((kuzuType: string, index: number) => {
       const colName = nodeColumns[index];
       // Map Kuzu types to schema types
       let schemaType: PrimaryKeyType | NonPrimaryKeyType = "STRING";
-      
+
       const typeUpper = kuzuType.toUpperCase();
       if (typeUpper.includes("INT32")) {
         schemaType = "INT32";
@@ -492,7 +517,7 @@ export default abstract class KuzuBaseService {
       } else if (typeUpper.includes("DATE")) {
         schemaType = "DATE";
       }
-      
+
       inferredTypes[colName] = schemaType;
     });
 
@@ -500,12 +525,14 @@ export default abstract class KuzuBaseService {
 
     // Create node table schema with inferred types
     const primaryKeyType = inferredTypes[primaryKeyColumn] as PrimaryKeyType;
-    const additionalProperties = nodeColumns.slice(1).map(col => ({
+    const additionalProperties = nodeColumns.slice(1).map((col) => ({
       name: col,
-      type: (inferredTypes[col] || "STRING") as NonPrimaryKeyType
+      type: (inferredTypes[col] || "STRING") as NonPrimaryKeyType,
     }));
 
-    console.log(`[CSV Import] Creating node table with primary key: ${primaryKeyColumn} (${primaryKeyType})`);
+    console.log(
+      `[CSV Import] Creating node table with primary key: ${primaryKeyColumn} (${primaryKeyType})`
+    );
     console.log(`[CSV Import] Additional properties:`, additionalProperties);
 
     await this.createNodeSchema(
@@ -531,7 +558,9 @@ export default abstract class KuzuBaseService {
           FROM ${nodeTableName} TO ${nodeTableName}
         )`;
 
-    console.log(`[CSV Import] Creating edge table with query: ${edgeTableQuery}`);
+    console.log(
+      `[CSV Import] Creating edge table with query: ${edgeTableQuery}`
+    );
     await this.executeQuery(edgeTableQuery);
 
     // Load edges using COPY FROM for direct table loading
@@ -539,37 +568,45 @@ export default abstract class KuzuBaseService {
       // For directed graphs, use COPY FROM directly
       const copyEdgesQuery = `COPY ${edgeTableName} FROM '${edgesPath}' (header = true)`;
 
-      console.log(`[CSV Import] Loading directed edges with COPY FROM: ${copyEdgesQuery}`);
+      console.log(
+        `[CSV Import] Loading directed edges with COPY FROM: ${copyEdgesQuery}`
+      );
       await this.executeQuery(copyEdgesQuery);
     } else {
       // For undirected graphs, we need to create edges in both directions
       // First, copy the original edges
       const copyEdgesQuery1 = `COPY ${edgeTableName} FROM '${edgesPath}' (header = true)`;
 
-      console.log(`[CSV Import] Loading undirected edges (direction 1) with COPY FROM: ${copyEdgesQuery1}`);
+      console.log(
+        `[CSV Import] Loading undirected edges (direction 1) with COPY FROM: ${copyEdgesQuery1}`
+      );
       await this.executeQuery(copyEdgesQuery1);
 
       // Then create a temporary file with reversed edges for the second direction
       const reversedEdgesPath = `${tempDir}/reversed_edges_${Date.now()}.csv`;
-      const reversedEdgesContent = edgesLines.map((line, index) => {
-        if (index === 0) {
-          // Header line - keep as is
-          return line;
-        }
-        // Data lines - swap first two columns (source and target)
-        const parts = line.split(',');
-        if (parts.length >= 2) {
-          [parts[0], parts[1]] = [parts[1], parts[0]]; // Swap source and target
-        }
-        return parts.join(',');
-      }).join('\n');
+      const reversedEdgesContent = edgesLines
+        .map((line, index) => {
+          if (index === 0) {
+            // Header line - keep as is
+            return line;
+          }
+          // Data lines - swap first two columns (source and target)
+          const parts = line.split(",");
+          if (parts.length >= 2) {
+            [parts[0], parts[1]] = [parts[1], parts[0]]; // Swap source and target
+          }
+          return parts.join(",");
+        })
+        .join("\n");
 
       await writeFile(reversedEdgesPath, reversedEdgesContent);
 
       // Copy the reversed edges
       const copyEdgesQuery2 = `COPY ${edgeTableName} FROM '${reversedEdgesPath}' (header = true)`;
 
-      console.log(`[CSV Import] Loading undirected edges (direction 2) with COPY FROM: ${copyEdgesQuery2}`);
+      console.log(
+        `[CSV Import] Loading undirected edges (direction 2) with COPY FROM: ${copyEdgesQuery2}`
+      );
       await this.executeQuery(copyEdgesQuery2);
 
       // Clean up the temporary reversed edges file
@@ -583,7 +620,9 @@ export default abstract class KuzuBaseService {
     // Refresh graph state
     const graphState = await this.snapshotGraphState();
 
-    console.log(`[CSV Import] Successfully bulk-imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges`);
+    console.log(
+      `[CSV Import] Successfully bulk-imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges`
+    );
 
     return {
       success: true,

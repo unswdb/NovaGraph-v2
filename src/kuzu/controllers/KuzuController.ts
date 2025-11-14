@@ -36,18 +36,23 @@ export interface KuzuDatabaseResult {
  * Type guard for persistent services (duck typing approach)
  */
 function isPersistentService(
-  service: KuzuInMemorySync | KuzuInMemoryAsync | KuzuPersistentSync | KuzuPersistentAsync | null
+  service:
+    | KuzuInMemorySync
+    | KuzuInMemoryAsync
+    | KuzuPersistentSync
+    | KuzuPersistentAsync
+    | null
 ): service is KuzuPersistentSync | KuzuPersistentAsync {
   if (!service) return false;
   // Duck typing: check if service has persistent-specific methods
   return (
-    typeof (service as any).connectToDatabase === 'function' &&
-    typeof (service as any).createDatabase === 'function' &&
-    typeof (service as any).deleteDatabase === 'function' &&
-    typeof (service as any).listDatabases === 'function' &&
-    typeof (service as any).saveIDBFS === 'function' &&
-    typeof (service as any).loadIDBFS === 'function' &&
-    typeof (service as any).getCurrentDatabaseName === 'function'
+    typeof (service as any).connectToDatabase === "function" &&
+    typeof (service as any).createDatabase === "function" &&
+    typeof (service as any).deleteDatabase === "function" &&
+    typeof (service as any).listDatabases === "function" &&
+    typeof (service as any).saveIDBFS === "function" &&
+    typeof (service as any).loadIDBFS === "function" &&
+    typeof (service as any).getCurrentDatabaseName === "function"
   );
 }
 
@@ -57,7 +62,12 @@ type VirtualFileCapableService = {
 };
 
 const hasVirtualFileSupport = (
-  service: KuzuInMemorySync | KuzuInMemoryAsync | KuzuPersistentSync | KuzuPersistentAsync | null
+  service:
+    | KuzuInMemorySync
+    | KuzuInMemoryAsync
+    | KuzuPersistentSync
+    | KuzuPersistentAsync
+    | null
 ): service is VirtualFileCapableService =>
   Boolean(
     service &&
@@ -71,10 +81,12 @@ const isPromise = <T>(value: any): value is Promise<T> =>
 /**
  * Normalize and validate type parameter
  */
-function normalizeType(type: string): 'inmemory' | 'persistent' {
+function normalizeType(type: string): "inmemory" | "persistent" {
   const normalized = type.toLowerCase().trim();
-  if (normalized !== 'inmemory' && normalized !== 'persistent') {
-    throw new Error(`Invalid Kuzu type '${type}'. Must be 'inmemory' or 'persistent'`);
+  if (normalized !== "inmemory" && normalized !== "persistent") {
+    throw new Error(
+      `Invalid Kuzu type '${type}'. Must be 'inmemory' or 'persistent'`
+    );
   }
   return normalized;
 }
@@ -82,9 +94,9 @@ function normalizeType(type: string): 'inmemory' | 'persistent' {
 /**
  * Normalize and validate mode parameter
  */
-function normalizeMode(mode: string): 'sync' | 'async' {
+function normalizeMode(mode: string): "sync" | "async" {
   const normalized = mode.toLowerCase().trim();
-  if (normalized !== 'sync' && normalized !== 'async') {
+  if (normalized !== "sync" && normalized !== "async") {
     throw new Error(`Invalid Kuzu mode '${mode}'. Must be 'sync' or 'async'`);
   }
   return normalized;
@@ -95,7 +107,12 @@ function normalizeMode(mode: string): 'sync' | 'async' {
  */
 class KuzuController {
   // Store current Kuzu type, i.e InMemorySync, InMemoryAsync, PersistentSync, PersistentAsync
-  private _service: KuzuInMemorySync | KuzuInMemoryAsync | KuzuPersistentSync | KuzuPersistentAsync | null = null;
+  private _service:
+    | KuzuInMemorySync
+    | KuzuInMemoryAsync
+    | KuzuPersistentSync
+    | KuzuPersistentAsync
+    | null = null;
   constructor() {
     this._service = null;
   }
@@ -125,12 +142,10 @@ class KuzuController {
     if (serviceKey === "inmemory_sync") {
       this._service = new KuzuInMemorySync();
       await this._service.initialize();
-    }
-    else if (serviceKey === "inmemory_async") {
+    } else if (serviceKey === "inmemory_async") {
       this._service = new KuzuInMemoryAsync();
       await this._service.initialize();
-    }
-    else if (serviceKey === "persistent_sync") {
+    } else if (serviceKey === "persistent_sync") {
       const persistentService = new KuzuPersistentSync();
       await persistentService.initialize();
       this._service = persistentService;
@@ -139,8 +154,7 @@ class KuzuController {
         options?.dbPath,
         options?.dbOptions
       );
-    }
-    else if (serviceKey === "persistent_async") {
+    } else if (serviceKey === "persistent_async") {
       const persistentService = new KuzuPersistentAsync();
       await persistentService.initialize();
       this._service = persistentService;
@@ -149,8 +163,7 @@ class KuzuController {
         options?.dbPath,
         options?.dbOptions
       );
-    }
-    else {
+    } else {
       // This should never happen due to normalization, but kept for safety
       throw new Error(`Invalid Kuzu type '${type}' or mode '${mode}'`);
     }
@@ -274,7 +287,7 @@ class KuzuController {
       | { name: string; type: PrimaryKeyType }
     )[],
     isDirected: boolean,
-    relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE",
+    relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE"
   ) {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
@@ -298,7 +311,13 @@ class KuzuController {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this._service.createEdge(node1, node2, edgeTable, isDirected, attributes);
+    return this._service.createEdge(
+      node1,
+      node2,
+      edgeTable,
+      isDirected,
+      attributes
+    );
   }
 
   updateNode(node: GraphNode, values: Record<string, InputChangeResult<any>>) {
@@ -308,7 +327,12 @@ class KuzuController {
     return this._service.updateNode(node, values);
   }
 
-  async deleteEdge(node1: GraphNode, node2: GraphNode, edgeTableName: string, isDirected: boolean) {
+  async deleteEdge(
+    node1: GraphNode,
+    node2: GraphNode,
+    edgeTableName: string,
+    isDirected: boolean
+  ) {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
@@ -325,7 +349,13 @@ class KuzuController {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    return this._service.updateEdge(node1, node2, edgeTableName, values, isDirected);
+    return this._service.updateEdge(
+      node1,
+      node2,
+      edgeTableName,
+      values,
+      isDirected
+    );
   }
   deleteNode(node: GraphNode) {
     if (!this._service) {
@@ -405,7 +435,7 @@ class KuzuController {
   }
 
   // -- Exclusive for Kuzu Persistent --
-  
+
   /**
    * Create a new persistent database
    * Only available for KuzuPersistentSync and KuzuPersistentAsync
@@ -451,40 +481,48 @@ class KuzuController {
   /**
    * Connect to an existing persistent database
    * Only available for persistent modes
-   * 
+   *
    * @param dbPath - Database name (not full path, will be prefixed with kuzu_databases/)
    * @param dbOptions - Database configuration options
    * @returns Result with success status, message, and optional error
    * @throws {Error} If service not initialized or not in persistent mode
    */
-  async connectToDatabase(dbPath: string, dbOptions: Record<string, any> = {}): Promise<KuzuDatabaseResult> {
+  async connectToDatabase(
+    dbPath: string,
+    dbOptions: Record<string, any> = {}
+  ): Promise<KuzuDatabaseResult> {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    
+
     // Validate dbPath
-    if (!dbPath || typeof dbPath !== 'string' || dbPath.trim().length === 0) {
+    if (!dbPath || typeof dbPath !== "string" || dbPath.trim().length === 0) {
       return {
         success: false,
-        error: 'Database path must be a non-empty string'
+        error: "Database path must be a non-empty string",
       };
     }
 
     // Use type guard instead of instanceof
     if (!isPersistentService(this._service)) {
-      throw new Error("connectToDatabase is only available for persistent mode");
+      throw new Error(
+        "connectToDatabase is only available for persistent mode"
+      );
     }
 
     // Type is now narrowed to KuzuPersistentSync | KuzuPersistentAsync
-    const result = await this._service.connectToDatabase(dbPath.trim(), dbOptions);
+    const result = await this._service.connectToDatabase(
+      dbPath.trim(),
+      dbOptions
+    );
     // console.log("here: " + result.metadata.isDirected);
-    
+
     // Normalize return type
     return {
       success: result.success ?? false,
       message: result.message,
       error: result.error,
-      database: result.database
+      database: result.database,
     };
   }
 
@@ -497,7 +535,9 @@ class KuzuController {
       throw new Error("Kuzu service not initialized");
     }
     if (!isPersistentService(this._service)) {
-      throw new Error("disconnectFromDatabase is only available for persistent mode");
+      throw new Error(
+        "disconnectFromDatabase is only available for persistent mode"
+      );
     }
     return await this._service.disconnectFromDatabase();
   }
@@ -541,7 +581,9 @@ class KuzuController {
       return null;
     }
     // Type guard ensures service has getCurrentDatabaseMetadata
-    if (typeof (this._service as any).getCurrentDatabaseMetadata === 'function') {
+    if (
+      typeof (this._service as any).getCurrentDatabaseMetadata === "function"
+    ) {
       return (this._service as any).getCurrentDatabaseMetadata();
     }
     return null;
@@ -584,7 +626,9 @@ class KuzuController {
       throw new Error("Kuzu service not initialized");
     }
     if (!isPersistentService(this._service)) {
-      throw new Error("clearAllDatabases is only available for persistent mode");
+      throw new Error(
+        "clearAllDatabases is only available for persistent mode"
+      );
     }
     return await this._service.clearAllDatabases();
   }
@@ -613,9 +657,9 @@ class KuzuController {
     // Duck typing: async services have worker or sendMessage method
     // and executeQuery returns Promise
     return (
-      typeof (this._service as any).worker !== 'undefined' ||
-      typeof (this._service as any).sendMessage === 'function' ||
-      typeof (this._service as any).pendingRequests !== 'undefined'
+      typeof (this._service as any).worker !== "undefined" ||
+      typeof (this._service as any).sendMessage === "function" ||
+      typeof (this._service as any).pendingRequests !== "undefined"
     );
   }
 
@@ -633,7 +677,8 @@ class KuzuController {
     dbOptions: Record<string, any> = {}
   ) {
     const normalizedTarget = (dbPath ?? "default").trim().toLowerCase();
-    const canonicalTarget = normalizedTarget.length > 0 ? normalizedTarget : "default";
+    const canonicalTarget =
+      normalizedTarget.length > 0 ? normalizedTarget : "default";
 
     let actualTarget = canonicalTarget;
 
@@ -672,9 +717,7 @@ class KuzuController {
     );
 
     if (!connectResult?.success) {
-      const message = (
-        connectResult.error || connectResult.message || ""
-      )
+      const message = (connectResult.error || connectResult.message || "")
         .toString()
         .toLowerCase();
       const notFound = message.includes("does not exist");
@@ -711,7 +754,9 @@ class KuzuController {
       throw new Error("Kuzu service not initialized");
     }
     if (!hasVirtualFileSupport(this._service)) {
-      throw new Error("writeVirtualFile is not supported by the current service");
+      throw new Error(
+        "writeVirtualFile is not supported by the current service"
+      );
     }
     await this._service.writeVirtualFile(path, content);
   }
@@ -721,7 +766,9 @@ class KuzuController {
       throw new Error("Kuzu service not initialized");
     }
     if (!hasVirtualFileSupport(this._service)) {
-      throw new Error("deleteVirtualFile is not supported by the current service");
+      throw new Error(
+        "deleteVirtualFile is not supported by the current service"
+      );
     }
     await this._service.deleteVirtualFile(path);
   }

@@ -4,6 +4,7 @@
  */
 
 import KuzuBaseService from "./KuzuBaseService";
+
 import type {
   EdgeSchema,
   GraphEdge,
@@ -62,17 +63,14 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
    */
   async initialize() {
     if (this.initialized) {
-      console.log("Kuzu persistent async already initialized, skipping");
       return true;
     }
 
     try {
-      console.log("Starting Kuzu persistent async initialization");
-
       // Create Web Worker
       this.worker = new Worker(
-        new URL('./workers/kuzu-persistent.worker.ts', import.meta.url),
-        { type: 'module' }
+        new URL("./workers/kuzu-persistent.worker.ts", import.meta.url),
+        { type: "module" }
       );
 
       // Set up message handler
@@ -101,19 +99,19 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
         });
         // Reject all pending requests
         this.pendingRequests.forEach((request) => {
-          request.reject(new Error(`Worker error: ${error.message || 'Unknown error'}`));
+          request.reject(
+            new Error(`Worker error: ${error.message || "Unknown error"}`)
+          );
         });
         this.pendingRequests.clear();
       };
 
       // Initialize the worker
-      const initResult = await this.sendMessage('init', {});
-      console.log("Kuzu persistent async initialized:", initResult);
+      const initResult = await this.sendMessage("init", {});
 
       this.initialized = true;
       return true;
     } catch (err) {
-      console.error("Failed Kuzu persistent async initialization:", err);
       throw err;
     }
   }
@@ -124,7 +122,7 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
   private sendMessage(type: string, data: any): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!this.worker) {
-        reject(new Error('Worker not initialized'));
+        reject(new Error("Worker not initialized"));
         return;
       }
 
@@ -148,18 +146,13 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
    */
   async createDatabase(dbName: string, metadata?: Partial<DatabaseMetadata>) {
     try {
-      const result = await this.sendMessage('createDatabase', { 
+      const result = await this.sendMessage("createDatabase", {
         dbName,
         metadata: {
           isDirected: metadata?.isDirected ?? true, // Hardcoded to true for now
         },
       });
-      
-      // Store metadata from result
-      if (result.metadata) {
-        console.log(`[KuzuPersistentAsync] Database created with metadata:`, result.metadata);
-      }
-      
+
       return {
         success: result.success,
         message: result.message,
@@ -178,16 +171,18 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
    */
   async connectToDatabase(dbName: string, options = {}) {
     try {
-      const result = await this.sendMessage('connectToDatabase', { dbName, options });
+      const result = await this.sendMessage("connectToDatabase", {
+        dbName,
+        options,
+      });
       if (result.success) {
         await this.refreshGraphState();
         this.currentDatabaseName = dbName;
         this.isConnected = true;
-        
+
         // Store metadata from result
         if (result.metadata) {
           this.currentDatabaseMetadata = result.metadata;
-          console.log(`[KuzuPersistentAsync] Connected to database with metadata:`, result.metadata);
         } else {
           // If no metadata in result, try to fetch it
           const metadataResult = await this.getMetadata(dbName);
@@ -215,7 +210,7 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
    */
   async disconnectFromDatabase() {
     try {
-      const result = await this.sendMessage('disconnectFromDatabase', {});
+      const result = await this.sendMessage("disconnectFromDatabase", {});
       if (result.success) {
         this.graphStateCache = {
           nodes: [],
@@ -229,7 +224,7 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
       }
       return {
         success: result.success,
-        message: 'Successfully disconnected from database',
+        message: "Successfully disconnected from database",
       };
     } catch (error) {
       return {
@@ -243,7 +238,7 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
    * List all databases
    */
   listDatabases() {
-    return this.sendMessage('listDatabases', {})
+    return this.sendMessage("listDatabases", {})
       .then((result) => ({
         success: result.success,
         databases: result.databases || [],
@@ -268,7 +263,7 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
    */
   async deleteDatabase(dbName: string) {
     try {
-      const result = await this.sendMessage('deleteDatabase', { dbName });
+      const result = await this.sendMessage("deleteDatabase", { dbName });
       if (result.success && this.currentDatabaseName === dbName) {
         this.currentDatabaseName = null;
         this.isConnected = false;
@@ -290,7 +285,10 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
    */
   async renameDatabase(oldName: string, newName: string) {
     try {
-      const result = await this.sendMessage('renameDatabase', { oldName, newName });
+      const result = await this.sendMessage("renameDatabase", {
+        oldName,
+        newName,
+      });
       if (result.success && this.currentDatabaseName === oldName) {
         this.currentDatabaseName = newName;
       }
@@ -311,10 +309,8 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
    */
   async saveIDBFS() {
     try {
-      await this.sendMessage('saveDatabase', {});
-      console.log("Database saved to IndexedDB");
+      await this.sendMessage("saveDatabase", {});
     } catch (error) {
-      console.error("Failed to save database:", error);
       throw error;
     }
   }
@@ -324,8 +320,7 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
    */
   async loadIDBFS() {
     try {
-      await this.sendMessage('loadDatabase', {});
-      console.log("Database loaded from IndexedDB");
+      await this.sendMessage("loadDatabase", {});
     } catch (error) {
       console.error("Failed to load database:", error);
       throw error;
@@ -341,7 +336,7 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
     }
 
     try {
-      const result = await this.sendMessage('query', { query, autoSave: true });
+      const result = await this.sendMessage("query", { query, autoSave: true });
       const successQueries = Array.isArray(result?.successQueries)
         ? result.successQueries
         : [];
@@ -349,9 +344,7 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
         ? result.failedQueries
         : [];
       const failureDetails =
-        failedQueries[0]?.message ||
-        result?.message ||
-        "Unknown query failure";
+        failedQueries[0]?.message || result?.message || "Unknown query failure";
       const graphState: GraphSnapshot = {
         nodes: result.nodes || [],
         edges: result.edges || [],
@@ -359,14 +352,7 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
         edgeTables: result.edgeTables || [],
       };
       this.graphStateCache = graphState;
-      console.log("[KuzuPersistentAsync] Query graph snapshot:", {
-        query,
-        success: result.success,
-        nodeCount: graphState.nodes.length,
-        sampleNode: graphState.nodes[0] || null,
-        error: result.success ? undefined : failureDetails,
-      });
-      
+
       // Transform worker result to match expected format
       return {
         success: result.success,
@@ -378,7 +364,9 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
         edgeTables: graphState.edgeTables || [],
         colorMap: result.colorMap || {},
         resultType: result.resultType || "graph",
-        message: result.success ? "Query executed successfully" : failureDetails,
+        message: result.success
+          ? "Query executed successfully"
+          : failureDetails,
         error: result.success ? undefined : failureDetails,
       };
     } catch (error) {
@@ -395,7 +383,7 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
       throw new Error("Worker not initialized");
     }
 
-    const result = await this.sendMessage('getColumnTypes', { query });
+    const result = await this.sendMessage("getColumnTypes", { query });
     return result.columnTypes || [];
   }
 
@@ -408,7 +396,7 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
       if (!listResult.success) {
         return {
           success: false,
-          error: 'Failed to list databases',
+          error: "Failed to list databases",
         };
       }
 
@@ -422,7 +410,7 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
 
       return {
         success: true,
-        message: 'Successfully cleared all databases',
+        message: "Successfully cleared all databases",
       };
     } catch (error) {
       return {
@@ -439,8 +427,8 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
     try {
       if (this.worker) {
         // Send cleanup message to worker (will auto-save)
-        await this.sendMessage('cleanup', {});
-        
+        await this.sendMessage("cleanup", {});
+
         // Terminate the worker
         this.worker.terminate();
         this.worker = null;
@@ -462,14 +450,12 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
       this.isConnected = false;
 
       this.initialized = false;
-      console.log("KuzuPersistentAsync cleaned up successfully");
-      
+
       return {
         success: true,
-        message: 'Successfully cleaned up KuzuPersistentAsync',
+        message: "Successfully cleaned up KuzuPersistentAsync",
       };
     } catch (error) {
-      console.error("Error during cleanup:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -483,7 +469,7 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
     }
 
     try {
-      const result = await this.sendMessage('snapshotGraphState', {});
+      const result = await this.sendMessage("snapshotGraphState", {});
       const snapshot: GraphSnapshot = {
         nodes: result?.nodes || [],
         edges: result?.edges || [],
@@ -517,14 +503,14 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
     if (!this.worker) {
       throw new Error("Worker not initialized");
     }
-    await this.sendMessage('writeFile', { path, content });
+    await this.sendMessage("writeFile", { path, content });
   }
 
   async deleteVirtualFile(path: string) {
     if (!this.worker) {
       throw new Error("Worker not initialized");
     }
-    await this.sendMessage('deleteFile', { path });
+    await this.sendMessage("deleteFile", { path });
   }
 
   /**
@@ -532,7 +518,7 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
    */
   async getMetadata(dbName: string) {
     try {
-      const result = await this.sendMessage('getMetadata', { dbName });
+      const result = await this.sendMessage("getMetadata", { dbName });
       return {
         success: result.success,
         metadata: result.metadata as DatabaseMetadata,
@@ -551,14 +537,16 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
    */
   async setMetadata(dbName: string, metadata: Partial<DatabaseMetadata>) {
     try {
-      const result = await this.sendMessage('setMetadata', { dbName, metadata });
-      
+      const result = await this.sendMessage("setMetadata", {
+        dbName,
+        metadata,
+      });
+
       // Update cache if this is the currently connected database
       if (this.currentDatabaseName === dbName && result.metadata) {
         this.currentDatabaseMetadata = result.metadata;
-        console.log(`[KuzuPersistentAsync] Updated metadata for ${dbName}:`, result.metadata);
       }
-      
+
       return {
         success: result.success,
         metadata: result.metadata as DatabaseMetadata,
@@ -608,7 +596,10 @@ export default class KuzuPersistentAsync extends KuzuBaseService {
     if (!connectResult.success) {
       return {
         success: false,
-        error: connectResult.error || connectResult.message || "Failed to connect to database",
+        error:
+          connectResult.error ||
+          connectResult.message ||
+          "Failed to connect to database",
       };
     }
 
