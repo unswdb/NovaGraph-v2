@@ -117,8 +117,6 @@ const GraphRenderer = observer(({ className }: { className?: string }) => {
     setClickedNode(null);
   };
 
-  console.log(nodes);
-
   return (
     <CosmographProvider nodes={nodes} links={edges}>
       <div className={cn("flex flex-col w-full h-full relative", className)}>

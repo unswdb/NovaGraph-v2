@@ -26,6 +26,7 @@ import {
   snapshotGraphState,
   validateSchemaPreflight,
 } from "../helpers/KuzuQueryExecutor";
+import type Database from "../types/kuzu_wasm_internal/database";
 
 import { throwOnFailedQuery } from "./KuzuBaseService.util";
 
@@ -33,7 +34,6 @@ import type { CompositeType } from "~/kuzu/types/KuzuDBTypes";
 import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
 import type { InputChangeResult } from "~/features/visualizer/inputs";
 import type { ColorMap } from "~/igraph/types";
-import type Database from "../types/kuzu_wasm_internal/database";
 
 type MaybePromise<T> = T | Promise<T>;
 

@@ -1,6 +1,7 @@
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import { useState } from "react";
 import { Table as TableIcon } from "lucide-react";
+
 import type { ImportOption } from "./types";
 
 import {

@@ -1,7 +1,8 @@
 import { LaptopMinimal, Table as TableIcon } from "lucide-react";
 
-import type { ImportOption } from "./types";
 import { createTextInput } from "../../inputs";
+
+import type { ImportOption } from "./types";
 
 export const ImportAuto: ImportOption = {
   label: "New Empty Graph",
