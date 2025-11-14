@@ -92,7 +92,11 @@ const EdgeListItem = observer(
       }
     );
 
-    const handleDeleteEdge = async (node1: GraphNode, node2: GraphNode, directed: boolean) => {
+    const handleDeleteEdge = async (
+      node1: GraphNode,
+      node2: GraphNode,
+      directed: boolean
+    ) => {
       await deleteEdge(node1, node2, directed, edgeSchema.tableName);
     };
 

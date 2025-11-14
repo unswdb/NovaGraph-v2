@@ -98,7 +98,7 @@ export default class VisualizerStore {
       edges: rawGraph?.edges ?? [],
       nodeTables: rawGraph?.nodeTables ?? [],
       edgeTables: rawGraph?.edgeTables ?? [],
-      directed: (rawGraph as GraphSnapshotInput)?.directed ?? false,
+      directed: (rawGraph as GraphSnapshotInput)?.directed ?? true,
     };
 
     const availableNames =
@@ -112,7 +112,7 @@ export default class VisualizerStore {
     const options = this.buildDatabaseOptions(availableNames, activeName);
     const graph = this.buildGraphFromSnapshot({
       ...graphSnapshot,
-      directed: graphSnapshot.directed ?? false,
+      directed: graphSnapshot.directed ?? true,
     });
 
     runInAction(() => {
@@ -141,8 +141,7 @@ export default class VisualizerStore {
   setGraphState = (snapshot: GraphSnapshotInput) => {
     this.checkInitialization();
 
-    const directed =
-      snapshot.directed ?? this.database.graph.directed ?? false;
+    const directed = snapshot.directed ?? this.database.graph.directed ?? true;
 
     const graph = this.buildGraphFromSnapshot({
       ...snapshot,
@@ -221,7 +220,7 @@ export default class VisualizerStore {
       edges: rawGraph?.edges ?? [],
       nodeTables: rawGraph?.nodeTables ?? [],
       edgeTables: rawGraph?.edgeTables ?? [],
-      directed: (rawGraph as GraphSnapshotInput)?.directed ?? false,
+      directed: (rawGraph as GraphSnapshotInput)?.directed ?? true,
     });
 
     runInAction(() => {
@@ -399,7 +398,7 @@ export default class VisualizerStore {
       nodeTablesMap,
       edgeTables,
       edgeTablesMap,
-      directed: snapshot.directed ?? false,
+      directed: snapshot.directed ?? true,
     };
   }
 
