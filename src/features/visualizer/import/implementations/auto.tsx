@@ -1,17 +1,24 @@
-import { Table as TableIcon } from "lucide-react";
+import { LaptopMinimal, Table as TableIcon } from "lucide-react";
 
 import type { ImportOption } from "./types";
+import { createTextInput } from "../../inputs";
 
 export const ImportAuto: ImportOption = {
-  label: "Generate Graph",
-  value: "manual-generate-graph",
-  icon: TableIcon,
-  title: "Generate Random Graph",
+  label: "New Empty Graph",
+  value: "generate-empty-graph",
+  icon: LaptopMinimal,
+  title: "New Empty Graph",
   description:
-    "This function will generate a random graph based on the Erdős-Rényi model. Enter the number of nodes and a probability value between 0 and 1 to generate a graph. The probability value represents the likelihood of an edge existing between two nodes.",
-  inputs: [],
-  // TODO: Import handler
-
+    "Creates a new persistent graph workspace containing no schemas, nodes, or edges. Ideal for starting a fresh project.",
+  inputs: [
+    createTextInput({
+      id: "database-name-empty-graph",
+      key: "name",
+      displayName: "Name of the database",
+      required: true,
+      placeholder: "Enter a name for the database...",
+    }),
+  ],
   handler: async ({}: { values: Record<string, any>; controller: any }) => {
     return { success: true };
   },

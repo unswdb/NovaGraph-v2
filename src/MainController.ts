@@ -12,7 +12,7 @@ class MainController {
   // Private sector
   private _IgraphController: undefined | IgraphController;
   private async _initKuzu() {
-    return kuzuController.initialize("persistent", "async", {});
+    return await kuzuController.initialize("persistent", "async", {});
   }
   private async _initIgraph() {
     return await this._IgraphController?.initIgraph();
@@ -45,9 +45,11 @@ class MainController {
   // Database operations namespace
   db = {
     getGraphDirection() {
-      // Get the current database metadata to determine graph direction
-      const metadata = kuzuController.getCurrentDatabaseMetadata?.();
-      return metadata?.isDirected;
+      // TODO: Implement direction
+      return true;
+      //   // Get the current database metadata to determine graph direction
+      //   const metadata = await kuzuController.getCurrentDatabaseMetadata?.();
+      //   return metadata?.isDirected ?? true;
     },
 
     async createNodeSchema(
@@ -211,8 +213,8 @@ class MainController {
       return Promise.resolve(kuzuController.listDatabases());
     },
 
-    async connectToDatabase(dbName: string, options: Record<string, any> = {}) {
-      return Promise.resolve(kuzuController.connectToDatabase(dbName, options));
+    async connectToDatabase(dbName: string) {
+      return Promise.resolve(kuzuController.connectToDatabase(dbName));
     },
 
     async getCurrentDatabaseName() {
@@ -229,6 +231,7 @@ class MainController {
 
     /**
      * Import graph data from CSV files
+     * @param databaseName - Name of the database
      * @param nodesText - Content of the nodes CSV file
      * @param edgesText - Content of the edges CSV file
      * @param nodeTableName - Name for the node table
@@ -237,14 +240,16 @@ class MainController {
      * @returns Import result with success status and graph state
      */
     async importFromCSV(
+      databaseName: string,
       nodesText: string,
       edgesText: string,
       nodeTableName: string,
       edgeTableName: string,
-      isDirected: boolean
+      isDirected: boolean = true
     ) {
       return Promise.resolve(
         kuzuController.importFromCSV(
+          databaseName,
           nodesText,
           edgesText,
           nodeTableName,
@@ -264,14 +269,16 @@ class MainController {
      * @returns Import result with success status and graph state
      */
     async importFromJSON(
+      databaseName: string,
       nodesText: string,
       edgesText: string,
       nodeTableName: string,
       edgeTableName: string,
-      isDirected: boolean
+      isDirected: boolean = true
     ) {
       return Promise.resolve(
         kuzuController.importFromJSON(
+          databaseName,
           nodesText,
           edgesText,
           nodeTableName,

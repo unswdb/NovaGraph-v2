@@ -2,7 +2,9 @@ import KuzuInMemorySync from "../services/KuzuInMemorySync";
 import KuzuInMemoryAsync from "../services/KuzuInMemoryAsync";
 // @ts-ignore - KuzuPersistentSync is a JS file
 import KuzuPersistentSync from "../services/KuzuPersistentSync";
-import KuzuPersistentAsync from "../services/KuzuPersistentAsync";
+import KuzuPersistentAsync, {
+  type DatabaseMetadata,
+} from "../services/KuzuPersistentAsync";
 
 import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
 import type { CompositeType } from "~/kuzu/types/KuzuDBTypes";
@@ -20,16 +22,6 @@ interface KuzuInitOptions {
   dbPath?: string;
   /** Database configuration options */
   dbOptions?: Record<string, any>;
-}
-
-/**
- * Standard result type for database operations
- */
-export interface KuzuDatabaseResult {
-  success: boolean;
-  message?: string;
-  error?: string;
-  database?: any;
 }
 
 /**
@@ -149,20 +141,10 @@ class KuzuController {
       const persistentService = new KuzuPersistentSync();
       await persistentService.initialize();
       this._service = persistentService;
-      await this.ensureDefaultPersistentDatabase(
-        persistentService,
-        options?.dbPath,
-        options?.dbOptions
-      );
     } else if (serviceKey === "persistent_async") {
       const persistentService = new KuzuPersistentAsync();
       await persistentService.initialize();
       this._service = persistentService;
-      await this.ensureDefaultPersistentDatabase(
-        persistentService,
-        options?.dbPath,
-        options?.dbOptions
-      );
     } else {
       // This should never happen due to normalization, but kept for safety
       throw new Error(`Invalid Kuzu type '${type}' or mode '${mode}'`);
@@ -388,16 +370,18 @@ class KuzuController {
    * @returns Import result with success status and graph state
    */
   async importFromCSV(
+    databaseName: string,
     nodesText: string,
     edgesText: string,
     nodeTableName: string,
     edgeTableName: string,
-    isDirected: boolean
+    isDirected: boolean = true
   ) {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
     return this._service.importFromCSV(
+      databaseName,
       nodesText,
       edgesText,
       nodeTableName,
@@ -416,16 +400,18 @@ class KuzuController {
    * @returns Import result with success status and graph state
    */
   async importFromJSON(
+    databaseName: string,
     nodesText: string,
     edgesText: string,
     nodeTableName: string,
     edgeTableName: string,
-    isDirected: boolean
+    isDirected: boolean = true
   ) {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
     return this._service.importFromJSON(
+      databaseName,
       nodesText,
       edgesText,
       nodeTableName,
@@ -447,7 +433,7 @@ class KuzuController {
     if (!isPersistentService(this._service)) {
       throw new Error("createDatabase is only available for persistent mode");
     }
-    return await this._service.createDatabase(dbName, metadata);
+    await this._service.createDatabase(dbName, metadata);
   }
 
   /**
@@ -461,7 +447,7 @@ class KuzuController {
     if (!isPersistentService(this._service)) {
       throw new Error("deleteDatabase is only available for persistent mode");
     }
-    return await this._service.deleteDatabase(dbName);
+    await this._service.deleteDatabase(dbName);
   }
 
   /**
@@ -475,7 +461,7 @@ class KuzuController {
     if (!isPersistentService(this._service)) {
       throw new Error("renameDatabase is only available for persistent mode");
     }
-    return await this._service.renameDatabase(oldName, newName);
+    await this._service.renameDatabase(oldName, newName);
   }
 
   /**
@@ -487,20 +473,9 @@ class KuzuController {
    * @returns Result with success status, message, and optional error
    * @throws {Error} If service not initialized or not in persistent mode
    */
-  async connectToDatabase(
-    dbPath: string,
-    dbOptions: Record<string, any> = {}
-  ): Promise<KuzuDatabaseResult> {
+  async connectToDatabase(dbPath: string) {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
-    }
-
-    // Validate dbPath
-    if (!dbPath || typeof dbPath !== "string" || dbPath.trim().length === 0) {
-      return {
-        success: false,
-        error: "Database path must be a non-empty string",
-      };
     }
 
     // Use type guard instead of instanceof
@@ -510,20 +485,13 @@ class KuzuController {
       );
     }
 
-    // Type is now narrowed to KuzuPersistentSync | KuzuPersistentAsync
-    const result = await this._service.connectToDatabase(
-      dbPath.trim(),
-      dbOptions
-    );
-    // console.log("here: " + result.metadata.isDirected);
+    // Validate dbPath
+    if (!dbPath || typeof dbPath !== "string" || dbPath.trim().length === 0) {
+      throw new Error("Database path must be a non-empty string");
+    }
 
-    // Normalize return type
-    return {
-      success: result.success ?? false,
-      message: result.message,
-      error: result.error,
-      database: result.database,
-    };
+    // Type is now narrowed to KuzuPersistentSync | KuzuPersistentAsync
+    await this._service.connectToDatabase(dbPath.trim());
   }
 
   /**
@@ -539,41 +507,43 @@ class KuzuController {
         "disconnectFromDatabase is only available for persistent mode"
       );
     }
-    return await this._service.disconnectFromDatabase();
+    await this._service.disconnectFromDatabase();
   }
 
   /**
    * List all available persistent databases
    * Only available for persistent modes
    */
-  listDatabases() {
+  async listDatabases() {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
     if (!isPersistentService(this._service)) {
       throw new Error("listDatabases is only available for persistent mode");
     }
-    return this._service.listDatabases();
+    return await this._service.listDatabases();
   }
 
   /**
    * Get the name of the currently connected persistent database
    */
-  getCurrentDatabaseName(): string | null {
+  async getCurrentDatabaseName() {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
     if (!isPersistentService(this._service)) {
-      return null;
+      throw new Error(
+        "getCurrentDatabaseName is only available for persistent mode"
+      );
     }
-    return this._service.getCurrentDatabaseName();
+    return await this._service.getCurrentDatabaseName();
   }
 
   /**
    * Get metadata for the currently connected persistent database
    * Only available for persistent modes
    */
-  getCurrentDatabaseMetadata() {
+  async getCurrentDatabaseMetadata(): Promise<DatabaseMetadata | null> {
     if (!this._service) {
       return null;
     }
@@ -581,10 +551,8 @@ class KuzuController {
       return null;
     }
     // Type guard ensures service has getCurrentDatabaseMetadata
-    if (
-      typeof (this._service as any).getCurrentDatabaseMetadata === "function"
-    ) {
-      return (this._service as any).getCurrentDatabaseMetadata();
+    if (typeof this._service.getCurrentDatabaseMetadata === "function") {
+      return await this._service.getCurrentDatabaseMetadata();
     }
     return null;
   }
@@ -630,7 +598,7 @@ class KuzuController {
         "clearAllDatabases is only available for persistent mode"
       );
     }
-    return await this._service.clearAllDatabases();
+    await this._service.clearAllDatabases();
   }
 
   /**
@@ -669,84 +637,6 @@ class KuzuController {
   isSyncMode(): boolean {
     if (!this._service) return false;
     return !this.isAsyncMode();
-  }
-
-  private async ensureDefaultPersistentDatabase(
-    service: KuzuPersistentSync | KuzuPersistentAsync,
-    dbPath?: string,
-    dbOptions: Record<string, any> = {}
-  ) {
-    const normalizedTarget = (dbPath ?? "default").trim().toLowerCase();
-    const canonicalTarget =
-      normalizedTarget.length > 0 ? normalizedTarget : "default";
-
-    let actualTarget = canonicalTarget;
-
-    try {
-      const listResult = await service.listDatabases();
-      const databases: string[] =
-        listResult && listResult.success && Array.isArray(listResult.databases)
-          ? listResult.databases
-          : [];
-
-      const normalizedMap = new Map<string, string>();
-      for (const name of databases) {
-        if (typeof name !== "string") continue;
-        const trimmed = name.trim();
-        if (!trimmed) continue;
-        const normalized = trimmed.toLowerCase();
-        if (!normalizedMap.has(normalized)) {
-          normalizedMap.set(normalized, trimmed);
-        }
-      }
-
-      const existingMatch = normalizedMap.get(canonicalTarget);
-      if (existingMatch) {
-        actualTarget = existingMatch;
-      }
-    } catch (error) {
-      console.warn(
-        "[KuzuController] Unable to inspect persistent databases before connecting:",
-        error
-      );
-    }
-
-    let connectResult = await service.connectToDatabase(
-      actualTarget,
-      dbOptions || {}
-    );
-
-    if (!connectResult?.success) {
-      const message = (connectResult.error || connectResult.message || "")
-        .toString()
-        .toLowerCase();
-      const notFound = message.includes("does not exist");
-
-      if (notFound && typeof service.createDatabase === "function") {
-        const createResult = await service.createDatabase(canonicalTarget);
-        if (!createResult?.success) {
-          throw new Error(
-            createResult?.error ||
-              createResult?.message ||
-              `Failed to create database '${canonicalTarget}'`
-          );
-        }
-
-        connectResult = await service.connectToDatabase(
-          canonicalTarget,
-          dbOptions || {}
-        );
-        actualTarget = canonicalTarget;
-      }
-    }
-
-    if (!connectResult?.success) {
-      throw new Error(
-        connectResult?.error ||
-          connectResult?.message ||
-          `Failed to connect to database '${actualTarget}'`
-      );
-    }
   }
 
   async writeVirtualFile(path: string, content: string): Promise<void> {

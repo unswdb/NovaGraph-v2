@@ -1,6 +1,12 @@
 import type { ElementType } from "react";
 
-import type { GraphNode, GraphEdge, NodeSchema, EdgeSchema } from "../../types";
+import type {
+  GraphNode,
+  GraphEdge,
+  NodeSchema,
+  EdgeSchema,
+  GraphSnapshotState,
+} from "../../types";
 import type VisualizerStore from "../../store";
 
 import type {
@@ -8,17 +14,8 @@ import type {
   InputType,
 } from "~/features/visualizer/inputs";
 
-type ImportHandlerResult = {
-  success: boolean;
-  message?: string;
-  databaseName?: string;
-  data?: {
-    nodes: GraphNode[];
-    edges: GraphEdge[];
-    nodeTables: NodeSchema[];
-    edgeTables: EdgeSchema[];
-    directed?: boolean;
-  };
+type ImportHandlerResult = GraphSnapshotState & {
+  databaseName: string;
 };
 
 type ImportHandler = (data: {

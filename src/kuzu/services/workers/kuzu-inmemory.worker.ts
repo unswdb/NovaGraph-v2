@@ -127,7 +127,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
             success: true,
             version: String(version),
           },
-        } as WorkerResponse);
+        });
         break;
 
       case "query":
@@ -189,10 +189,8 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
             edgeTables: graphState.edgeTables,
             colorMap,
             resultType,
-            message: allSuccess ? "All queries succeeded" : failureMessage,
-            error: allSuccess ? undefined : failureMessage,
           },
-        } as WorkerResponse);
+        });
         break;
 
       case "snapshotGraphState":
@@ -204,7 +202,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
           id,
           type,
           data: snapshotGraphState(connection),
-        } as WorkerResponse);
+        });
         break;
 
       case "getColumnTypes":
@@ -220,7 +218,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
           id,
           type,
           data: { columnTypes },
-        } as WorkerResponse);
+        });
         break;
 
       case "writeFile":
@@ -234,7 +232,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
           id,
           type,
           data: { success: true, path: targetPath },
-        } as WorkerResponse);
+        });
         break;
 
       case "deleteFile":
@@ -251,7 +249,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
           id,
           type,
           data: { success: true },
-        } as WorkerResponse);
+        });
         break;
 
       case "cleanup":
@@ -270,7 +268,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
           id,
           type,
           data: { success: true },
-        } as WorkerResponse);
+        });
         break;
 
       default:
@@ -282,7 +280,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
       id,
       type,
       error: error instanceof Error ? error.message : String(error),
-    } as WorkerResponse);
+    });
   }
 };
 

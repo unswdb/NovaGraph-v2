@@ -1,3 +1,6 @@
+// @ts-ignore
+import kuzu from "kuzu-wasm/sync";
+
 import {
   queryResultColorMapExtraction,
   processQueryResult,
@@ -28,24 +31,24 @@ import { throwOnFailedQuery } from "./KuzuBaseService.util";
 
 import type { CompositeType } from "~/kuzu/types/KuzuDBTypes";
 import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
-import type {
-  NonPrimaryKeyType,
-  PrimaryKeyType,
-} from "~/features/visualizer/schema-inputs";
 import type { InputChangeResult } from "~/features/visualizer/inputs";
 import type { ColorMap } from "~/igraph/types";
+import type Database from "../types/kuzu_wasm_internal/database";
 
 type MaybePromise<T> = T | Promise<T>;
 
 const isPromiseLike = <T>(value: MaybePromise<T>): value is Promise<T> =>
   Boolean(value) && typeof (value as any).then === "function";
 
+type SyncFileSystem = ReturnType<kuzu.getFS>;
+type AsyncFileSystem = null;
+
 type VirtualFileCapableService = {
   writeVirtualFile(path: string, content: string): Promise<void> | void;
   deleteVirtualFile(path: string): Promise<void> | void;
 };
 
-const hasVirtualFileSupport = (
+const isVirtualCapableService = (
   service: unknown
 ): service is VirtualFileCapableService =>
   Boolean(
@@ -56,16 +59,20 @@ const hasVirtualFileSupport = (
         "function"
   );
 
+type InitializedKuzuBaseService = KuzuBaseService & {
+  db: NonNullable<KuzuBaseService["db"]>;
+  connection: NonNullable<KuzuBaseService["connection"]>;
+  initialized: true;
+};
+
 export default abstract class KuzuBaseService {
-  protected db: any;
+  protected db: Database | null = null;
   protected connection: Connection | null = null;
-  protected helper: any = null;
   protected initialized: boolean = false;
 
   constructor() {
     this.db = null;
     this.connection = null;
-    this.helper = null;
     this.initialized = false;
   }
 
@@ -74,7 +81,7 @@ export default abstract class KuzuBaseService {
    * Must be implemented by subclasses
    * @returns File system object with mkdir, writeFile, unlink methods
    */
-  protected abstract getFileSystem(): any;
+  protected abstract getFileSystem(): SyncFileSystem | AsyncFileSystem;
 
   snapshotGraphState() {
     if (!this.connection) {
@@ -95,8 +102,10 @@ export default abstract class KuzuBaseService {
    * @returns {Array<string>} - Array of column type strings
    */
   getColumnTypes(query: string): string[] | Promise<string[]> {
-    if (!this.connection || !query.trim()) {
-      throw new Error("Connection not initialized or empty query");
+    this.checkInitialization();
+
+    if (!query.trim()) {
+      throw new Error("Query cannot be empty. Please enter a query first.");
     }
 
     const result = this.connection.query(query);
@@ -112,8 +121,10 @@ export default abstract class KuzuBaseService {
    * @returns {Object} - Query execution result object
    */
   executeQuery(query: string): any {
-    if (!this.connection || !query.trim()) {
-      throw new Error("Connection not initialized or empty query");
+    this.checkInitialization();
+
+    if (!query.trim()) {
+      throw new Error("Query cannot be empty. Please enter a query first.");
     }
 
     // Init variable
@@ -203,10 +214,10 @@ export default abstract class KuzuBaseService {
   createNodeSchema(
     tableName: string,
     primaryKey: string,
-    primaryKeyType: PrimaryKeyType,
+    primaryKeyType: string,
     properties: {
       name: string;
-      type: NonPrimaryKeyType;
+      type: string;
       isPrimary?: boolean;
     }[] = [],
     relInfo: { from: string; to: string } | null = null
@@ -285,10 +296,7 @@ export default abstract class KuzuBaseService {
   createEdgeSchema(
     tableName: string,
     tablePairs: Array<[string | number, string | number]>,
-    properties: (
-      | { name: string; type: NonPrimaryKeyType }
-      | { name: string; type: PrimaryKeyType }
-    )[],
+    properties: { name: string; type: string }[],
     isDirected: boolean,
     relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE"
   ) {
@@ -400,15 +408,14 @@ export default abstract class KuzuBaseService {
    * @throws Error if import fails at any step
    */
   async importFromCSV(
+    databaseName: string,
     nodesText: string,
     edgesText: string,
     nodeTableName: string,
     edgeTableName: string,
-    isDirected: boolean
+    isDirected: boolean = true
   ) {
-    if (!this.initialized) {
-      throw new Error("Kuzu service not initialized");
-    }
+    this.checkInitialization();
 
     console.log(
       `[CSV Import] Starting import for tables: ${nodeTableName}, ${edgeTableName}`
@@ -427,7 +434,7 @@ export default abstract class KuzuBaseService {
     const edgeColumns = edgesHeader.split(",").map((col) => col.trim());
     const hasWeight = edgeColumns.includes("weight");
 
-    const virtualFS = hasVirtualFileSupport(this) ? this : null;
+    const virtualFS = isVirtualCapableService(this) ? this : null;
     const fs = virtualFS ? null : this.getFileSystem();
     const tempDir = "/tmp";
 
@@ -490,13 +497,11 @@ export default abstract class KuzuBaseService {
       : columnTypesResult;
 
     // Extract column types from the query result
-    const inferredTypes: Record<string, PrimaryKeyType | NonPrimaryKeyType> =
-      {};
-
+    const inferredTypes: Record<string, string> = {};
     columnTypes.forEach((kuzuType: string, index: number) => {
       const colName = nodeColumns[index];
       // Map Kuzu types to schema types
-      let schemaType: PrimaryKeyType | NonPrimaryKeyType = "STRING";
+      let schemaType: string = "STRING";
 
       const typeUpper = kuzuType.toUpperCase();
       if (typeUpper.includes("INT32")) {
@@ -521,13 +526,11 @@ export default abstract class KuzuBaseService {
       inferredTypes[colName] = schemaType;
     });
 
-    console.log(`[CSV Import] Inferred types:`, inferredTypes);
-
     // Create node table schema with inferred types
-    const primaryKeyType = inferredTypes[primaryKeyColumn] as PrimaryKeyType;
+    const primaryKeyType = inferredTypes[primaryKeyColumn];
     const additionalProperties = nodeColumns.slice(1).map((col) => ({
       name: col,
-      type: (inferredTypes[col] || "STRING") as NonPrimaryKeyType,
+      type: inferredTypes[col] ?? "STRING",
     }));
 
     console.log(
@@ -617,18 +620,13 @@ export default abstract class KuzuBaseService {
     await deleteFile(nodesPath);
     await deleteFile(edgesPath);
 
-    // Refresh graph state
     const graphState = await this.snapshotGraphState();
 
     console.log(
       `[CSV Import] Successfully bulk-imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges`
     );
 
-    return {
-      success: true,
-      message: `Successfully imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges!`,
-      data: graphState,
-    };
+    return { databaseName, ...graphState };
   }
 
   /**
@@ -643,15 +641,14 @@ export default abstract class KuzuBaseService {
    * @throws Error if import fails at any step
    */
   async importFromJSON(
+    databaseName: string,
     nodesText: string,
     edgesText: string,
     nodeTableName: string,
     edgeTableName: string,
-    isDirected: boolean
+    isDirected: boolean = true
   ) {
-    if (!this.initialized) {
-      throw new Error("Kuzu service not initialized");
-    }
+    this.checkInitialization();
 
     console.log(
       `[JSON Import] Starting import for tables: ${nodeTableName}, ${edgeTableName}`
@@ -695,7 +692,7 @@ export default abstract class KuzuBaseService {
       (key) => key !== "from" && key !== "to"
     );
 
-    const virtualFS = hasVirtualFileSupport(this) ? this : null;
+    const virtualFS = isVirtualCapableService(this) ? this : null;
     const fs = virtualFS ? null : this.getFileSystem();
     const tempDir = "/tmp";
 
@@ -879,10 +876,12 @@ export default abstract class KuzuBaseService {
       `[JSON Import] Successfully imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges`
     );
 
-    return {
-      success: true,
-      message: `Successfully imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges!`,
-      data: graphState,
-    };
+    return { databaseName, ...graphState };
+  }
+
+  protected checkInitialization(): asserts this is InitializedKuzuBaseService {
+    if (!this.connection || !this.db) {
+      throw new Error("Connection or database is not initialized");
+    }
   }
 }

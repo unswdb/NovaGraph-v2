@@ -3,8 +3,8 @@
  * Runs Kuzu database operations with IndexedDB persistence in a separate thread
  */
 
-// @ts-ignore
 // Use sync version for filesystem operations
+// @ts-ignore
 import kuzu from "kuzu-wasm/sync";
 
 import { snapshotGraphState } from "../../helpers/KuzuQueryExecutor";
@@ -531,8 +531,6 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
             edgeTables: graphState.edgeTables,
             colorMap,
             resultType,
-            message: allSuccess ? "All queries succeeded" : failureMessage,
-            error: allSuccess ? undefined : failureMessage,
           },
         } as WorkerResponse);
         break;
@@ -689,7 +687,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
         throw new Error(`Unknown message type: ${type}`);
     }
   } catch (error) {
-    console.error("[Worker] Error:", error);
+    console.error("[Worker]", error);
     self.postMessage({
       id,
       type,

@@ -8,10 +8,6 @@
 import type { CompositeType, ScalarType } from "../types/KuzuDBTypes";
 
 import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
-import type {
-  NonPrimaryKeyType,
-  PrimaryKeyType,
-} from "~/features/visualizer/schema-inputs";
 import type { InputChangeResult } from "~/features/visualizer/inputs";
 
 export function createEdgeQuery(
@@ -126,10 +122,7 @@ export function updateEdgeQuery(
 export function createEdgeSchemaQuery(
   tableName: string,
   tablePairs: Array<[string | number, string | number]>,
-  properties: (
-    | { name: string; type: NonPrimaryKeyType }
-    | { name: string; type: PrimaryKeyType }
-  )[],
+  properties: { name: string; type: string }[],
   isDirected: boolean,
   relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE"
 ) {
@@ -192,19 +185,19 @@ export function createEdgeSchemaQuery(
 export function createNodeSchemaQuery(
   tableName: string,
   primaryKey: string,
-  primaryKeyType: PrimaryKeyType,
+  primaryKeyType: string,
   properties: {
     name: string;
-    type: NonPrimaryKeyType;
+    type: string;
     isPrimary?: boolean;
   }[] = [],
   _relInfo: { from: string; to: string } | null = null
 ): string {
   const qid = (s: string) => `\`${String(s).replace(/`/g, "``")}\``;
 
-  const typeToDDL = (t: NonPrimaryKeyType): string => {
+  const typeToDDL = (t: unknown): string => {
     if (typeof t === "string") return t; // types stay raw, e.g., STRING, INT, DATE
-    return String(t as any);
+    return String(t);
   };
 
   const cols: string[] = [

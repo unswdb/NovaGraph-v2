@@ -1,10 +1,6 @@
-import SyntaxHighlighterPkg from "react-syntax-highlighter";
+import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import { useState } from "react";
 import { Table as TableIcon } from "lucide-react";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const { Light: SyntaxHighlighter } = SyntaxHighlighterPkg as any;
-
 import type { ImportOption } from "./types";
 
 import {
@@ -18,11 +14,7 @@ import {
 } from "~/components/ui/table";
 import { Switch } from "~/components/form/switch";
 import { Label } from "~/components/form/label";
-import {
-  createFileInput,
-  // createSwitchInput,
-  createTextInput,
-} from "~/features/visualizer/inputs";
+import { createFileInput, createTextInput } from "~/features/visualizer/inputs";
 
 const validateNodes = async (file: File | undefined) => {
   if (!file)
@@ -156,14 +148,6 @@ export const ImportCSV: ImportOption = {
       accept: ".csv",
       validator: validateEdges,
     }),
-    // Temporarily disabled - keeping logic intact with default value
-    // createSwitchInput({
-    //   id: "directed-csv",
-    //   key: "directed",
-    //   displayName: "Directed Graph",
-    //   required: true,
-    //   defaultValue: false,
-    // }),
   ],
   handler: async ({
     values,
@@ -172,42 +156,15 @@ export const ImportCSV: ImportOption = {
     values: Record<string, any>;
     controller: any;
   }) => {
-    const { name, nodes, edges, directed } = values;
+    const { name, nodes, edges } = values;
 
     const databaseName = name.value as string;
-    const trimmedDatabaseName = (databaseName ?? "").trim();
     const nodesFile = nodes.value as File;
     const edgesFile = edges.value as File;
-    const isDirected = (directed?.value as boolean) ?? true;
 
-    if (!trimmedDatabaseName) {
-      return {
-        success: false,
-        message: "Please provide a name for the new database.",
-      };
-    }
+    await controller.db.createDatabase(databaseName);
 
-    const createResult = await controller.db.createDatabase(
-      trimmedDatabaseName,
-      { isDirected }
-    );
-    if (!createResult.success) {
-      throw new Error(
-        createResult.error ||
-          createResult.message ||
-          `Failed to create database "${trimmedDatabaseName}"`
-      );
-    }
-
-    const connectResult =
-      await controller.db.connectToDatabase(trimmedDatabaseName);
-    if (!connectResult.success) {
-      throw new Error(
-        connectResult.error ||
-          connectResult.message ||
-          `Failed to connect to database "${trimmedDatabaseName}"`
-      );
-    }
+    await controller.db.connectToDatabase(databaseName);
 
     const nodesText = await nodesFile.text();
     const edgesText = await edgesFile.text();
@@ -216,21 +173,13 @@ export const ImportCSV: ImportOption = {
     const edgeTableName = edgesFile.name.replace(/\.csv$/i, "");
 
     const result = await controller.db.importFromCSV(
+      databaseName,
       nodesText,
       edgesText,
       nodeTableName,
-      edgeTableName,
-      isDirected
+      edgeTableName
     );
-
-    if (result.success && result.data) {
-      await controller.db.saveDatabase();
-      return {
-        ...result,
-        databaseName: trimmedDatabaseName,
-        message: `Successfully imported graph "${trimmedDatabaseName}" with ${result.data.nodes.length} nodes and ${result.data.edges.length} edges!`,
-      };
-    }
+    await controller.db.saveDatabase();
 
     return result;
   },
@@ -240,7 +189,7 @@ function CSVPreview() {
   const [isTableView, setIsTableView] = useState(true);
 
   return (
-    <div className="flex flex-col items-end gap-6">
+    <div className="flex flex-col items-end gap-6 mt-4">
       <div className="flex items-center gap-2">
         <Label htmlFor="toggle-table-view">Table View</Label>
         <Switch

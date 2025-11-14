@@ -49,7 +49,7 @@ const GraphRenderer = observer(({ className }: { className?: string }) => {
   );
 
   // States
-  const [isSimulationPaused, setIsSimulationPaused] = useState(false);
+  const [isSimulationPaused, setIsSimulationPaused] = useState(true);
   const [showDynamicLabels, setShowDynamicLabels] = useState(true);
   const [clickedNode, setClickedNode] = useState<GraphNode | null>(null);
 
@@ -88,11 +88,11 @@ const GraphRenderer = observer(({ className }: { className?: string }) => {
       if (!!target) map[edge.source].push([target, edge]);
 
       // If undirected, also add Target → Source
-      // if (!directed) {
-      //   if (!map[edge.target]) map[edge.target] = [];
-      //   const source = nodesMap.get(edge.source);
-      //   if (!!source) map[edge.target].push([source, edge]);
-      // }
+      if (!directed) {
+        if (!map[edge.target]) map[edge.target] = [];
+        const source = nodesMap.get(edge.source);
+        if (!!source) map[edge.target].push([source, edge]);
+      }
     });
 
     return map;
@@ -116,6 +116,8 @@ const GraphRenderer = observer(({ className }: { className?: string }) => {
     cosmographRef.current?.unselectNodes();
     setClickedNode(null);
   };
+
+  console.log(nodes);
 
   return (
     <CosmographProvider nodes={nodes} links={edges}>
