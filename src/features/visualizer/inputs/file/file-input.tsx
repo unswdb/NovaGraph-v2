@@ -74,6 +74,7 @@ export default function FileInputComponent({
         onChange={handleFileOnChange}
         required={input.required}
         accept={input.accept}
+        disabled={input.disabled}
       />
       {showError && errorMessage && (
         <p className="text-typography-critical xsmall-body mt-1">

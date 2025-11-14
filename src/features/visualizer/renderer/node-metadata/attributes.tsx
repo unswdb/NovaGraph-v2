@@ -50,8 +50,11 @@ const AttributesForm = observer(
     const [values, setValues] = useState(createEmptyInputResults(inputs));
 
     const isReadyToSubmit = useMemo(
-      () => Object.values(values).every((v) => v.success),
-      [values]
+      () =>
+        Object.values(values).every((v) => v.success) &&
+        !!node.attributes &&
+        Object.entries(node.attributes).some(([k, v]) => values[k].value != v),
+      [values, node]
     );
 
     const { run: updateNode, isLoading } = useAsyncFn(
