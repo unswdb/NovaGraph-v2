@@ -376,7 +376,6 @@ function AlgorithmMultipleSelectInputComponent({
     count: filteredOptions.length,
     getScrollElement: () => listRef.current,
     estimateSize: () => 32, // px height per item
-    overscan: 5,
   });
 
   useEffect(() => {

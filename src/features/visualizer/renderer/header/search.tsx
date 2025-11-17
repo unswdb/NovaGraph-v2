@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Search, X } from "lucide-react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 import type { GraphNode } from "../../types";
 
@@ -196,6 +197,23 @@ function MobileSearch({
     setIsSheetOpen(false);
   };
 
+  // Windowing
+  const virtualizer = useVirtualizer({
+    count: filteredNodes.length,
+    getScrollElement: () => listRef.current,
+    estimateSize: () => 48,
+  });
+
+  useEffect(() => {
+    if (!isSheetOpen) return;
+
+    const timer = setTimeout(() => {
+      virtualizer.measure();
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [isSheetOpen, virtualizer]);
+
   return (
     <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
       <SheetTrigger asChild>
@@ -251,48 +269,66 @@ function MobileSearch({
         </div>
         {/* List of nodes */}
         <div>
-          {filteredNodes.length === 0 ? (
+          {filteredNodes.length === 0 && (
             <p className="text-sm text-typography-secondary text-center">
               No results found
             </p>
-          ) : (
+          )}
+          <div
+            role="listbox"
+            ref={listRef}
+            className="max-h-48 overflow-y-auto"
+            aria-label="Search results"
+          >
             <div
-              role="listbox"
-              ref={listRef}
-              className="max-h-48 overflow-y-auto"
-              aria-label="Seach results"
+              style={{
+                height: virtualizer.getTotalSize(),
+                position: "relative",
+              }}
             >
-              {filteredNodes.map((node, index) => {
+              {virtualizer.getVirtualItems().map((row) => {
+                const index = row.index;
+                const node = filteredNodes[index];
                 const value = currentAccessor.accessor(node);
                 const isSelected = index === selectedIndex;
 
                 return (
                   <div
-                    key={index}
-                    role="option"
-                    aria-selected={isSelected}
-                    className={cn(
-                      "p-3 rounded-md cursor-pointer border-b border-b-border last:border-0",
-                      isSelected && "bg-neutral-low"
-                    )}
-                    onClick={() => handleItemClick(node)}
-                    onMouseEnter={() => handleMouseEnter(index)}
+                    key={row.key}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      transform: `translateY(${row.start}px)`,
+                    }}
+                    className="border-b border-b-border last:border-0"
                   >
-                    <div className="font-medium text-sm">{value}</div>
-                    {accessors.filter((_, i) => i !== currentAccessorIdx)
-                      .length > 0 && (
-                      <div className="text-xs text-typography-secondary truncate mt-1">
-                        {accessors
-                          .filter((_, i) => i !== currentAccessorIdx)
-                          .map((a) => `${a.label}: ${a.accessor(node)}`)
-                          .join(" • ")}
-                      </div>
-                    )}
+                    <div
+                      role="option"
+                      aria-selected={isSelected}
+                      className={cn(
+                        "p-3 rounded-md cursor-pointer",
+                        isSelected && "bg-neutral-low"
+                      )}
+                      onClick={() => handleItemClick(node)}
+                      onMouseEnter={() => handleMouseEnter(index)}
+                    >
+                      <div className="font-medium text-sm">{value}</div>
+                      {accessors.length > 1 && (
+                        <div className="text-xs text-typography-secondary truncate mt-1">
+                          {accessors
+                            .filter((_, i) => i !== currentAccessorIdx)
+                            .map((a) => `${a.label}: ${a.accessor(node)}`)
+                            .join(" • ")}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
-          )}
+          </div>
         </div>
       </SheetContent>
     </Sheet>
@@ -334,6 +370,25 @@ function DesktopSearch({
     }
   }, [isExpanded]);
 
+  // Windowing
+  const listRef = useRef<HTMLDivElement | null>(null);
+
+  const virtualizer = useVirtualizer({
+    count: filteredNodes.length,
+    getScrollElement: () => listRef.current,
+    estimateSize: () => 36,
+  });
+
+  useEffect(() => {
+    if (!isExpanded) return;
+
+    const timer = setTimeout(() => {
+      virtualizer.measure();
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [isExpanded, virtualizer]);
+
   return !isExpanded ? (
     <Button
       type="button"
@@ -365,28 +420,52 @@ function DesktopSearch({
           />
           {/* List of nodes */}
           {isFocused && (
-            <CommandList className="absolute min-w-full max-w-60 mt-2 top-full left-0 z-50 max-h-40 rounded-md border border-border">
-              <CommandEmpty>No results found</CommandEmpty>
+            <CommandList
+              ref={listRef}
+              className="absolute min-w-full max-w-60 mt-2 top-full left-0 z-50 max-h-40 rounded-md border border-border"
+            >
+              {filteredNodes.length === 0 && (
+                <CommandEmpty>No results found</CommandEmpty>
+              )}
               <CommandGroup>
-                {filteredNodes.map((node, index) => {
-                  const value = currentAccessor.accessor(node);
-                  return (
-                    <CommandItem
-                      key={index}
-                      value={value}
-                      onSelect={() => handleOnSelect(node)}
-                    >
-                      <span>{value}</span>
-                      <span className="text-typography-tertiary truncate">
-                        {/* Other accessors' values */}
-                        {accessors
-                          .filter((_, i) => i !== currentAccessorIdx)
-                          .map((a) => `${a.label}: ${a.accessor(node)}`)
-                          .join(" . ")}
-                      </span>
-                    </CommandItem>
-                  );
-                })}
+                <div
+                  style={{
+                    height: virtualizer.getTotalSize(),
+                    position: "relative",
+                  }}
+                >
+                  {virtualizer.getVirtualItems().map((row) => {
+                    const index = row.index;
+                    const node = filteredNodes[index];
+                    const value = currentAccessor.accessor(node);
+
+                    return (
+                      <div
+                        key={row.key}
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          transform: `translateY(${row.start}px)`,
+                        }}
+                      >
+                        <CommandItem
+                          value={value}
+                          onSelect={() => handleOnSelect(node)}
+                        >
+                          <span className="mr-2 truncate">{value}</span>
+                          <span className="text-typography-tertiary truncate">
+                            {accessors
+                              .filter((_, i) => i !== currentAccessorIdx)
+                              .map((a) => `${a.label}: ${a.accessor(node)}`)
+                              .join(" · ")}
+                          </span>
+                        </CommandItem>
+                      </div>
+                    );
+                  })}
+                </div>
               </CommandGroup>
             </CommandList>
           )}
