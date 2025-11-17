@@ -34,6 +34,10 @@ import type { CompositeType } from "~/kuzu/types/KuzuDBTypes";
 import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
 import type { InputChangeResult } from "~/features/visualizer/inputs";
 import type { ColorMap } from "~/igraph/types";
+import {
+  NON_PK_SCHEMA_TYPES,
+  PK_SCHEMA_TYPES,
+} from "~/features/visualizer/schema-inputs";
 
 type MaybePromise<T> = T | Promise<T>;
 
@@ -473,160 +477,161 @@ export default abstract class KuzuBaseService {
     await writeFile(nodesPath, nodesText);
     await writeFile(edgesPath, edgesText);
 
-    // Infer column types by using LOAD FROM to scan the CSV
-    const primaryKeyColumn = nodeColumns[0];
+    try {
+      // Infer column types by using LOAD FROM to scan the CSV
+      const primaryKeyColumn = nodeColumns[0];
 
-    console.log(`[CSV Import] Primary key: ${primaryKeyColumn}`);
-    console.log(`[CSV Import] Inferring types for columns:`, nodeColumns);
+      console.log(`[CSV Import] Primary key: ${primaryKeyColumn}`);
+      console.log(`[CSV Import] Inferring types for columns:`, nodeColumns);
 
-    // Query to infer types - load one row and return it to see inferred types
-    const typeInferenceQuery = `
-      LOAD FROM '${nodesPath}' (header = true)
-      RETURN ${nodeColumns.join(", ")}
-      LIMIT 1
-    `;
+      // Query to infer types - load one row and return it to see inferred types
+      const typeInferenceQuery = `
+          LOAD FROM '${nodesPath}' (header = true)
+          RETURN ${nodeColumns.join(", ")}
+          LIMIT 1
+        `;
 
-    console.log(
-      `[CSV Import] Inferring types with query: ${typeInferenceQuery}`
-    );
+      console.log(
+        `[CSV Import] Inferring types with query: ${typeInferenceQuery}`
+      );
 
-    // Use the getColumnTypes method to infer types
-    const columnTypesResult = this.getColumnTypes(typeInferenceQuery);
-    const columnTypes = isPromiseLike(columnTypesResult)
-      ? await columnTypesResult
-      : columnTypesResult;
+      // Use the getColumnTypes method to infer types
+      const columnTypesResult = this.getColumnTypes(typeInferenceQuery);
+      const columnTypes = isPromiseLike(columnTypesResult)
+        ? await columnTypesResult
+        : columnTypesResult;
 
-    // Extract column types from the query result
-    const inferredTypes: Record<string, string> = {};
-    columnTypes.forEach((kuzuType: string, index: number) => {
-      const colName = nodeColumns[index];
-      // Map Kuzu types to schema types
-      let schemaType: string = "STRING";
+      // Extract column types from the query result
+      const inferredTypes: Record<string, string> = {};
+      const supportedTypes: string[] = [
+        ...PK_SCHEMA_TYPES,
+        ...NON_PK_SCHEMA_TYPES,
+      ].map((t) => t.toString());
+      columnTypes.forEach((kuzuType: string, index: number) => {
+        const colName = nodeColumns[index];
+        // Map Kuzu types to schema types
+        let schemaType: string = "STRING";
 
-      const typeUpper = kuzuType.toUpperCase();
-      if (typeUpper.includes("INT32")) {
-        schemaType = "INT32";
-      } else if (typeUpper.includes("INT16")) {
-        schemaType = "INT16";
-      } else if (typeUpper.includes("INT8")) {
-        schemaType = "INT8";
-      } else if (typeUpper.includes("INT64") || typeUpper.includes("INT")) {
-        // Map INT64 and generic INT to INT32 (closest available type)
-        schemaType = "INT32";
-      } else if (typeUpper.includes("DOUBLE")) {
-        schemaType = "DOUBLE";
-      } else if (typeUpper.includes("FLOAT")) {
-        schemaType = "FLOAT";
-      } else if (typeUpper.includes("BOOL")) {
-        schemaType = "BOOL";
-      } else if (typeUpper.includes("DATE")) {
-        schemaType = "DATE";
+        const typeUpper = kuzuType.toUpperCase();
+        if (supportedTypes.includes(typeUpper)) {
+          schemaType = typeUpper;
+        } else if (typeUpper.startsWith("INT")) {
+          // Try scale down INT64/INT128 to INT32 if possible
+          // Error with value will be caught during COPY if not possible
+          schemaType = "INT32";
+        } else if (typeUpper.startsWith("UINT")) {
+          // Try scale down UINT64/UINT128 to UINT32 if possible
+          // Error with value will be caught during COPY if not possible
+          schemaType = "UINT32";
+        }
+
+        inferredTypes[colName] = schemaType;
+      });
+
+      // Create node table schema with inferred types
+      const primaryKeyType = inferredTypes[primaryKeyColumn];
+      const additionalProperties = nodeColumns.slice(1).map((col) => ({
+        name: col,
+        type: inferredTypes[col] ?? "STRING",
+      }));
+
+      console.log(
+        `[CSV Import] Creating node table with primary key: ${primaryKeyColumn} (${primaryKeyType})`
+      );
+      console.log(`[CSV Import] Additional properties:`, additionalProperties);
+
+      await this.createNodeSchema(
+        nodeTableName,
+        primaryKeyColumn,
+        primaryKeyType,
+        additionalProperties
+      );
+
+      // Load nodes using COPY FROM for direct bulk loading
+      const copyNodesQuery = `COPY ${nodeTableName} FROM '${nodesPath}' (header = true)`;
+
+      console.log(
+        `[CSV Import] Loading nodes with COPY FROM: ${copyNodesQuery}`
+      );
+      throwOnFailedQuery(await this.executeQuery(copyNodesQuery));
+
+      // Create edge table schema using CREATE REL TABLE syntax
+      const edgeTableQuery = hasWeight
+        ? `CREATE REL TABLE ${edgeTableName} (
+              FROM ${nodeTableName} TO ${nodeTableName},
+              weight DOUBLE
+            )`
+        : `CREATE REL TABLE ${edgeTableName} (
+              FROM ${nodeTableName} TO ${nodeTableName}
+            )`;
+
+      console.log(
+        `[CSV Import] Creating edge table with query: ${edgeTableQuery}`
+      );
+      throwOnFailedQuery(await this.executeQuery(edgeTableQuery));
+
+      // Load edges using COPY FROM for direct table loading
+      if (isDirected) {
+        // For directed graphs, use COPY FROM directly
+        const copyEdgesQuery = `COPY ${edgeTableName} FROM '${edgesPath}' (header = true)`;
+
+        console.log(
+          `[CSV Import] Loading directed edges with COPY FROM: ${copyEdgesQuery}`
+        );
+        throwOnFailedQuery(await this.executeQuery(copyEdgesQuery));
+      } else {
+        // For undirected graphs, we need to create edges in both directions
+        // First, copy the original edges
+        const copyEdgesQuery1 = `COPY ${edgeTableName} FROM '${edgesPath}' (header = true)`;
+
+        console.log(
+          `[CSV Import] Loading undirected edges (direction 1) with COPY FROM: ${copyEdgesQuery1}`
+        );
+        throwOnFailedQuery(await this.executeQuery(copyEdgesQuery1));
+
+        // Then create a temporary file with reversed edges for the second direction
+        const reversedEdgesPath = `${tempDir}/reversed_edges_${Date.now()}.csv`;
+        const reversedEdgesContent = edgesLines
+          .map((line, index) => {
+            if (index === 0) {
+              // Header line - keep as is
+              return line;
+            }
+            // Data lines - swap first two columns (source and target)
+            const parts = line.split(",");
+            if (parts.length >= 2) {
+              [parts[0], parts[1]] = [parts[1], parts[0]]; // Swap source and target
+            }
+            return parts.join(",");
+          })
+          .join("\n");
+
+        await writeFile(reversedEdgesPath, reversedEdgesContent);
+
+        // Copy the reversed edges
+        const copyEdgesQuery2 = `COPY ${edgeTableName} FROM '${reversedEdgesPath}' (header = true)`;
+
+        console.log(
+          `[CSV Import] Loading undirected edges (direction 2) with COPY FROM: ${copyEdgesQuery2}`
+        );
+        throwOnFailedQuery(await this.executeQuery(copyEdgesQuery2));
+
+        // Clean up the temporary reversed edges file
+        await deleteFile(reversedEdgesPath);
       }
 
-      inferredTypes[colName] = schemaType;
-    });
-
-    // Create node table schema with inferred types
-    const primaryKeyType = inferredTypes[primaryKeyColumn];
-    const additionalProperties = nodeColumns.slice(1).map((col) => ({
-      name: col,
-      type: inferredTypes[col] ?? "STRING",
-    }));
-
-    console.log(
-      `[CSV Import] Creating node table with primary key: ${primaryKeyColumn} (${primaryKeyType})`
-    );
-    console.log(`[CSV Import] Additional properties:`, additionalProperties);
-
-    await this.createNodeSchema(
-      nodeTableName,
-      primaryKeyColumn,
-      primaryKeyType,
-      additionalProperties
-    );
-
-    // Load nodes using COPY FROM for direct bulk loading
-    const copyNodesQuery = `COPY ${nodeTableName} FROM '${nodesPath}' (header = true)`;
-
-    console.log(`[CSV Import] Loading nodes with COPY FROM: ${copyNodesQuery}`);
-    await this.executeQuery(copyNodesQuery);
-
-    // Create edge table schema using CREATE REL TABLE syntax
-    const edgeTableQuery = hasWeight
-      ? `CREATE REL TABLE ${edgeTableName} (
-          FROM ${nodeTableName} TO ${nodeTableName},
-          weight DOUBLE
-        )`
-      : `CREATE REL TABLE ${edgeTableName} (
-          FROM ${nodeTableName} TO ${nodeTableName}
-        )`;
-
-    console.log(
-      `[CSV Import] Creating edge table with query: ${edgeTableQuery}`
-    );
-    await this.executeQuery(edgeTableQuery);
-
-    // Load edges using COPY FROM for direct table loading
-    if (isDirected) {
-      // For directed graphs, use COPY FROM directly
-      const copyEdgesQuery = `COPY ${edgeTableName} FROM '${edgesPath}' (header = true)`;
+      const graphState = await this.snapshotGraphState();
 
       console.log(
-        `[CSV Import] Loading directed edges with COPY FROM: ${copyEdgesQuery}`
+        `[CSV Import] Successfully bulk-imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges`
       );
-      await this.executeQuery(copyEdgesQuery);
-    } else {
-      // For undirected graphs, we need to create edges in both directions
-      // First, copy the original edges
-      const copyEdgesQuery1 = `COPY ${edgeTableName} FROM '${edgesPath}' (header = true)`;
 
-      console.log(
-        `[CSV Import] Loading undirected edges (direction 1) with COPY FROM: ${copyEdgesQuery1}`
-      );
-      await this.executeQuery(copyEdgesQuery1);
-
-      // Then create a temporary file with reversed edges for the second direction
-      const reversedEdgesPath = `${tempDir}/reversed_edges_${Date.now()}.csv`;
-      const reversedEdgesContent = edgesLines
-        .map((line, index) => {
-          if (index === 0) {
-            // Header line - keep as is
-            return line;
-          }
-          // Data lines - swap first two columns (source and target)
-          const parts = line.split(",");
-          if (parts.length >= 2) {
-            [parts[0], parts[1]] = [parts[1], parts[0]]; // Swap source and target
-          }
-          return parts.join(",");
-        })
-        .join("\n");
-
-      await writeFile(reversedEdgesPath, reversedEdgesContent);
-
-      // Copy the reversed edges
-      const copyEdgesQuery2 = `COPY ${edgeTableName} FROM '${reversedEdgesPath}' (header = true)`;
-
-      console.log(
-        `[CSV Import] Loading undirected edges (direction 2) with COPY FROM: ${copyEdgesQuery2}`
-      );
-      await this.executeQuery(copyEdgesQuery2);
-
-      // Clean up the temporary reversed edges file
-      await deleteFile(reversedEdgesPath);
+      return { databaseName, ...graphState };
+    } finally {
+      // Clean up temporary files
+      await deleteFile(nodesPath);
+      await deleteFile(edgesPath);
     }
-
-    // Clean up temporary files
-    await deleteFile(nodesPath);
-    await deleteFile(edgesPath);
-
-    const graphState = await this.snapshotGraphState();
-
-    console.log(
-      `[CSV Import] Successfully bulk-imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges`
-    );
-
-    return { databaseName, ...graphState };
   }
 
   /**
@@ -731,152 +736,143 @@ export default abstract class KuzuBaseService {
     await writeFile(nodesPath, nodesText);
     await writeFile(edgesPath, edgesText);
 
-    // Install and load JSON extension (safe to retry)
     try {
-      await this.executeQuery("INSTALL json");
-      await this.executeQuery("LOAD EXTENSION json");
-    } catch (error) {
-      console.log("[JSON Import] JSON extension load/install notice:", error);
-    }
-
-    // Infer column types by scanning JSON
-    const typeInferenceQuery = `
-      LOAD FROM '${nodesPath}'
-      RETURN ${nodeKeys.join(", ")}
-      LIMIT 1
-    `;
-
-    const columnTypesResult = this.getColumnTypes(typeInferenceQuery);
-    const columnTypes = isPromiseLike(columnTypesResult)
-      ? await columnTypesResult
-      : columnTypesResult;
-    const inferredTypes: Record<string, string> = {};
-
-    columnTypes.forEach((kuzuType: string, index: number) => {
-      const colName = nodeKeys[index];
-      let schemaType = "STRING";
-      const typeUpper = kuzuType.toUpperCase();
-
-      if (typeUpper.includes("STRUCT")) {
-        schemaType = kuzuType;
-      } else if (typeUpper.includes("[]")) {
-        schemaType = kuzuType;
-      } else if (typeUpper.includes("INT32")) {
-        schemaType = "INT32";
-      } else if (typeUpper.includes("INT16")) {
-        schemaType = "INT16";
-      } else if (typeUpper.includes("INT8")) {
-        schemaType = "INT8";
-      } else if (typeUpper.includes("UINT8")) {
-        schemaType = "UINT8";
-      } else if (typeUpper.includes("UINT16")) {
-        schemaType = "UINT16";
-      } else if (typeUpper.includes("UINT32")) {
-        schemaType = "UINT32";
-      } else if (typeUpper.includes("DOUBLE")) {
-        schemaType = "DOUBLE";
-      } else if (typeUpper.includes("FLOAT")) {
-        schemaType = "FLOAT";
-      } else if (typeUpper.includes("BOOL")) {
-        schemaType = "BOOL";
-      } else if (typeUpper.includes("DATE")) {
-        schemaType = "DATE";
-      } else if (typeUpper.includes("INT64") || typeUpper.includes("INT")) {
-        schemaType = "INT32";
+      // Install and load JSON extension (safe to retry)
+      try {
+        throwOnFailedQuery(await this.executeQuery("INSTALL json"));
+        throwOnFailedQuery(await this.executeQuery("LOAD EXTENSION json"));
+      } catch (error) {
+        console.log("[JSON Import] JSON extension load/install notice:", error);
       }
 
-      inferredTypes[colName] = schemaType;
-    });
+      // Infer column types by scanning JSON
+      const typeInferenceQuery = `
+          LOAD FROM '${nodesPath}'
+          RETURN ${nodeKeys.join(", ")}
+          LIMIT 1
+        `;
 
-    console.log("[JSON Import] Inferred column types:", inferredTypes);
+      const columnTypesResult = this.getColumnTypes(typeInferenceQuery);
+      const columnTypes = isPromiseLike(columnTypesResult)
+        ? await columnTypesResult
+        : columnTypesResult;
 
-    const propertyDefinitions = nodeKeys
-      .map((col) => `${col} ${inferredTypes[col] ?? "STRING"}`)
-      .join(", ");
+      const inferredTypes: Record<string, string> = {};
+      const supportedTypes: string[] = [
+        ...PK_SCHEMA_TYPES,
+        ...NON_PK_SCHEMA_TYPES,
+      ].map((t) => t.toString());
+      columnTypes.forEach((kuzuType: string, index: number) => {
+        const colName = nodeKeys[index];
+        // Map Kuzu types to schema types
+        let schemaType: string = "STRING";
 
-    const createNodeTableQuery = `
-      CREATE NODE TABLE ${nodeTableName} (
-        ${propertyDefinitions},
-        PRIMARY KEY(${primaryKeyColumn})
-      )
-    `;
+        const typeUpper = kuzuType.toUpperCase();
+        if (supportedTypes.includes(typeUpper)) {
+          schemaType = typeUpper;
+        } else if (typeUpper.startsWith("INT")) {
+          // Try scale down INT64/INT128 to INT32 if possible
+          // Error with value will be caught during COPY if not possible
+          schemaType = "INT32";
+        } else if (typeUpper.startsWith("UINT")) {
+          // Try scale down UINT64/UINT128 to UINT32 if possible
+          // Error with value will be caught during COPY if not possible
+          schemaType = "UINT32";
+        }
 
-    await this.executeQuery(createNodeTableQuery);
+        inferredTypes[colName] = schemaType;
+      });
 
-    const copyNodesQuery = `COPY ${nodeTableName} FROM '${nodesPath}'`;
-    await this.executeQuery(copyNodesQuery);
+      console.log("[JSON Import] Inferred column types:", inferredTypes);
 
-    let edgeTableQuery: string;
-
-    if (edgeProperties.length > 0) {
-      const edgePropsDefinition = edgeProperties
-        .map((prop) => {
-          const value = (firstEdge as Record<string, unknown>)[prop];
-          let propType = "STRING";
-
-          if (typeof value === "number") {
-            propType = Number.isInteger(value) ? "INT32" : "DOUBLE";
-          } else if (typeof value === "boolean") {
-            propType = "BOOL";
-          }
-
-          return `${prop} ${propType}`;
-        })
+      const propertyDefinitions = nodeKeys
+        .map((col) => `${col} ${inferredTypes[col] ?? "STRING"}`)
         .join(", ");
 
-      edgeTableQuery = `CREATE REL TABLE ${edgeTableName} (
-        FROM ${nodeTableName} TO ${nodeTableName},
-        ${edgePropsDefinition}
-      )`;
-    } else {
-      edgeTableQuery = `CREATE REL TABLE ${edgeTableName} (
-        FROM ${nodeTableName} TO ${nodeTableName}
-      )`;
-    }
+      const createNodeTableQuery = `
+          CREATE NODE TABLE ${nodeTableName} (
+            ${propertyDefinitions},
+            PRIMARY KEY(${primaryKeyColumn})
+          )
+        `;
 
-    await this.executeQuery(edgeTableQuery);
+      throwOnFailedQuery(await this.executeQuery(createNodeTableQuery));
 
-    if (isDirected) {
-      const copyEdgesQuery = `COPY ${edgeTableName} FROM '${edgesPath}'`;
-      await this.executeQuery(copyEdgesQuery);
-    } else {
-      const copyEdgesQuery = `COPY ${edgeTableName} FROM '${edgesPath}'`;
-      await this.executeQuery(copyEdgesQuery);
+      const copyNodesQuery = `COPY ${nodeTableName} FROM '${nodesPath}'`;
+      throwOnFailedQuery(await this.executeQuery(copyNodesQuery));
 
-      const reversedEdgesPath = `${tempDir}/reversed_edges_${Date.now()}.json`;
-      const reversedEdgesData = edgesData.map(
-        (edge: Record<string, unknown>) => {
-          const extraProps = Object.fromEntries(
-            Object.entries(edge).filter(
-              ([key]) => key !== "from" && key !== "to"
-            )
-          );
-          return {
-            from: edge["to"],
-            to: edge["from"],
-            ...extraProps,
-          };
-        }
+      let edgeTableQuery: string;
+
+      if (edgeProperties.length > 0) {
+        const edgePropsDefinition = edgeProperties
+          .map((prop) => {
+            const value = (firstEdge as Record<string, unknown>)[prop];
+            let propType = "STRING";
+
+            if (typeof value === "number") {
+              propType = Number.isInteger(value) ? "INT32" : "DOUBLE";
+            } else if (typeof value === "boolean") {
+              propType = "BOOL";
+            }
+
+            return `${prop} ${propType}`;
+          })
+          .join(", ");
+
+        edgeTableQuery = `CREATE REL TABLE ${edgeTableName} (
+            FROM ${nodeTableName} TO ${nodeTableName},
+            ${edgePropsDefinition}
+          )`;
+      } else {
+        edgeTableQuery = `CREATE REL TABLE ${edgeTableName} (
+            FROM ${nodeTableName} TO ${nodeTableName}
+          )`;
+      }
+
+      throwOnFailedQuery(await this.executeQuery(edgeTableQuery));
+
+      if (isDirected) {
+        const copyEdgesQuery = `COPY ${edgeTableName} FROM '${edgesPath}'`;
+        throwOnFailedQuery(await this.executeQuery(copyEdgesQuery));
+      } else {
+        const copyEdgesQuery = `COPY ${edgeTableName} FROM '${edgesPath}'`;
+        throwOnFailedQuery(await this.executeQuery(copyEdgesQuery));
+
+        const reversedEdgesPath = `${tempDir}/reversed_edges_${Date.now()}.json`;
+        const reversedEdgesData = edgesData.map(
+          (edge: Record<string, unknown>) => {
+            const extraProps = Object.fromEntries(
+              Object.entries(edge).filter(
+                ([key]) => key !== "from" && key !== "to"
+              )
+            );
+            return {
+              from: edge["to"],
+              to: edge["from"],
+              ...extraProps,
+            };
+          }
+        );
+
+        await writeFile(reversedEdgesPath, JSON.stringify(reversedEdgesData));
+
+        const copyReversedEdgesQuery = `COPY ${edgeTableName} FROM '${reversedEdgesPath}'`;
+        throwOnFailedQuery(await this.executeQuery(copyReversedEdgesQuery));
+
+        await deleteFile(reversedEdgesPath);
+      }
+
+      const graphState = await this.snapshotGraphState();
+
+      console.log(
+        `[JSON Import] Successfully imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges`
       );
 
-      await writeFile(reversedEdgesPath, JSON.stringify(reversedEdgesData));
-
-      const copyReversedEdgesQuery = `COPY ${edgeTableName} FROM '${reversedEdgesPath}'`;
-      await this.executeQuery(copyReversedEdgesQuery);
-
-      await deleteFile(reversedEdgesPath);
+      return { databaseName, ...graphState };
+    } finally {
+      await deleteFile(nodesPath);
+      await deleteFile(edgesPath);
     }
-
-    await deleteFile(nodesPath);
-    await deleteFile(edgesPath);
-
-    const graphState = await this.snapshotGraphState();
-
-    console.log(
-      `[JSON Import] Successfully imported graph with ${graphState.nodes.length} nodes and ${graphState.edges.length} edges`
-    );
-
-    return { databaseName, ...graphState };
   }
 
   protected checkInitialization(): asserts this is InitializedKuzuBaseService {
