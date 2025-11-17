@@ -36,7 +36,8 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
 
     const databases = await this.listDatabases().catch(() => [] as string[]);
     if (databases.length === 0) {
-      this.currentDatabaseName = null;
+      await this.createDatabase("default");
+      await this.connectToDatabase("default");
       return;
     }
 
