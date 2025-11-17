@@ -528,6 +528,9 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
             success: allSuccess,
             successQueries,
             failedQueries,
+            message: allSuccess
+              ? "All queries executed successfully"
+              : failureMessage,
             nodes: graphState.nodes,
             edges: graphState.edges,
             nodeTables: graphState.nodeTables,

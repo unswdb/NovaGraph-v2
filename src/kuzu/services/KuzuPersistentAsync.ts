@@ -204,6 +204,7 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
       success: result.success,
       successQueries,
       failedQueries,
+      message: result.message,
       nodes: graphState.nodes || [],
       edges: graphState.edges || [],
       nodeTables: graphState.nodeTables || [],
