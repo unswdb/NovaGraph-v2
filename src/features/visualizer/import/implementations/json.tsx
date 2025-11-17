@@ -170,26 +170,32 @@ export const ImportJSON: ImportOption = {
     const nodesFile = nodes.value as File;
     const edgesFile = edges.value as File;
 
-    await controller.db.createDatabase(databaseName);
-
-    await controller.db.connectToDatabase(databaseName);
-
     const nodesText = await nodesFile.text();
     const edgesText = await edgesFile.text();
 
     const nodeTableName = nodesFile.name.replace(/\.json$/i, "");
     const edgeTableName = edgesFile.name.replace(/\.json$/i, "");
 
-    const result = await controller.db.importFromJSON(
-      databaseName,
-      nodesText,
-      edgesText,
-      nodeTableName,
-      edgeTableName
-    );
-    await controller.db.saveDatabase();
+    let databaseCreated = false;
+    try {
+      await controller.db.createDatabase(databaseName);
+      databaseCreated = true;
 
-    return result;
+      await controller.db.connectToDatabase(databaseName);
+
+      const result = await controller.db.importFromJSON(
+        databaseName,
+        nodesText,
+        edgesText,
+        nodeTableName,
+        edgeTableName
+      );
+      await controller.db.saveDatabase();
+      return result;
+    } catch (err) {
+      await controller.db.deleteDatabase(databaseName);
+      throw err;
+    }
   },
 };
 
