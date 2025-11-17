@@ -147,6 +147,11 @@ export default class VisualizerStore {
 
   addDatabase = (database: string) => {
     this.databases = this.buildDatabases([...this.databases, database]);
+    this.databaseDrawerStateMap[database] = {
+      code: "",
+      activeAlgorithm: null,
+      activeResponse: null,
+    };
   };
 
   switchDatabase = async (name: string) => {
@@ -177,6 +182,7 @@ export default class VisualizerStore {
     this.databases = this.databases.filter(
       (databaseName) => databaseName !== name
     );
+    delete this.databaseDrawerStateMap[name];
   };
 
   setGravity = (gravity: Gravity) => {

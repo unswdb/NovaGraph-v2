@@ -17,7 +17,7 @@ import ScrollUp from "./scroll-up";
 import { LS_KEY } from "./use-navigate-app";
 
 // TODO: Assets to preload
-const ASSETS = ["unsw.svg", "page.jpg"];
+const ASSETS = ["unsw.svg", "page.png"];
 
 export default function Home() {
   const navigate = useNavigate();

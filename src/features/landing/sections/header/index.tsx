@@ -48,7 +48,7 @@ export default function Header() {
           <div className="w-4/5 mx-auto flex justify-center items-center bg-black p-4 rounded-md border border-white/15 animate-glow">
             <img
               alt="NovaGraph Preview"
-              src="page.jpg"
+              src="page.png"
               className="aspect-auto"
             />
           </div>

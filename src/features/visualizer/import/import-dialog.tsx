@@ -87,7 +87,7 @@ const ImportContent = observer(
     } = useAsyncFn(option.handler.bind(option), {
       onSuccess: ({ databaseName, ...graphState }) => {
         store.addAndSetDatabase(databaseName!, graphState!);
-        toast.success(`Successfully imported "${databaseName}"`);
+        toast.success(`Successfully added/imported "${databaseName}"`);
         onClose();
       },
       onError: (err) => {

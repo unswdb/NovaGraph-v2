@@ -6,7 +6,7 @@ import GlowBorderCard from "../glow-border-card";
 
 const FEATURES = [
   {
-    title: "Near‑Native Performance",
+    title: "Near-Native Performance",
     description:
       "NovaGraph runs at speeds you'd expect from installed software, not a website.",
     icon: Zap,
@@ -18,7 +18,7 @@ const FEATURES = [
     icon: ServerOff,
   },
   {
-    title: "Cross‑Platform Compatibility",
+    title: "Cross-Platform Compatibility",
     description:
       "Works the same on Chrome, Safari, Firefox, and Edge — no plugins or downloads. If you have a modern browser, you're good to go.",
     icon: MonitorSmartphone,
@@ -26,7 +26,7 @@ const FEATURES = [
   {
     title: "No Setup Required",
     description:
-      "Professional-grade graph analysis right in your browser. No installation or specialized infrastructure required.",
+      "Complex graph analysis right in your browser. No installation or specialized infrastructure required.",
     icon: BadgeCheck,
   },
 ];
@@ -48,7 +48,7 @@ export default function HowItWorks() {
 
       <FadeUpCopy
         stagger={0.25}
-        className="px-[10%] mx-auto max-w-6xl 2xl:max-w-3/5 grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8"
+        className="px-[10%] mx-auto max-w-6xl 2xl:max-w-4/5 grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8"
       >
         {FEATURES.map((feature, i) => (
           <GlowBorderCard
