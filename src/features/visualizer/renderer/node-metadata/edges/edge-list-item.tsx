@@ -76,7 +76,7 @@ const EdgeListItem = observer(
       [values]
     );
 
-    const { run: deleteEdge, isLoading } = useAsyncFn(
+    const { run: deleteEdge, isLoading: isDeleting } = useAsyncFn(
       controller.db.deleteEdge.bind(controller.db),
       {
         onSuccess: (result) => {
@@ -100,7 +100,7 @@ const EdgeListItem = observer(
       await deleteEdge(node1, node2, directed, edgeSchema.tableName);
     };
 
-    const { run: updateEdge } = useAsyncFn(
+    const { run: updateEdge, isLoading: isUpdating } = useAsyncFn(
       controller.db.updateEdge.bind(controller.db),
       {
         onSuccess: (result) => {
@@ -173,7 +173,7 @@ const EdgeListItem = observer(
                 disabled={!isReadyToSubmit}
                 className="flex-1"
               >
-                {isLoading ? <Loader className="animate-spin" /> : "Update"}
+                {isUpdating ? <Loader className="animate-spin" /> : "Update"}
               </Button>
             </div>
           </DialogContent>
@@ -201,7 +201,7 @@ const EdgeListItem = observer(
               <AlertDialogAction
                 onClick={() => handleDeleteEdge(source, target, directed)}
               >
-                Continue
+                {isDeleting ? <Loader className="animate-spin" /> : "Continue"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

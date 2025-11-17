@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { observer } from "mobx-react-lite";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 import type { InputComponentProps } from "../..";
 
@@ -189,6 +190,37 @@ function AlgorithmSingleSelectInputComponent({
     }
   }, [input.defaultValue]);
 
+  // Windowing
+  const [searchText, setSearchText] = useState("");
+
+  useEffect(() => {
+    if (!open) setSearchText("");
+  }, [open]);
+
+  const filteredOptions = useMemo(() => {
+    return sources.filter((source) =>
+      source.label.toLowerCase().includes(searchText.toLowerCase())
+    );
+  }, [searchText, sources]);
+
+  const listRef = useRef<HTMLDivElement | null>(null);
+
+  const virtualizer = useVirtualizer({
+    count: filteredOptions.length,
+    getScrollElement: () => listRef.current,
+    estimateSize: () => 32, // px height per item
+  });
+
+  useEffect(() => {
+    if (!open) return;
+
+    // Force recalculation of virtualizer size on open
+    const timer = setTimeout(() => {
+      virtualizer.measure();
+    });
+    return () => clearTimeout(timer);
+  }, [open, virtualizer]);
+
   return (
     <>
       <Popover open={open} onOpenChange={setOpen} modal={true}>
@@ -201,38 +233,62 @@ function AlgorithmSingleSelectInputComponent({
             disabled={input.disabled}
           >
             <span className="truncate">
-              {value
-                ? sources.find((source) => source.value === value)?.label
-                : placeholder}
+              {sources.find((source) => source.value === value)?.label ??
+                placeholder}
             </span>
             <ChevronsUpDown className="opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-          <Command>
-            <CommandInput placeholder={placeholder} className="h-9" />
-            <CommandList className="overflow-y-auto">
-              <CommandEmpty>No {noun} found.</CommandEmpty>
-              <CommandGroup>
-                {sources.map((source) => (
-                  <CommandItem
-                    key={source.value}
-                    value={source.label}
-                    onSelect={() => {
-                      onValueChange(source.value);
-                      setOpen(false);
-                    }}
-                  >
-                    {source.label}
-                    <Check
-                      className={cn(
-                        "ml-auto",
-                        value === source.value ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+          <Command shouldFilter={false}>
+            <CommandInput
+              onValueChange={(text) => setSearchText(text)}
+              placeholder={placeholder}
+              className="h-9"
+            />
+            <CommandList ref={listRef} className="max-h-72 overflow-y-auto">
+              {filteredOptions.length === 0 && (
+                <CommandEmpty>No {noun} found.</CommandEmpty>
+              )}
+              <div
+                style={{
+                  height: virtualizer.getTotalSize(),
+                  position: "relative",
+                }}
+              >
+                {virtualizer.getVirtualItems().map((row) => {
+                  const source = filteredOptions[row.index];
+
+                  return (
+                    <CommandGroup
+                      key={row.key}
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        transform: `translateY(${row.start}px)`,
+                      }}
+                    >
+                      <CommandItem
+                        value={source.label}
+                        onSelect={() => {
+                          onValueChange(source.value);
+                          setOpen(false);
+                        }}
+                      >
+                        {source.label}
+                        <Check
+                          className={cn(
+                            "ml-auto",
+                            value === source.value ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                      </CommandItem>
+                    </CommandGroup>
+                  );
+                })}
+              </div>
             </CommandList>
           </Command>
         </PopoverContent>
@@ -254,6 +310,7 @@ function AlgorithmMultipleSelectInputComponent({
 }: InputComponentProps<AlgorithmMultipleSelectInput> & {
   sources: { value: string; label: string }[];
 }) {
+  const [open, setOpen] = useState(false);
   const [values, setValues] = useState<MultipleValues>(inputValues ?? []);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -300,22 +357,87 @@ function AlgorithmMultipleSelectInputComponent({
     setValues(inputValues ?? []);
   }, [inputValues]);
 
+  // Windowing
+  const [searchText, setSearchText] = useState("");
+
+  useEffect(() => {
+    if (!open) setSearchText("");
+  }, [open]);
+
+  const filteredOptions = useMemo(() => {
+    return sources.filter((source) =>
+      source.label.toLowerCase().includes(searchText.toLowerCase())
+    );
+  }, [searchText, sources]);
+
+  const listRef = useRef<HTMLDivElement | null>(null);
+
+  const virtualizer = useVirtualizer({
+    count: filteredOptions.length,
+    getScrollElement: () => listRef.current,
+    estimateSize: () => 32, // px height per item
+    overscan: 5,
+  });
+
+  useEffect(() => {
+    if (!open) return;
+
+    // Force recalculation of virtualizer size on open
+    const timer = setTimeout(() => {
+      virtualizer.measure();
+    });
+    return () => clearTimeout(timer);
+  }, [open, virtualizer]);
+
   return (
     <>
-      <MultiSelect values={values} onValuesChange={onValuesChange}>
+      <MultiSelect
+        open={open}
+        setOpen={setOpen}
+        values={values}
+        onValuesChange={onValuesChange}
+      >
         <MultiSelectTrigger className="w-full" disabled={input.disabled}>
           <MultiSelectValue placeholder={placeholder} />
         </MultiSelectTrigger>
         <MultiSelectContent
+          listRef={listRef}
           className="w-full"
-          search={{ placeholder, emptyMessage: `No ${noun} yet.` }}
+          search={{ placeholder }}
+          shouldFilter={false}
+          onSearchChange={setSearchText}
         >
+          {filteredOptions.length === 0 && (
+            <CommandEmpty>No {noun} found.</CommandEmpty>
+          )}
           <MultiSelectGroup>
-            {sources.map((source, index) => (
-              <MultiSelectItem key={index} value={source.value}>
-                {source.label}
-              </MultiSelectItem>
-            ))}
+            <div
+              style={{
+                height: virtualizer.getTotalSize(),
+                position: "relative",
+              }}
+            >
+              {virtualizer.getVirtualItems().map((row) => {
+                const source = filteredOptions[row.index];
+
+                return (
+                  <div
+                    key={row.key}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      transform: `translateY(${row.start}px)`,
+                    }}
+                  >
+                    <MultiSelectItem value={source.value}>
+                      {source.label}
+                    </MultiSelectItem>
+                  </div>
+                );
+              })}
+            </div>
           </MultiSelectGroup>
         </MultiSelectContent>
       </MultiSelect>

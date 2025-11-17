@@ -100,6 +100,17 @@ const GraphRenderer = observer(({ className }: { className?: string }) => {
     return map;
   }, [nodesMap, edges, directed]);
 
+  // Change clicked node value when nodes change
+  useEffect(() => {
+    if (!clickedNode) return;
+    const updatedNode = nodesMap.get(clickedNode.id);
+    if (updatedNode) {
+      setClickedNode(updatedNode);
+    } else {
+      setClickedNode(null);
+    }
+  }, [nodes]);
+
   const clickedNodeSchema = useMemo(() => {
     if (clickedNode) {
       return (

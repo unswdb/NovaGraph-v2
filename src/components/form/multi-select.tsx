@@ -44,13 +44,23 @@ export function MultiSelect({
   values,
   defaultValues,
   onValuesChange,
+  open: parentOpen,
+  setOpen: setParentOpen,
 }: {
   children: ReactNode;
   values?: string[];
   defaultValues?: string[];
   onValuesChange?: (values: string[]) => void;
+  open?: boolean;
+  setOpen?: (open: boolean) => void;
 }) {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!parentOpen) return;
+    setOpen(parentOpen);
+  }, [parentOpen]);
+
   const [internalValues, setInternalValues] = useState(
     new Set<string>(values ?? defaultValues)
   );
@@ -78,6 +88,11 @@ export function MultiSelect({
     });
   }, []);
 
+  const handleOnOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    setParentOpen && setParentOpen(isOpen);
+  };
+
   return (
     <MultiSelectContext
       value={{
@@ -89,7 +104,7 @@ export function MultiSelect({
         onItemAdded,
       }}
     >
-      <Popover open={open} onOpenChange={setOpen} modal={true}>
+      <Popover open={open} onOpenChange={handleOnOpenChange} modal={true}>
         {children}
       </Popover>
     </MultiSelectContext>
@@ -245,10 +260,14 @@ export function MultiSelectValue({
 export function MultiSelectContent({
   search = true,
   children,
+  onSearchChange,
+  listRef,
   ...props
 }: {
   search?: boolean | { placeholder?: string; emptyMessage?: string };
   children: ReactNode;
+  onSearchChange?: (value: string) => void;
+  listRef?: React.RefObject<HTMLDivElement | null>;
 } & Omit<ComponentPropsWithoutRef<typeof Command>, "children">) {
   const canSearch = typeof search === "object" ? true : search;
 
@@ -266,12 +285,13 @@ export function MultiSelectContent({
               placeholder={
                 typeof search === "object" ? search.placeholder : undefined
               }
+              onValueChange={onSearchChange}
             />
           ) : (
             <button autoFocus className="sr-only" />
           )}
-          <CommandList>
-            {canSearch && (
+          <CommandList ref={listRef} className="max-h-72 overflow-y-auto">
+            {canSearch && props.shouldFilter && (
               <CommandEmpty>
                 {typeof search === "object" ? search.emptyMessage : undefined}
               </CommandEmpty>
