@@ -107,7 +107,7 @@ function ImportListSelector({
     onSelectDatabase,
     {
       onSuccess: () => {
-        toast.success("Successfully switched database");
+        toast.success("Database switched successfully");
       },
       onError: () => {
         toast.error("Failed to switch database. Please try again later");
@@ -119,7 +119,7 @@ function ImportListSelector({
     onDeleteDatabase,
     {
       onSuccess: () => {
-        toast.success("Successfully deleted database");
+        toast.success("Database deleted successfully");
       },
       onError: () => {
         toast.error("Failed to delete database. Please try again later");
