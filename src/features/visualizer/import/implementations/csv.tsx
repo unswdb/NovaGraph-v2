@@ -2,6 +2,8 @@ import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import { useState } from "react";
 import { Table as TableIcon } from "lucide-react";
 
+import type VisualizerStore from "../../store";
+
 import type { ImportOption } from "./types";
 
 import {
@@ -155,7 +157,7 @@ export const ImportCSV: ImportOption = {
     controller,
   }: {
     values: Record<string, any>;
-    controller: any;
+    controller: VisualizerStore["controller"];
   }) => {
     const { name, nodes, edges } = values;
 

@@ -1,6 +1,7 @@
 import { LaptopMinimal, Table as TableIcon } from "lucide-react";
 
 import { createTextInput } from "../../inputs";
+import type VisualizerStore from "../../store";
 
 import type { ImportOption } from "./types";
 
@@ -20,7 +21,28 @@ export const ImportAuto: ImportOption = {
       placeholder: "Enter a name for the database...",
     }),
   ],
-  handler: async ({}: { values: Record<string, any>; controller: any }) => {
-    return { success: true };
+  handler: async ({
+    values,
+    controller,
+  }: {
+    values: Record<string, any>;
+    controller: VisualizerStore["controller"];
+  }) => {
+    const { name } = values;
+    const databaseName = name.value as string;
+
+    await controller.db.createDatabase(databaseName);
+    await controller.db.connectToDatabase(databaseName);
+    const { nodes, edges, nodeTables, edgeTables, directed } =
+      await controller.db.snapshotGraphState();
+
+    return {
+      databaseName: databaseName,
+      nodes,
+      edges,
+      nodeTables,
+      edgeTables,
+      directed: directed ?? true,
+    };
   },
 };
