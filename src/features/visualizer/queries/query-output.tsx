@@ -3,11 +3,15 @@ import { useMemo } from "react";
 import type { ExecuteQueryResult } from "../types";
 
 import { Button } from "~/components/ui/button";
+import type {
+  ErrorQueryResult,
+  SuccessQueryResult,
+} from "~/kuzu/helpers/KuzuQueryResultExtractor.types";
 
 function stringifySafe(v: unknown) {
   return JSON.stringify(
     v,
-    (k, val) => (typeof val === "bigint" ? String(val) : val),
+    (_, val) => (typeof val === "bigint" ? String(val) : val),
     2
   );
 }
@@ -62,7 +66,7 @@ export default function QueryOutput({ data }: { data: ExecuteQueryResult }) {
           <h3 className="font-semibold text-critical">
             Failed Queries ({failedQueries.length})
           </h3>
-          {failedQueries.map((query, index) => (
+          {failedQueries.map((query: ErrorQueryResult, index: number) => (
             <div
               key={index}
               className="bg-critical/10 border border-critical/20 rounded-md p-3"
@@ -79,7 +83,7 @@ export default function QueryOutput({ data }: { data: ExecuteQueryResult }) {
           <h3 className="font-semibold text-positive">
             Success Queries ({successQueries.length})
           </h3>
-          {successQueries.map((query, index) => (
+          {successQueries.map((query: SuccessQueryResult, index: number) => (
             <div key={index} className="space-y-2">
               <div className="text-xs text-typography-secondary">
                 Result {index + 1}: {query.objects.length}{" "}

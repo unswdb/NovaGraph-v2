@@ -33,9 +33,7 @@ export default class VisualizerStore {
       databases: observable,
       gravity: observable,
       nodeSizeScale: observable,
-      code: observable,
-      activeAlgorithm: observable,
-      activeResponse: observable,
+      databaseDrawerStateMap: observable,
       initialize: action,
       cleanup: action,
       setDatabase: action,
@@ -58,9 +56,14 @@ export default class VisualizerStore {
   databases: string[] = []; // List of database options available
   gravity: Gravity = GRAVITY.ZERO_GRAVITY;
   nodeSizeScale: NodeSizeScale = NODE_SIZE_SCALE.MEDIUM;
-  code: string = "";
-  activeAlgorithm: BaseGraphAlgorithm | null = null;
-  activeResponse: VisualizationResponse | null = null; // Can be algorithm or query result
+  databaseDrawerStateMap: Record<
+    string,
+    {
+      code: string;
+      activeAlgorithm: BaseGraphAlgorithm | null;
+      activeResponse: VisualizationResponse | null;
+    }
+  > = {};
 
   // ACTIONS
   initialize = async () => {
@@ -84,10 +87,19 @@ export default class VisualizerStore {
 
     const currentDatabaseName =
       rawCurrentDatabaseName ?? rawDatabases[0] ?? null;
+
     const databases = this.buildDatabases([
       ...rawDatabases,
       currentDatabaseName,
     ]);
+    databases.forEach((dbName) => {
+      this.databaseDrawerStateMap[dbName] = {
+        code: "",
+        activeAlgorithm: null,
+        activeResponse: null,
+      };
+    });
+
     const graph = this.buildGraphFromSnapshotState(graphSnapshotState);
 
     runInAction(() => {
@@ -176,15 +188,20 @@ export default class VisualizerStore {
   };
 
   setCode = (code: string) => {
-    this.code = code;
+    if (this.database == null) return;
+    this.databaseDrawerStateMap[this.database.name].code = code;
   };
 
   setActiveAlgorithm = (activeAlgorithm: BaseGraphAlgorithm | null) => {
-    this.activeAlgorithm = activeAlgorithm;
+    if (this.database == null) return;
+    this.databaseDrawerStateMap[this.database.name].activeAlgorithm =
+      activeAlgorithm;
   };
 
   setActiveResponse = (activeResponse: VisualizationResponse | null) => {
-    this.activeResponse = activeResponse;
+    if (this.database == null) return;
+    this.databaseDrawerStateMap[this.database.name].activeResponse =
+      activeResponse;
   };
 
   // UTILITIES FUNCTION

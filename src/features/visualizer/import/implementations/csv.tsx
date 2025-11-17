@@ -156,6 +156,7 @@ export const ImportCSV: ImportOption = {
     values,
     controller,
   }: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     values: Record<string, any>;
     controller: VisualizerStore["controller"];
   }) => {
@@ -188,7 +189,9 @@ export const ImportCSV: ImportOption = {
       await controller.db.saveDatabase();
       return result;
     } catch (err) {
-      await controller.db.deleteDatabase(databaseName);
+      if (databaseCreated) {
+        await controller.db.deleteDatabase(databaseName);
+      }
       throw err;
     }
   },

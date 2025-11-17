@@ -17,7 +17,6 @@ const CreateEdgeDialogForm = observer(
   ({
     source,
     target,
-    directed,
     selectedEdgeSchema,
     onClose,
   }: {

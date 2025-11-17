@@ -1,4 +1,4 @@
-import { LaptopMinimal, Table as TableIcon } from "lucide-react";
+import { LaptopMinimal } from "lucide-react";
 
 import { createTextInput } from "../../inputs";
 import type VisualizerStore from "../../store";
@@ -25,6 +25,7 @@ export const ImportAuto: ImportOption = {
     values,
     controller,
   }: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     values: Record<string, any>;
     controller: VisualizerStore["controller"];
   }) => {

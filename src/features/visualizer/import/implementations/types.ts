@@ -1,12 +1,6 @@
 import type { ElementType } from "react";
 
-import type {
-  GraphNode,
-  GraphEdge,
-  NodeSchema,
-  EdgeSchema,
-  GraphSnapshotState,
-} from "../../types";
+import type { GraphSnapshotState } from "../../types";
 import type VisualizerStore from "../../store";
 
 import type {
@@ -19,6 +13,7 @@ type ImportHandlerResult = GraphSnapshotState & {
 };
 
 type ImportHandler = (data: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   values: Record<string, InputChangeResult<any>>;
   controller: VisualizerStore["controller"];
 }) => Promise<ImportHandlerResult>;

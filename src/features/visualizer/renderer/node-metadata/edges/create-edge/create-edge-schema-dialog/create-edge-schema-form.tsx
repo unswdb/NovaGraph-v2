@@ -33,7 +33,6 @@ const CreateEdgeSchemaForm = observer(
   ({
     source,
     target,
-    directed,
     onSubmit,
   }: {
     source: GraphNode;

@@ -25,7 +25,9 @@ const SIMULATION_DECAY = 100000;
 const SIMULATION_REPULSION = 2;
 
 const GraphRenderer = observer(({ className }: { className?: string }) => {
-  const { database, gravity, nodeSizeScale, activeResponse } = useStore();
+  const { database, gravity, nodeSizeScale, databaseDrawerStateMap } =
+    useStore();
+  const { activeResponse } = databaseDrawerStateMap[database!.name];
 
   const { nodes, edges, nodesMap, nodeTables, directed } = database.graph;
 
@@ -118,7 +120,7 @@ const GraphRenderer = observer(({ className }: { className?: string }) => {
   };
 
   return (
-    <CosmographProvider nodes={nodes} links={edges}>
+    <CosmographProvider key={database.name} nodes={nodes} links={edges}>
       <div className={cn("flex flex-col w-full h-full relative", className)}>
         {/* Main Graph Visualizer */}
         <Cosmograph
