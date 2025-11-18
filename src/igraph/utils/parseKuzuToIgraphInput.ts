@@ -15,6 +15,7 @@ export function parseKuzuToIgraphInput(
       "Vertex ID exceeds 32-bit signed range expected by igraph 32 bit (WASM)."
     );
   }
+
   let KuzuToIgraph = new Map<string, number>();
   let IgraphToKuzu = new Map<number, string>();
 
@@ -82,6 +83,12 @@ export function parseKuzuToIgraphInput(
         }
       }
     }
+  }
+
+  // Make sure all declared nodes get an ID
+  // including isolated ones
+  for (const node of nodes) {
+    getOrAssign(node.id);
   }
 
   const nodesAssigned = nextId;
