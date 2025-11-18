@@ -67,9 +67,9 @@ export function parseKuzuToIgraphInput(
         }
 
         if (
-          typeof numVal !== 'string' && 
-          typeof numVal !== 'boolean' && 
-          numVal !== null && 
+          typeof numVal !== "string" &&
+          typeof numVal !== "boolean" &&
+          numVal !== null &&
           Number.isFinite(numVal)
         ) {
           if (!weight) weight = new Float64Array(E); // default zeros

@@ -141,9 +141,9 @@ export function parseNodesResult(result: any, connection: any): GraphNode[] {
   let foundTablePrimaryKey: Map<string | number, string | number> = new Map();
   let foundTableProperties: Map<string | number, Set<string>> = new Map();
 
-  console.log("Inside parse Node")
-  console.log(objects)
-  console.log("Inside parse Node")
+  console.log("Inside parse Node");
+  console.log(objects);
+  console.log("Inside parse Node");
 
   for (const obj of objects) {
     // Extract node out and check valid node

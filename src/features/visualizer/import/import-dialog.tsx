@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Loader } from "lucide-react";
 import { observer } from "mobx-react-lite";
@@ -98,6 +98,10 @@ const ImportContent = observer(
     const handleOnSubmit = async () => {
       await importFile({ values: inputResults, controller: store.controller });
     };
+
+    useEffect(() => {
+      setError("");
+    }, [inputResults]);
 
     return (
       <TabsContent

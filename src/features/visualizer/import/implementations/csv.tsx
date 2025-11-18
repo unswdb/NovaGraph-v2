@@ -86,11 +86,11 @@ const validateEdges = async (file: File | undefined) => {
 
     // Check header
     const header = lines[0].trim();
-    if (!["source,target,weight", "source,target"].includes(header)) {
+    if (!header.includes("source") || !header.includes("target")) {
       return {
         success: false,
         message:
-          "Nodes file must have 'source,target,weight' or 'source,target' as the header (first line)",
+          "Edges file must have 'source,target,weight' or 'source,target' as the header (first line)",
       };
     }
 
