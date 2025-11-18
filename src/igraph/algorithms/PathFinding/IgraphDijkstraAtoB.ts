@@ -34,7 +34,7 @@ function _parseResult(
   const path = data.path.map(({ from, to, weight }) => ({
     from: mapLabelBack(from),
     to: mapLabelBack(to),
-    weight: Number(weight),
+    weight: weight != null ? Number(weight) : 0,
   }));
 
   return {
