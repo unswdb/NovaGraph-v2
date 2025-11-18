@@ -1,18 +1,17 @@
-# Welcome to React Router!
+# Welcome to NovaGraph V2.0 ⭐!
 
-A modern, production-ready template for building full-stack React applications using React Router.
+A fast, WebAssembly-powered graph analysis and visualization tool built for the browser.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+NovaGraph combines a WASM-compiled C++ graph engine (igraph + kuzu) with a React frontend stack, enabling near-native performance for graph exploration, querying, and algorithmic analysis directly in your browser. No specialized infrastructure or installation required.
+
+The project is part of UNSW Honours Thesis and the description can be found at [TMS](https://thesis.cse.unsw.edu.au/topic/767).
 
 ## Features
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+- **Define or Import Your Graph Data**: Construct nodes and/or edges through a schema-driven interface, specifying properties and metadata, or import existing graph data from CSV or JSON files.
+- **Visualize Your Graph**: Render and explore large graphs smoothly using a high-performance WebGL visualizer.
+- **Run Algorithms and Execute Queries**: Select from a library of algorithms to analyze your graph, or write queries to test your hypotheses directly.
+- **Export Results for Further Analysis**: Save your findings as JSON or YAML format for further analysis.
 
 ## Getting Started
 
@@ -39,7 +38,7 @@ docker run -it --entrypoint /bin/bash novagraph-dev
 
 Your application will be available at `http://localhost:5173`.
 
-Note: You need to build the image again if you install any new dependencies (i.e. changes to package.json or package-lock.json) or made changes to the WASM code.
+> Note: Rebuild the Docker image whenever you update package.json, package-lock.json, or the WASM source code (`wasm/`).
 
 ## Production
 
@@ -63,4 +62,4 @@ The containerized application can be deployed to any platform that supports Dock
 
 ---
 
-Built with ❤️ using React Router.
+Built with ❤️ by unswdb.
