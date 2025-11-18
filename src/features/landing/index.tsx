@@ -16,8 +16,15 @@ import Footer from "./sections/footer";
 import ScrollUp from "./scroll-up";
 import { LS_KEY } from "./use-navigate-app";
 
-// TODO: Assets to preload
-const ASSETS = ["unsw.svg", "page.png"];
+// Assets to preload
+const ASSETS = [
+  "unsw.svg",
+  "page.png",
+  "import.gif",
+  "visualizer.gif",
+  "algorithm_query.gif",
+  "export.gif",
+];
 
 export default function Home() {
   const navigate = useNavigate();

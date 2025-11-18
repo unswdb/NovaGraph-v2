@@ -11,25 +11,25 @@ const SLIDES = [
     title: "Define or Import Your Graph Data",
     description:
       "Construct nodes and/or edges through a schema-driven interface, specifying properties and metadata, or import existing graph data from CSV or JSON files.",
-    image: "page.png",
+    image: "import.gif",
   },
   {
     title: "Visualize Your Graph",
     description:
       "Render and explore large graphs smoothly using a high-performance WebGL visualizer.",
-    image: "page.png",
+    image: "visualizer.gif",
   },
   {
     title: "Run Algorithms and Execute Queries",
     description:
       "Select from a library of algorithms to analyze your graph, or write queries to test your hypotheses directly.",
-    image: "page.png",
+    image: "algorithm_query.gif",
   },
   {
     title: "Export Results for Further Analysis",
     description:
       "Save your findings as JSON or YAML format for further analysis.",
-    image: "page.png",
+    image: "export.gif",
   },
 ];
 
