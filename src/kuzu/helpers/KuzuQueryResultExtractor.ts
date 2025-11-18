@@ -141,6 +141,10 @@ export function parseNodesResult(result: any, connection: any): GraphNode[] {
   let foundTablePrimaryKey: Map<string | number, string | number> = new Map();
   let foundTableProperties: Map<string | number, Set<string>> = new Map();
 
+  console.log("Inside parse Node")
+  console.log(objects)
+  console.log("Inside parse Node")
+
   for (const obj of objects) {
     // Extract node out and check valid node
     const nodeObj = obj[Object.keys(obj)[0]];
@@ -175,13 +179,13 @@ export function parseNodesResult(result: any, connection: any): GraphNode[] {
       }
     }
 
-    // Extract attributes (all keys except id/label variants and keys starting with _)
+    // Extract attributes (all keys except _id/_label internal structure)
     let primaryKeyValue;
     const attributes: Record<string, PrimaryKeyType> = {};
     for (const key in nodeObj) {
       if (key === primaryKey) {
         primaryKeyValue = nodeObj[key];
-      } else if (key !== "_id" && key !== "_label" && !key.startsWith("_")) {
+      } else if (key !== "_id" && key !== "_label") {
         if (foundTableProperties.get(tableName)?.has(key)) {
           attributes[key] = nodeObj[key];
         }
@@ -213,36 +217,26 @@ export function parseEdgesResult(result: any): GraphEdge[] {
     return [];
   }
   const objects = result.getAllObjects();
-
   const edges: GraphEdge[] = [];
   for (const obj of objects) {
     // Get the first property value (e.g., obj.r)
     const edgeObj = obj[Object.keys(obj)[0]];
     if (!edgeObj) continue;
 
-    // Extract source, target, label
-    const src = edgeObj._SRC || edgeObj._src;
-    const dst = edgeObj._DST || edgeObj._dst;
-    const label = edgeObj._LABEL || edgeObj._label || edgeObj.label;
+    // Extract internal source, target, label
+    const src = edgeObj._src;
+    const dst = edgeObj._dst;
+    const label = edgeObj._label;
     if (!src || !dst || !label) continue;
 
-    // Extract attributes (all keys except id/label/src/dst variants and keys starting with _)
+    // Extract attributes except internal attributes
     const attributes: any = {};
     for (const key in edgeObj) {
       if (
-        key !== "_ID" &&
         key !== "_id" &&
-        key !== "id" &&
-        key !== "_LABEL" &&
         key !== "_label" &&
-        key !== "label" &&
-        key !== "_SRC" &&
         key !== "_src" &&
-        key !== "src" &&
-        key !== "_DST" &&
-        key !== "_dst" &&
-        key !== "dst" &&
-        !key.startsWith("_")
+        key !== "_dst"
       ) {
         attributes[key] = edgeObj[key];
       }
@@ -342,72 +336,3 @@ export function queryResultColorMapExtraction(result: any) {
   }
   return colorMap;
 }
-
-// export function queryResultNodesAndEdgesExtraction(result) {
-//   // if (!result || !result.objects) {
-//   //     console.log(result.isSuccess());
-//   //     console.log(result.toString());
-
-//   //     console.warn("No graph data found");
-//   //     return { nodes: [], edges: [] };
-//   // }
-
-//   const nodeMap = new Map();
-//   const edges = [];
-
-//   for (const row of result.objects) {
-//     const n = row.n;
-//     const m = row.m;
-//     const r = row.r;
-
-//     // Lamda function to extract props
-//     const extractProps = (entity, excludeKeys = []) => {
-//       const props = {};
-//       for (const key in entity) {
-//         if (!key.startsWith("_") && !excludeKeys.includes(key)) {
-//           props[key] = entity[key];
-//         }
-//       }
-//       return props;
-//     };
-
-//     // Parse node 'n'
-//     if (n?._id?.offset != null) {
-//       const id = n._id.offset.toString();
-//       const label = n._label;
-//       const attributes = extractProps(n, ["id"]);
-//       nodeMap.set(id, {
-//         id,
-//         label,
-//         ...(Object.keys(attributes).length > 0 ? { attribute: attributes } : {})
-//       });
-//     }
-
-//     // Parse node 'm'
-//     if (m?._id?.offset != null) {
-//       const id = m._id.offset.toString();
-//       const label = m._label;
-//       const attributes = extractProps(m, ["id"]);
-//       nodeMap.set(id, {
-//         id,
-//         label,
-//         ...(Object.keys(attributes).length > 0 ? { attribute: attributes } : {})
-//       });
-//     }
-
-//     // Parse relationship 'r'
-//     if (r?._id?.offset != null && r._src && r._dst) {
-//       const attributes = extractProps(r);
-//       edges.push({
-//         source: r._src.offset.toString(),
-//         target: r._dst.offset.toString(),
-//         ...(Object.keys(attributes).length > 0 ? { attribute: attributes } : {})
-//       });
-//     }
-//   }
-
-//   return {
-//     nodes: Array.from(nodeMap.values()),
-//     edges
-//   };
-// }

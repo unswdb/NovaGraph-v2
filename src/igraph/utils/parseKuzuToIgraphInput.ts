@@ -53,20 +53,33 @@ export function parseKuzuToIgraphInput(
     src[i] = sId;
     dst[i] = tId;
 
-    // Strict numeric weights only
-    if (
-      e.attributes &&
-      Object.prototype.hasOwnProperty.call(e.attributes, "weight")
-    ) {
-      const val = e.attributes["weight"];
-      if (typeof val === "number" && Number.isFinite(val)) {
-        if (!weight) weight = new Float64Array(E); // default zeros
-        weight[i] = val;
-      } else {
-        // eslint-disable-next-line no-console
-        console.warn(
-          `[KuzuToIgraphParsing] Non-numeric weight at edge ${i} (${e.source} -> ${e.target}); treated as 0.`
-        );
+    if (e.attributes) {
+      const weightKey = Object.keys(e.attributes).find(
+        (key) => key.toLowerCase() === "weight"
+      );
+      if (weightKey) {
+        const val = e.attributes[weightKey];
+        let numVal: string | number | boolean | null = null;
+        if (typeof val === "number") {
+          numVal = val;
+        } else if (val instanceof Number) {
+          numVal = val.valueOf();
+        }
+
+        if (
+          typeof numVal !== 'string' && 
+          typeof numVal !== 'boolean' && 
+          numVal !== null && 
+          Number.isFinite(numVal)
+        ) {
+          if (!weight) weight = new Float64Array(E); // default zeros
+          weight[i] = numVal;
+        } else {
+          // eslint-disable-next-line no-console
+          console.warn(
+            `[KuzuToIgraphParsing] Non-numeric weight at edge ${i} (${e.source} -> ${e.target}); treated as 0.`
+          );
+        }
       }
     }
   }
