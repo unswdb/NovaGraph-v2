@@ -23,7 +23,15 @@ export default class KuzuInMemoryAsync extends KuzuAsyncBaseService {
   graphSnapshotStateCache: GraphSnapshotState = EMPTY_SNAPSHOT_GRAPH_STATE;
 
   async initialize() {
-    super.initialize("./workers/kuzu-inmemory.worker.ts");
+    await super.initialize(
+      () =>
+        new Worker(
+          new URL("./workers/kuzu-inmemory.worker.ts", import.meta.url),
+          {
+            type: "module",
+          }
+        )
+    );
   }
 
   private async refreshGraphState(): Promise<GraphSnapshotState> {

@@ -48,6 +48,7 @@ WORKDIR /src
 
 # Copy only your own sources now (doesn't break deps cache)
 COPY src/kuzu/ ./kuzu/
+COPY src/igraph/ ./igraph/
 COPY src/wasm/ ./wasm/
 
 # Install typescript

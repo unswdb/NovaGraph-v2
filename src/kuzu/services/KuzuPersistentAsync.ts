@@ -32,7 +32,15 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
   }
 
   async initialize() {
-    await super.initialize("./workers/kuzu-persistent.worker.ts");
+    await super.initialize(
+      () =>
+        new Worker(
+          new URL("./workers/kuzu-persistent.worker.ts", import.meta.url),
+          {
+            type: "module",
+          }
+        )
+    );
 
     const databases = await this.listDatabases().catch(() => [] as string[]);
     if (databases.length === 0) {

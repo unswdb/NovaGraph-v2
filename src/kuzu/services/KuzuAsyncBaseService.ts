@@ -38,19 +38,17 @@ export default class KuzuAsyncBaseService extends KuzuBaseService {
   /**
    * Initialize the async in-memory database
    */
-  protected async initialize(workerPath: string) {
+  protected async initialize(createWorker: () => Worker) {
     if (this._initializationPromise) {
       return this._initializationPromise;
     }
-    this._initializationPromise = this._doInitialize(workerPath);
+    this._initializationPromise = this._doInitialize(createWorker);
     return this._initializationPromise;
   }
 
-  private async _doInitialize(workerPath: string) {
+  private async _doInitialize(createWorker: () => Worker) {
     // Create Web Worker
-    this.worker = new Worker(new URL(workerPath, import.meta.url), {
-      type: "module",
-    });
+    this.worker = createWorker();
 
     this.worker.onmessage = (e) => {
       const { id, data, error } = e.data;
