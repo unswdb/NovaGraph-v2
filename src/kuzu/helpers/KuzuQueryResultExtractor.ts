@@ -141,10 +141,6 @@ export function parseNodesResult(result: any, connection: any): GraphNode[] {
   let foundTablePrimaryKey: Map<string | number, string | number> = new Map();
   let foundTableProperties: Map<string | number, Set<string>> = new Map();
 
-  console.log("Inside parse Node");
-  console.log(objects);
-  console.log("Inside parse Node");
-
   for (const obj of objects) {
     // Extract node out and check valid node
     const nodeObj = obj[Object.keys(obj)[0]];
@@ -217,6 +213,7 @@ export function parseEdgesResult(result: any): GraphEdge[] {
     return [];
   }
   const objects = result.getAllObjects();
+
   const edges: GraphEdge[] = [];
   for (const obj of objects) {
     // Get the first property value (e.g., obj.r)

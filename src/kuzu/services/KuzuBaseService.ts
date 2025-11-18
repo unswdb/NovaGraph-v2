@@ -436,7 +436,6 @@ export default abstract class KuzuBaseService {
     // Parse edge CSV header
     const edgesHeader = edgesLines[0].trim();
     const edgeColumns = edgesHeader.split(",").map((col) => col.trim());
-    const hasWeight = edgeColumns.includes("weight");
 
     const virtualFS = isVirtualCapableService(this) ? this : null;
     const fs = virtualFS ? null : this.getFileSystem();
@@ -556,14 +555,63 @@ export default abstract class KuzuBaseService {
       throwOnFailedQuery(await this.executeQuery(copyNodesQuery));
 
       // Create edge table schema using CREATE REL TABLE syntax
-      const edgeTableQuery = hasWeight
-        ? `CREATE REL TABLE ${edgeTableName} (
-              FROM ${nodeTableName} TO ${nodeTableName},
-              weight DOUBLE
-            )`
-        : `CREATE REL TABLE ${edgeTableName} (
-              FROM ${nodeTableName} TO ${nodeTableName}
-            )`;
+      const edgeAttributeColumns = edgeColumns.filter(
+        (col) => col !== "source" && col !== "target"
+      );
+
+      const edgeTypeInferenceQuery = `
+        LOAD FROM '${edgesPath}' (header = true)
+        RETURN ${edgeAttributeColumns.join(", ")}
+        LIMIT 1
+      `;
+
+      console.log(
+        `[CSV Import] Inferring edge attribute types with query: ${edgeTypeInferenceQuery}`
+      );
+
+      const edgeColumnTypesResult = this.getColumnTypes(edgeTypeInferenceQuery);
+      const edgeColumnTypes = isPromiseLike(edgeColumnTypesResult)
+        ? await edgeColumnTypesResult
+        : edgeColumnTypesResult;
+
+      const inferredEdgeTypes: Record<string, string> = {};
+      edgeColumnTypes.forEach((kuzuType: string, index: number) => {
+        const colName = edgeAttributeColumns[index];
+        let schemaType: string = "STRING";
+
+        const typeUpper = kuzuType.toUpperCase();
+        if (supportedTypes.includes(typeUpper)) {
+          schemaType = typeUpper;
+        } else if (typeUpper.startsWith("INT")) {
+          schemaType = "INT32";
+        } else if (typeUpper.startsWith("UINT")) {
+          schemaType = "UINT32";
+        }
+
+        inferredEdgeTypes[colName] = schemaType;
+      });
+
+      const edgeProperties = edgeAttributeColumns.map((col) => ({
+        name: col,
+        type: inferredEdgeTypes[col] ?? "STRING",
+      }));
+
+      console.log(
+        `[CSV Import] Creating edge table with source and target from ${nodeTableName}`
+      );
+      console.log(`[CSV Import] Additional properties:`, edgeProperties);
+
+      // Create edge table schema using CREATE REL TABLE syntax
+      const edgePropsSchema = edgeProperties
+        .map((prop) => `${prop.name} ${prop.type}`)
+        .join(", ");
+
+      const edgeTableQuery = `
+        CREATE REL TABLE ${edgeTableName} (
+          FROM ${nodeTableName} TO ${nodeTableName}
+          ${edgeProperties.length > 0 ? `, ${edgePropsSchema}` : ""}
+        )
+      `;
 
       console.log(
         `[CSV Import] Creating edge table with query: ${edgeTableQuery}`
@@ -801,33 +849,59 @@ export default abstract class KuzuBaseService {
       const copyNodesQuery = `COPY ${nodeTableName} FROM '${nodesPath}'`;
       throwOnFailedQuery(await this.executeQuery(copyNodesQuery));
 
-      let edgeTableQuery: string;
+      const edgeTypeInferenceQuery = `
+      LOAD FROM '${edgesPath}'
+      RETURN ${edgeProperties.join(", ")}
+      LIMIT 1
+    `;
 
-      if (edgeProperties.length > 0) {
-        const edgePropsDefinition = edgeProperties
-          .map((prop) => {
-            const value = (firstEdge as Record<string, unknown>)[prop];
-            let propType = "STRING";
+      console.log(
+        `[JSON Import] Inferring edge attribute types with query: ${edgeTypeInferenceQuery}`
+      );
 
-            if (typeof value === "number") {
-              propType = Number.isInteger(value) ? "INT32" : "DOUBLE";
-            } else if (typeof value === "boolean") {
-              propType = "BOOL";
-            }
+      const edgeColumnTypesResult = this.getColumnTypes(edgeTypeInferenceQuery);
+      const edgeColumnTypes = isPromiseLike(edgeColumnTypesResult)
+        ? await edgeColumnTypesResult
+        : edgeColumnTypesResult;
 
-            return `${prop} ${propType}`;
-          })
-          .join(", ");
+      const inferredEdgeTypes: Record<string, string> = {};
 
-        edgeTableQuery = `CREATE REL TABLE ${edgeTableName} (
-            FROM ${nodeTableName} TO ${nodeTableName},
-            ${edgePropsDefinition}
-          )`;
-      } else {
-        edgeTableQuery = `CREATE REL TABLE ${edgeTableName} (
-            FROM ${nodeTableName} TO ${nodeTableName}
-          )`;
-      }
+      edgeColumnTypes.forEach((kuzuType: string, index: number) => {
+        const colName = edgeProperties[index];
+        let schemaType: string = "STRING";
+
+        const typeUpper = kuzuType.toUpperCase();
+        if (supportedTypes.includes(typeUpper)) {
+          schemaType = typeUpper;
+        } else if (typeUpper.startsWith("INT")) {
+          schemaType = "INT32";
+        } else if (typeUpper.startsWith("UINT")) {
+          schemaType = "UINT32";
+        }
+
+        inferredEdgeTypes[colName] = schemaType;
+      });
+
+      const edgePropertiesWithTypes = edgeProperties.map((prop) => ({
+        name: prop,
+        type: inferredEdgeTypes[prop] ?? "STRING",
+      }));
+
+      console.log(
+        "[JSON Import] Inferred edge attribute types:",
+        edgePropertiesWithTypes
+      );
+
+      const edgePropsDefinition = edgePropertiesWithTypes
+        .map((prop) => `${prop.name} ${prop.type}`)
+        .join(", ");
+
+      const edgeTableQuery = `
+        CREATE REL TABLE ${edgeTableName} (
+          FROM ${nodeTableName} TO ${nodeTableName}
+          ${edgePropertiesWithTypes.length > 0 ? `, ${edgePropsDefinition}` : ""}
+        )
+      `;
 
       throwOnFailedQuery(await this.executeQuery(edgeTableQuery));
 

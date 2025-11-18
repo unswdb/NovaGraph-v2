@@ -122,7 +122,7 @@ export const ImportCSV: ImportOption = {
   icon: TableIcon,
   title: "Import CSV Files",
   description:
-    "Upload your graph data by selecting two CSV files: one for nodes and one for edges. The node table name will be taken from the filename (without .csv). The first column in nodes.csv will be the primary key, and all columns will be imported as node properties. Edges.csv should have source and target columns (matching the node primary key), with optional weight column.",
+    "Upload your graph data by selecting two CSV files: one for nodes and one for edges. The node table name will be taken from the filename (without .csv). The first column in nodes.csv will be the primary key, and all columns will be imported as node properties. Edges.csv should have source and target columns (matching the node primary key), with optional weight column and other additional columns.",
   previewTitle: "CSV Format Preview",
   previewDescription: "Expected format for nodes.csv and edges.csv files",
   preview: CSVPreview,

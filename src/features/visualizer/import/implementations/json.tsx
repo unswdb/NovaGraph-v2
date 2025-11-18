@@ -127,7 +127,7 @@ export const ImportJSON: ImportOption = {
   icon: FileJson,
   title: "Import JSON Files",
   description:
-    "Upload your graph data by selecting two JSON files: one for nodes and one for edges. The node table name will be taken from the filename (without .json). The first property in the JSON objects will be used as the primary key. For edges, 'from' and 'to' properties are required and should match the node primary key values.",
+    "Upload your graph data by selecting two JSON files: one for nodes and one for edges. The node table name will be taken from the filename (without .json). The first property in the JSON objects will be used as the primary key. For edges, 'from' and 'to' properties are required and should match the node primary key values, with optional weight column and other additional columns.",
   previewTitle: "JSON Format Preview",
   previewDescription: "Expected format for nodes.json and edges.json files",
   preview: JSONPreview,
