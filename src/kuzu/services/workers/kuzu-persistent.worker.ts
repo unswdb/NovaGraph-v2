@@ -107,8 +107,14 @@ if (typeof globalScope.document === "undefined") {
   };
 } else {
   globalScope.document.createElement ??= () => createStubNode();
-  globalScope.document.head ??= { appendChild: () => {}, removeChild: () => {} };
-  globalScope.document.body ??= { appendChild: () => {}, removeChild: () => {} };
+  globalScope.document.head ??= {
+    appendChild: () => {},
+    removeChild: () => {},
+  };
+  globalScope.document.body ??= {
+    appendChild: () => {},
+    removeChild: () => {},
+  };
   globalScope.document.documentElement ??= createStubNode();
   globalScope.document.querySelector ??= () => null;
   globalScope.document.querySelectorAll ??= () => [];

@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Loader } from "lucide-react";
+import { observer } from "mobx-react-lite";
 
 import InputComponent, { createEmptyInputResults } from "../inputs";
+import { useStore } from "../hooks/use-store";
 
 import ALL_IMPORTS, { type ImportOption } from "./implementations";
 
@@ -16,10 +18,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Separator } from "~/components/ui/separator";
 import { Button } from "~/components/ui/button";
 import { useAsyncFn } from "~/hooks/use-async-fn";
-import { useStore } from "../hooks/use-store";
 
 export default function ImportDialog({ onClose }: { onClose: () => void }) {
-  const store = useStore();
   return (
     <DialogContent className="flex flex-col gap-2 max-h-[80vh] !max-w-[min(100%,calc(80vw))]">
       <DialogHeader>
@@ -52,7 +52,11 @@ export default function ImportDialog({ onClose }: { onClose: () => void }) {
           {/* Right Content - Tabbed Interface with separate overflow */}
           <div className="flex-1 flex flex-col min-h-0">
             {ALL_IMPORTS.map((option) => (
-              <ImportContent key={option.value} option={option} store={store} onClose={onClose} />
+              <ImportContent
+                key={option.value}
+                option={option}
+                onClose={onClose}
+              />
             ))}
           </div>
         </div>
@@ -61,139 +65,122 @@ export default function ImportDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-function ImportContent({ option, store, onClose }: { option: ImportOption; store: any; onClose: () => void }) {
-  const [inputResults, setInputResults] = useState(
-    createEmptyInputResults(option.inputs)
-  );
-  const [error, setError] = useState("");
+const ImportContent = observer(
+  ({ option, onClose }: { option: ImportOption; onClose: () => void }) => {
+    const store = useStore();
 
-  // Memoised values
-  const isReadyToSubmit = useMemo(
-    () => Object.values(inputResults).every((v) => v.success),
-    [inputResults]
-  );
+    const [inputResults, setInputResults] = useState(
+      createEmptyInputResults(option.inputs)
+    );
+    const [error, setError] = useState("");
 
-  const {
-    run: importFile,
-    isLoading,
-    getErrorMessage,
-  } = useAsyncFn(option.handler.bind(option), {
-    onSuccess: async (result: any) => {
-      if (result?.message) {
-        toast.success(result.message);
-      }
+    // Memoised values
+    const isReadyToSubmit = useMemo(
+      () => Object.values(inputResults).every((v) => v.success),
+      [inputResults]
+    );
 
-      if (result?.databaseName && result?.data) {
-        store.setActiveDatabaseFromSnapshot(result.databaseName, {
-          nodes: result.data.nodes,
-          edges: result.data.edges,
-          nodeTables: result.data.nodeTables,
-          edgeTables: result.data.edgeTables,
-          directed: result.data.directed,
-        });
-        await store.refreshDatabases();
-      } else if (result?.data) {
-        store.setGraphState({
-          nodes: result.data.nodes,
-          edges: result.data.edges,
-          nodeTables: result.data.nodeTables,
-          edgeTables: result.data.edgeTables,
-          directed: result.data.directed,
-        });
-      }
+    const {
+      run: importFile,
+      isLoading,
+      getErrorMessage,
+    } = useAsyncFn(option.handler.bind(option), {
+      onSuccess: ({ databaseName, ...graphState }) => {
+        store.addAndSetDatabase(databaseName!, graphState!);
+        toast.success(`Successfully added/imported "${databaseName}"`);
+        onClose();
+      },
+      onError: (err) => {
+        setError(getErrorMessage(err));
+      },
+    });
 
-      onClose();
-    },
-    onError: (err) => {
-      setError(getErrorMessage(err));
-    },
-  });
+    const handleOnSubmit = async () => {
+      await importFile({ values: inputResults, controller: store.controller });
+    };
 
-  const handleOnSubmit = async () => {
-    await importFile({ values: inputResults });
-  };
-
-  return (
-    <TabsContent
-      key={option.value}
-      value={option.value}
-      className="overflow-y-auto flex-1 min-h-0 data-[state=active]:flex data-[state=active]:flex-col"
-    >
-      <Tabs defaultValue="upload" className="space-y-2">
-        {!!option.preview && (
-          <>
-            <TabsList>
-              {/* Tabs */}
-              <TabsTrigger value="upload">Upload</TabsTrigger>
-              <TabsTrigger value="preview">Preview</TabsTrigger>
-            </TabsList>
-            <Separator />
-          </>
-        )}
-        <TabsContent value="upload" className="space-y-6 p-1">
-          <div className="space-y-2">
-            {/* Title + Description */}
-            <div className="flex items-center gap-2">
-              <option.icon />
-              <h1 className="medium-title">{option.title}</h1>
-            </div>
-            {option.description && (
-              <p className="small-body text-typography-secondary">
-                {option.description}
-              </p>
-            )}
-          </div>
-          <div className="space-y-3">
-            {/* Inputs */}
-            {option.inputs.map((input, index) => (
-              <InputComponent
-                key={index}
-                input={input}
-                value={inputResults[input.key]?.value}
-                onChange={(value) =>
-                  setInputResults((prev) => ({
-                    ...prev,
-                    [input.key]: value,
-                  }))
-                }
-              />
-            ))}
-          </div>
-          {/* Additional Note */}
-          {option.note && (
+    return (
+      <TabsContent
+        key={option.value}
+        value={option.value}
+        className="overflow-y-auto flex-1 min-h-0 data-[state=active]:flex data-[state=active]:flex-col"
+      >
+        <Tabs defaultValue="upload" className="space-y-2">
+          {!!option.preview && (
             <>
+              <TabsList>
+                {/* Tabs */}
+                <TabsTrigger value="upload">Upload</TabsTrigger>
+                <TabsTrigger value="preview">Preview</TabsTrigger>
+              </TabsList>
               <Separator />
-              <p className="text-typography-secondary small-body">
-                Note: {option.note}
-              </p>
             </>
           )}
-          <Button
-            type="submit"
-            onClick={handleOnSubmit}
-            disabled={!isReadyToSubmit || isLoading}
-          >
-            {isLoading ? <Loader className="animate-spin" /> : "Create Graph"}
-          </Button>
-          {!!error && <p className="text-critical">{error}</p>}
-        </TabsContent>
-        {!!option.preview && (
-          <TabsContent value="preview">
+          <TabsContent value="upload" className="space-y-6 p-1">
             <div className="space-y-2">
               {/* Title + Description */}
-              {option.previewTitle && (
-                <h1 className="medium-title">{option.previewTitle}</h1>
-              )}
-              {option.previewDescription && (
+              <div className="flex items-center gap-2">
+                <option.icon />
+                <h1 className="medium-title">{option.title}</h1>
+              </div>
+              {option.description && (
                 <p className="small-body text-typography-secondary">
-                  {option.previewDescription}
+                  {option.description}
                 </p>
               )}
             </div>
-            <option.preview />
+            <div className="space-y-3">
+              {/* Inputs */}
+              {option.inputs.map((input, index) => (
+                <InputComponent
+                  key={index}
+                  input={input}
+                  value={inputResults[input.key]?.value}
+                  onChange={(value) =>
+                    setInputResults((prev) => ({
+                      ...prev,
+                      [input.key]: value,
+                    }))
+                  }
+                />
+              ))}
+            </div>
+            {/* Additional Note */}
+            {option.note && (
+              <>
+                <Separator />
+                <p className="text-typography-secondary small-body">
+                  Note: {option.note}
+                </p>
+              </>
+            )}
+            <Button
+              type="submit"
+              onClick={handleOnSubmit}
+              disabled={!isReadyToSubmit || isLoading}
+            >
+              {isLoading ? <Loader className="animate-spin" /> : "Create Graph"}
+            </Button>
+            {!!error && <p className="text-critical">{error}</p>}
           </TabsContent>
-        )}
-      </Tabs>
-    </TabsContent>
-  );
-}
+          {!!option.preview && (
+            <TabsContent value="preview">
+              <div className="space-y-2">
+                {/* Title + Description */}
+                {option.previewTitle && (
+                  <h1 className="medium-title">{option.previewTitle}</h1>
+                )}
+                {option.previewDescription && (
+                  <p className="small-body text-typography-secondary">
+                    {option.previewDescription}
+                  </p>
+                )}
+              </div>
+              <option.preview />
+            </TabsContent>
+          )}
+        </Tabs>
+      </TabsContent>
+    );
+  }
+);

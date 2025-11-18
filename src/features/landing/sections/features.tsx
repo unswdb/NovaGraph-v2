@@ -8,28 +8,28 @@ import { useIsMobile } from "~/hooks/use-mobile";
 
 const SLIDES = [
   {
-    title: "Import Your Data",
+    title: "Define or Import Your Graph Data",
     description:
-      "Import your graph data files in JSON, CSV, GEXF or GML format.",
-    image: "page.jpg",
+      "Construct nodes and/or edges through a schema-driven interface, specifying properties and metadata, or import existing graph data from CSV or JSON files.",
+    image: "import.gif",
   },
   {
     title: "Visualize Your Graph",
     description:
-      "Watch as NovaGraph transforms your data into an interactive visualization.",
-    image: "page.jpg",
+      "Render and explore large graphs smoothly using a high-performance WebGL visualizer.",
+    image: "visualizer.gif",
   },
   {
-    title: "Apply Algorithms & Queries",
+    title: "Run Algorithms and Execute Queries",
     description:
-      "Select from a library of algorithms to analyze your network, or write queries to filter and explore specific patterns.",
-    image: "page.jpg",
+      "Select from a library of algorithms to analyze your graph, or write queries to test your hypotheses directly.",
+    image: "algorithm_query.gif",
   },
   {
-    title: "Export & Share Discoveries",
+    title: "Export Results for Further Analysis",
     description:
-      "Save your findings as raw data in JSON or YAML format for further analysis.",
-    image: "page.jpg",
+      "Save your findings as JSON or YAML format for further analysis.",
+    image: "export.gif",
   },
 ];
 

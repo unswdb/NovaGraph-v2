@@ -5,15 +5,7 @@ type QueryResult = Awaited<ReturnType<KuzuBaseService["executeQuery"]>>;
 const isPromise = <T>(value: any): value is Promise<T> =>
   Boolean(value) && typeof value.then === "function";
 
-type QueryLike =
-  | {
-      success?: boolean;
-      failedQueries?: Array<{ message?: string } | undefined> | undefined;
-      message?: string;
-      error?: string;
-    }
-  | null
-  | undefined;
+type QueryLike = Partial<QueryResult> | null | undefined;
 
 const extractErrorMessage = (result: QueryLike) =>
   result?.failedQueries?.[0]?.message ??
@@ -38,9 +30,9 @@ function assertSuccess<T extends QueryResult>(result: T): T {
 
 export function throwOnFailedQuery<
   T extends ReturnType<KuzuBaseService["executeQuery"]>,
->(res: T): T {
+>(res: T): Promise<T> | T {
   if (isPromise<QueryResult>(res)) {
-    return res.then((resolved) => assertSuccess(resolved)) as T;
+    return res.then((resolved) => assertSuccess(resolved));
   }
-  return assertSuccess(res as QueryResult) as T;
+  return assertSuccess(res);
 }

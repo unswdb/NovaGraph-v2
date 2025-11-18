@@ -1,19 +1,36 @@
 import { useMemo } from "react";
+import {
+  List,
+  useDynamicRowHeight,
+  type RowComponentProps,
+} from "react-window";
 
 import type { ExecuteQueryResult } from "../types";
 
 import { Button } from "~/components/ui/button";
+import type {
+  ErrorQueryResult,
+  SuccessQueryResult,
+} from "~/kuzu/helpers/KuzuQueryResultExtractor.types";
 
 function stringifySafe(v: unknown) {
   return JSON.stringify(
     v,
-    (k, val) => (typeof val === "bigint" ? String(val) : val),
+    (_, val) => (typeof val === "bigint" ? String(val) : val),
     2
   );
 }
 
 export default function QueryOutput({ data }: { data: ExecuteQueryResult }) {
   const { successQueries, failedQueries, success, message } = data;
+
+  const failedQueryRowHeight = useDynamicRowHeight({
+    defaultRowHeight: 16,
+  });
+
+  const successQueryRowHeight = useDynamicRowHeight({
+    defaultRowHeight: 16,
+  });
 
   return (
     <div className="space-y-4">
@@ -62,14 +79,12 @@ export default function QueryOutput({ data }: { data: ExecuteQueryResult }) {
           <h3 className="font-semibold text-critical">
             Failed Queries ({failedQueries.length})
           </h3>
-          {failedQueries.map((query, index) => (
-            <div
-              key={index}
-              className="bg-critical/10 border border-critical/20 rounded-md p-3"
-            >
-              <p className="small-body text-critical">{query.message}</p>
-            </div>
-          ))}
+          <List
+            rowComponent={FailedQueryRowComponent}
+            rowCount={failedQueries.length}
+            rowHeight={failedQueryRowHeight}
+            rowProps={{ failedQueries: failedQueries }}
+          />
         </div>
       )}
 
@@ -79,19 +94,50 @@ export default function QueryOutput({ data }: { data: ExecuteQueryResult }) {
           <h3 className="font-semibold text-positive">
             Success Queries ({successQueries.length})
           </h3>
-          {successQueries.map((query, index) => (
-            <div key={index} className="space-y-2">
-              <div className="text-xs text-typography-secondary">
-                Result {index + 1}: {query.objects.length}{" "}
-                {query.objects.length === 1 ? "row" : "rows"}
-              </div>
-              {query.objects.length > 0 && (
-                <div className="bg-neutral-low rounded-md p-3 overflow-x-auto">
-                  <JsonViewer objects={query.objects} />
-                </div>
-              )}
-            </div>
-          ))}
+          <List
+            rowComponent={SuccessQueryRowComponent}
+            rowCount={successQueries.length}
+            rowHeight={successQueryRowHeight}
+            rowProps={{ successQueries: successQueries }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FailedQueryRowComponent({
+  index,
+  style,
+  failedQueries,
+}: RowComponentProps<{ failedQueries: ErrorQueryResult[] }>) {
+  const query = failedQueries[index];
+  return (
+    <div
+      key={index}
+      style={style}
+      className="bg-critical/10 border border-critical/20 rounded-md p-3 not-first:pt-4"
+    >
+      <p className="small-body text-critical">{query.message}</p>
+    </div>
+  );
+}
+
+function SuccessQueryRowComponent({
+  index,
+  style,
+  successQueries,
+}: RowComponentProps<{ successQueries: SuccessQueryResult[] }>) {
+  const query = successQueries[index];
+  return (
+    <div key={index} style={style} className="space-y-2 not-first:pt-4">
+      <div className="text-xs text-typography-secondary">
+        Result {index + 1}: {query.objects.length}{" "}
+        {query.objects.length === 1 ? "row" : "rows"}
+      </div>
+      {query.objects.length > 0 && (
+        <div className="bg-neutral-low rounded-md p-3 overflow-x-auto">
+          <JsonViewer objects={query.objects} />
         </div>
       )}
     </div>

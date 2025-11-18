@@ -17,14 +17,13 @@ const CreateEdgeDialogForm = observer(
   ({
     source,
     target,
-    directed,
-  selectedEdgeSchema,
+    selectedEdgeSchema,
     onClose,
   }: {
     source: GraphNode;
     target: GraphNode;
     directed: boolean;
-  selectedEdgeSchema: string;
+    selectedEdgeSchema: string;
     onClose: () => void;
   }) => {
     const { database, controller, setGraphState } = useStore();

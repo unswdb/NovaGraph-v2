@@ -6,8 +6,9 @@ import {
   useState,
   type ComponentProps,
 } from "react";
+import { toast } from "sonner";
 
-import type { DatabaseOption, GraphDatabase } from "../types";
+import type { GraphDatabase } from "../types";
 
 import ImportDialog from "./import-dialog";
 
@@ -27,7 +28,7 @@ import {
 } from "~/components/ui/popover";
 import { Dialog, DialogTrigger } from "~/components/ui/dialog";
 import { cn } from "~/lib/utils";
-import { toast } from "sonner";
+import { useAsyncFn } from "~/hooks/use-async-fn";
 
 export default function ImportDropdown({
   database,
@@ -36,18 +37,10 @@ export default function ImportDropdown({
   onDeleteDatabase,
   className,
 }: ComponentProps<"button"> & {
-  database: GraphDatabase | null;
-  databases: DatabaseOption[];
-  onSelectDatabase: (
-    name: string
-  ) =>
-    | Promise<{ success: boolean; message?: string; error?: string }>
-    | { success: boolean; message?: string; error?: string };
-  onDeleteDatabase: (
-    name: string
-  ) =>
-    | Promise<{ success: boolean; message?: string; error?: string }>
-    | { success: boolean; message?: string; error?: string };
+  database: GraphDatabase;
+  databases: string[];
+  onSelectDatabase: (name: string) => Promise<void>;
+  onDeleteDatabase: (name: string) => Promise<void>;
 }) {
   // Refs
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -71,7 +64,7 @@ export default function ImportDropdown({
             className
           )}
         >
-          {database ? database.label : "Default"}
+          {database ? database.name : "Default"}
           <ChevronDown />
         </Button>
       </PopoverTrigger>
@@ -102,62 +95,51 @@ function ImportListSelector({
   onDeleteDatabase,
 }: {
   setOpen: (b: boolean) => void;
-  database: GraphDatabase | null;
-  databases: DatabaseOption[];
-  onSelectDatabase: (
-    name: string
-  ) =>
-    | Promise<{ success: boolean; message?: string; error?: string }>
-    | { success: boolean; message?: string; error?: string };
-  onDeleteDatabase: (
-    name: string
-  ) =>
-    | Promise<{ success: boolean; message?: string; error?: string }>
-    | { success: boolean; message?: string; error?: string };
+  database: GraphDatabase;
+  databases: string[];
+  onSelectDatabase: (name: string) => Promise<void>;
+  onDeleteDatabase: (name: string) => Promise<void>;
 }) {
+  const [selectingName, setSelectingName] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const handleSelect = (name: string) => {
-    void (async () => {
-      if (database?.name === name) {
-        setOpen(false);
-        return;
-      }
+  const { run: selectDatabase, isLoading: isSelecting } = useAsyncFn(
+    onSelectDatabase,
+    {
+      onSuccess: () => {
+        toast.success("Database switched successfully");
+      },
+      onError: () => {
+        toast.error("Failed to switch database. Please try again later");
+      },
+    }
+  );
 
-      try {
-        const result = await onSelectDatabase(name);
-        if (result.success) {
-          if (result.message) {
-            toast.success(result.message);
-          }
-          setOpen(false);
-        } else if (result.error) {
-          toast.error(result.error);
-        }
-      } catch (err) {
-        toast.error(
-          err instanceof Error ? err.message : "Failed to switch database"
-        );
-      }
-    })();
+  const { run: deleteDatabase, isLoading: isDeleting } = useAsyncFn(
+    onDeleteDatabase,
+    {
+      onSuccess: () => {
+        toast.success("Database deleted successfully");
+      },
+      onError: () => {
+        toast.error("Failed to delete database. Please try again later");
+      },
+    }
+  );
+
+  const handleSelect = async (name: string) => {
+    // Close when select already current database
+    if (database.name === name) {
+      setOpen(false);
+      return;
+    }
+    setSelectingName(name);
+    await selectDatabase(name);
+    setSelectingName(null);
   };
 
-  const handleDelete = (name: string) => {
-    void (async () => {
-      try {
-        const result = await onDeleteDatabase(name);
-        if (result.success) {
-          toast.success(result.message ?? `Deleted database "${name}"`);
-          setOpen(false);
-        } else if (result.error) {
-          toast.error(result.error);
-        }
-      } catch (err) {
-        toast.error(
-          err instanceof Error ? err.message : "Failed to delete database"
-        );
-      }
-    })();
+  const handleDelete = async (name: string) => {
+    await deleteDatabase(name);
   };
 
   return (
@@ -169,30 +151,40 @@ function ImportListSelector({
           <CommandGroup heading="Existing Databases">
             {databases.map((entry) => (
               <CommandItem
-                key={entry.name}
-                value={entry.name}
-                onSelect={() => handleSelect(entry.name)}
+                key={entry}
+                value={entry}
+                onSelect={() => handleSelect(entry)}
+                className="block px-3"
               >
-                <div className="flex w-full items-center justify-between gap-2">
-                  <span className="truncate">
-                    {entry.label}
-                    {database?.name === entry.name && (
-                      <span className="ml-2 text-xs text-typography-secondary">
-                        Active
-                      </span>
+                <div className="flex items-center justify-between gap-2 h-8">
+                  <div
+                    title={entry}
+                    className="flex-1 flex items-center gap-1 truncate"
+                  >
+                    {isSelecting && selectingName === entry && (
+                      <Loader className="w-4 h-4 animate-spin" />
                     )}
-                  </span>
-                  {database?.name !== entry.name && (
+                    <span className="truncate">{entry}</span>
+                  </div>
+                  {database.name === entry ? (
+                    <span className="px-2 py-1 text-xs text-typography-secondary border border-neutral rounded-full">
+                      Active
+                    </span>
+                  ) : (
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="sm"
                       onClick={(event) => {
                         event.preventDefault();
                         event.stopPropagation();
-                        handleDelete(entry.name);
+                        handleDelete(entry);
                       }}
                     >
-                      <Trash className="h-4 w-4" />
+                      {isDeleting ? (
+                        <Loader className="animate-spin" />
+                      ) : (
+                        <Trash className="size-4" />
+                      )}
                     </Button>
                   )}
                 </div>

@@ -18,14 +18,15 @@ const DRAWER_HEIGHT = "18rem";
 
 const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
   const {
-    code,
+    database,
     setCode,
     setGraphState,
-    activeAlgorithm,
-    activeResponse,
     setActiveResponse,
+    databaseDrawerStateMap,
     controller,
   } = useStore();
+  const { code, activeAlgorithm, activeResponse } =
+    databaseDrawerStateMap[database!.name];
 
   // States
   const [tabValue, setTabValue] = useState("code");
@@ -36,6 +37,8 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
     if (!!activeResponse) {
       setIsExpanded(true);
       setTabValue("output");
+    } else {
+      setTabValue("code");
     }
   }, [activeResponse, activeAlgorithm]);
 

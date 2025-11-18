@@ -1,8 +1,8 @@
-import SyntaxHighlighterPkg from "react-syntax-highlighter";
+import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import { useState } from "react";
 import { FileJson } from "lucide-react";
 
-const { Light: SyntaxHighlighter } = SyntaxHighlighterPkg as any;
+import type VisualizerStore from "../../store";
 
 import type { ImportOption } from "./types";
 
@@ -17,11 +17,7 @@ import {
 } from "~/components/ui/table";
 import { Switch } from "~/components/form/switch";
 import { Label } from "~/components/form/label";
-import {
-  createFileInput,
-  createSwitchInput,
-  createTextInput,
-} from "~/features/visualizer/inputs";
+import { createFileInput, createTextInput } from "~/features/visualizer/inputs";
 
 const validateNodesJSON = async (file: File | undefined) => {
   if (!file)
@@ -51,7 +47,9 @@ const validateNodesJSON = async (file: File | undefined) => {
     }
 
     // Check if all elements are objects
-    const allObjects = data.every((item) => typeof item === "object" && item !== null);
+    const allObjects = data.every(
+      (item) => typeof item === "object" && item !== null
+    );
     if (!allObjects) {
       return {
         success: false,
@@ -63,7 +61,10 @@ const validateNodesJSON = async (file: File | undefined) => {
   } catch (error) {
     return {
       success: false,
-      message: error instanceof Error ? `Invalid JSON: ${error.message}` : "Unable to parse JSON file",
+      message:
+        error instanceof Error
+          ? `Invalid JSON: ${error.message}`
+          : "Unable to parse JSON file",
     };
   }
 };
@@ -112,7 +113,10 @@ const validateEdgesJSON = async (file: File | undefined) => {
   } catch (error) {
     return {
       success: false,
-      message: error instanceof Error ? `Invalid JSON: ${error.message}` : "Unable to parse JSON file",
+      message:
+        error instanceof Error
+          ? `Invalid JSON: ${error.message}`
+          : "Unable to parse JSON file",
     };
   }
 };
@@ -152,127 +156,48 @@ export const ImportJSON: ImportOption = {
       accept: ".json",
       validator: validateEdgesJSON,
     }),
-    // createSwitchInput({
-    //   id: "directed-json",
-    //   key: "directed",
-    //   displayName: "Directed Graph",
-    //   required: true,
-    //   defaultValue: false,
-    // }),
   ],
-  handler: async ({ values }: { values: Record<string, any> }) => {
-    const { name, nodes, edges, directed } = values;
+  handler: async ({
+    values,
+    controller,
+  }: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    values: Record<string, any>;
+    controller: VisualizerStore["controller"];
+  }) => {
+    const { name, nodes, edges } = values;
 
-    // Get the database name
     const databaseName = name.value as string;
-    const trimmedDatabaseName = (databaseName ?? "").trim();
     const nodesFile = nodes.value as File;
     const edgesFile = edges.value as File;
-    const isDirected = directed.value as boolean;
 
-    if (!trimmedDatabaseName) {
-      return {
-        success: false,
-        message: "Please provide a name for the new database.",
-      };
-    }
+    const nodesText = await nodesFile.text();
+    const edgesText = await edgesFile.text();
 
-    const { controller } = await import("~/MainController");
-    const previousDatabaseName = await controller.db
-      .getCurrentDatabaseName()
-      .catch(() => null);
-    let createdDatabase = false;
+    const nodeTableName = nodesFile.name.replace(/\.json$/i, "");
+    const edgeTableName = edgesFile.name.replace(/\.json$/i, "");
 
+    let databaseCreated = false;
     try {
-      console.log(
-        `[JSON Import] Starting import for database: ${databaseName}, isDirected: ${isDirected}`
-      );
+      await controller.db.createDatabase(databaseName);
+      databaseCreated = true;
 
-      const createResult = await controller.db.createDatabase(
-        trimmedDatabaseName,
-        { isDirected }
-      );
-      if (!createResult.success) {
-        throw new Error(
-          createResult.error ||
-            createResult.message ||
-            `Failed to create database "${trimmedDatabaseName}"`
-        );
-      }
-      createdDatabase = true;
-      
-      console.log(`[JSON Import] Database created with metadata:`, createResult.metadata);
-
-      const connectResult = await controller.db.connectToDatabase(
-        trimmedDatabaseName
-      );
-      if (!connectResult.success) {
-        throw new Error(
-          connectResult.error ||
-            connectResult.message ||
-            `Failed to connect to database "${trimmedDatabaseName}"`
-        );
-      }
-
-      const nodesText = await nodesFile.text();
-      const edgesText = await edgesFile.text();
-
-      const nodeTableName = nodesFile.name.replace(/\.json$/i, "");
-      const edgeTableName = edgesFile.name.replace(/\.json$/i, "");
-
-      console.log(
-        `[JSON Import] Node table: ${nodeTableName}, Edge table: ${edgeTableName}`
-      );
+      await controller.db.connectToDatabase(databaseName);
 
       const result = await controller.db.importFromJSON(
+        databaseName,
         nodesText,
         edgesText,
         nodeTableName,
-        edgeTableName,
-        isDirected
+        edgeTableName
       );
-
-      if (result.success && result.data) {
-        await controller.db.saveDatabase().catch(() => {});
-        return {
-          ...result,
-          databaseName: trimmedDatabaseName,
-          message: `Successfully imported graph "${trimmedDatabaseName}" with ${result.data.nodes.length} nodes and ${result.data.edges.length} edges!`,
-        };
-      }
-
+      await controller.db.saveDatabase();
       return result;
-    } catch (error) {
-      console.error("[JSON Import] Error:", error);
-      if (
-        previousDatabaseName &&
-        previousDatabaseName !== trimmedDatabaseName
-      ) {
-        try {
-          await controller.db.connectToDatabase(previousDatabaseName);
-        } catch (reconnectError) {
-          console.error(
-            "[JSON Import] Failed to reconnect to previous database:",
-            reconnectError
-          );
-        }
+    } catch (err) {
+      if (databaseCreated) {
+        await controller.db.deleteDatabase(databaseName);
       }
-      if (createdDatabase) {
-        await controller.db
-          .deleteDatabase(trimmedDatabaseName)
-          .catch((cleanupError: unknown) =>
-            console.warn(
-              `[JSON Import] Failed to delete database "${trimmedDatabaseName}" after error`,
-              cleanupError
-            )
-          );
-      }
-      return {
-        success: false,
-        message: `Failed to import JSON: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      };
+      throw err;
     }
   },
 };
@@ -317,7 +242,7 @@ function JSONPreview() {
   ];
 
   return (
-    <div className="flex flex-col items-end gap-6">
+    <div className="flex flex-col items-end gap-6 mt-4">
       <div className="flex items-center gap-2">
         <Label htmlFor="toggle-table-view-json">Table View</Label>
         <Switch

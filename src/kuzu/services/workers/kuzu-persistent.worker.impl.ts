@@ -3,41 +3,37 @@
  * Runs Kuzu database operations with IndexedDB persistence in a separate thread
  */
 
-// @ts-ignore
 // Use sync version for filesystem operations
+// @ts-ignore
 import kuzu from "kuzu-wasm/sync";
+
 import { snapshotGraphState } from "../../helpers/KuzuQueryExecutor";
 import { queryResultColorMapExtraction } from "../../helpers/KuzuQueryResultExtractor";
+import type { DatabaseMetadata } from "../KuzuPersistentAsync";
 
-const DATABASES_DIR = 'kuzu_databases';
-const DB_FILE_NAME = 'database.kuzu';
-const METADATA_FILE_NAME = 'metadata.json';
+const DATABASES_DIR = "kuzu_databases";
+const DB_FILE_NAME = "database.kuzu";
+const METADATA_FILE_NAME = "metadata.json";
 
 let db: any = null;
 let connection: any = null;
 let initialized = false;
 
-interface DatabaseMetadata {
-  isDirected: boolean;
-  createdAt?: string;
-  lastModified?: string;
-}
-
 const normalizePath = (filePath: string) =>
-  filePath.startsWith('/') ? filePath : `/${filePath}`;
+  filePath.startsWith("/") ? filePath : `/${filePath}`;
 
 function ensureParentDirectory(filePath: string) {
   const fs = kuzu.getFS();
   const normalized = normalizePath(filePath);
-  const lastSlash = normalized.lastIndexOf('/');
-  const dirPath = lastSlash <= 0 ? '/' : normalized.slice(0, lastSlash);
+  const lastSlash = normalized.lastIndexOf("/");
+  const dirPath = lastSlash <= 0 ? "/" : normalized.slice(0, lastSlash);
 
-  if (dirPath === '/') {
+  if (dirPath === "/") {
     return;
   }
 
-  const segments = dirPath.split('/').filter(Boolean);
-  let currentPath = '';
+  const segments = dirPath.split("/").filter(Boolean);
+  let currentPath = "";
 
   for (const segment of segments) {
     currentPath += `/${segment}`;
@@ -109,16 +105,18 @@ function saveMetadata(dbName: string, metadata: DatabaseMetadata) {
  */
 function loadMetadata(dbName: string): DatabaseMetadata {
   const metadataPath = getMetadataFilePath(dbName);
-  
+
   try {
     if (fileExists(metadataPath)) {
-      const metadataContent = kuzu.getFS().readFile(metadataPath, { encoding: 'utf8' });
+      const metadataContent = kuzu
+        .getFS()
+        .readFile(metadataPath, { encoding: "utf8" });
       return JSON.parse(metadataContent) as DatabaseMetadata;
     }
   } catch (error) {
     console.warn(`[Worker] Failed to load metadata for ${dbName}:`, error);
   }
-  
+
   // Return default metadata if file doesn't exist or fails to load
   return {
     isDirected: true,
@@ -189,7 +187,10 @@ function processWorkerQueryResult(result: any) {
       isSuccess = result.isSuccess();
     }
   } catch (error) {
-    console.warn("[Worker] Failed to read isSuccess flag, assuming success:", error);
+    console.warn(
+      "[Worker] Failed to read isSuccess flag, assuming success:",
+      error
+    );
     isSuccess = true;
   }
 
@@ -229,7 +230,10 @@ function processWorkerQueryResult(result: any) {
       }
     } catch (error) {
       // DDL statements frequently throw here – just log and continue
-      console.warn("[Worker] getAllObjects failed; continuing with empty nodes:", error);
+      console.warn(
+        "[Worker] getAllObjects failed; continuing with empty nodes:",
+        error
+      );
       nodes = [];
     }
   }
@@ -249,119 +253,129 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 
   try {
     switch (type) {
-      case 'init':
+      case "init":
         if (!initialized) {
-          console.log('[Worker] Initializing Kuzu persistent async...');
+          console.log("[Worker] Initializing Kuzu persistent async...");
           await kuzu.init();
-          
+
           // Setup IDBFS
           if (!directoryExists(DATABASES_DIR)) {
             await kuzu.getFS().mkdir(DATABASES_DIR);
           }
-          await kuzu.getFS().mount(kuzu.getFS().filesystems.IDBFS, {}, DATABASES_DIR);
+          await kuzu
+            .getFS()
+            .mount(kuzu.getFS().filesystems.IDBFS, {}, DATABASES_DIR);
           await loadIDBFS();
-          
+
           initialized = true;
-          console.log('[Worker] Kuzu persistent async initialized');
+          console.log("[Worker] Kuzu persistent async initialized");
         }
-        
+
         // Get version synchronously (ensure it's a string, not Promise)
-        let version = '0.11.3';
-        if (typeof kuzu.getVersion === 'function') {
+        let version = "0.11.3";
+        if (typeof kuzu.getVersion === "function") {
           const versionValue = kuzu.getVersion();
           if (versionValue instanceof Promise) {
             version = await versionValue;
           } else {
-            version = versionValue || '0.11.3';
+            version = versionValue || "0.11.3";
           }
         }
-        
+
         self.postMessage({
           id,
           type,
-          data: { 
-            success: true, 
-            version: String(version)
+          data: {
+            success: true,
+            version: String(version),
           },
         } as WorkerResponse);
         break;
 
-      case 'createDatabase':
+      case "createDatabase":
         const createDbDir = getDatabaseDir(data.dbName);
         const createDbFile = getDatabaseFilePath(data.dbName);
-        
+
         // Check if already exists
         if (directoryExists(createDbDir)) {
           throw new Error(`Database '${data.dbName}' already exists`);
         }
-        
+
         // Create directory
         await kuzu.getFS().mkdir(createDbDir);
-        
+
         // Initialize the database by creating a Database instance
         // This creates the necessary database files
         const tempDb = new kuzu.Database(createDbFile);
         const tempConn = new kuzu.Connection(tempDb);
         tempConn.close();
         tempDb.close();
-        
+
         // Save metadata (hardcoded to isDirected: true for now)
         const metadata: DatabaseMetadata = {
           isDirected: data.metadata?.isDirected ?? true,
           createdAt: new Date().toISOString(),
           lastModified: new Date().toISOString(),
+          lastUsedAt: new Date().toISOString(),
         };
         saveMetadata(data.dbName, metadata);
-        
+
         await saveIDBFS();
-        
+
         self.postMessage({
           id,
           type,
-          data: { 
-            success: true, 
+          data: {
+            success: true,
             message: `Database ${data.dbName} created`,
             metadata,
           },
         } as WorkerResponse);
         break;
 
-      case 'connectToDatabase':
+      case "connectToDatabase":
         const dbDir = getDatabaseDir(data.dbName);
         const dbFile = getDatabaseFilePath(data.dbName);
-        
+
         if (!directoryExists(dbDir) || !fileExists(dbFile)) {
           throw new Error(`Database '${data.dbName}' does not exist`);
         }
-        
+
         if (db) {
           db.close();
           db = null;
         }
         db = new kuzu.Database(dbFile);
         connection = new kuzu.Connection(db);
-        
+
         // Load metadata
         const loadedMetadata = loadMetadata(data.dbName);
-        
+        const newMetadata: DatabaseMetadata = {
+          ...loadedMetadata,
+          lastModified: new Date().toISOString(),
+          lastUsedAt: new Date().toISOString(), // 👈 mark as most recently used
+        };
+        saveMetadata(data.dbName, newMetadata);
+        await saveIDBFS();
+
         self.postMessage({
           id,
           type,
-          data: { 
-            success: true, 
+          data: {
+            success: true,
             message: `Connected to ${data.dbName}`,
             metadata: loadedMetadata,
           },
         } as WorkerResponse);
         break;
 
-      case 'disconnectFromDatabase':
+      case "disconnectFromDatabase":
         if (db) {
           db.close();
           db = null;
         }
         connection = null;
-        
+
         self.postMessage({
           id,
           type,
@@ -369,13 +383,13 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
         } as WorkerResponse);
         break;
 
-      case 'listDatabases':
+      case "listDatabases":
         const entries = kuzu.getFS().readdir(DATABASES_DIR);
         const databases: string[] = [];
-        
+
         for (const entry of entries) {
-          if (entry === '.' || entry === '..') continue;
-          
+          if (entry === "." || entry === "..") continue;
+
           try {
             const fullPath = `${DATABASES_DIR}/${entry}`;
             const stats = kuzu.getFS().stat(fullPath);
@@ -386,7 +400,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
             console.warn(`[Worker] Error accessing entry "${entry}":`, e);
           }
         }
-        
+
         self.postMessage({
           id,
           type,
@@ -394,16 +408,16 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
         } as WorkerResponse);
         break;
 
-      case 'deleteDatabase':
+      case "deleteDatabase":
         const deletePath = getDatabaseDir(data.dbName);
-        
+
         if (!directoryExists(deletePath)) {
           throw new Error(`Database '${data.dbName}' does not exist`);
         }
-        
+
         removeDirectoryRecursive(deletePath);
         await saveIDBFS();
-        
+
         self.postMessage({
           id,
           type,
@@ -411,31 +425,34 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
         } as WorkerResponse);
         break;
 
-      case 'renameDatabase':
+      case "renameDatabase":
         const oldPath = `${DATABASES_DIR}/${data.oldName}`;
         const newPath = `${DATABASES_DIR}/${data.newName}`;
-        
+
         if (!directoryExists(oldPath)) {
           throw new Error(`Database '${data.oldName}' does not exist`);
         }
-        
+
         if (directoryExists(newPath)) {
           throw new Error(`Database '${data.newName}' already exists`);
         }
-        
+
         kuzu.getFS().rename(oldPath, newPath);
         await saveIDBFS();
-        
+
         self.postMessage({
           id,
           type,
-          data: { success: true, message: `Database renamed from ${data.oldName} to ${data.newName}` },
+          data: {
+            success: true,
+            message: `Database renamed from ${data.oldName} to ${data.newName}`,
+          },
         } as WorkerResponse);
         break;
 
-      case 'saveDatabase':
+      case "saveDatabase":
         await saveIDBFS();
-        
+
         self.postMessage({
           id,
           type,
@@ -443,9 +460,9 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
         } as WorkerResponse);
         break;
 
-      case 'loadDatabase':
+      case "loadDatabase":
         await loadIDBFS();
-        
+
         self.postMessage({
           id,
           type,
@@ -453,18 +470,18 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
         } as WorkerResponse);
         break;
 
-      case 'query':
+      case "query":
         if (!connection) {
-          throw new Error('Database not connected');
+          throw new Error("Database not connected");
         }
-        
-        console.log('[Worker] Executing query:', data.query);
+
+        console.log("[Worker] Executing query:", data.query);
         let currentResult = connection.query(data.query);
         const successQueries: any[] = [];
         const failedQueries: any[] = [];
         let allSuccess = true;
         let colorMap = {};
-        let resultType = 'graph';
+        let resultType = "graph";
 
         while (currentResult) {
           const queryResult = processWorkerQueryResult(currentResult);
@@ -475,7 +492,10 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
             failedQueries.push(queryResult);
           }
 
-          if (currentResult.hasNextQueryResult && currentResult.hasNextQueryResult()) {
+          if (
+            currentResult.hasNextQueryResult &&
+            currentResult.hasNextQueryResult()
+          ) {
             currentResult = currentResult.getNextQueryResult();
             continue;
           } else {
@@ -484,7 +504,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
           }
         }
 
-        if (currentResult && typeof currentResult.close === 'function') {
+        if (currentResult && typeof currentResult.close === "function") {
           currentResult.close();
         }
 
@@ -495,12 +515,12 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
         const failureMessage = errorMessages.length
           ? errorMessages.join(" | ")
           : "Some queries failed. Check results for details.";
-        
+
         // Auto-save after query execution
         if (data.autoSave !== false) {
           await saveIDBFS();
         }
-        
+
         self.postMessage({
           id,
           type,
@@ -508,27 +528,28 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
             success: allSuccess,
             successQueries,
             failedQueries,
+            message: allSuccess
+              ? "All queries executed successfully"
+              : failureMessage,
             nodes: graphState.nodes,
             edges: graphState.edges,
             nodeTables: graphState.nodeTables,
             edgeTables: graphState.edgeTables,
             colorMap,
             resultType,
-            message: allSuccess ? 'All queries succeeded' : failureMessage,
-            error: allSuccess ? undefined : failureMessage,
           },
         } as WorkerResponse);
         break;
 
-      case 'getColumnTypes':
+      case "getColumnTypes":
         if (!connection) {
-          throw new Error('Database not connected');
+          throw new Error("Database not connected");
         }
-        
+
         const typeResult = connection.query(data.query);
         const columnTypes = typeResult.getColumnTypes();
         typeResult.close();
-        
+
         self.postMessage({
           id,
           type,
@@ -536,13 +557,13 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
         } as WorkerResponse);
         break;
 
-      case 'writeFile':
+      case "writeFile":
         if (!data?.path) {
-          throw new Error('File path is required');
+          throw new Error("File path is required");
         }
         const filePath = normalizePath(data.path);
         ensureParentDirectory(filePath);
-        kuzu.getFS().writeFile(filePath, data.content ?? '');
+        kuzu.getFS().writeFile(filePath, data.content ?? "");
         self.postMessage({
           id,
           type,
@@ -550,15 +571,15 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
         } as WorkerResponse);
         break;
 
-      case 'deleteFile':
+      case "deleteFile":
         if (!data?.path) {
-          throw new Error('File path is required');
+          throw new Error("File path is required");
         }
         try {
           const deleteFilePath = normalizePath(data.path);
           kuzu.getFS().unlink(deleteFilePath);
         } catch (error) {
-          console.warn('[Worker] deleteFile warning:', error);
+          console.warn("[Worker] deleteFile warning:", error);
         }
         self.postMessage({
           id,
@@ -566,8 +587,8 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
           data: { success: true },
         } as WorkerResponse);
         break;
-      
-      case 'snapshotGraphState':
+
+      case "snapshotGraphState":
         if (!connection) {
           self.postMessage({
             id,
@@ -588,40 +609,40 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
         }
         break;
 
-      case 'getMetadata':
+      case "getMetadata":
         const getMetaDbName = data.dbName;
         if (!getMetaDbName) {
-          throw new Error('Database name is required for getMetadata');
+          throw new Error("Database name is required for getMetadata");
         }
-        
+
         const getMetaDbDir = getDatabaseDir(getMetaDbName);
         if (!directoryExists(getMetaDbDir)) {
           throw new Error(`Database '${getMetaDbName}' does not exist`);
         }
-        
+
         const retrievedMetadata = loadMetadata(getMetaDbName);
-        
+
         self.postMessage({
           id,
           type,
-          data: { 
+          data: {
             success: true,
             metadata: retrievedMetadata,
           },
         } as WorkerResponse);
         break;
 
-      case 'setMetadata':
+      case "setMetadata":
         const setMetaDbName = data.dbName;
         if (!setMetaDbName) {
-          throw new Error('Database name is required for setMetadata');
+          throw new Error("Database name is required for setMetadata");
         }
-        
+
         const setMetaDbDir = getDatabaseDir(setMetaDbName);
         if (!directoryExists(setMetaDbDir)) {
           throw new Error(`Database '${setMetaDbName}' does not exist`);
         }
-        
+
         // Load existing metadata and merge with new values
         const existingMetadata = loadMetadata(setMetaDbName);
         const updatedMetadata: DatabaseMetadata = {
@@ -629,28 +650,28 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
           ...data.metadata,
           lastModified: new Date().toISOString(),
         };
-        
+
         saveMetadata(setMetaDbName, updatedMetadata);
         await saveIDBFS();
-        
+
         self.postMessage({
           id,
           type,
-          data: { 
+          data: {
             success: true,
             metadata: updatedMetadata,
           },
         } as WorkerResponse);
         break;
 
-      case 'cleanup':
-        console.log('[Worker] Cleaning up...');
-        
+      case "cleanup":
+        console.log("[Worker] Cleaning up...");
+
         // Save before cleanup
         if (initialized) {
           await saveIDBFS();
         }
-        
+
         if (connection) {
           connection.close();
           connection = null;
@@ -660,7 +681,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
           db = null;
         }
         initialized = false;
-        
+
         self.postMessage({
           id,
           type,
@@ -672,7 +693,7 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
         throw new Error(`Unknown message type: ${type}`);
     }
   } catch (error) {
-    console.error('[Worker] Error:', error);
+    console.error("[Worker]", error);
     self.postMessage({
       id,
       type,
@@ -683,5 +704,5 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
 
 // Handle worker errors
 self.onerror = (error) => {
-  console.error('[Worker] Unhandled error:', error);
+  console.error("[Worker] Unhandled error:", error);
 };

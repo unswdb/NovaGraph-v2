@@ -1,31 +1,21 @@
 import type { ElementType } from "react";
 
+import type { GraphSnapshotState } from "../../types";
+import type VisualizerStore from "../../store";
+
 import type {
   InputChangeResult,
   InputType,
 } from "~/features/visualizer/inputs";
-import type {
-  GraphNode,
-  GraphEdge,
-  NodeSchema,
-  EdgeSchema,
-} from "../../types";
 
-type ImportHandlerResult = {
-  success: boolean;
-  message?: string;
-  databaseName?: string;
-  data?: {
-    nodes: GraphNode[];
-    edges: GraphEdge[];
-    nodeTables: NodeSchema[];
-    edgeTables: EdgeSchema[];
-    directed?: boolean;
-  };
+type ImportHandlerResult = GraphSnapshotState & {
+  databaseName: string;
 };
 
 type ImportHandler = (data: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   values: Record<string, InputChangeResult<any>>;
+  controller: VisualizerStore["controller"];
 }) => Promise<ImportHandlerResult>;
 
 type ImportValidator = (data: {

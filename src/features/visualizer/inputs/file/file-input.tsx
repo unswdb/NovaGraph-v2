@@ -60,6 +60,10 @@ export default function FileInputComponent({
     }
   };
 
+  const onClick = (e: React.MouseEvent<HTMLInputElement, MouseEvent>) => {
+    e.currentTarget.value = "";
+  };
+
   useEffect(() => {
     if (input.defaultValue) {
       handleFile(input.defaultValue);
@@ -74,6 +78,8 @@ export default function FileInputComponent({
         onChange={handleFileOnChange}
         required={input.required}
         accept={input.accept}
+        disabled={input.disabled}
+        onClick={onClick}
       />
       {showError && errorMessage && (
         <p className="text-typography-critical xsmall-body mt-1">

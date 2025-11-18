@@ -59,7 +59,6 @@ export function createSchema(s: GraphSchema): GraphSchema {
 
 export type GraphDatabase = {
   name: string;
-  label: string;
   graph: {
     nodes: GraphNode[];
     edges: GraphEdge[];
@@ -71,11 +70,6 @@ export type GraphDatabase = {
     edgeTablesMap: Map<string, EdgeSchema>;
     directed: boolean;
   };
-};
-
-export type DatabaseOption = {
-  name: string;
-  label: string;
 };
 
 export type ExecuteQueryResult = ReturnType<KuzuBaseService["executeQuery"]>;
@@ -94,3 +88,18 @@ export function isAlgorithmVisualizationResult(
 ): response is BaseGraphAlgorithmResult {
   return response.type === "algorithm";
 }
+
+export type GraphSnapshotState = {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  nodeTables: NodeSchema[];
+  edgeTables: EdgeSchema[];
+  directed?: boolean;
+};
+
+export const EMPTY_SNAPSHOT_GRAPH_STATE: GraphSnapshotState = {
+  nodes: [],
+  edges: [],
+  nodeTables: [],
+  edgeTables: [],
+};

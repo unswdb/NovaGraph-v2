@@ -5,16 +5,9 @@
  * Each function returns a Cypher query string that can be executed by any query executor.
  */
 
-import type {
-  CompositeType,
-  ScalarType,
-} from "../types/KuzuDBTypes";
+import type { CompositeType, ScalarType } from "../types/KuzuDBTypes";
 
 import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
-import type {
-  NonPrimaryKeyType,
-  PrimaryKeyType,
-} from "~/features/visualizer/schema-inputs";
 import type { InputChangeResult } from "~/features/visualizer/inputs";
 
 export function createEdgeQuery(
@@ -40,14 +33,14 @@ export function createEdgeQuery(
       attributesMappingString += "}";
     }
   }
-  
+
   // For directed graphs, create single edge u1 -> u2
   const forwardQuery = `
   MATCH (u1:\`${node1.tableName}\` { \`${node1._primaryKey}\`: ${_formatQueryInput(node1._primaryKeyValue)} }),
         (u2:\`${node2.tableName}\` { \`${node2._primaryKey}\`: ${_formatQueryInput(node2._primaryKeyValue)} })
   CREATE (u1)-[:\`${edgeTable.tableName}\` ${attributesMappingString}]->(u2);
   `;
-  
+
   // For undirected graphs, also create reverse edge u2 -> u1
   if (!isDirected) {
     const reverseQuery = `
@@ -57,7 +50,7 @@ export function createEdgeQuery(
   `;
     return forwardQuery + reverseQuery;
   }
-  
+
   return forwardQuery;
 }
 
@@ -110,7 +103,7 @@ export function updateEdgeQuery(
   SET ${attriutesMappingString.slice(2)}
   RETURN f;
   `;
-  
+
   // For undirected graphs, also update reverse edge u2 -> u1 to maintain consistency
   if (!isDirected) {
     const reverseQuery = `
@@ -122,19 +115,16 @@ export function updateEdgeQuery(
   `;
     return forwardQuery + reverseQuery;
   }
-  
+
   return forwardQuery;
 }
 
 export function createEdgeSchemaQuery(
   tableName: string,
   tablePairs: Array<[string | number, string | number]>,
-  properties: (
-    | { name: string; type: NonPrimaryKeyType }
-    | { name: string; type: PrimaryKeyType }
-  )[],
+  properties: { name: string; type: string }[],
   isDirected: boolean,
-  relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE",
+  relationshipType?: "MANY_ONE" | "ONE_MANY" | "MANY_MANY" | "ONE_ONE"
 ) {
   const q = (v: string | number) => `\`${String(v)}\``;
 
@@ -163,7 +153,7 @@ export function createEdgeSchemaQuery(
   const tailParts = relationshipType ? [relationshipType] : [];
   const inner = [...pairParts, ...propParts, ...tailParts].join(", ");
   const query = `CREATE REL TABLE ${q(tableName)} (${inner});`;
-  
+
   return query;
 }
 
@@ -195,19 +185,19 @@ export function createEdgeSchemaQuery(
 export function createNodeSchemaQuery(
   tableName: string,
   primaryKey: string,
-  primaryKeyType: PrimaryKeyType,
+  primaryKeyType: string,
   properties: {
     name: string;
-    type: NonPrimaryKeyType;
+    type: string;
     isPrimary?: boolean;
   }[] = [],
   _relInfo: { from: string; to: string } | null = null
 ): string {
   const qid = (s: string) => `\`${String(s).replace(/`/g, "``")}\``;
 
-  const typeToDDL = (t: NonPrimaryKeyType): string => {
+  const typeToDDL = (t: unknown): string => {
     if (typeof t === "string") return t; // types stay raw, e.g., STRING, INT, DATE
-    return String(t as any);
+    return String(t);
   };
 
   const cols: string[] = [
@@ -286,7 +276,7 @@ export function createSchemaQuery(
   };
 
   const qid = (s: string) => `\`${String(s).replace(/`/g, "``")}\``;
-  
+
   const cols = Object.entries(properties).map(
     ([name, spec]) => `${qid(name)} ${typeToDDL(spec)}`
   );
@@ -604,43 +594,43 @@ function _normalizeTimestamp(value: string): string {
 
 /**
  * Converts JavaScript File object or Uint8Array to Kùzu BLOB format.
- * 
+ *
  * BLOB (Binary Large Object) supports up to 4KB of arbitrary binary data.
  * Converts binary data into Kùzu's hex format: BLOB('\\xHH\\xHH...')
- * 
+ *
  * Note: This function is synchronous. For File objects, you must convert them
  * to Uint8Array first using: new Uint8Array(await file.arrayBuffer())
- * 
+ *
  * @param value - Uint8Array containing binary data
  * @returns BLOB literal in format: BLOB('\\xHH\\xHH...')
- * 
+ *
  * @throws Error if BLOB size exceeds 4KB (4096 bytes)
- * 
+ *
  * @example
  * // From Uint8Array
- * _formatBlob(new Uint8Array([188, 189, 186, 170])); 
+ * _formatBlob(new Uint8Array([188, 189, 186, 170]));
  * // Returns: BLOB('\\xBC\\xBD\\xBA\\xAA')
  */
 function _formatBlob(value: Uint8Array): string {
   const bytes = value;
-  
+
   // Check 4KB limit (4096 bytes)
   if (bytes.length > 4096) {
     throw new Error(`BLOB size exceeds 4KB limit: ${bytes.length} bytes`);
   }
-  
+
   // Convert bytes to \\xHH\\xHH format
-  let hexString = '';
+  let hexString = "";
   for (let i = 0; i < bytes.length; i++) {
-    hexString += '\\\\x' + bytes[i].toString(16).padStart(2, '0').toUpperCase();
+    hexString += "\\\\x" + bytes[i].toString(16).padStart(2, "0").toUpperCase();
   }
-  
+
   return `BLOB('${hexString}')`;
 }
 
 function _formatQueryInput(value: any) {
   const inferredType = typeof value;
-  
+
   // Handle BLOB type (Uint8Array from File.arrayBuffer())
   if (value instanceof Uint8Array) {
     return _formatBlob(value);

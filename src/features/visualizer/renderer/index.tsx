@@ -25,7 +25,9 @@ const SIMULATION_DECAY = 100000;
 const SIMULATION_REPULSION = 2;
 
 const GraphRenderer = observer(({ className }: { className?: string }) => {
-  const { database, gravity, nodeSizeScale, activeResponse } = useStore();
+  const { database, gravity, nodeSizeScale, databaseDrawerStateMap } =
+    useStore();
+  const { activeResponse } = databaseDrawerStateMap[database!.name];
 
   const { nodes, edges, nodesMap, nodeTables, directed } = database.graph;
 
@@ -49,7 +51,7 @@ const GraphRenderer = observer(({ className }: { className?: string }) => {
   );
 
   // States
-  const [isSimulationPaused, setIsSimulationPaused] = useState(false);
+  const [isSimulationPaused, setIsSimulationPaused] = useState(true);
   const [showDynamicLabels, setShowDynamicLabels] = useState(true);
   const [clickedNode, setClickedNode] = useState<GraphNode | null>(null);
 
@@ -88,15 +90,26 @@ const GraphRenderer = observer(({ className }: { className?: string }) => {
       if (!!target) map[edge.source].push([target, edge]);
 
       // If undirected, also add Target → Source
-      // if (!directed) {
-      //   if (!map[edge.target]) map[edge.target] = [];
-      //   const source = nodesMap.get(edge.source);
-      //   if (!!source) map[edge.target].push([source, edge]);
-      // }
+      if (!directed) {
+        if (!map[edge.target]) map[edge.target] = [];
+        const source = nodesMap.get(edge.source);
+        if (!!source) map[edge.target].push([source, edge]);
+      }
     });
 
     return map;
   }, [nodesMap, edges, directed]);
+
+  // Change clicked node value when nodes change
+  useEffect(() => {
+    if (!clickedNode) return;
+    const updatedNode = nodesMap.get(clickedNode.id);
+    if (updatedNode) {
+      setClickedNode(updatedNode);
+    } else {
+      setClickedNode(null);
+    }
+  }, [nodes]);
 
   const clickedNodeSchema = useMemo(() => {
     if (clickedNode) {
@@ -118,7 +131,7 @@ const GraphRenderer = observer(({ className }: { className?: string }) => {
   };
 
   return (
-    <CosmographProvider nodes={nodes} links={edges}>
+    <CosmographProvider key={database.name} nodes={nodes} links={edges}>
       <div className={cn("flex flex-col w-full h-full relative", className)}>
         {/* Main Graph Visualizer */}
         <Cosmograph

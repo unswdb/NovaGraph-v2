@@ -93,6 +93,7 @@ export default function NumberInputComponent({
         value={String(value ?? "")}
         placeholder={input.placeholder}
         onChange={(e) => handleNumberOnChange(Number(e.target.value))}
+        disabled={input.disabled}
       />
       {showError && errorMessage && (
         <p className="text-typography-critical xsmall-body mt-1">
