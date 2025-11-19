@@ -11,6 +11,7 @@ import InputComponent, {
 } from "~/features/visualizer/inputs";
 import type { EdgeSchema, GraphNode } from "~/features/visualizer/types";
 import type { NonEmpty } from "~/lib/utils";
+import { Button } from "~/components/ui/button";
 
 export default function CreateEdgeDialog({
   source,
@@ -20,6 +21,7 @@ export default function CreateEdgeDialog({
   open,
   setOpen,
   onClose,
+  onCreateSchemaClick,
 }: {
   source: GraphNode;
   target: GraphNode;
@@ -28,6 +30,7 @@ export default function CreateEdgeDialog({
   open: boolean;
   setOpen: (b: boolean) => void;
   onClose: () => void;
+  onCreateSchemaClick: () => void;
 }) {
   const selectEdgeSchemaInput = createAlgorithmSelectInput({
     id: "select-schema",
@@ -53,11 +56,18 @@ export default function CreateEdgeDialog({
             Choose an edge schema, then provide values for its fields
           </DialogDescription>
         </DialogHeader>
-        <InputComponent
-          input={selectEdgeSchemaInput}
-          value={selectedEdgeSchema.value}
-          onChange={setSelectedEdgeSchema}
-        />
+        <div className="flex gap-2 items-end">
+          <div className="flex-1">
+            <InputComponent
+              input={selectEdgeSchemaInput}
+              value={selectedEdgeSchema.value}
+              onChange={setSelectedEdgeSchema}
+            />
+          </div>
+          <Button variant="outline" onClick={() => onCreateSchemaClick()}>
+            Create Schema
+          </Button>
+        </div>
         <Separator />
         {selectedEdgeSchema.value && (
           <CreateEdgeDialogForm

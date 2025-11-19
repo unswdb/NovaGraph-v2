@@ -89,6 +89,13 @@ const CreateEdge = observer(
       setStatus({ selectingEdge: true, edgeSelected: false });
     };
 
+    const onCreateSchemaClickCreateEdge = () => {
+      setDialogStatus((prev) => ({
+        createEdge: !prev.createEdge,
+        createEdgeSchema: true,
+      }));
+    };
+
     const onSubmitCreateEdgeSchema = () => {
       if (dialogStatus.createEdgeSchema) {
         setDialogStatus({ createEdge: true, createEdgeSchema: false });
@@ -99,6 +106,8 @@ const CreateEdge = observer(
       if (!isNonEmpty(sourceTargetSchemas)) {
         setDialogStatus({ createEdge: false, createEdgeSchema: open });
         setStatus({ selectingEdge: true, edgeSelected: false });
+      } else {
+        setDialogStatus({ createEdge: !open, createEdgeSchema: open });
       }
     };
 
@@ -159,10 +168,9 @@ const CreateEdge = observer(
               <Plus />
             </Button>
           </div>
-          {status.edgeSelected &&
-            !!target &&
-            // Todo: filter edge table of the current node
-            (!isNonEmpty(sourceTargetSchemas) ? (
+          {status.edgeSelected && !!target && (
+            <>
+              {/* // Todo: filter edge table of the current node */}
               <CreateEdgeSchemaDialog
                 source={source}
                 target={target}
@@ -171,17 +179,20 @@ const CreateEdge = observer(
                 setOpen={setCreateEdgeSchemaOpen}
                 onSubmit={onSubmitCreateEdgeSchema}
               />
-            ) : (
-              <CreateEdgeDialog
-                source={source}
-                target={target}
-                schemas={sourceTargetSchemas}
-                directed={directed}
-                open={dialogStatus.createEdge}
-                setOpen={setCreateEdgeOpen}
-                onClose={onClose}
-              />
-            ))}
+              {isNonEmpty(sourceTargetSchemas) && (
+                <CreateEdgeDialog
+                  source={source}
+                  target={target}
+                  schemas={sourceTargetSchemas}
+                  directed={directed}
+                  open={dialogStatus.createEdge}
+                  setOpen={setCreateEdgeOpen}
+                  onClose={onClose}
+                  onCreateSchemaClick={onCreateSchemaClickCreateEdge}
+                />
+              )}
+            </>
+          )}
         </>
       );
     }
