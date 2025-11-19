@@ -29,6 +29,17 @@ import {
 import { Dialog, DialogTrigger } from "~/components/ui/dialog";
 import { cn } from "~/lib/utils";
 import { useAsyncFn } from "~/hooks/use-async-fn";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "~/components/ui/alert-dialog";
 
 export default function ImportDropdown({
   database,
@@ -171,21 +182,48 @@ function ImportListSelector({
                       Active
                     </span>
                   ) : (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        handleDelete(entry);
-                      }}
-                    >
-                      {isDeleting ? (
-                        <Loader className="animate-spin" />
-                      ) : (
-                        <Trash className="size-4" />
-                      )}
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Trash className="size-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            Are you sure you want to delete this database?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently remove the selected database
+                            and all of its contents. This action cannot be
+                            undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Cancel
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(entry);
+                            }}
+                          >
+                            {isDeleting ? (
+                              <Loader className="animate-spin" />
+                            ) : (
+                              "Delete"
+                            )}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   )}
                 </div>
               </CommandItem>
