@@ -1,12 +1,12 @@
 import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router";
 
 import { Button } from "~/components/ui/button";
 import Logo from "~/components/ui/logo";
 import GlowBorderCard from "~/features/landing/glow-border-card";
-import useNavigateApp from "~/features/landing/use-navigate-app";
 
 export default function DesktopNavbar() {
-  const { navigateToApp } = useNavigateApp();
+  const navigate = useNavigate();
 
   return (
     <div className="relative flex items-center justify-between px-14 py-4">
@@ -61,7 +61,7 @@ export default function DesktopNavbar() {
           </GlowBorderCard>
         </nav>
       </div>
-      <Button onClick={navigateToApp}>
+      <Button onClick={() => navigate("/app")}>
         Get Started <ArrowRight className="size-4" />
       </Button>
     </div>

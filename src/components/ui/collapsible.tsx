@@ -1,5 +1,7 @@
 import * as CollapsiblePrimitive from "@radix-ui/react-collapsible";
 
+import { cn } from "~/lib/utils";
+
 function Collapsible({
   ...props
 }: React.ComponentProps<typeof CollapsiblePrimitive.Root>) {
@@ -13,6 +15,7 @@ function CollapsibleTrigger({
     <CollapsiblePrimitive.CollapsibleTrigger
       data-slot="collapsible-trigger"
       {...props}
+      className={cn("cursor-pointer", props.className)}
     />
   );
 }

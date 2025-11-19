@@ -1,13 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { X, Menu, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router";
 
 import { Button } from "~/components/ui/button";
 import Logo from "~/components/ui/logo";
-import useNavigateApp from "~/features/landing/use-navigate-app";
 
 export default function MobileNavbar() {
-  const { navigateToApp } = useNavigateApp();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -163,7 +163,7 @@ export default function MobileNavbar() {
           className="mx-auto w-full mb-6"
           onClick={() => {
             setOpen(false);
-            navigateToApp();
+            navigate("/app");
           }}
           size="lg"
         >

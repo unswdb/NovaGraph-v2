@@ -1,7 +1,6 @@
 import { gsap } from "gsap";
 import SplitText from "gsap/SplitText";
 import ScrollTrigger from "gsap/ScrollTrigger";
-import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 import { Loader } from "lucide-react";
 
@@ -14,7 +13,6 @@ import HowItWorks from "./sections/how-it-works";
 import CTA from "./sections/cta";
 import Footer from "./sections/footer";
 import ScrollUp from "./scroll-up";
-import { LS_KEY } from "./use-navigate-app";
 
 // Assets to preload
 const ASSETS = [
@@ -27,7 +25,6 @@ const ASSETS = [
 ];
 
 export default function Home() {
-  const navigate = useNavigate();
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -43,13 +40,6 @@ export default function Home() {
       });
 
     const loadAll = async () => {
-      // Redirect to app if user has visited /app previously
-      const preference = localStorage.getItem(LS_KEY);
-      if (preference === "app") {
-        navigate("/app", { replace: true });
-        return;
-      }
-
       // Wait for fonts and images
       await Promise.all([
         document.fonts.ready ?? Promise.resolve(),
@@ -74,7 +64,7 @@ export default function Home() {
     };
 
     loadAll();
-  }, [navigate]);
+  }, []);
 
   if (!isLoaded) {
     return (

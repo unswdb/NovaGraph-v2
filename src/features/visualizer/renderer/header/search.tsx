@@ -358,6 +358,10 @@ function DesktopSearch({
   filteredNodes: GraphNode[];
   handleOnSelect: (node: GraphNode) => void;
 }) {
+  // Refs
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // States
   const [isExpanded, setIsExpanded] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
@@ -408,7 +412,7 @@ function DesktopSearch({
       )}
     >
       {/* Input */}
-      <div className="relative">
+      <div ref={containerRef} className="relative">
         <Command shouldFilter={false}>
           <CommandInput
             ref={inputRef}
@@ -416,7 +420,13 @@ function DesktopSearch({
             onValueChange={setSearchText}
             placeholder={`Find by ${currentAccessor.label}...`}
             onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
+            onBlur={(e) => {
+              const next = e.relatedTarget as HTMLElement | null;
+              // Only close if focus moved *outside* the search wrapper
+              if (!next || !containerRef.current?.contains(next)) {
+                setIsFocused(false);
+              }
+            }}
           />
           {/* List of nodes */}
           {isFocused && (
@@ -452,7 +462,10 @@ function DesktopSearch({
                       >
                         <CommandItem
                           value={value}
-                          onSelect={() => handleOnSelect(node)}
+                          onSelect={() => {
+                            handleOnSelect(node);
+                            setIsFocused(false);
+                          }}
                         >
                           <span className="mr-2 truncate">{value}</span>
                           <span className="text-typography-tertiary truncate">
