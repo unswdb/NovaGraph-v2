@@ -130,7 +130,9 @@ const EdgeListItem = observer(
             >
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="truncate">{String(target._primaryKeyValue)} </span>
+                  <span className="truncate">
+                    {String(target._primaryKeyValue)}{" "}
+                  </span>
                 </TooltipTrigger>
                 <TooltipContent>
                   Label: {String(target._primaryKeyValue)}
