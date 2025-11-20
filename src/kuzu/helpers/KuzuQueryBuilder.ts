@@ -702,5 +702,5 @@ function _formatQueryInput(value: any) {
     return "NULL";
   }
 
-  throw Error("Unsupported type at: " + value + " - type: " + typeof value);
+  throw new Error("Unsupported type at: " + value + " - type: " + typeof value);
 }

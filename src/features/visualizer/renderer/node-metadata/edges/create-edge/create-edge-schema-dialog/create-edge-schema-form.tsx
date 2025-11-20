@@ -135,7 +135,7 @@ const CreateEdgeSchemaForm = observer(
     const handleOnSubmit = async () => {
       if (isReadyToSubmit) {
         if (tableName.value === undefined) {
-          throw Error("Empty or undefined table name");
+          throw new Error("Empty or undefined table name");
         }
         await createEdgeSchema(
           tableName.value,

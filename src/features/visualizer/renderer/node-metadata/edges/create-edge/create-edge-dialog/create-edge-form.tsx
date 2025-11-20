@@ -80,11 +80,11 @@ const CreateEdgeDialogForm = observer(
 
     const handleSubmit = async () => {
       if (edgeTablesMap === undefined) {
-        throw Error("Missing edge table when adding edge");
+        throw new Error("Missing edge table when adding edge");
       }
       const edgeSchema = edgeTablesMap.get(selectedEdgeSchema);
       if (edgeSchema === undefined) {
-        throw Error(`Edge schema '${selectedEdgeSchema}' not found`);
+        throw new Error(`Edge schema '${selectedEdgeSchema}' not found`);
       }
       await createEdge(source, target, edgeSchema, values);
     };
