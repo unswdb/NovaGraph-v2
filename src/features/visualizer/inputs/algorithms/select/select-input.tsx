@@ -51,7 +51,7 @@ function buildItems(
       .filter((n) => !blacklist.has(n))
       .map((n) => ({
         value: n.id,
-        label: `${n._primaryKeyValue} (${n.tableName})`,
+        label: `${String(n._primaryKeyValue)} (${n.tableName})`,
       }));
   }
 

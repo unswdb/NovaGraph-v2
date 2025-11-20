@@ -50,7 +50,7 @@ export default function NodeMetadata({
       )}
     >
       <CardHeader className="px-4">
-        <CardTitle className="truncate">Node {node._primaryKeyValue}</CardTitle>
+        <CardTitle className="truncate">Node {String(node._primaryKeyValue)}</CardTitle>
         <CardDescription className="truncate">
           View and edit details to a node
         </CardDescription>

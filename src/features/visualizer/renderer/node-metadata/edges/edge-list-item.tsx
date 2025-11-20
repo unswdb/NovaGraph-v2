@@ -130,10 +130,10 @@ const EdgeListItem = observer(
             >
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="truncate">{target._primaryKeyValue} </span>
+                  <span className="truncate">{String(target._primaryKeyValue)} </span>
                 </TooltipTrigger>
                 <TooltipContent>
-                  Label: {target._primaryKeyValue}
+                  Label: {String(target._primaryKeyValue)}
                 </TooltipContent>
               </Tooltip>
             </Button>
@@ -143,8 +143,8 @@ const EdgeListItem = observer(
               <DialogTitle>
                 Edge{" "}
                 <b>
-                  {source._primaryKeyValue} {directed ? "→" : "↔"}{" "}
-                  {target._primaryKeyValue}
+                  {String(source._primaryKeyValue)} {directed ? "→" : "↔"}{" "}
+                  {String(target._primaryKeyValue)}
                 </b>
               </DialogTitle>
               <DialogDescription>

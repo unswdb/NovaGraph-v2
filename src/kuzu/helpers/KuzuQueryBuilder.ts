@@ -628,34 +628,79 @@ function _formatBlob(value: Uint8Array): string {
   return `BLOB('${hexString}')`;
 }
 
+function _isStringValue(value: any): boolean {
+  return typeof value === "string" || value instanceof String;
+}
+
+function _isNumberValue(value: any): boolean {
+  return typeof value === "number" || value instanceof Number;
+}
+
+function _isBooleanValue(value: any): boolean {
+  return typeof value === "boolean" || value instanceof Boolean;
+}
+
+function _isDateOnlyValue(value: any): boolean {
+  if (value instanceof Date) return true;
+  if (_isStringValue(value)) {
+    const v = String(value);
+    return /^\d{4}-\d{2}-\d{2}$/.test(v);
+  }
+  return false;
+}
+
+function _formatDateOnlyValue(value: any): string {
+  let isoDate = value;
+  if (value && typeof value.toISOString === "function") {
+    isoDate = value.toISOString().split("T")[0];
+  }
+  return `date("${_esc(String(isoDate))}")`;
+}
+
+function _isTimestampValue(value: any): boolean {
+  if (value instanceof Date) return true;
+  if (_isStringValue(value)) {
+    const v = String(value);
+    return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v);
+  }
+  return false;
+}
+
+function _formatTimestampValue(value: any): string {
+  return `timestamp("${_esc(_normalizeTimestamp(String(value)))}")`;
+}
+
 function _formatQueryInput(value: any) {
   const inferredType = typeof value;
 
   // Handle BLOB type (Uint8Array from File.arrayBuffer())
   if (value instanceof Uint8Array) {
     return _formatBlob(value);
-  } else if (
-    value instanceof Date ||
-    (inferredType === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value))
-  ) {
-    let isoDate = value;
-    if (value && typeof value.toISOString === "function") {
-      isoDate = value.toISOString().split("T")[0];
-    }
-    return `date("${_esc(isoDate)}")`;
-  } else if (
-    value instanceof Date ||
-    (inferredType === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value))
-  ) {
-    return `timestamp("${_esc(_normalizeTimestamp(value))}")`;
-  } else if (inferredType === "string") {
-    return `"${_esc(value)}"`;
-  } else if (inferredType === "number") {
+  }
+
+  // Dates and time
+  if (_isDateOnlyValue(value)) {
+    return _formatDateOnlyValue(value);
+  }
+  if (_isTimestampValue(value)) {
+    return _formatTimestampValue(value);
+  }
+
+  // Primitives
+  if (_isStringValue(value)) {
+    return `"${_esc(String(value))}"`;
+  }
+  if (_isNumberValue(value)) {
     return value;
-  } else if (inferredType === "boolean") {
+  }
+  if (_isBooleanValue(value)) {
     return value;
-  } else if (inferredType === undefined) {
+  }
+
+  // Undefined → NULL
+  if (inferredType === undefined) {
     return "NULL";
   }
-  throw Error("Unsupported type at: " + value);
+
+  throw Error("Unsupported type at: " + value + " - type: " + typeof value);
 }
