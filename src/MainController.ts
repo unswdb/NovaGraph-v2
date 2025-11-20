@@ -37,7 +37,7 @@ class MainController {
 
   getAlgorithm() {
     if (this._IgraphController === undefined) {
-      throw Error("IgraphController is undefinned");
+      throw new Error("IgraphController is undefinned");
     }
     return this._IgraphController;
   }
