@@ -274,7 +274,7 @@ export default class VisualizerStore {
       const builtNode = {
         id: String(n.id),
         _primaryKey: String(n._primaryKey),
-        _primaryKeyValue: String(n._primaryKeyValue),
+        _primaryKeyValue: n._primaryKeyValue,
         tableName: String(n.tableName),
         ...(n.attributes ? { attributes: n.attributes } : {}),
       };

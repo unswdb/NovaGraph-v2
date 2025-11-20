@@ -123,6 +123,11 @@ const GraphRenderer = observer(({ className }: { className?: string }) => {
   const selectNode = (node: GraphNode | null | undefined) => {
     zoomToNode(node);
     setClickedNode(node ?? null);
+    console.log("begin selectnode ")
+    console.log(node)
+    console.log("begin selectnode ")
+
+
   };
 
   const unselectNode = (_: GraphNode | null | undefined) => {

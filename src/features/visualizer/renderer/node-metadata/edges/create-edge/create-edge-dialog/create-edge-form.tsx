@@ -26,6 +26,11 @@ const CreateEdgeDialogForm = observer(
     selectedEdgeSchema: string;
     onClose: () => void;
   }) => {
+    console.log("right after func")
+    console.log(source)
+    console.log(target)
+    console.log("right after func")
+
     const { database, controller, setGraphState } = useStore();
     const { edgeTablesMap } = database.graph;
 
@@ -86,6 +91,12 @@ const CreateEdgeDialogForm = observer(
       if (edgeSchema === undefined) {
         throw Error(`Edge schema '${selectedEdgeSchema}' not found`);
       }
+      console.log("Inside fe handle submit")
+      console.log(source)
+      console.log(target)
+
+      console.log("Exit fe handle submit")
+
       await createEdge(source, target, edgeSchema, values);
     };
 

@@ -37,7 +37,7 @@ export function createMapIdBack(
       }
       return String(mapped);
     }
-    return `${mappedNode._primaryKeyValue} (${mappedNode.tableName})`;
+    return `${String(mappedNode._primaryKeyValue)} (${mappedNode.tableName})`;
   };
   return { mapIdBack, mapLabelBack };
 }
