@@ -82,7 +82,7 @@ export type PropsForText<I> = I extends TextInput
 
 ### 4. Create the Input Component (`[name]-input.tsx`)
 
-Implement the React component for the input. Use the props and value types defined in `types.ts`.
+Implement the React component for the input. Use the props and value types defined in your `types.ts`.
 
 ### 5. Define the Entry Point (`index.tsx`)
 
@@ -184,4 +184,4 @@ export type PropsForInput<I> =
 
 ## Conclusion
 
-By following this guide, you can create new input components that integrate seamlessly into NovaGraph's visualizer. Ensure proper registration and documentation for each input component to maintain consistency and clarity across the codebase.
+With this guide, you can create new input components that integrate seamlessly into NovaGraph's visualizer. Ensure proper registration and documentation for each input component to maintain consistency and clarity across the codebase.

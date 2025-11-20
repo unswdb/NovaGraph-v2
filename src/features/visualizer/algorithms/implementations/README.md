@@ -6,7 +6,7 @@ The `algorithms/` folder contains implementations of algorithms that can be run 
 
 ### 1. Ensure Algorithm Implementation Exists
 
-Before adding a new algorithm, ensure that the algorithm is implemented in `igraph` (i.e., `wasm/`). The `wasmFunction` in the `GraphAlgorithm` interface directly calls the igraph implementation, so the algorithm must be available there.
+Before adding a new algorithm, make sure it is implemented in both `igraph` (inside `wasm/`) and in our `IgraphController` within the Kuzu controller. The `wasmFunction` defined in the `GraphAlgorithm` interface delegates to `IgraphController`, which then invokes the corresponding function in `igraph`. If the algorithm isn’t implemented in both layers, it cannot be called.
 
 ### 2. Create a New File
 
@@ -17,7 +17,7 @@ To create a new algorithm option:
 
 ### 3. Define the Algorithm
 
-Inside the file, define the algorithm based on the `GraphAlgorithm<TData>` interface located in `implementations/types.ts`. Below is the definition of the interface:
+Inside the file, define the algorithm based on the `GraphAlgorithm<TData>` interface located in `implementations/types.ts`.
 
 Example implementation:
 
@@ -35,8 +35,8 @@ export const bfs = createGraphAlgorithm<BFSOutputData>({
       required: true,
     }),
   ],
-  wasmFunction: (controller, [args]) => {
-    return await controller.algorithms.BFS(args);
+  wasmFunction: async (igraphController, [arg1]) => {
+    return await igraphController.bfs(arg1);
   },
   output: (props) => <BFS {...props} />,
 });
@@ -81,4 +81,4 @@ Algorithms within each folder are automatically sorted alphabetically (A-Z). How
 
 ## Conclusion
 
-By following this guide, you can extend algorithm options in NovaGraph's visualizer to support new graph algorithms. Ensure proper validation, compatibility, and registration for each new algorithm to maintain consistency and reliability across the codebase.
+With this guide, you can extend algorithm options in NovaGraph's visualizer to support new graph algorithms. Ensure proper validation, compatibility, and registration for each new algorithm to maintain consistency and reliability across the codebase.

@@ -1,6 +1,6 @@
 # Extending Schema Inputs for NovaGraph Visualizer
 
-The schema-inputs folder contains implementations of inputs directly mapped to types supported by Kuzu, as defined in [Kuzu Data Types](https://docs.kuzudb.com/cypher/data-types/). During early development, we focused on types that we could clearly validate with edge cases we could anticipate, rather than supporting all types at once. If you decide to extend support to more types in the future, this guide will help you add new schema inputs to NovaGraph's visualizer :)
+The schema-inputs folder contains implementations of inputs directly mapped to types supported by Kuzu, as defined in [Kuzu Data Types](https://kuzudb.github.io/docs/cypher/data-types/). During early development, we focused on types that we could clearly validate with edge cases we could anticipate, rather than supporting all types at once. If you decide to extend support to more types in the future, this guide will help you add new schema inputs to NovaGraph's visualizer.
 
 ## Steps to Extend Schema Inputs
 
@@ -13,18 +13,22 @@ To support a new schema input, create a new file under implementations/ with a n
 Inside the file, define the schema input class based on the `SchemaInput` interface located in `schema-inputs/types.ts`. Below is the definition of the `SchemaInput` interface:
 
 ```ts
-export interface SchemaInput<I extends InputType> {
+export interface SchemaInput<
+  I extends InputType,
+  T extends string = string,
+  C extends readonly FieldContextKind[] = readonly FieldContextKind[],
+> {
   /** Type/name of the Kuzu type */
-  readonly type: string;
+  readonly type: T;
 
   /** Label/display name of the Kuzu type when shown as an option */
   readonly displayName: string;
 
   /** Contexts where the type is supported (e.g., primary, non-primary, or both) */
-  readonly contexts: readonly FieldContextKind[];
+  readonly contexts: C;
 
-  /** Function that builds the input (maps back to inputs supported in inputs/) */
-  readonly build: (args: WithoutValidator<I>) => I;
+  /** Function that builds the input */
+  readonly build: (args: PropsForInput<I>) => I;
 }
 ```
 
@@ -35,14 +39,11 @@ The build function maps directly back to inputs supported in the `inputs/` folde
 Here’s an example of how to define a schema input for the INT8 type:
 
 ```ts
-import { createNumberInput, type NumberInput } from "../../inputs";
-import { defineSchemaInput } from "../types";
-
-export const Int8SchemaInput = defineSchemaInput<NumberInput>({
-  type: "INT8",
+export const Int8SchemaInput = defineSchemaInput({
+  type: "INT8" as const,
   displayName: "INT8",
   contexts: ["primary", "non-primary"],
-  build: (args) => {
+  build: (args: PropsForInput<NumberInput>) => {
     return createNumberInput({
       ...args,
       min: -128,
@@ -51,6 +52,9 @@ export const Int8SchemaInput = defineSchemaInput<NumberInput>({
       validator: (n) => {
         if (!Number.isInteger(n)) {
           return { success: false, message: "Must be an integer" };
+        }
+        if (!!args.validator) {
+          return args.validator(n);
         }
         return { success: true };
       },
@@ -70,6 +74,7 @@ After defining the schema input, register it in `implementations/index.ts` to ma
 Ensure the type can be readily supported in the system. For example:
 
 - `INT64`: Requires an input that supports `BigInt` because it exceeds the range of JavaScript's `Number` type.
+- `INT128`: Not supported. The algorithm can’t handle value with this type because igraph only supports 32-bit values.
 - `DECIMAL`: May require specialized handling for precision and scale.
 
 ### 2. Edge Cases
@@ -91,4 +96,4 @@ Check the level of support for the type in the Kuzu side of the codebase (`kuzu/
 
 ## Conclusion
 
-By following this guide, you can extend schema inputs in NovaGraph's visualizer to support additional Kuzu types. Ensure proper validation, compatibility, and registration for each new type to maintain consistency and reliability across the codebase.
+With this guide, you can extend schema inputs in NovaGraph's visualizer to support additional Kuzu types. Ensure proper validation, compatibility, and registration for each new type to maintain consistency and reliability across the codebase.
