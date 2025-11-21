@@ -10,13 +10,13 @@ MainController -> IgraphController
 IgraphController -> WASM (igraph C++)
 
 - `src/MainController.ts` — Orchestrates init, exposes DB API and algorithms
-  - Details: `../src/MainController.DOCS.md`
+  - Details: `../../src/README.md`
 - `src/kuzu/KuzuController.ts` — Facade over storage services (in-memory/persistent; sync/async)
-  - Details: `../src/kuzu/KuzuController.DOCS.md`
+  - Details: `../../src/kuzu/README.md`
 - `src/igraph/IgraphController.ts` — Prepares data and calls WASM algorithms
-  - Details: `../src/igraph/IgraphController.DOCS.md`
+  - Details: `../../src/igraph/README.md`
 - `src/wasm/graph.cpp` — C++ igraph core compiled to WASM with global graph state
-  - Details: `../src/wasm/graph.DOCS.md`
+  - Details: `../../src/wasm/README.md`
 
 ### Key data handoffs
 - Kuzu snapshot -> arrays -> WASM graph rebuild

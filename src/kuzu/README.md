@@ -67,7 +67,7 @@ Notes:
 - Persistent services add IDBFS save/load and DB management; in-memory services omit those.
 
 ### Pointers to more detail
-- Orchestration and consumers: see `../MainController.DOCS.md`
-- Graph analytics pathway using snapshots: see `../igraph/IgraphController.DOCS.md`
+- Orchestration and consumers: see `../README.md`
+- Graph analytics pathway using snapshots: see `../igraph/README.md`
 
 

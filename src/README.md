@@ -1,8 +1,8 @@
 ## MainController.ts — Role, Structure, Data Flow
 
 - Role: Orchestrates system initialization and exposes two main capabilities:
-  - Database operations via `kuzuController` (see `kuzu/KuzuController.DOCS.md` for details)
-  - Graph analytics via `IgraphController` + WASM (see `igraph/IgraphController.DOCS.md`)
+  - Database operations via `kuzuController` (see `kuzu/README.md` for details)
+  - Graph analytics via `IgraphController` + WASM (see `igraph/README.md`)
 
 ### Section breakdown inside MainController
 - Private sector
@@ -51,5 +51,7 @@ Notes:
 - Direction flag comes from `db.getGraphDirection()`; algorithms that require directed graphs enforce it in `IgraphController`.
 
 ### Pointers to more detail
-- Database facade and storage modes: see `kuzu/KuzuController.DOCS.md`
-- Graph algorithms, data preparation, and WASM: see `igraph/IgraphController.DOCS.md`
+- Database facade and storage modes: see `kuzu/README.md`
+- Graph algorithms, data preparation, and WASM: see `igraph/README.md`
+
+
