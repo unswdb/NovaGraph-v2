@@ -224,6 +224,15 @@ function SchemaFieldInputs({
         showLabel: false,
         required: true,
         placeholder: "Enter property name...",
+        validator: (value) => {
+          if (/^[0-9]/.test(value.trim())) {
+            return {
+              success: false,
+              message: "Property name cannot start with a number",
+            };
+          }
+          return { success: true };
+        },
       }),
     []
   );
