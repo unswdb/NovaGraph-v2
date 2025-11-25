@@ -9,8 +9,11 @@ const SCHEMA_INPUTS = Object.values(SCHEMA_RAW_INPUTS);
 type AllSchemaInputs =
   (typeof SCHEMA_RAW_INPUTS)[keyof typeof SCHEMA_RAW_INPUTS];
 
-type SchemaInputTypesByContext<Context extends FieldContextKind> =
-  AllSchemaInputs extends SchemaInput<any, infer T, infer C>
+type SchemaInputTypesByContext<
+  Context extends FieldContextKind,
+  S = AllSchemaInputs,
+> =
+  S extends SchemaInput<any, infer T, infer C>
     ? Context extends C[number]
       ? T
       : never

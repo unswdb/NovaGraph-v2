@@ -7,9 +7,18 @@
 // @ts-ignore
 import kuzu from "kuzu-wasm/sync";
 
-import { snapshotGraphState } from "../../helpers/KuzuQueryExecutor";
+import {
+  snapshotGraphState,
+  validateSchemaPreflight,
+} from "../../helpers/KuzuQueryExecutor";
 import { queryResultColorMapExtraction } from "../../helpers/KuzuQueryResultExtractor";
 import type { DatabaseMetadata } from "../KuzuPersistentAsync";
+
+import type {
+  ErrorQueryResult,
+  SuccessQueryResult,
+} from "~/kuzu/helpers/KuzuQueryResultExtractor.types";
+import type { ColorMap } from "~/igraph/types";
 
 const DATABASES_DIR = "kuzu_databases";
 const DB_FILE_NAME = "database.kuzu";
@@ -245,6 +254,7 @@ function processWorkerQueryResult(result: any) {
     columnTypes,
   };
 }
+
 /**
  * Handle messages from the main thread
  */
@@ -475,14 +485,32 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
           throw new Error("Database not connected");
         }
 
+        if (!data.query.trim()) {
+          throw new Error("Query cannot be empty. Please enter a query first.");
+        }
+
         console.log("[Worker] Executing query:", data.query);
-        let currentResult = connection.query(data.query);
+
+        // Init variable
         const successQueries: any[] = [];
         const failedQueries: any[] = [];
         let allSuccess = true;
-        let colorMap = {};
+        let colorMap: ColorMap = {};
         let resultType = "graph";
 
+        const preflightResult = validateSchemaPreflight(connection, data.query);
+        if (preflightResult != null && !preflightResult.success) {
+          self.postMessage({
+            id,
+            type,
+            data: preflightResult,
+          } as WorkerResponse);
+          return;
+        }
+
+        let currentResult = connection.query(data.query);
+
+        // Loop through each query result and collect successnesss
         while (currentResult) {
           const queryResult = processWorkerQueryResult(currentResult);
           if (queryResult.success) {
@@ -492,10 +520,8 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
             failedQueries.push(queryResult);
           }
 
-          if (
-            currentResult.hasNextQueryResult &&
-            currentResult.hasNextQueryResult()
-          ) {
+          // Check last query result
+          if (currentResult.hasNextQueryResult()) {
             currentResult = currentResult.getNextQueryResult();
             continue;
           } else {
@@ -504,17 +530,12 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
           }
         }
 
-        if (currentResult && typeof currentResult.close === "function") {
-          currentResult.close();
-        }
+        // Get snapshot set to nodes and edges
+        const { nodes, edges, nodeTables, edgeTables } =
+          snapshotGraphState(connection);
 
-        const graphState = snapshotGraphState(connection);
-        const errorMessages = failedQueries
-          .map((queryResult) => queryResult?.message)
-          .filter((msg): msg is string => Boolean(msg && msg.trim()));
-        const failureMessage = errorMessages.length
-          ? errorMessages.join(" | ")
-          : "Some queries failed. Check results for details.";
+        // Gracefully close the query result object
+        currentResult.close();
 
         // Auto-save after query execution
         if (data.autoSave !== false) {
@@ -529,12 +550,12 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
             successQueries,
             failedQueries,
             message: allSuccess
-              ? "All queries executed successfully"
-              : failureMessage,
-            nodes: graphState.nodes,
-            edges: graphState.edges,
-            nodeTables: graphState.nodeTables,
-            edgeTables: graphState.edgeTables,
+              ? `All queries succeeded`
+              : `Some queries failed. Check results for details.`,
+            nodes,
+            edges,
+            nodeTables,
+            edgeTables,
             colorMap,
             resultType,
           },
