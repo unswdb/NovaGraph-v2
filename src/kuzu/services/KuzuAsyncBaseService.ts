@@ -25,6 +25,13 @@ export default class KuzuAsyncBaseService extends KuzuBaseService {
     super();
   }
 
+  protected failPendingRequests(message: string) {
+    this.pendingRequests.forEach((request) =>
+      request.reject(new Error(message))
+    );
+    this.pendingRequests.clear();
+  }
+
   /**
    * Get the file system for this service
    * Note: In worker-based implementation, file system operations are proxied through the worker
@@ -38,15 +45,21 @@ export default class KuzuAsyncBaseService extends KuzuBaseService {
   /**
    * Initialize the async in-memory database
    */
-  protected async initialize(createWorker: () => Worker) {
+  protected async initialize(
+    createWorker: () => Worker,
+    initData: Record<string, unknown> = {}
+  ) {
     if (this._initializationPromise) {
       return this._initializationPromise;
     }
-    this._initializationPromise = this._doInitialize(createWorker);
+    this._initializationPromise = this._doInitialize(createWorker, initData);
     return this._initializationPromise;
   }
 
-  private async _doInitialize(createWorker: () => Worker) {
+  private async _doInitialize(
+    createWorker: () => Worker,
+    initData: Record<string, unknown>
+  ) {
     // Create Web Worker
     this.worker = createWorker();
 
@@ -62,16 +75,18 @@ export default class KuzuAsyncBaseService extends KuzuBaseService {
 
     this.worker.onerror = (error) => {
       console.error("Worker error:", error);
-      this.pendingRequests.forEach((request) => {
-        request.reject(
-          new Error(`Worker error: ${error.message || "Unknown error"}`)
-        );
-      });
-      this.pendingRequests.clear();
+      this.failPendingRequests(
+        `Worker error: ${error.message || "Unknown error"}`
+      );
+    };
+
+    this.worker.onmessageerror = (error) => {
+      console.error("Worker message error:", error);
+      this.failPendingRequests("Worker message channel closed");
     };
 
     // Initialize the worker
-    await this.sendMessage("init", {});
+    await this.sendMessage("init", initData);
   }
 
   /**

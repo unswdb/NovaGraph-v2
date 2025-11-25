@@ -1,290 +1,134 @@
 /**
- * Web Worker for Kuzu In-Memory Async Mode
- * Runs Kuzu database operations in a separate thread to avoid blocking the main UI thread
+ * Entry shim for the in-memory Kuzu worker.
+ * React Router's dev HMR runtime expects `window` to exist, but a worker
+ * only exposes `self`. We polyfill the minimal globals before loading the
+ * actual implementation to keep dev builds happy.
  */
 
-// @ts-ignore
-import kuzu from "kuzu-wasm/sync";
+type MinimalDocNode = {
+  style: Record<string, unknown>;
+  setAttribute: (...args: unknown[]) => void;
+  remove: () => void;
+  appendChild?: (...args: unknown[]) => void;
+  removeChild?: (...args: unknown[]) => void;
+};
 
-import { snapshotGraphState } from "../../helpers/KuzuQueryExecutor";
-import { queryResultColorMapExtraction } from "../../helpers/KuzuQueryResultExtractor";
+const createStubNode = (): MinimalDocNode => ({
+  style: {},
+  setAttribute: () => {},
+  remove: () => {},
+});
 
-let db: any = null;
-let connection: any = null;
-let initialized = false;
+type DocumentShim = {
+  createElement?: (tag: string) => MinimalDocNode;
+  head?: {
+    appendChild?: (...args: unknown[]) => void;
+    removeChild?: (...args: unknown[]) => void;
+  };
+  body?: {
+    appendChild?: (...args: unknown[]) => void;
+    removeChild?: (...args: unknown[]) => void;
+  };
+  documentElement?: MinimalDocNode;
+  querySelector?: (...args: unknown[]) => null;
+  querySelectorAll?: (...args: unknown[]) => [];
+  addEventListener?: (...args: unknown[]) => void;
+  removeEventListener?: (...args: unknown[]) => void;
+};
 
-const normalizePath = (filePath: string) =>
-  filePath.startsWith("/") ? filePath : `/${filePath}`;
+type WorkerShimGlobal = Omit<
+  typeof globalThis,
+  "window" | "self" | "document" | "$RefreshReg$" | "$RefreshSig$"
+> & {
+  window?: Window & typeof globalThis;
+  self?: Window & typeof globalThis;
+  document?: DocumentShim;
+  $RefreshReg$?: (type: unknown, id: string) => void;
+  $RefreshSig$?: () => (type: unknown) => unknown;
+  __vite_plugin_react_preamble_installed__?: boolean;
+};
 
-function ensureParentDirectory(filePath: string) {
-  const fs = kuzu.getFS();
-  const normalized = normalizePath(filePath);
-  const lastSlash = normalized.lastIndexOf("/");
-  const dirPath = lastSlash <= 0 ? "/" : normalized.slice(0, lastSlash);
+type OnMessageHandler = (
+  this: Window & typeof globalThis,
+  ev: MessageEvent<any>
+) => any;
 
-  if (dirPath === "/") {
-    return;
-  }
+const globalScope = globalThis as unknown as WorkerShimGlobal;
 
-  const segments = dirPath.split("/").filter(Boolean);
-  let currentPath = "";
+const windowShim = globalScope as unknown as Window & typeof globalThis;
 
-  for (const segment of segments) {
-    currentPath += `/${segment}`;
-    try {
-      fs.mkdir(currentPath);
-    } catch (error) {
-      // Ignore already-existing directories
-    }
-  }
+if (typeof globalScope.window === "undefined") {
+  globalScope.window = windowShim;
 }
 
-interface WorkerMessage {
-  id: number;
-  type: string;
-  data: any;
+if (typeof globalScope.self === "undefined") {
+  globalScope.self = windowShim;
 }
 
-interface WorkerResponse {
-  id: number;
-  type: string;
-  data?: any;
-  error?: string;
-}
+// React Refresh expects these globals; provide fallbacks if the runtime
+// preamble hasn't run inside the worker context.
+globalScope.$RefreshReg$ ??= () => {};
+globalScope.$RefreshSig$ ??= () => (type) => type;
+globalScope.__vite_plugin_react_preamble_installed__ ??= true;
 
-/**
- * Process query results to make them serializable for postMessage
- */
-function processQueryResult(result: any) {
-  try {
-    const isSuccess =
-      typeof result.isSuccess === "function" ? result.isSuccess() : true;
-    if (!isSuccess) {
-      const message =
-        typeof result.getErrorMessage === "function"
-          ? result.getErrorMessage()
-          : "Query failed";
-      return { success: false, message };
+type QueuedMessageEvent = MessageEvent<any>;
+const queuedMessages: QueuedMessageEvent[] = [];
+const queueingHandler: OnMessageHandler = function (event) {
+  queuedMessages.push(event);
+};
+
+const flushQueuedMessages = () => {
+  const handler = globalScope.onmessage as OnMessageHandler | null;
+  if (
+    typeof handler === "function" &&
+    handler !== queueingHandler &&
+    queuedMessages.length > 0
+  ) {
+    const messages = queuedMessages.splice(0);
+    for (const message of messages) {
+      handler.call(windowShim, message);
     }
-
-    let objects: any[] = [];
-    if (typeof result.getAllObjects === "function") {
-      try {
-        const fetched = result.getAllObjects();
-        if (Array.isArray(fetched)) {
-          objects = fetched;
-        }
-      } catch (err) {
-        console.warn("[Worker] getAllObjects failed; treating as empty:", err);
-      }
-    }
-
-    return {
-      success: true,
-      objects,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      message: error instanceof Error ? error.message : String(error),
-    };
-  }
-}
-
-/**
- * Handle messages from the main thread
- */
-self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
-  const { id, type, data } = e.data;
-
-  try {
-    switch (type) {
-      case "init":
-        if (!initialized) {
-          console.log("[Worker] Initializing Kuzu async...");
-          await kuzu.init();
-          db = new kuzu.Database(":memory:");
-          connection = new kuzu.Connection(db);
-          initialized = true;
-          console.log("[Worker] Kuzu async initialized");
-        }
-
-        // Get version synchronously (ensure it's a string, not Promise)
-        let version = "0.11.3";
-        if (typeof kuzu.getVersion === "function") {
-          const versionValue = kuzu.getVersion();
-          if (versionValue instanceof Promise) {
-            version = await versionValue;
-          } else {
-            version = versionValue || "0.11.3";
-          }
-        }
-
-        self.postMessage({
-          id,
-          type,
-          data: {
-            success: true,
-            version: String(version),
-          },
-        });
-        break;
-
-      case "query":
-        if (!connection) {
-          throw new Error("Database not initialized");
-        }
-
-        console.log("[Worker] Executing query:", data.query);
-        let currentResult = connection.query(data.query);
-        const successQueries: any[] = [];
-        const failedQueries: any[] = [];
-        let allSuccess = true;
-        let colorMap = {};
-        let resultType = "graph";
-
-        while (currentResult) {
-          const queryResult = processQueryResult(currentResult);
-          if (queryResult.success) {
-            successQueries.push(queryResult);
-          } else {
-            allSuccess = false;
-            failedQueries.push(queryResult);
-          }
-
-          if (
-            currentResult.hasNextQueryResult &&
-            currentResult.hasNextQueryResult()
-          ) {
-            currentResult = currentResult.getNextQueryResult();
-            continue;
-          } else {
-            colorMap = queryResultColorMapExtraction(currentResult);
-            break;
-          }
-        }
-
-        if (currentResult && typeof currentResult.close === "function") {
-          currentResult.close();
-        }
-
-        const graphState = snapshotGraphState(connection);
-        const errorMessages = failedQueries
-          .map((queryResult) => queryResult?.message)
-          .filter((msg): msg is string => Boolean(msg && msg.trim()));
-        const failureMessage = errorMessages.length
-          ? errorMessages.join(" | ")
-          : "Some queries failed. Check results for details.";
-
-        self.postMessage({
-          id,
-          type,
-          data: {
-            success: allSuccess,
-            successQueries,
-            failedQueries,
-            nodes: graphState.nodes,
-            edges: graphState.edges,
-            nodeTables: graphState.nodeTables,
-            edgeTables: graphState.edgeTables,
-            colorMap,
-            resultType,
-          },
-        });
-        break;
-
-      case "snapshotGraphState":
-        if (!connection) {
-          throw new Error("Database not initialized");
-        }
-
-        self.postMessage({
-          id,
-          type,
-          data: snapshotGraphState(connection),
-        });
-        break;
-
-      case "getColumnTypes":
-        if (!connection) {
-          throw new Error("Database not initialized");
-        }
-
-        const typeResult = connection.query(data.query);
-        const columnTypes = typeResult.getColumnTypes();
-        typeResult.close();
-
-        self.postMessage({
-          id,
-          type,
-          data: { columnTypes },
-        });
-        break;
-
-      case "writeFile":
-        if (!data?.path) {
-          throw new Error("File path is required");
-        }
-        const targetPath = normalizePath(data.path);
-        ensureParentDirectory(targetPath);
-        kuzu.getFS().writeFile(targetPath, data.content ?? "");
-        self.postMessage({
-          id,
-          type,
-          data: { success: true, path: targetPath },
-        });
-        break;
-
-      case "deleteFile":
-        if (!data?.path) {
-          throw new Error("File path is required");
-        }
-        try {
-          const deletePath = normalizePath(data.path);
-          kuzu.getFS().unlink(deletePath);
-        } catch (error) {
-          console.warn("[Worker] deleteFile warning:", error);
-        }
-        self.postMessage({
-          id,
-          type,
-          data: { success: true },
-        });
-        break;
-
-      case "cleanup":
-        console.log("[Worker] Cleaning up...");
-        if (connection) {
-          connection.close();
-          connection = null;
-        }
-        if (db) {
-          db.close();
-          db = null;
-        }
-        initialized = false;
-
-        self.postMessage({
-          id,
-          type,
-          data: { success: true },
-        });
-        break;
-
-      default:
-        throw new Error(`Unknown message type: ${type}`);
-    }
-  } catch (error) {
-    console.error("[Worker] Error:", error);
-    self.postMessage({
-      id,
-      type,
-      error: error instanceof Error ? error.message : String(error),
-    });
   }
 };
 
-// Handle worker errors
-self.onerror = (error) => {
-  console.error("[Worker] Unhandled error:", error);
-};
+globalScope.onmessage = queueingHandler as typeof globalScope.onmessage;
+
+// Some dev-only helpers touch `document` to inject style tags. Provide a stub.
+if (typeof globalScope.document === "undefined") {
+  globalScope.document = {
+    createElement: () => createStubNode(),
+    head: { appendChild: () => {}, removeChild: () => {} },
+    body: { appendChild: () => {}, removeChild: () => {} },
+    documentElement: createStubNode(),
+    querySelector: () => null,
+    querySelectorAll: () => [],
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  };
+} else {
+  globalScope.document.createElement ??= () => createStubNode();
+  globalScope.document.head ??= {
+    appendChild: () => {},
+    removeChild: () => {},
+  };
+  globalScope.document.body ??= {
+    appendChild: () => {},
+    removeChild: () => {},
+  };
+  globalScope.document.documentElement ??= createStubNode();
+  globalScope.document.querySelector ??= () => null;
+  globalScope.document.querySelectorAll ??= () => [];
+  globalScope.document.addEventListener ??= () => {};
+  globalScope.document.removeEventListener ??= () => {};
+}
+
+import("./kuzu-inmemory.worker.impl")
+  .then(() => {
+    flushQueuedMessages();
+  })
+  .catch((error) => {
+    console.error("[Worker] Failed to initialize implementation:", error);
+    throw error;
+  });
+
+export {};

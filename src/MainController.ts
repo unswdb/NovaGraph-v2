@@ -12,7 +12,52 @@ class MainController {
   // Private sector
   private _IgraphController: undefined | IgraphController;
   private async _initKuzu() {
-    return await kuzuController.initialize("persistent", "async", {});
+    // 从环境变量读取配置，如果没有设置则使用默认值
+    // 支持两种方式：服务器端 (process.env) 和客户端 (import.meta.env)
+    const getEnv = (key: string): string | undefined => {
+      if (typeof process !== "undefined" && process.env) {
+        return process.env[key];
+      }
+      if (typeof import.meta !== "undefined" && import.meta.env) {
+        // Vite 环境变量需要 VITE_ 前缀，但我们也支持不带前缀的
+        return (import.meta.env as any)[key] || (import.meta.env as any)[`VITE_${key}`];
+      }
+      return undefined;
+    };
+    
+    const kuzuType = (getEnv("KUZU_TYPE") || "persistent").toLowerCase();
+    const kuzuMode = (getEnv("KUZU_MODE") || "async").toLowerCase();
+    const dbPath = getEnv("KUZU_DB_PATH");
+    
+    // 验证类型和模式
+    const validTypes = ["inmemory", "persistent"];
+    const validModes = ["sync", "async"];
+    
+    if (!validTypes.includes(kuzuType)) {
+      console.warn(
+        `Invalid KUZU_TYPE: ${kuzuType}. Valid values are: ${validTypes.join(", ")}. Using default: persistent`
+      );
+    }
+    
+    if (!validModes.includes(kuzuMode)) {
+      console.warn(
+        `Invalid KUZU_MODE: ${kuzuMode}. Valid values are: ${validModes.join(", ")}. Using default: async`
+      );
+    }
+    
+    const finalType = validTypes.includes(kuzuType) ? kuzuType : "persistent";
+    const finalMode = validModes.includes(kuzuMode) ? kuzuMode : "async";
+    
+    const options: { dbPath?: string; dbOptions?: Record<string, any> } = {};
+    if (dbPath) {
+      options.dbPath = dbPath;
+    }
+    
+    console.log(
+      `Initializing Kuzu with type: ${finalType}, mode: ${finalMode}${dbPath ? `, dbPath: ${dbPath}` : ""}`
+    );
+    
+    return kuzuController.initialize(finalType, finalMode, options);
   }
   private async _initIgraph() {
     return await this._IgraphController?.initIgraph();
