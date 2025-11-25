@@ -12,12 +12,27 @@ services:
       - /src/node_modules
     environment:
       - NODE_ENV=development
+      # Kuzu configuration: type can be "inmemory" or "persistent"
+      - KUZU_TYPE=${KUZU_TYPE:-persistent}
+      - VITE_KUZU_TYPE=${KUZU_TYPE:-persistent}
+      # Kuzu configuration: mode can be "sync" or "async"
+      - KUZU_MODE=${KUZU_MODE:-async}
+      - VITE_KUZU_MODE=${KUZU_MODE:-async}
+      # Optional: database path for persistent mode
+      - KUZU_DB_PATH=${KUZU_DB_PATH:-}
+      - VITE_KUZU_DB_PATH=${KUZU_DB_PATH:-}
     command: npm run dev
 
   novagraph-prod:
     build:
       context: .
       target: production
+      args:
+        # Kuzu configuration build arguments
+        # These are used during build time to inject into the Vite bundle
+        - KUZU_TYPE=${KUZU_TYPE:-persistent}
+        - KUZU_MODE=${KUZU_MODE:-async}
+        - KUZU_DB_PATH=${KUZU_DB_PATH:-}
     ports:
       - "3000:3000"
     environment:

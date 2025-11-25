@@ -262,8 +262,8 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
       this.worker = null;
     }
 
-    // Clear pending requests
-    this.pendingRequests.clear();
+    // Reject and clear pending requests to avoid hanging promises
+    this.failPendingRequests("KuzuPersistentAsync cleaned up");
 
     // Clear variable
     this.graphSnapshotStateCache = EMPTY_SNAPSHOT_GRAPH_STATE;
