@@ -4,7 +4,6 @@ export type NumberValues = number;
 
 export type NumberInput = BaseInputType<NumberValues> & {
   type: "number";
-  placeholder?: string;
   min?: number;
   max?: number;
   step?: number;

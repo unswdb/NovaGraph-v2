@@ -52,6 +52,7 @@ export interface BaseInputType<T> {
   id: string; // Unique identifier for the input
   key: string; // Key used to store the InputChangeResult object
   displayName: string; // Label or display name of the input
+  placeholder?: string; // Placeholder text for the input
   required?: boolean; // Whether the input is required
   showLabel?: boolean; // Whether to show the label/display name
   disabled?: boolean; // Whether the input is disabled

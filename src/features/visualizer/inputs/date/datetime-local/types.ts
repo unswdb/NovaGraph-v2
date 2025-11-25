@@ -23,7 +23,6 @@ export type DatetimeLocalParts = {
 
 export type DatetimeLocalInput = BaseInputType<DatetimeLocalValues> & {
   type: "datetime-local";
-  placeholder?: string;
   min?: DatetimeLocalParts;
   max?: DatetimeLocalParts;
   step?: number; // in seconds
