@@ -69,9 +69,18 @@ type InputTypeForSchemaKeyType<T extends SchemaKeyType> =
     ? I
     : never;
 
-type PropsForSchemaKeyType<T extends SchemaKeyType> = PropsForInput<
+type InputPropsForSchemaKeyType<T extends SchemaKeyType> = PropsForInput<
   InputTypeForSchemaKeyType<T>
 >;
+
+type SchemaValueUnion = PrimaryKeyValueType | NonPrimaryKeyValueType;
+
+type PropsForSchemaKeyType<T extends SchemaKeyType> = Omit<
+  InputPropsForSchemaKeyType<T>,
+  "defaultValue"
+> & {
+  defaultValue?: SchemaValueUnion;
+};
 
 export function createSchemaInput<T extends SchemaKeyType>(
   schemaType: T,
