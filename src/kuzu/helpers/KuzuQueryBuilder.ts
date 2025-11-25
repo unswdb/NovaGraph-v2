@@ -675,8 +675,6 @@ function _formatTimestampValue(value: any): string {
 }
 
 function _formatQueryInput(value: any) {
-  const inferredType = typeof value;
-
   // Handle BLOB type (Uint8Array from File.arrayBuffer())
   if (value instanceof Uint8Array) {
     return _formatBlob(value);
@@ -702,7 +700,7 @@ function _formatQueryInput(value: any) {
   }
 
   // Undefined → NULL
-  if (inferredType === undefined) {
+  if (value == null) {
     return "NULL";
   }
 

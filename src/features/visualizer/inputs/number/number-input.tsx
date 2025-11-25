@@ -25,7 +25,7 @@ export default function NumberInputComponent({
       setShowError(true);
       setErrorMessage("Please enter a valid number.");
       onChange({
-        value: undefined,
+        value: newValue,
         success: !required,
         message: "Invalid number",
       });
@@ -36,7 +36,7 @@ export default function NumberInputComponent({
       setShowError(true);
       setErrorMessage(`Value must be at least ${input.min}.`);
       onChange({
-        value: undefined,
+        value: newValue,
         success: !required,
         message: `Value must be at least ${input.min}.`,
       });
@@ -47,7 +47,7 @@ export default function NumberInputComponent({
       setShowError(true);
       setErrorMessage(`Value must not exceed ${input.max}.`);
       onChange({
-        value: undefined,
+        value: newValue,
         success: !required,
         message: `Value must not exceed ${input.max}.`,
       });
