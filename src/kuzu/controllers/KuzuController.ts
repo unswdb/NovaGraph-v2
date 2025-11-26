@@ -60,10 +60,10 @@ function hasDatabaseManagement(
     | KuzuPersistentAsync
     | null
 ): service is
-    | KuzuInMemorySync
-    | KuzuInMemoryAsync
-    | KuzuPersistentSync
-    | KuzuPersistentAsync {
+  | KuzuInMemorySync
+  | KuzuInMemoryAsync
+  | KuzuPersistentSync
+  | KuzuPersistentAsync {
   if (!service) return false;
   // Check if service has database management methods
   return (
@@ -525,7 +525,9 @@ class KuzuController {
       throw new Error("Kuzu service not initialized");
     }
     if (!hasDatabaseManagement(this._service)) {
-      throw new Error("disconnectFromDatabase is not available for this service");
+      throw new Error(
+        "disconnectFromDatabase is not available for this service"
+      );
     }
     await this._service.disconnectFromDatabase();
   }
@@ -559,7 +561,9 @@ class KuzuController {
       throw new Error("Kuzu service not initialized");
     }
     if (!hasDatabaseManagement(this._service)) {
-      throw new Error("getCurrentDatabaseName is not available for this service");
+      throw new Error(
+        "getCurrentDatabaseName is not available for this service"
+      );
     }
     const result = this._service.getCurrentDatabaseName();
     // Handle both sync (KuzuPersistentSync) and async (others) returns
@@ -575,7 +579,9 @@ class KuzuController {
       return null;
     }
     // Check if service has getCurrentDatabaseMetadata method
-    if (typeof (this._service as any).getCurrentDatabaseMetadata === "function") {
+    if (
+      typeof (this._service as any).getCurrentDatabaseMetadata === "function"
+    ) {
       return (this._service as any).getCurrentDatabaseMetadata();
     }
     return null;

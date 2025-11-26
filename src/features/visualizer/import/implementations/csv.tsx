@@ -162,7 +162,7 @@ export const ImportCSV: ImportOption = {
   }) => {
     const { name, nodes, edges } = values;
 
-    const databaseName = name.value as string;
+    const databaseName = (name.value as string).trim();
     const nodesFile = nodes.value as File;
     const edgesFile = edges.value as File;
 
