@@ -189,9 +189,7 @@ const EdgeListItem = observer(
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>
-                Are you sure you want to delete this edge?
-              </AlertDialogTitle>
+              <AlertDialogTitle>Delete this edge?</AlertDialogTitle>
               <AlertDialogDescription>
                 This will permanently remove the edge between the two nodes. The
                 nodes themselves will remain in the graph. The action cannot be
