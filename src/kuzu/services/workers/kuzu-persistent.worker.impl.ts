@@ -12,7 +12,7 @@ import {
   validateSchemaPreflight,
 } from "../../helpers/KuzuQueryExecutor";
 import { queryResultColorMapExtraction } from "../../helpers/KuzuQueryResultExtractor";
-import type { DatabaseMetadata } from "../KuzuPersistentAsync";
+import type { DatabaseMetadata } from "../KuzuDatabaseRecovery";
 
 import type {
   ErrorQueryResult,

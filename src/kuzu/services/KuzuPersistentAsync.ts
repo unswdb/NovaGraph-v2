@@ -15,21 +15,19 @@ import {
   type GraphSnapshotState,
 } from "~/features/visualizer/types";
 
-export type DatabaseMetadata = {
-  isDirected: boolean;
-  createdAt?: string;
-  lastModified?: string;
-  lastUsedAt?: string;
-};
+import {
+  type DatabaseMetadata,
+  type DatabaseRecoveryCallback,
+  getProblematicDatabases,
+  markDatabaseAsProblematic,
+  unmarkDatabaseAsProblematic,
+  isDatabaseConnectionError,
+  shouldTriggerRecovery,
+  clearProblematicDatabases as clearProblematicDatabasesUtil,
+} from "./KuzuDatabaseRecovery";
 
-/**
- * Callback type for database recovery notifications
- */
-export type DatabaseRecoveryCallback = (info: {
-  failedDatabase: string;
-  switchedToDatabase: string;
-  reason: string;
-}) => void;
+// Re-export types for backward compatibility
+export type { DatabaseMetadata, DatabaseRecoveryCallback };
 
 export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
   currentDatabaseName: string | null = null;
@@ -39,6 +37,31 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
 
   constructor() {
     super();
+    
+    // Set up page unload handler to mark current database as problematic if page crashes
+    if (typeof window !== 'undefined') {
+      // Use beforeunload to try to catch crashes
+      window.addEventListener('beforeunload', () => {
+        if (this.currentDatabaseName) {
+          // Don't mark here as it might be a normal page close
+          // Instead, we'll rely on error detection during connection
+        }
+      });
+      
+      // Listen for error events that might indicate a crash
+      window.addEventListener('error', (event) => {
+        if (
+          event.message?.includes('Out of Memory') ||
+          event.message?.includes('memory') ||
+          event.message?.includes('crash')
+        ) {
+          if (this.currentDatabaseName) {
+            console.warn(`[KuzuPersistentAsync] Detected crash, marking '${this.currentDatabaseName}' as problematic`);
+            markDatabaseAsProblematic(this.currentDatabaseName);
+          }
+        }
+      });
+    }
   }
 
   async initialize() {
@@ -65,6 +88,9 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
       console.error("[KuzuPersistentAsync] Initialization failed:", errorMessage);
       throw error;
     }
+    
+    // Clean up problematic database markers for databases that no longer exist
+    await this.cleanupNonExistentProblematicDatabases();
 
     const databases = await this.listDatabases().catch(() => [] as string[]);
     if (databases.length === 0) {
@@ -73,9 +99,43 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
       return;
     }
 
+    // Get list of problematic databases (those that caused crashes)
+    const problematicDatabases = getProblematicDatabases();
+    
+    // Filter out problematic databases
+    const availableDatabases = databases.filter(db => !problematicDatabases.has(db));
+    
+    if (availableDatabases.length === 0) {
+      // All databases are problematic, create a new default one
+      console.warn("[KuzuPersistentAsync] All databases are marked as problematic, creating new default database");
+      const skippedDatabase = this.currentDatabaseName || databases[0] || "unknown";
+      await this.createDatabase("default");
+      await this.connectToDatabase("default");
+      
+      // Notify callback about the switch
+      if (this.recoveryCallback) {
+        this.recoveryCallback({
+          failedDatabase: skippedDatabase,
+          switchedToDatabase: "default",
+          reason: `All databases are marked as problematic (likely caused crashes). Created new default database.`,
+        });
+      }
+      return;
+    }
+
+    // If currentDatabaseName is problematic, clear it and don't try to connect
+    const skippedProblematicDatabase = this.currentDatabaseName && problematicDatabases.has(this.currentDatabaseName)
+      ? this.currentDatabaseName
+      : null;
+    
+    if (skippedProblematicDatabase) {
+      console.warn(`[KuzuPersistentAsync] Current database '${skippedProblematicDatabase}' is marked as problematic, skipping it`);
+      this.currentDatabaseName = null;
+    }
+
     // Try to connect to databases, starting with the most recently used one
     const databasesWithMetadata = await Promise.all(
-      databases.map(async (name) => {
+      availableDatabases.map(async (name) => {
         const metadata = await this.getMetadata(name).catch(() => null);
         return { name, metadata };
       })
@@ -94,24 +154,59 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
     let connected = false;
     let lastError: Error | null = null;
     
-    // First, try the most recently used database (if currentDatabaseName is set, prioritize it)
-    const preferredDatabases = this.currentDatabaseName
-      ? [this.currentDatabaseName, ...sortedDatabases.map(d => d.name).filter(n => n !== this.currentDatabaseName), ...databases.filter(n => !sortedDatabases.some(s => s.name === n) && n !== this.currentDatabaseName)]
-      : [...sortedDatabases.map(d => d.name), ...databases.filter(n => !sortedDatabases.some(s => s.name === n))];
+    // First, try the most recently used database (if currentDatabaseName is set and not problematic, prioritize it)
+    const preferredDatabases = this.currentDatabaseName && !problematicDatabases.has(this.currentDatabaseName)
+      ? [this.currentDatabaseName, ...sortedDatabases.map(d => d.name).filter(n => n !== this.currentDatabaseName), ...availableDatabases.filter(n => !sortedDatabases.some(s => s.name === n) && n !== this.currentDatabaseName)]
+      : [...sortedDatabases.map(d => d.name), ...availableDatabases.filter(n => !sortedDatabases.some(s => s.name === n))];
+    
+    let failedDatabaseName: string | null = skippedProblematicDatabase;
     
     for (const dbName of preferredDatabases) {
+      // Double check it's not problematic (shouldn't happen, but safety check)
+      if (problematicDatabases.has(dbName)) {
+        console.warn(`[KuzuPersistentAsync] Skipping problematic database '${dbName}'`);
+        continue;
+      }
+      
       try {
         // connectToDatabase already has timeout protection, so we can call it directly
         await this.connectToDatabase(dbName);
         connected = true;
+        // If we successfully connected, remove it from problematic list (in case it was fixed)
+        unmarkDatabaseAsProblematic(dbName);
+        
+        // If we switched from a failed database, notify the callback
+        if (failedDatabaseName && this.recoveryCallback) {
+          this.recoveryCallback({
+            failedDatabase: failedDatabaseName,
+            switchedToDatabase: dbName,
+            reason: `Database '${failedDatabaseName}' failed to connect during initialization. Automatically switched to '${dbName}'.`,
+          });
+        }
         break;
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
         console.warn(`[KuzuPersistentAsync] Failed to connect to database '${dbName}':`, lastError.message);
         
-        // If this was a timeout or connection error, mark the database as potentially corrupted
-        // and continue to next database
-        if (this.isDatabaseConnectionError(lastError.message) || lastError.message.includes("timeout")) {
+        // Record the first failed database for notification
+        if (!failedDatabaseName) {
+          failedDatabaseName = dbName;
+        }
+        
+        // If this was a timeout, connection error, or memory-related error, mark the database as problematic
+        if (shouldTriggerRecovery(lastError.message)) {
+          // Mark as problematic to avoid trying again
+          markDatabaseAsProblematic(dbName);
+          
+          // Try to delete the problematic database
+          try {
+            console.warn(`[KuzuPersistentAsync] Attempting to delete problematic database '${dbName}' during initialization`);
+            await this.deleteDatabase(dbName);
+            console.log(`[KuzuPersistentAsync] Successfully deleted problematic database '${dbName}'`);
+          } catch (deleteError) {
+            console.warn(`[KuzuPersistentAsync] Failed to delete problematic database '${dbName}':`, deleteError);
+          }
+          
           // Continue to next database
           continue;
         }
@@ -125,6 +220,15 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
       try {
         await this.createDatabase("default");
         await this.connectToDatabase("default");
+        
+        // Notify callback about the switch
+        if (failedDatabaseName && this.recoveryCallback) {
+          this.recoveryCallback({
+            failedDatabase: failedDatabaseName,
+            switchedToDatabase: "default",
+            reason: `All databases failed to connect during initialization. Created new default database. Last error: ${lastError?.message || "Unknown error"}`,
+          });
+        }
       } catch (createError) {
         const errorMsg = createError instanceof Error ? createError.message : String(createError);
         throw new Error(`Failed to initialize: All databases failed and could not create default. Last error: ${lastError?.message || errorMsg}`);
@@ -162,13 +266,29 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
 
   /**
    * List all databases
+   * @param includeProblematic - If false, filter out databases marked as problematic (default: false)
    */
-  async listDatabases() {
+  async listDatabases(includeProblematic: boolean = false): Promise<string[]> {
     const result = await this.sendMessage<{
       success: true;
       databases: string[];
     }>("listDatabases", {});
-    return result.databases ?? [];
+    const allDatabases = result.databases ?? [];
+    
+    if (includeProblematic) {
+      return allDatabases;
+    }
+    
+    // Filter out problematic databases
+    const problematicDatabases = getProblematicDatabases();
+    return allDatabases.filter(db => !problematicDatabases.has(db));
+  }
+  
+  /**
+   * List all databases including problematic ones
+   */
+  async listAllDatabases(): Promise<string[]> {
+    return this.listDatabases(true);
   }
 
   /**
@@ -181,12 +301,39 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
 
   /**
    * Delete a database
+   * Can delete databases even if they are marked as problematic
    */
   async deleteDatabase(dbName: string) {
+    // Check if database exists (use listAllDatabases to include problematic ones)
+    const allDatabases = await this.listAllDatabases();
+    if (!allDatabases.includes(dbName)) {
+      throw new Error(`Database '${dbName}' does not exist`);
+    }
+    
+    // If this is the current database, disconnect first
+    if (this.currentDatabaseName === dbName) {
+      try {
+        await this.disconnectFromDatabase();
+      } catch {
+        // Ignore disconnect errors, continue with deletion
+      }
+    }
+    
+    // Delete the database
     await this.sendMessage<{ success: true; message: string }>(
       "deleteDatabase",
       { dbName }
     );
+    
+    // Remove from problematic databases list when database is deleted
+    unmarkDatabaseAsProblematic(dbName);
+    
+    // Clear the reference if this was the current database
+    if (this.currentDatabaseName === dbName) {
+      this.currentDatabaseName = null;
+      this.currentDatabaseMetadata = null;
+      this.graphSnapshotStateCache = EMPTY_SNAPSHOT_GRAPH_STATE;
+    }
   }
 
   /**
@@ -321,22 +468,63 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
   }
 
   /**
-   * Check if an error indicates database connection failure
+   * Get list of databases marked as problematic
    */
-  private isDatabaseConnectionError(error: Error | string): boolean {
-    const errorMessage = typeof error === 'string' ? error : error.message;
-    const connectionErrorPatterns = [
-      /database not connected/i,
-      /database.*does not exist/i,
-      /failed to connect/i,
-      /connection.*closed/i,
-      /database.*corrupted/i,
-      /database.*crash/i,
-      /database.*error/i,
-      /operation timeout/i,
-    ];
-    return connectionErrorPatterns.some(pattern => pattern.test(errorMessage));
+  getProblematicDatabases(): string[] {
+    return Array.from(getProblematicDatabases());
   }
+
+  /**
+   * Manually mark a database as problematic
+   */
+  markDatabaseAsProblematic(dbName: string) {
+    markDatabaseAsProblematic(dbName);
+  }
+
+  /**
+   * Remove a database from problematic list
+   */
+  unmarkDatabaseAsProblematic(dbName: string) {
+    unmarkDatabaseAsProblematic(dbName);
+  }
+
+  /**
+   * Clear all problematic database markers
+   */
+  clearProblematicDatabases() {
+    clearProblematicDatabasesUtil();
+  }
+
+  /**
+   * Clean up problematic database markers for databases that no longer exist
+   */
+  private async cleanupNonExistentProblematicDatabases() {
+    try {
+      const problematicDatabases = getProblematicDatabases();
+      if (problematicDatabases.size === 0) {
+        return;
+      }
+      
+      const allDatabases = await this.listAllDatabases();
+      const existingDatabases = new Set(allDatabases);
+      
+      // Remove markers for databases that no longer exist
+      let cleaned = false;
+      problematicDatabases.forEach((dbName) => {
+        if (!existingDatabases.has(dbName)) {
+          unmarkDatabaseAsProblematic(dbName);
+          cleaned = true;
+        }
+      });
+      
+      if (cleaned) {
+        console.log("[KuzuPersistentAsync] Cleaned up problematic markers for non-existent databases");
+      }
+    } catch (error) {
+      console.warn("[KuzuPersistentAsync] Failed to cleanup non-existent problematic databases:", error);
+    }
+  }
+
 
   /**
    * Attempt to recover by switching to another database
@@ -346,12 +534,29 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
     reason: string
   ): Promise<boolean> {
     try {
+      // Mark the failed database as problematic
+      markDatabaseAsProblematic(failedDatabaseName);
+      
+      // Try to delete the problematic database to free up space and allow recreation
+      try {
+        console.warn(`[KuzuPersistentAsync] Attempting to delete problematic database '${failedDatabaseName}'`);
+        await this.deleteDatabase(failedDatabaseName);
+        console.log(`[KuzuPersistentAsync] Successfully deleted problematic database '${failedDatabaseName}'`);
+      } catch (deleteError) {
+        // If deletion fails, log but continue with recovery
+        console.warn(`[KuzuPersistentAsync] Failed to delete problematic database '${failedDatabaseName}':`, deleteError);
+        // Note: The database is still marked as problematic, so it won't appear in lists
+      }
+      
       // Get list of available databases
       const databases = await this.listDatabases().catch(() => [] as string[]);
       
-      // Filter out the failed database
+      // Get problematic databases and filter them out
+      const problematicDatabases = getProblematicDatabases();
+      
+      // Filter out the failed database and all problematic databases
       const availableDatabases = databases.filter(
-        (db) => db !== failedDatabaseName
+        (db) => db !== failedDatabaseName && !problematicDatabases.has(db)
       );
 
       if (availableDatabases.length === 0) {
@@ -410,13 +615,29 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
       // Connect to the alternative database
       await this.connectToDatabase(targetDatabase);
 
-      // Notify callback
+      // Notify callback (this will trigger UI refresh)
       if (this.recoveryCallback) {
-        this.recoveryCallback({
-          failedDatabase: failedDatabaseName,
-          switchedToDatabase: targetDatabase,
-          reason,
-        });
+        // Use setTimeout to ensure connection is fully established before callback
+        setTimeout(() => {
+          if (this.recoveryCallback) {
+            this.recoveryCallback({
+              failedDatabase: failedDatabaseName,
+              switchedToDatabase: targetDatabase,
+              reason,
+            });
+          }
+        }, 0);
+      }
+      
+      // Trigger a custom event to notify UI to refresh database list
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('kuzu-database-switched', {
+          detail: {
+            failedDatabase: failedDatabaseName,
+            switchedToDatabase: targetDatabase,
+            reason,
+          }
+        }));
       }
 
       return true;
@@ -477,10 +698,27 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       
+      // Check if this is a memory-related error
+      if (this.currentDatabaseName && shouldTriggerRecovery(errorMessage)) {
+        const failedDb = this.currentDatabaseName;
+        console.error(`[KuzuPersistentAsync] Memory error detected with database '${failedDb}', marking as problematic`);
+        markDatabaseAsProblematic(failedDb);
+        
+        const recovered = await this.recoverFromDatabaseFailure(
+          failedDb,
+          `Memory error: ${errorMessage}`
+        );
+
+        if (recovered) {
+          // Retry the query on the new database
+          return this.executeQuery(query);
+        }
+      }
+      
       // Check if this is a database connection error
       if (
         this.currentDatabaseName &&
-        this.isDatabaseConnectionError(errorMessage)
+        isDatabaseConnectionError(errorMessage)
       ) {
         const failedDb = this.currentDatabaseName;
         const recovered = await this.recoverFromDatabaseFailure(
@@ -501,11 +739,23 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
 
   /**
    * Connect to database with automatic recovery
-   * Uses timeout to prevent hanging on corrupted databases
+   * Uses shorter timeout to quickly detect problematic databases
    */
   async connectToDatabase(dbName: string) {
+    // First, check if database exists
+    const allDatabases = await this.listAllDatabases();
+    if (!allDatabases.includes(dbName)) {
+      throw new Error(`Database '${dbName}' does not exist`);
+    }
+    
+    // Then check if database is marked as problematic
+    const problematicDatabases = getProblematicDatabases();
+    if (problematicDatabases.has(dbName)) {
+      throw new Error(`Database '${dbName}' is marked as problematic and will not be connected`);
+    }
+
     try {
-      // Add timeout to prevent hanging on corrupted databases
+      // Use shorter timeout (5 seconds) to quickly detect memory issues
       const result = await Promise.race([
         this.sendMessage<{
           success: true;
@@ -514,14 +764,54 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
         }>("connectToDatabase", { dbName }),
         new Promise<never>((_, reject) =>
           setTimeout(
-            () => reject(new Error("Database connection timeout - database may be corrupted")),
-            10000 // 10 second timeout
+            () => reject(new Error("Database connection timeout - database may be corrupted or too large")),
+            5000 // 5 second timeout for faster detection
           )
         ),
       ]);
 
+      // After connection, try a lightweight health check query
+      try {
+        await Promise.race([
+          this.sendMessage("query", { query: "MATCH (n) RETURN count(n) LIMIT 1", autoSave: false }),
+          new Promise<never>((_, reject) =>
+            setTimeout(
+              () => reject(new Error("Health check timeout - database may be too large")),
+              3000 // 3 second timeout for health check
+            )
+          ),
+        ]);
+      } catch (healthCheckError) {
+        // Health check failed, mark as problematic and disconnect
+        const errorMsg = healthCheckError instanceof Error ? healthCheckError.message : String(healthCheckError);
+        console.warn(`[KuzuPersistentAsync] Health check failed for '${dbName}':`, errorMsg);
+        markDatabaseAsProblematic(dbName);
+        
+        // Try to disconnect
+        try {
+          await this.sendMessage("disconnectFromDatabase", {});
+        } catch {
+          // Ignore disconnect errors
+        }
+        
+        // Try to delete the problematic database
+        try {
+          console.warn(`[KuzuPersistentAsync] Attempting to delete problematic database '${dbName}' after health check failure`);
+          await this.deleteDatabase(dbName);
+          console.log(`[KuzuPersistentAsync] Successfully deleted problematic database '${dbName}'`);
+        } catch (deleteError) {
+          console.warn(`[KuzuPersistentAsync] Failed to delete problematic database '${dbName}':`, deleteError);
+        }
+        
+        throw new Error(`Database '${dbName}' failed health check: ${errorMsg}`);
+      }
+
       await this.resetGraphState();
       this.currentDatabaseName = dbName;
+
+      // If database was previously marked as problematic but now connects successfully,
+      // remove it from the problematic list
+      unmarkDatabaseAsProblematic(dbName);
 
       // Store metadata from result
       if (result.metadata) {
@@ -538,8 +828,20 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
       // Log the error for debugging
       console.warn(`[KuzuPersistentAsync] Failed to connect to database '${dbName}':`, errorMessage);
       
-      // If connection fails, try to recover
-      if (this.isDatabaseConnectionError(errorMessage) || errorMessage.includes("timeout")) {
+      // If connection fails, mark as problematic and try to recover
+      if (shouldTriggerRecovery(errorMessage)) {
+        // Mark database as problematic to avoid trying again on next page load
+        markDatabaseAsProblematic(dbName);
+        
+        // Try to delete the problematic database before recovery
+        try {
+          console.warn(`[KuzuPersistentAsync] Attempting to delete problematic database '${dbName}' before recovery`);
+          await this.deleteDatabase(dbName);
+          console.log(`[KuzuPersistentAsync] Successfully deleted problematic database '${dbName}'`);
+        } catch (deleteError) {
+          console.warn(`[KuzuPersistentAsync] Failed to delete problematic database '${dbName}':`, deleteError);
+        }
+        
         const recovered = await this.recoverFromDatabaseFailure(
           dbName,
           `Failed to connect to database: ${errorMessage}`
@@ -574,7 +876,7 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
       // Check if this is a database connection error
       if (
         this.currentDatabaseName &&
-        this.isDatabaseConnectionError(errorMessage)
+        isDatabaseConnectionError(errorMessage)
       ) {
         const failedDb = this.currentDatabaseName;
         const recovered = await this.recoverFromDatabaseFailure(
@@ -618,7 +920,7 @@ export default class KuzuPersistentAsync extends KuzuAsyncBaseService {
       // Check if this is a database connection error
       if (
         this.currentDatabaseName &&
-        this.isDatabaseConnectionError(errorMessage)
+        isDatabaseConnectionError(errorMessage)
       ) {
         const failedDb = this.currentDatabaseName;
         const recovered = await this.recoverFromDatabaseFailure(

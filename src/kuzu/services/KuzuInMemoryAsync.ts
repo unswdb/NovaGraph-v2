@@ -10,7 +10,14 @@ import type {
 
 import KuzuAsyncBaseService from "./KuzuAsyncBaseService";
 import type KuzuBaseService from "./KuzuBaseService";
-import type { DatabaseMetadata } from "./KuzuPersistentAsync";
+import type { DatabaseMetadata } from "./KuzuDatabaseRecovery";
+import {
+  getProblematicDatabases,
+  markDatabaseAsProblematic,
+  unmarkDatabaseAsProblematic,
+  shouldTriggerRecovery,
+  type DatabaseRecoveryCallback,
+} from "./KuzuDatabaseRecovery";
 
 import {
   EMPTY_SNAPSHOT_GRAPH_STATE,
@@ -29,6 +36,27 @@ export default class KuzuInMemoryAsync extends KuzuAsyncBaseService {
   currentDatabaseMetadata: DatabaseMetadata | null = null;
   graphSnapshotStateCache: GraphSnapshotState = EMPTY_SNAPSHOT_GRAPH_STATE;
   private persistentEnabled: boolean = false;
+  private recoveryCallback: DatabaseRecoveryCallback | null = null;
+
+  constructor() {
+    super();
+    
+    // Set up error listeners for crash detection
+    if (typeof window !== 'undefined') {
+      window.addEventListener('error', (event) => {
+        if (
+          event.message?.includes('Out of Memory') ||
+          event.message?.includes('memory') ||
+          event.message?.includes('crash')
+        ) {
+          if (this.currentDatabaseName) {
+            console.warn(`[KuzuInMemoryAsync] Detected crash, marking '${this.currentDatabaseName}' as problematic`);
+            markDatabaseAsProblematic(this.currentDatabaseName);
+          }
+        }
+      });
+    }
+  }
 
   async initialize(options: InMemoryInitOptions = {}) {
     this.currentDatabaseName = options.dbPath || "default";
@@ -81,39 +109,174 @@ export default class KuzuInMemoryAsync extends KuzuAsyncBaseService {
   }
 
   /**
-   * Execute a Cypher query asynchronously
+   * Set callback for database recovery notifications
+   */
+  setRecoveryCallback(callback: DatabaseRecoveryCallback | null) {
+    this.recoveryCallback = callback;
+  }
+
+  /**
+   * Attempt to recover by switching to another database
+   */
+  private async recoverFromDatabaseFailure(
+    failedDatabaseName: string,
+    reason: string
+  ): Promise<boolean> {
+    try {
+      // Mark the failed database as problematic
+      markDatabaseAsProblematic(failedDatabaseName);
+
+      // Get list of available databases
+      const databases = await this.listDatabases().catch(() => [] as string[]);
+      const problematicDatabases = getProblematicDatabases();
+
+      // Filter out the failed database and all problematic databases
+      const availableDatabases = databases.filter(
+        (db) => db !== failedDatabaseName && !problematicDatabases.has(db)
+      );
+
+      if (availableDatabases.length === 0) {
+        // No other databases available, create a default one
+        const defaultName = "default";
+        try {
+          await this.createDatabase(defaultName);
+          await this.connectToDatabase(defaultName);
+
+          if (this.recoveryCallback) {
+            this.recoveryCallback({
+              failedDatabase: failedDatabaseName,
+              switchedToDatabase: defaultName,
+              reason: `${reason}. Created new default database as no alternatives were available.`,
+            });
+          }
+
+          // Trigger custom event for UI updates
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('kuzu-database-switched', {
+              detail: {
+                failedDatabase: failedDatabaseName,
+                switchedToDatabase: defaultName,
+                reason,
+              }
+            }));
+          }
+
+          return true;
+        } catch (createError) {
+          console.error(
+            "[KuzuInMemoryAsync] Failed to create default database during recovery:",
+            createError
+          );
+          return false;
+        }
+      }
+
+      // Try to connect to the first available database
+      const targetDatabase = availableDatabases[0];
+
+      // Disconnect from failed database (if still connected)
+      if (this.currentDatabaseName === failedDatabaseName) {
+        try {
+          await this.disconnectFromDatabase();
+        } catch {
+          // Ignore disconnect errors during recovery
+        }
+      }
+
+      // Connect to the alternative database
+      await this.connectToDatabase(targetDatabase);
+
+      // Notify callback
+      if (this.recoveryCallback) {
+        setTimeout(() => {
+          if (this.recoveryCallback) {
+            this.recoveryCallback({
+              failedDatabase: failedDatabaseName,
+              switchedToDatabase: targetDatabase,
+              reason,
+            });
+          }
+        }, 0);
+      }
+
+      // Trigger custom event for UI updates
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('kuzu-database-switched', {
+          detail: {
+            failedDatabase: failedDatabaseName,
+            switchedToDatabase: targetDatabase,
+            reason,
+          }
+        }));
+      }
+
+      return true;
+    } catch (recoveryError) {
+      console.error(
+        "[KuzuInMemoryAsync] Failed to recover from database failure:",
+        recoveryError
+      );
+      return false;
+    }
+  }
+
+  /**
+   * Execute a Cypher query asynchronously with automatic recovery
    */
   async executeQuery(query: string) {
     super.checkInitialization();
 
-    const result = await this.sendMessage<
-      ReturnType<KuzuBaseService["executeQuery"]>
-    >("query", { query });
-    const graphState = await this.refreshGraphState();
+    try {
+      const result = await this.sendMessage<
+        ReturnType<KuzuBaseService["executeQuery"]>
+      >("query", { query });
+      const graphState = await this.refreshGraphState();
 
-    const successQueries: SuccessQueryResult[] = Array.isArray(
-      result?.successQueries
-    )
-      ? result.successQueries
-      : [];
-    const failedQueries: ErrorQueryResult[] = Array.isArray(
-      result?.failedQueries
-    )
-      ? result.failedQueries
-      : [];
+      const successQueries: SuccessQueryResult[] = Array.isArray(
+        result?.successQueries
+      )
+        ? result.successQueries
+        : [];
+      const failedQueries: ErrorQueryResult[] = Array.isArray(
+        result?.failedQueries
+      )
+        ? result.failedQueries
+        : [];
 
-    // Transform worker result to match expected format
-    return {
-      success: result.success,
-      successQueries,
-      failedQueries,
-      nodes: graphState.nodes || [],
-      edges: graphState.edges || [],
-      nodeTables: graphState.nodeTables || [],
-      edgeTables: graphState.edgeTables || [],
-      colorMap: result.colorMap || {},
-      resultType: result.resultType || "graph",
-    };
+      // Transform worker result to match expected format
+      return {
+        success: result.success,
+        successQueries,
+        failedQueries,
+        nodes: graphState.nodes || [],
+        edges: graphState.edges || [],
+        nodeTables: graphState.nodeTables || [],
+        edgeTables: graphState.edgeTables || [],
+        colorMap: result.colorMap || {},
+        resultType: result.resultType || "graph",
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      // Check if this is a recoverable error
+      if (this.currentDatabaseName && shouldTriggerRecovery(errorMessage)) {
+        const failedDb = this.currentDatabaseName;
+        console.error(`[KuzuInMemoryAsync] Error detected with database '${failedDb}':`, errorMessage);
+        markDatabaseAsProblematic(failedDb);
+
+        const recovered = await this.recoverFromDatabaseFailure(
+          failedDb,
+          `Query execution error: ${errorMessage}`
+        );
+
+        if (recovered) {
+          // Retry the query on the new database
+          return this.executeQuery(query);
+        }
+      }
+
+      throw error;
+    }
   }
 
   /**
@@ -190,26 +353,66 @@ export default class KuzuInMemoryAsync extends KuzuAsyncBaseService {
   }
 
   /**
-   * Connect to an existing database
+   * Connect to an existing database with automatic recovery
    */
   async connectToDatabase(dbName: string) {
     super.checkInitialization();
-    const result = await this.sendMessage<{
-      success: true;
-      message: string;
-      metadata?: DatabaseMetadata;
-    }>("connectToDatabase", { dbName });
 
-    await this.refreshGraphState();
-    this.currentDatabaseName = dbName;
+    // Check if database is marked as problematic
+    const problematicDatabases = getProblematicDatabases();
+    if (problematicDatabases.has(dbName)) {
+      const recovered = await this.recoverFromDatabaseFailure(
+        dbName,
+        `Database '${dbName}' is marked as problematic and will not be connected`
+      );
+      if (!recovered) {
+        throw new Error(`Database '${dbName}' is marked as problematic and recovery failed`);
+      }
+      return;
+    }
 
-    // Store metadata from result
-    if (result.metadata) {
-      this.currentDatabaseMetadata = result.metadata;
-    } else {
-      this.currentDatabaseMetadata = {
-        isDirected: true,
-      };
+    try {
+      const result = await this.sendMessage<{
+        success: true;
+        message: string;
+        metadata?: DatabaseMetadata;
+      }>("connectToDatabase", { dbName });
+
+      await this.refreshGraphState();
+      this.currentDatabaseName = dbName;
+
+      // Store metadata from result
+      if (result.metadata) {
+        this.currentDatabaseMetadata = result.metadata;
+      } else {
+        this.currentDatabaseMetadata = {
+          isDirected: true,
+        };
+      }
+
+      // If database was previously marked as problematic but now connects successfully,
+      // remove it from the problematic list
+      unmarkDatabaseAsProblematic(dbName);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      // If connection fails with recoverable error, mark as problematic and try to recover
+      if (shouldTriggerRecovery(errorMessage)) {
+        markDatabaseAsProblematic(dbName);
+
+        const recovered = await this.recoverFromDatabaseFailure(
+          dbName,
+          `Failed to connect to database: ${errorMessage}`
+        );
+
+        if (!recovered) {
+          throw error;
+        }
+        // Recovery successful, connection already established
+        return;
+      }
+
+      throw error;
     }
   }
 
@@ -226,14 +429,23 @@ export default class KuzuInMemoryAsync extends KuzuAsyncBaseService {
 
   /**
    * List all databases
+   * @param includeProblematic - If false, filter out databases marked as problematic (default: false)
    */
-  async listDatabases() {
+  async listDatabases(includeProblematic: boolean = false): Promise<string[]> {
     super.checkInitialization();
     const result = await this.sendMessage<{
       success: true;
       databases: string[];
     }>("listDatabases", {});
-    return result.databases ?? [];
+    const allDatabases = result.databases ?? [];
+
+    if (includeProblematic) {
+      return allDatabases;
+    }
+
+    // Filter out problematic databases
+    const problematicDatabases = getProblematicDatabases();
+    return allDatabases.filter(db => !problematicDatabases.has(db));
   }
 
   /**
@@ -256,6 +468,9 @@ export default class KuzuInMemoryAsync extends KuzuAsyncBaseService {
       "deleteDatabase",
       { dbName }
     );
+
+    // Remove from problematic databases list when database is deleted
+    unmarkDatabaseAsProblematic(dbName);
 
     // If we deleted the current database, switch to default or first available
     if (this.currentDatabaseName === dbName) {
