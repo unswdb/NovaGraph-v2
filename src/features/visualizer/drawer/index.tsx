@@ -53,6 +53,8 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
       edges: result.edges,
       nodeTables: result.nodeTables,
       edgeTables: result.edgeTables,
+      // Preserve current directed flag (result.directed is added in MainController)
+      directed: (result as any).directed ?? database.graph.directed,
     });
     onQuery(result);
     toast.success("Query executed successfully!");
@@ -64,6 +66,7 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
       edges: result.edges,
       nodeTables: result.nodeTables,
       edgeTables: result.edgeTables,
+      directed: (result as any).directed ?? database.graph.directed,
     });
     onQuery(result);
     toast.error("Some queries failed", {
@@ -127,7 +130,8 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
               <CodeTabContent
                 code={code}
                 setCode={setCode}
-                runQuery={controller.db.executeQuery.bind(controller.db)}
+                // Use CLI wrapper to support UNDIRECTED DSL on undirected graphs
+                runQuery={controller.db.executeCliQuery.bind(controller.db)}
                 onSuccessQuery={onSuccessQuery}
                 onErrorQuery={onErrorQuery}
                 enableOutput={!!activeResponse}

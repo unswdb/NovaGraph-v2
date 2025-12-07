@@ -128,7 +128,8 @@ export default class VisualizerStore {
 
     const graph = this.buildGraphFromSnapshotState({
       ...snapshot,
-      directed: snapshot.directed ?? true,
+      // If caller没有提供 directed，就沿用当前图的 directed，避免误把无向图重置为有向
+      directed: snapshot.directed ?? this.database?.graph.directed ?? true,
     });
 
     runInAction(() => {
@@ -140,7 +141,13 @@ export default class VisualizerStore {
   };
 
   addAndSetDatabase = (name: string, snapshot: GraphSnapshotState) => {
-    const graph = this.buildGraphFromSnapshotState(snapshot);
+    const graph = this.buildGraphFromSnapshotState({
+      nodes: snapshot?.nodes ?? [],
+      edges: snapshot?.edges ?? [],
+      nodeTables: snapshot?.nodeTables ?? [],
+      edgeTables: snapshot?.edgeTables ?? [],
+      directed: snapshot?.directed ?? true,
+    });
     runInAction(() => {
       this.database = {
         name,

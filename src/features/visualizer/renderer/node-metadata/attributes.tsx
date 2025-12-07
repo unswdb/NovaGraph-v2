@@ -66,6 +66,7 @@ const AttributesForm = observer(
             edges: result.edges,
             nodeTables: result.nodeTables,
             edgeTables: result.edgeTables,
+            directed: (result as any).directed ?? database.graph.directed,
           });
           toast.success("Node attributes updated successfully!");
         },

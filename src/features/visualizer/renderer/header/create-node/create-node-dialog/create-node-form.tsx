@@ -23,7 +23,7 @@ const CreateNodeDialogForm = observer(
     selectedNodeSchema: NodeSchema;
     onClose: () => void;
   }) => {
-    const { controller, setGraphState } = useStore();
+    const { controller, setGraphState, database } = useStore();
 
     const inputs = useMemo(() => {
       const { primaryKey, primaryKeyType, properties } = selectedNodeSchema;
@@ -81,6 +81,8 @@ const CreateNodeDialogForm = observer(
             edges: result.edges,
             nodeTables: result.nodeTables,
             edgeTables: result.edgeTables,
+            directed:
+              (result as any).directed ?? database?.graph.directed ?? true,
           });
           toast.success("Node created successfully!");
           onClose();
