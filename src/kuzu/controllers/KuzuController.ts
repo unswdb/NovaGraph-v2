@@ -122,6 +122,27 @@ function normalizeMode(mode: string): "sync" | "async" {
 }
 
 /**
+ * Helper to provide "direction-agnostic" CLI experience for undirected graphs.
+ * For undirected databases, any directional edge pattern in the CLI query, e.g.:
+ *   MATCH (a)-[e:Friend]->(b) RETURN a, e, b;
+ *   MATCH (a)<-[e:Friend]-(b) RETURN a, e, b;
+ * is internally rewritten to the undirected form:
+ *   MATCH (a)-[e:Friend]-(b) RETURN a, e, b;
+ * before sending to Kuzu. This guarantees that, with canonical single-edge
+ * storage, users can query from either endpoint and still hit the same edge.
+ */
+function transformCliQueryForUndirected(
+  rawQuery: string,
+  isDirected: boolean
+): string {
+  if (isDirected) return rawQuery;
+
+  return rawQuery
+    .replace(/-\s*\[([^\]]*)\]\s*->/g, "-[$1]-")
+    .replace(/<-\s*\[([^\]]*)\]\s*-/g, "-[$1]-");
+}
+
+/**
  * This class is used to handle logic related to Kuzu before exposing into the highest API
  */
 class KuzuController {
@@ -191,6 +212,22 @@ class KuzuController {
       throw new Error("Kuzu service not initialized");
     }
     return this._service.executeQuery(query);
+  }
+
+  /**
+   * CLI-facing executeQuery with undirected experience support.
+   * For undirected databases, any directional edge pattern like:
+   *   MATCH (a)-[e:Friend]->(b) ...
+   *   MATCH (a)<-[e:Friend]-(b) ...
+   * is rewritten to:
+   *   MATCH (a)-[e:Friend]-(b) ...
+   * before sending to Kuzu, so queries from either endpoint work.
+   */
+  executeCliQuery(query: string) {
+    const metadata = this.getCurrentDatabaseMetadata();
+    const isDirected = metadata?.isDirected ?? true;
+    const transformed = transformCliQueryForUndirected(query, isDirected);
+    return this.executeQuery(transformed);
   }
 
   /**
@@ -574,7 +611,7 @@ class KuzuController {
    * Get metadata for the currently connected database
    * Available for all modes: InMemorySync, InMemoryAsync, PersistentSync, PersistentAsync
    */
-  async getCurrentDatabaseMetadata(): Promise<DatabaseMetadata | null> {
+  getCurrentDatabaseMetadata(): DatabaseMetadata | null {
     if (!this._service) {
       return null;
     }

@@ -87,6 +87,40 @@ export default abstract class KuzuBaseService {
    */
   protected abstract getFileSystem(): SyncFileSystem | AsyncFileSystem;
 
+  /**
+   * Canonicalize node order for undirected edges to ensure a single stored direction.
+   * For cross-table edges: sort by table name (lexicographically).
+   * For same-table edges: sort by primary key string value.
+   * For directed graphs: preserve the original order.
+   */
+  protected canonicalizeNodesForEdge(
+    node1: GraphNode,
+    node2: GraphNode,
+    isDirected: boolean
+  ): { src: GraphNode; dst: GraphNode } {
+    if (isDirected) {
+      return { src: node1, dst: node2 };
+    }
+
+    // Cross-table: canonical order by tableName
+    if (node1.tableName !== node2.tableName) {
+      const [first, second] = [node1, node2].sort((a, b) =>
+        a.tableName.localeCompare(b.tableName)
+      );
+      return { src: first, dst: second };
+    }
+
+    // Same-table: canonical order by primary key string representation
+    const pk1 = String(node1._primaryKeyValue);
+    const pk2 = String(node2._primaryKeyValue);
+
+    if (pk1 <= pk2) {
+      return { src: node1, dst: node2 };
+    }
+
+    return { src: node2, dst: node1 };
+  }
+
   snapshotGraphState() {
     if (!this.connection) {
       return {
@@ -338,13 +372,13 @@ export default abstract class KuzuBaseService {
       }
     }
 
-    const query = createEdgeQuery(
+    const { src, dst } = this.canonicalizeNodesForEdge(
       node1,
       node2,
-      edgeTable,
-      isDirected,
-      processedAttributes
+      isDirected
     );
+
+    const query = createEdgeQuery(src, dst, edgeTable, isDirected, processedAttributes);
     return throwOnFailedQuery(this.executeQuery(query));
   }
 
@@ -354,7 +388,12 @@ export default abstract class KuzuBaseService {
     edgeTableName: string,
     isDirected: boolean
   ) {
-    const query = deleteEdgeQuery(node1, node2, edgeTableName, isDirected);
+    const { src, dst } = this.canonicalizeNodesForEdge(
+      node1,
+      node2,
+      isDirected
+    );
+    const query = deleteEdgeQuery(src, dst, edgeTableName, isDirected);
     return throwOnFailedQuery(this.executeQuery(query));
   }
 
@@ -379,9 +418,15 @@ export default abstract class KuzuBaseService {
       }
     }
 
-    const query = updateEdgeQuery(
+    const { src, dst } = this.canonicalizeNodesForEdge(
       node1,
       node2,
+      isDirected
+    );
+
+    const query = updateEdgeQuery(
+      src,
+      dst,
       edgeTableName,
       processedValues,
       isDirected
@@ -472,9 +517,55 @@ export default abstract class KuzuBaseService {
       }
     };
 
-    // Write files to virtual file system
+    // Write node file to virtual file system as-is
     await writeFile(nodesPath, nodesText);
-    await writeFile(edgesPath, edgesText);
+
+    // For edges, pre-canonicalize (source, target) for undirected graphs to avoid duplicates
+    let edgesContentToWrite = edgesText;
+    if (!isDirected) {
+      const [headerLine, ...dataLines] = edgesLines;
+      const headerCols = headerLine.split(",").map((c) => c.trim());
+      const sourceIdx = headerCols.indexOf("source");
+      const targetIdx = headerCols.indexOf("target");
+
+      if (sourceIdx === -1 || targetIdx === -1) {
+        throw new Error(
+          "[CSV Import] Edges CSV header must contain 'source' and 'target' columns for undirected graphs"
+        );
+      }
+
+      const seenPairs = new Set<string>();
+      const canonicalDataLines = dataLines
+        .map((line) => {
+          const parts = line.split(",");
+          if (parts.length <= Math.max(sourceIdx, targetIdx)) {
+            return null;
+          }
+          const rawSource = parts[sourceIdx];
+          const rawTarget = parts[targetIdx];
+
+          const s = rawSource.trim();
+          const t = rawTarget.trim();
+
+          const [canonSource, canonTarget] =
+            s <= t ? [rawSource, rawTarget] : [rawTarget, rawSource];
+
+          parts[sourceIdx] = canonSource;
+          parts[targetIdx] = canonTarget;
+
+          const key = `${canonSource}::${canonTarget}`;
+          if (seenPairs.has(key)) {
+            return null;
+          }
+          seenPairs.add(key);
+          return parts.join(",");
+        })
+        .filter((line): line is string => line !== null);
+
+      edgesContentToWrite = [headerLine, ...canonicalDataLines].join("\n");
+    }
+
+    await writeFile(edgesPath, edgesContentToWrite);
 
     try {
       // Infer column types by using LOAD FROM to scan the CSV
@@ -619,54 +710,12 @@ export default abstract class KuzuBaseService {
       throwOnFailedQuery(await this.executeQuery(edgeTableQuery));
 
       // Load edges using COPY FROM for direct table loading
-      if (isDirected) {
-        // For directed graphs, use COPY FROM directly
         const copyEdgesQuery = `COPY ${edgeTableName} FROM '${edgesPath}' (header = true)`;
 
         console.log(
-          `[CSV Import] Loading directed edges with COPY FROM: ${copyEdgesQuery}`
+        `[CSV Import] Loading edges with COPY FROM (isDirected=${isDirected}): ${copyEdgesQuery}`
         );
         throwOnFailedQuery(await this.executeQuery(copyEdgesQuery));
-      } else {
-        // For undirected graphs, we need to create edges in both directions
-        // First, copy the original edges
-        const copyEdgesQuery1 = `COPY ${edgeTableName} FROM '${edgesPath}' (header = true)`;
-
-        console.log(
-          `[CSV Import] Loading undirected edges (direction 1) with COPY FROM: ${copyEdgesQuery1}`
-        );
-        throwOnFailedQuery(await this.executeQuery(copyEdgesQuery1));
-
-        // Then create a temporary file with reversed edges for the second direction
-        const reversedEdgesPath = `${tempDir}/reversed_edges_${Date.now()}.csv`;
-        const reversedEdgesContent = edgesLines
-          .map((line, index) => {
-            if (index === 0) {
-              // Header line - keep as is
-              return line;
-            }
-            // Data lines - swap first two columns (source and target)
-            const parts = line.split(",");
-            if (parts.length >= 2) {
-              [parts[0], parts[1]] = [parts[1], parts[0]]; // Swap source and target
-            }
-            return parts.join(",");
-          })
-          .join("\n");
-
-        await writeFile(reversedEdgesPath, reversedEdgesContent);
-
-        // Copy the reversed edges
-        const copyEdgesQuery2 = `COPY ${edgeTableName} FROM '${reversedEdgesPath}' (header = true)`;
-
-        console.log(
-          `[CSV Import] Loading undirected edges (direction 2) with COPY FROM: ${copyEdgesQuery2}`
-        );
-        throwOnFailedQuery(await this.executeQuery(copyEdgesQuery2));
-
-        // Clean up the temporary reversed edges file
-        await deleteFile(reversedEdgesPath);
-      }
 
       const graphState = await this.snapshotGraphState();
 
@@ -782,7 +831,62 @@ export default abstract class KuzuBaseService {
     };
 
     await writeFile(nodesPath, nodesText);
-    await writeFile(edgesPath, edgesText);
+
+    // For edges, pre-canonicalize (from, to) for undirected graphs to avoid duplicates
+    let edgesContentToWrite = edgesText;
+    if (!isDirected) {
+      const edgesArray = JSON.parse(edgesText);
+      if (!Array.isArray(edgesArray)) {
+        throw new Error("Edges JSON must contain an array of objects");
+      }
+
+      const seenPairs = new Set<string>();
+      const canonicalEdges = edgesArray
+        .map((edge: unknown): { from: string; to: string } & Record<string, unknown> | null => {
+          if (
+            typeof edge !== "object" ||
+            edge === null ||
+            !("from" in edge) ||
+            !("to" in edge)
+          ) {
+            return null;
+          }
+
+          const from = String((edge as any)["from"]);
+          const to = String((edge as any)["to"]);
+
+          const [canonFrom, canonTo] =
+            from <= to ? [from, to] : [to, from];
+
+          const key = `${canonFrom}::${canonTo}`;
+          if (seenPairs.has(key)) {
+            return null;
+          }
+          seenPairs.add(key);
+
+          const extraProps = Object.fromEntries(
+            Object.entries(edge as Record<string, unknown>).filter(
+              ([key]) => key !== "from" && key !== "to"
+            )
+          );
+
+          return {
+            from: canonFrom,
+            to: canonTo,
+            ...extraProps,
+          };
+        })
+        .filter(
+          (
+            edge
+          ): edge is { from: string; to: string } & Record<string, unknown> =>
+            edge !== null
+        );
+
+      edgesContentToWrite = JSON.stringify(canonicalEdges);
+    }
+
+    await writeFile(edgesPath, edgesContentToWrite);
 
     try {
       // Install and load JSON extension (safe to retry)
@@ -905,36 +1009,8 @@ export default abstract class KuzuBaseService {
 
       throwOnFailedQuery(await this.executeQuery(edgeTableQuery));
 
-      if (isDirected) {
         const copyEdgesQuery = `COPY ${edgeTableName} FROM '${edgesPath}'`;
         throwOnFailedQuery(await this.executeQuery(copyEdgesQuery));
-      } else {
-        const copyEdgesQuery = `COPY ${edgeTableName} FROM '${edgesPath}'`;
-        throwOnFailedQuery(await this.executeQuery(copyEdgesQuery));
-
-        const reversedEdgesPath = `${tempDir}/reversed_edges_${Date.now()}.json`;
-        const reversedEdgesData = edgesData.map(
-          (edge: Record<string, unknown>) => {
-            const extraProps = Object.fromEntries(
-              Object.entries(edge).filter(
-                ([key]) => key !== "from" && key !== "to"
-              )
-            );
-            return {
-              from: edge["to"],
-              to: edge["from"],
-              ...extraProps,
-            };
-          }
-        );
-
-        await writeFile(reversedEdgesPath, JSON.stringify(reversedEdgesData));
-
-        const copyReversedEdgesQuery = `COPY ${edgeTableName} FROM '${reversedEdgesPath}'`;
-        throwOnFailedQuery(await this.executeQuery(copyReversedEdgesQuery));
-
-        await deleteFile(reversedEdgesPath);
-      }
 
       const graphState = await this.snapshotGraphState();
 
