@@ -145,7 +145,7 @@ function AlgorithmSidebarControls({ open }: { open: boolean }) {
         !open || isMobile ? "left-0" : "left-[calc(var(--sidebar-width))]"
       } transition-all duration-200 ease-linear border border-l-transparent border-border rounded-tr-md rounded-br-md`}
     >
-      <SidebarTrigger size="icon">
+      <SidebarTrigger size="icon" title="Open Algorithm Sidebar">
         {!open || isMobile ? (
           <ChevronsRight className="w-6 h-6" />
         ) : (

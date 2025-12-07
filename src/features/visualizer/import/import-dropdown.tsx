@@ -70,12 +70,12 @@ export default function ImportDropdown({
         <Button
           ref={buttonRef}
           variant="outline"
-          className={cn(
-            "flex justify-between items-center truncate",
-            className
-          )}
+          className={cn("flex justify-between items-center", className)}
+          title={`Database: ${database ? database.name : "Default"}`}
         >
-          {database ? database.name : "Default"}
+          <span className="truncate">
+            Database: <b>{database ? database.name : "Default"}</b>
+          </span>
           <ChevronDown />
         </Button>
       </PopoverTrigger>
@@ -113,6 +113,7 @@ function ImportListSelector({
 }) {
   const [selectingName, setSelectingName] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [alertDialogOpen, setAlertDialogOpen] = useState<string | null>(null);
 
   const { run: selectDatabase, isLoading: isSelecting } = useAsyncFn(
     onSelectDatabase,
@@ -144,6 +145,7 @@ function ImportListSelector({
       setOpen(false);
       return;
     }
+
     setSelectingName(name);
     await selectDatabase(name);
     setSelectingName(null);
@@ -154,7 +156,7 @@ function ImportListSelector({
   };
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen} modal={true}>
       <Command value={database?.name}>
         <CommandInput placeholder="Filter database..." />
         <CommandList>
@@ -182,20 +184,45 @@ function ImportListSelector({
                       Active
                     </span>
                   ) : (
-                    <AlertDialog>
+                    <AlertDialog
+                      key={entry}
+                      open={alertDialogOpen === entry}
+                      onOpenChange={(open) =>
+                        setAlertDialogOpen(open ? entry : null)
+                      }
+                      aria-hidden="false"
+                    >
                       <AlertDialogTrigger asChild>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAlertDialogOpen(entry);
+                          }}
+                          onKeyDownCapture={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setAlertDialogOpen(entry);
+                            }
+                          }}
                         >
                           <Trash className="size-4" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                        onOverlayClick={(e) => {
+                          e.stopPropagation();
+                          setAlertDialogOpen(null);
+                        }}
+                      >
                         <AlertDialogHeader>
                           <AlertDialogTitle>
-                            Are you sure you want to delete this database?
+                            Delete database "{entry}"?
                           </AlertDialogTitle>
                           <AlertDialogDescription>
                             This will permanently remove the selected database
@@ -205,7 +232,17 @@ function ImportListSelector({
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setAlertDialogOpen(null);
+                            }}
+                            onKeyDownCapture={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setAlertDialogOpen(null);
+                              }
+                            }}
                           >
                             Cancel
                           </AlertDialogCancel>
@@ -213,6 +250,15 @@ function ImportListSelector({
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDelete(entry);
+                              setAlertDialogOpen(null);
+                            }}
+                            onKeyDownCapture={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleDelete(entry);
+                                setAlertDialogOpen(null);
+                              }
                             }}
                           >
                             {isDeleting ? (

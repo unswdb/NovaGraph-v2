@@ -48,6 +48,33 @@ function isPersistentService(
   );
 }
 
+/**
+ * Type guard for services that support database management
+ * All four modes (InMemorySync, InMemoryAsync, PersistentSync, PersistentAsync) support this
+ */
+function hasDatabaseManagement(
+  service:
+    | KuzuInMemorySync
+    | KuzuInMemoryAsync
+    | KuzuPersistentSync
+    | KuzuPersistentAsync
+    | null
+): service is
+  | KuzuInMemorySync
+  | KuzuInMemoryAsync
+  | KuzuPersistentSync
+  | KuzuPersistentAsync {
+  if (!service) return false;
+  // Check if service has database management methods
+  return (
+    typeof (service as any).connectToDatabase === "function" &&
+    typeof (service as any).createDatabase === "function" &&
+    typeof (service as any).deleteDatabase === "function" &&
+    typeof (service as any).listDatabases === "function" &&
+    typeof (service as any).getCurrentDatabaseName === "function"
+  );
+}
+
 type VirtualFileCapableService = {
   writeVirtualFile(path: string, content: string): Promise<void> | void;
   deleteVirtualFile(path: string): Promise<void> | void;
@@ -420,69 +447,65 @@ class KuzuController {
     );
   }
 
-  // -- Exclusive for Kuzu Persistent --
+  // -- Database Management (available for all four modes) --
 
   /**
-   * Create a new persistent database
-   * Only available for KuzuPersistentSync and KuzuPersistentAsync
+   * Create a new database
+   * Available for all modes: InMemorySync, InMemoryAsync, PersistentSync, PersistentAsync
    */
   async createDatabase(dbName: string, metadata?: { isDirected?: boolean }) {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    if (!isPersistentService(this._service)) {
-      throw new Error("createDatabase is only available for persistent mode");
+    if (!hasDatabaseManagement(this._service)) {
+      throw new Error("createDatabase is not available for this service");
     }
     await this._service.createDatabase(dbName, metadata);
   }
 
   /**
-   * Delete a persistent database
-   * Only available for persistent modes
+   * Delete a database
+   * Available for all modes: InMemorySync, InMemoryAsync, PersistentSync, PersistentAsync
    */
   async deleteDatabase(dbName: string) {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    if (!isPersistentService(this._service)) {
-      throw new Error("deleteDatabase is only available for persistent mode");
+    if (!hasDatabaseManagement(this._service)) {
+      throw new Error("deleteDatabase is not available for this service");
     }
     await this._service.deleteDatabase(dbName);
   }
 
   /**
-   * Rename a persistent database
-   * Only available for persistent modes
+   * Rename a database
+   * Available for all modes: InMemorySync, InMemoryAsync, PersistentSync, PersistentAsync
    */
   async renameDatabase(oldName: string, newName: string) {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    if (!isPersistentService(this._service)) {
-      throw new Error("renameDatabase is only available for persistent mode");
+    if (!hasDatabaseManagement(this._service)) {
+      throw new Error("renameDatabase is not available for this service");
     }
     await this._service.renameDatabase(oldName, newName);
   }
 
   /**
-   * Connect to an existing persistent database
-   * Only available for persistent modes
+   * Connect to an existing database
+   * Available for all modes: InMemorySync, InMemoryAsync, PersistentSync, PersistentAsync
    *
-   * @param dbPath - Database name (not full path, will be prefixed with kuzu_databases/)
-   * @param dbOptions - Database configuration options
+   * @param dbPath - Database name
    * @returns Result with success status, message, and optional error
-   * @throws {Error} If service not initialized or not in persistent mode
+   * @throws {Error} If service not initialized or doesn't support database management
    */
   async connectToDatabase(dbPath: string) {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
 
-    // Use type guard instead of instanceof
-    if (!isPersistentService(this._service)) {
-      throw new Error(
-        "connectToDatabase is only available for persistent mode"
-      );
+    if (!hasDatabaseManagement(this._service)) {
+      throw new Error("connectToDatabase is not available for this service");
     }
 
     // Validate dbPath
@@ -490,69 +513,76 @@ class KuzuController {
       throw new Error("Database path must be a non-empty string");
     }
 
-    // Type is now narrowed to KuzuPersistentSync | KuzuPersistentAsync
     await this._service.connectToDatabase(dbPath.trim());
   }
 
   /**
-   * Disconnect from current persistent database
-   * Only available for persistent modes
+   * Disconnect from current database
+   * Available for all modes: InMemorySync, InMemoryAsync, PersistentSync, PersistentAsync
    */
   async disconnectFromDatabase() {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    if (!isPersistentService(this._service)) {
+    if (!hasDatabaseManagement(this._service)) {
       throw new Error(
-        "disconnectFromDatabase is only available for persistent mode"
+        "disconnectFromDatabase is not available for this service"
       );
     }
     await this._service.disconnectFromDatabase();
   }
 
   /**
-   * List all available persistent databases
-   * Only available for persistent modes
+   * List all available databases
+   * Available for all modes: InMemorySync, InMemoryAsync, PersistentSync, PersistentAsync
    */
   async listDatabases() {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    if (!isPersistentService(this._service)) {
-      throw new Error("listDatabases is only available for persistent mode");
+    if (!hasDatabaseManagement(this._service)) {
+      throw new Error("listDatabases is not available for this service");
     }
-    return await this._service.listDatabases();
+    const result = await this._service.listDatabases();
+    // Handle KuzuPersistentSync which returns { success: boolean, databases: string[] }
+    if (result && typeof result === "object" && "databases" in result) {
+      return (result as any).databases || [];
+    }
+    // Handle other services which return string[] directly
+    return Array.isArray(result) ? result : [];
   }
 
   /**
-   * Get the name of the currently connected persistent database
+   * Get the name of the currently connected database
+   * Available for all modes: InMemorySync, InMemoryAsync, PersistentSync, PersistentAsync
    */
   async getCurrentDatabaseName() {
     if (!this._service) {
       throw new Error("Kuzu service not initialized");
     }
-    if (!isPersistentService(this._service)) {
+    if (!hasDatabaseManagement(this._service)) {
       throw new Error(
-        "getCurrentDatabaseName is only available for persistent mode"
+        "getCurrentDatabaseName is not available for this service"
       );
     }
-    return await this._service.getCurrentDatabaseName();
+    const result = this._service.getCurrentDatabaseName();
+    // Handle both sync (KuzuPersistentSync) and async (others) returns
+    return isPromise<string>(result) ? await result : result;
   }
 
   /**
-   * Get metadata for the currently connected persistent database
-   * Only available for persistent modes
+   * Get metadata for the currently connected database
+   * Available for all modes: InMemorySync, InMemoryAsync, PersistentSync, PersistentAsync
    */
   async getCurrentDatabaseMetadata(): Promise<DatabaseMetadata | null> {
     if (!this._service) {
       return null;
     }
-    if (!isPersistentService(this._service)) {
-      return null;
-    }
-    // Type guard ensures service has getCurrentDatabaseMetadata
-    if (typeof this._service.getCurrentDatabaseMetadata === "function") {
-      return await this._service.getCurrentDatabaseMetadata();
+    // Check if service has getCurrentDatabaseMetadata method
+    if (
+      typeof (this._service as any).getCurrentDatabaseMetadata === "function"
+    ) {
+      return (this._service as any).getCurrentDatabaseMetadata();
     }
     return null;
   }
@@ -566,7 +596,8 @@ class KuzuController {
       throw new Error("Kuzu service not initialized");
     }
     if (!isPersistentService(this._service)) {
-      throw new Error("saveDatabase is only available for persistent mode");
+      // In-memory mode: no-op, nothing to persist
+      return { success: true };
     }
     return await this._service.saveIDBFS();
   }
@@ -580,7 +611,8 @@ class KuzuController {
       throw new Error("Kuzu service not initialized");
     }
     if (!isPersistentService(this._service)) {
-      throw new Error("loadDatabase is only available for persistent mode");
+      // In-memory mode: no-op, nothing to load
+      return { success: true };
     }
     return await this._service.loadIDBFS();
   }

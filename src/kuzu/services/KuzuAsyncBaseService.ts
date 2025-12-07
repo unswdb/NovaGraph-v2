@@ -25,6 +25,13 @@ export default class KuzuAsyncBaseService extends KuzuBaseService {
     super();
   }
 
+  protected failPendingRequests(message: string) {
+    this.pendingRequests.forEach((request) =>
+      request.reject(new Error(message))
+    );
+    this.pendingRequests.clear();
+  }
+
   /**
    * Get the file system for this service
    * Note: In worker-based implementation, file system operations are proxied through the worker
@@ -38,11 +45,14 @@ export default class KuzuAsyncBaseService extends KuzuBaseService {
   /**
    * Initialize the async in-memory database
    */
-  protected async initialize(createWorker: () => Worker) {
+  protected async initialize(
+    createWorker: () => Worker,
+    initData: Record<string, unknown> = {}
+  ) {
     if (this._initializationPromise) {
       return this._initializationPromise;
     }
-    this._initializationPromise = this._doInitialize(createWorker);
+    this._initializationPromise = this._doInitialize(createWorker, initData);
     return this._initializationPromise;
   }
 

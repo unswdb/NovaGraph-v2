@@ -90,9 +90,9 @@ export function updateEdgeQuery(
   isDirected: boolean
 ) {
   // console.log("updateEdgeQuery Here\n");
-  let attriutesMappingString = "";
+  let attributesMappingString = "";
   for (const [key, val] of Object.entries(values)) {
-    attriutesMappingString += `, f.\`${key}\` = ${_formatQueryInput(val.value)}`;
+    attributesMappingString += `, f.\`${key}\` = ${_formatQueryInput(val.value)}`;
   }
 
   // For directed graphs, update single edge u1 -> u2
@@ -100,7 +100,7 @@ export function updateEdgeQuery(
   MATCH (u0:\`${node1.tableName}\`)-[f:\`${edgeTableName}\`]->(u1:\`${node2.tableName}\`)
   WHERE u0.\`${node1._primaryKey}\` = ${_formatQueryInput(node1._primaryKeyValue)} 
   AND u1.\`${node2._primaryKey}\` = ${_formatQueryInput(node2._primaryKeyValue)}
-  SET ${attriutesMappingString.slice(2)}
+  SET ${attributesMappingString.slice(2)}
   RETURN f;
   `;
 
@@ -110,7 +110,7 @@ export function updateEdgeQuery(
   MATCH (u0:\`${node2.tableName}\`)-[f:\`${edgeTableName}\`]->(u1:\`${node1.tableName}\`)
   WHERE u0.\`${node2._primaryKey}\` = ${_formatQueryInput(node2._primaryKeyValue)} 
   AND u1.\`${node1._primaryKey}\` = ${_formatQueryInput(node1._primaryKeyValue)}
-  SET ${attriutesMappingString.slice(2)}
+  SET ${attributesMappingString.slice(2)}
   RETURN f;
   `;
     return forwardQuery + reverseQuery;
@@ -628,6 +628,10 @@ function _formatBlob(value: Uint8Array): string {
   return `BLOB('${hexString}')`;
 }
 
+function _formatUUID(value: string): string {
+  return `UUID("${_esc(value)}")`;
+}
+
 function _isStringValue(value: any): boolean {
   return typeof value === "string" || value instanceof String;
 }
@@ -671,8 +675,6 @@ function _formatTimestampValue(value: any): string {
 }
 
 function _formatQueryInput(value: any) {
-  const inferredType = typeof value;
-
   // Handle BLOB type (Uint8Array from File.arrayBuffer())
   if (value instanceof Uint8Array) {
     return _formatBlob(value);
@@ -698,7 +700,7 @@ function _formatQueryInput(value: any) {
   }
 
   // Undefined → NULL
-  if (inferredType === undefined) {
+  if (value == null) {
     return "NULL";
   }
 

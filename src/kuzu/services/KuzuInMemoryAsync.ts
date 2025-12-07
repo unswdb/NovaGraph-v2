@@ -17,12 +17,40 @@ import {
   type GraphSnapshotState,
 } from "~/features/visualizer/types";
 
+type InMemoryInitOptions = {
+  persistent?: boolean;
+  autoSave?: boolean;
+  dbPath?: string;
+  reset?: boolean;
+};
+
 export default class KuzuInMemoryAsync extends KuzuAsyncBaseService {
   currentDatabaseName: string | null = null;
   currentDatabaseMetadata: DatabaseMetadata | null = null;
   graphSnapshotStateCache: GraphSnapshotState = EMPTY_SNAPSHOT_GRAPH_STATE;
+  private persistentEnabled: boolean = false;
 
-  async initialize() {
+  async initialize(options: InMemoryInitOptions = {}) {
+    this.currentDatabaseName = options.dbPath || "default";
+    this.currentDatabaseMetadata = {
+      isDirected: true,
+    };
+
+    this.persistentEnabled = options.persistent === true;
+
+    const initData: Record<string, unknown> = {
+      persistent: options.persistent === true,
+      autoSave: options.autoSave === true,
+    };
+
+    if (options.dbPath) {
+      initData.dbPath = options.dbPath;
+    }
+
+    if (options.reset) {
+      initData.reset = true;
+    }
+
     await super.initialize(
       () =>
         new Worker(
@@ -30,7 +58,8 @@ export default class KuzuInMemoryAsync extends KuzuAsyncBaseService {
           {
             type: "module",
           }
-        )
+        ),
+      initData
     );
   }
 
@@ -118,6 +147,153 @@ export default class KuzuInMemoryAsync extends KuzuAsyncBaseService {
     await this.sendMessage("deleteFile", { path });
   }
 
+  async saveIDBFS() {
+    // In inmemory mode (persistent disabled), do nothing
+    if (!this.persistentEnabled) {
+      return;
+    }
+    super.checkInitialization();
+    await this.sendMessage("saveDatabase", {});
+  }
+
+  async loadIDBFS() {
+    // In inmemory mode (persistent disabled), do nothing
+    if (!this.persistentEnabled) {
+      return;
+    }
+    super.checkInitialization();
+    await this.sendMessage("loadDatabase", {});
+    await this.refreshGraphState();
+  }
+
+  /**
+   * Create a new database
+   */
+  async createDatabase(dbName: string, metadata?: DatabaseMetadata) {
+    super.checkInitialization();
+    const result = await this.sendMessage<{
+      success: boolean;
+      message: string;
+      metadata?: DatabaseMetadata;
+    }>("createDatabase", {
+      dbName,
+      metadata: {
+        ...metadata,
+        isDirected: metadata?.isDirected ?? true,
+      },
+    });
+
+    // If this is the first database or we're not connected, connect to it
+    if (!this.currentDatabaseName) {
+      await this.connectToDatabase(dbName);
+    }
+  }
+
+  /**
+   * Connect to an existing database
+   */
+  async connectToDatabase(dbName: string) {
+    super.checkInitialization();
+    const result = await this.sendMessage<{
+      success: true;
+      message: string;
+      metadata?: DatabaseMetadata;
+    }>("connectToDatabase", { dbName });
+
+    await this.refreshGraphState();
+    this.currentDatabaseName = dbName;
+
+    // Store metadata from result
+    if (result.metadata) {
+      this.currentDatabaseMetadata = result.metadata;
+    } else {
+      this.currentDatabaseMetadata = {
+        isDirected: true,
+      };
+    }
+  }
+
+  /**
+   * Disconnect from current database
+   */
+  async disconnectFromDatabase() {
+    super.checkInitialization();
+    await this.sendMessage<{ success: true }>("disconnectFromDatabase", {});
+    this.graphSnapshotStateCache = EMPTY_SNAPSHOT_GRAPH_STATE;
+    this.currentDatabaseName = null;
+    this.currentDatabaseMetadata = null;
+  }
+
+  /**
+   * List all databases
+   */
+  async listDatabases() {
+    super.checkInitialization();
+    const result = await this.sendMessage<{
+      success: true;
+      databases: string[];
+    }>("listDatabases", {});
+    return result.databases ?? [];
+  }
+
+  /**
+   * Get the name of the currently connected database, if any
+   */
+  async getCurrentDatabaseName() {
+    if (this.currentDatabaseName) {
+      return this.currentDatabaseName;
+    }
+    const databases = await this.listDatabases();
+    return databases.length > 0 ? databases[0] : "default";
+  }
+
+  /**
+   * Delete a database
+   */
+  async deleteDatabase(dbName: string) {
+    super.checkInitialization();
+    await this.sendMessage<{ success: true; message: string }>(
+      "deleteDatabase",
+      { dbName }
+    );
+
+    // If we deleted the current database, switch to default or first available
+    if (this.currentDatabaseName === dbName) {
+      const databases = await this.listDatabases();
+      if (databases.length > 0) {
+        await this.connectToDatabase(databases[0]);
+      } else {
+        this.currentDatabaseName = null;
+        this.currentDatabaseMetadata = null;
+        this.graphSnapshotStateCache = EMPTY_SNAPSHOT_GRAPH_STATE;
+      }
+    }
+  }
+
+  /**
+   * Rename a database
+   */
+  async renameDatabase(oldName: string, newName: string) {
+    super.checkInitialization();
+    await this.sendMessage<{ success: true; message: string }>(
+      "renameDatabase",
+      {
+        oldName,
+        newName,
+      }
+    );
+    if (this.currentDatabaseName === oldName) {
+      this.currentDatabaseName = newName;
+    }
+  }
+
+  /**
+   * Get metadata for the currently connected database
+   */
+  getCurrentDatabaseMetadata(): DatabaseMetadata | null {
+    return this.currentDatabaseMetadata;
+  }
+
   /**
    * Clean up resources
    */
@@ -131,9 +307,11 @@ export default class KuzuInMemoryAsync extends KuzuAsyncBaseService {
       this.worker = null;
     }
 
-    // Clear pending requests
-    this.pendingRequests.clear();
+    // Reject and clear pending requests to avoid hanging promises
+    this.failPendingRequests("KuzuInMemoryAsync cleaned up");
     this.graphSnapshotStateCache = EMPTY_SNAPSHOT_GRAPH_STATE;
+    this.currentDatabaseName = null;
+    this.currentDatabaseMetadata = null;
     console.log("KuzuInMemoryAsync cleaned up successfully");
   }
 }

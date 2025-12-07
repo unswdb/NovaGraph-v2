@@ -138,7 +138,7 @@ function SettingsSidebarControls({ open }: { open: boolean }) {
         !open || isMobile ? "right-0" : "right-[calc(var(--sidebar-width))]"
       } transition-all duration-200 ease-linear border border-r-transparent border-border rounded-tl-md rounded-bl-md`}
     >
-      <SidebarTrigger size="icon">
+      <SidebarTrigger size="icon" title="Open Visualiser's Settings Sidebar">
         {!open || isMobile ? (
           <ChevronsLeft className="w-6 h-6" />
         ) : (

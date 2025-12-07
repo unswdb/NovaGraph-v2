@@ -31,7 +31,7 @@ export default function DatetimeLocalInputComponent({
       setShowError(true);
       setErrorMessage(`Invalid date.`);
       onChange({
-        value: "",
+        value: newValue,
         success: !required,
         message: `Invalid date.`,
       });
@@ -43,7 +43,7 @@ export default function DatetimeLocalInputComponent({
       setShowError(true);
       setErrorMessage(`Date must be before ${min}.`);
       onChange({
-        value: "",
+        value: newValue,
         success: !required,
         message: `Date must be before ${min}.`,
       });
@@ -55,7 +55,7 @@ export default function DatetimeLocalInputComponent({
       setShowError(true);
       setErrorMessage(`Date must not be after ${max}.`);
       onChange({
-        value: "",
+        value: newValue,
         success: !required,
         message: `Date must not be after ${max}.`,
       });

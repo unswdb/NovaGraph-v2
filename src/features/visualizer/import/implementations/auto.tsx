@@ -30,7 +30,7 @@ export const ImportAuto: ImportOption = {
     controller: VisualizerStore["controller"];
   }) => {
     const { name } = values;
-    const databaseName = name.value as string;
+    const databaseName = (name.value as string).trim();
 
     await controller.db.createDatabase(databaseName);
     await controller.db.connectToDatabase(databaseName);
