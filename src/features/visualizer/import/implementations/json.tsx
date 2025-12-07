@@ -17,7 +17,11 @@ import {
 } from "~/components/ui/table";
 import { Switch } from "~/components/form/switch";
 import { Label } from "~/components/form/label";
-import { createFileInput, createTextInput } from "~/features/visualizer/inputs";
+import {
+  createFileInput,
+  createSwitchInput,
+  createTextInput,
+} from "~/features/visualizer/inputs";
 
 const validateNodesJSON = async (file: File | undefined) => {
   if (!file)
@@ -140,6 +144,12 @@ export const ImportJSON: ImportOption = {
       required: true,
       placeholder: "Enter a name for the database...",
     }),
+    createSwitchInput({
+      id: "directed-graph-json",
+      key: "isDirected",
+      displayName: "Directed Graph",
+      defaultValue: true,
+    }),
     createFileInput({
       id: "nodes-json",
       key: "nodes",
@@ -165,9 +175,10 @@ export const ImportJSON: ImportOption = {
     values: Record<string, any>;
     controller: VisualizerStore["controller"];
   }) => {
-    const { name, nodes, edges } = values;
+    const { name, nodes, edges, isDirected } = values;
 
     const databaseName = name.value as string;
+    const directed = Boolean(isDirected?.value ?? true);
     const nodesFile = nodes.value as File;
     const edgesFile = edges.value as File;
 
@@ -179,7 +190,7 @@ export const ImportJSON: ImportOption = {
 
     let databaseCreated = false;
     try {
-      await controller.db.createDatabase(databaseName);
+      await controller.db.createDatabase(databaseName, { isDirected: directed });
       databaseCreated = true;
 
       await controller.db.connectToDatabase(databaseName);
@@ -189,7 +200,8 @@ export const ImportJSON: ImportOption = {
         nodesText,
         edgesText,
         nodeTableName,
-        edgeTableName
+        edgeTableName,
+        directed
       );
       await controller.db.saveDatabase();
       return result;

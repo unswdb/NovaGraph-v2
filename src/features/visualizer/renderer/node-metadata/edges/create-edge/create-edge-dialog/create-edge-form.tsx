@@ -69,6 +69,7 @@ const CreateEdgeDialogForm = observer(
           edges: result.edges,
           nodeTables: result.nodeTables,
           edgeTables: result.edgeTables,
+          directed: (result as any).directed ?? database.graph.directed,
         });
         toast.success("Edge schema created successfully!");
         onClose();

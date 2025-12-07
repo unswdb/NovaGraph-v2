@@ -17,7 +17,11 @@ import {
 } from "~/components/ui/table";
 import { Switch } from "~/components/form/switch";
 import { Label } from "~/components/form/label";
-import { createFileInput, createTextInput } from "~/features/visualizer/inputs";
+import {
+  createFileInput,
+  createSwitchInput,
+  createTextInput,
+} from "~/features/visualizer/inputs";
 
 const validateNodes = async (file: File | undefined) => {
   if (!file)
@@ -135,6 +139,12 @@ export const ImportCSV: ImportOption = {
       required: true,
       placeholder: "Enter a name for the database...",
     }),
+    createSwitchInput({
+      id: "directed-graph-csv",
+      key: "isDirected",
+      displayName: "Directed Graph",
+      defaultValue: true,
+    }),
     createFileInput({
       id: "nodes-csv",
       key: "nodes",
@@ -160,9 +170,10 @@ export const ImportCSV: ImportOption = {
     values: Record<string, any>;
     controller: VisualizerStore["controller"];
   }) => {
-    const { name, nodes, edges } = values;
+    const { name, nodes, edges, isDirected } = values;
 
     const databaseName = name.value as string;
+    const directed = Boolean(isDirected?.value ?? true);
     const nodesFile = nodes.value as File;
     const edgesFile = edges.value as File;
 
@@ -174,7 +185,7 @@ export const ImportCSV: ImportOption = {
 
     let databaseCreated = false;
     try {
-      await controller.db.createDatabase(databaseName);
+      await controller.db.createDatabase(databaseName, { isDirected: directed });
       databaseCreated = true;
 
       await controller.db.connectToDatabase(databaseName);
@@ -184,7 +195,8 @@ export const ImportCSV: ImportOption = {
         nodesText,
         edgesText,
         nodeTableName,
-        edgeTableName
+        edgeTableName,
+        directed
       );
       await controller.db.saveDatabase();
       return result;

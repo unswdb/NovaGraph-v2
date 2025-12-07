@@ -40,7 +40,7 @@ const CreateNodeSchemaForm = observer(
     nodeTables: NodeSchema[];
     onSubmit: () => void;
   }) => {
-    const { controller, setGraphState } = useStore();
+    const { controller, setGraphState, database } = useStore();
 
     const { run: createNodeSchema, isLoading } = useAsyncFn(
       controller.db.createNodeSchema.bind(controller.db),
@@ -51,6 +51,8 @@ const CreateNodeSchemaForm = observer(
             edges: result.edges,
             nodeTables: result.nodeTables,
             edgeTables: result.edgeTables,
+            directed:
+              (result as any).directed ?? database?.graph.directed ?? true,
           });
           toast.success("Node schema created successfully!");
           onSubmit();

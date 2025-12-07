@@ -1,6 +1,6 @@
 import { LaptopMinimal } from "lucide-react";
 
-import { createTextInput } from "../../inputs";
+import { createSwitchInput, createTextInput } from "../../inputs";
 import type VisualizerStore from "../../store";
 
 import type { ImportOption } from "./types";
@@ -20,6 +20,12 @@ export const ImportAuto: ImportOption = {
       required: true,
       placeholder: "Enter a name for the database...",
     }),
+    createSwitchInput({
+      id: "directed-graph-empty",
+      key: "isDirected",
+      displayName: "Directed Graph",
+      defaultValue: true,
+    }),
   ],
   handler: async ({
     values,
@@ -29,21 +35,18 @@ export const ImportAuto: ImportOption = {
     values: Record<string, any>;
     controller: VisualizerStore["controller"];
   }) => {
-    const { name } = values;
+    const { name, isDirected } = values;
     const databaseName = name.value as string;
+    const directed = Boolean(isDirected?.value ?? true);
 
-    await controller.db.createDatabase(databaseName);
+    await controller.db.createDatabase(databaseName, { isDirected: directed });
     await controller.db.connectToDatabase(databaseName);
-    const { nodes, edges, nodeTables, edgeTables, directed } =
-      await controller.db.snapshotGraphState();
+    const snapshot = await controller.db.snapshotGraphState();
 
     return {
-      databaseName: databaseName,
-      nodes,
-      edges,
-      nodeTables,
-      edgeTables,
-      directed: directed ?? true,
+      databaseName,
+      ...snapshot,
+      directed: snapshot.directed ?? directed,
     };
   },
 };

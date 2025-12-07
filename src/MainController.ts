@@ -66,8 +66,9 @@ class MainController {
   // Public sector
   constructor() {
     this._IgraphController = new IgraphController(
-      this.db.snapshotGraphState,
-      this.db.getGraphDirection
+      // Bind to ensure 'this' inside db methods points to db namespace
+      this.db.snapshotGraphState.bind(this.db),
+      this.db.getGraphDirection.bind(this.db)
     );
   }
 
@@ -90,11 +91,8 @@ class MainController {
   // Database operations namespace
   db = {
     getGraphDirection() {
-      // TODO: Implement direction
-      return true;
-      //   // Get the current database metadata to determine graph direction
-      //   const metadata = await kuzuController.getCurrentDatabaseMetadata?.();
-      //   return metadata?.isDirected ?? true;
+      const metadata = kuzuController.getCurrentDatabaseMetadata?.();
+      return metadata?.isDirected ?? true;
     },
 
     async createNodeSchema(
@@ -158,9 +156,22 @@ class MainController {
       return Promise.resolve(kuzuController.deleteNode(node));
     },
 
-    // Execute query method
+    // Execute query method (adds directed flag based on current DB metadata)
     async executeQuery(query: string) {
-      return Promise.resolve(kuzuController.executeQuery(query));
+      const result = await kuzuController.executeQuery(query);
+      return {
+        ...result,
+        directed: this.getGraphDirection(),
+      };
+    },
+
+    /** CLI-facing executeQuery; actual undirected handling lives in KuzuController. */
+    async executeCliQuery(query: string) {
+      const result = await kuzuController.executeCliQuery(query);
+      return {
+        ...result,
+        directed: this.getGraphDirection(),
+      };
     },
 
     // Get column types from query
@@ -170,7 +181,11 @@ class MainController {
 
     // snapshotGraphState
     async snapshotGraphState() {
-      return Promise.resolve(kuzuController.snapshotGraphState());
+      const snapshot = await Promise.resolve(kuzuController.snapshotGraphState());
+      return {
+        ...snapshot,
+        directed: this.getGraphDirection(),
+      };
     },
 
     async createEdgeSchema(
@@ -292,16 +307,19 @@ class MainController {
       edgeTableName: string,
       isDirected: boolean = true
     ) {
-      return Promise.resolve(
-        kuzuController.importFromCSV(
-          databaseName,
-          nodesText,
-          edgesText,
-          nodeTableName,
-          edgeTableName,
-          isDirected
-        )
+      const result = await kuzuController.importFromCSV(
+        databaseName,
+        nodesText,
+        edgesText,
+        nodeTableName,
+        edgeTableName,
+        isDirected
       );
+
+      return {
+        ...result,
+        directed: isDirected,
+      };
     },
 
     /**
@@ -321,16 +339,19 @@ class MainController {
       edgeTableName: string,
       isDirected: boolean = true
     ) {
-      return Promise.resolve(
-        kuzuController.importFromJSON(
-          databaseName,
-          nodesText,
-          edgesText,
-          nodeTableName,
-          edgeTableName,
-          isDirected
-        )
+      const result = await kuzuController.importFromJSON(
+        databaseName,
+        nodesText,
+        edgesText,
+        nodeTableName,
+        edgeTableName,
+        isDirected
       );
+
+      return {
+        ...result,
+        directed: isDirected,
+      };
     },
   };
 

@@ -54,7 +54,7 @@ const EdgeListItem = observer(
     directed: boolean;
     onClose: () => void;
   }) => {
-    const { controller, setGraphState } = useStore();
+    const { controller, setGraphState, database } = useStore();
 
     const inputs = [
       Object.entries(edgeSchema.properties).map(([key, type]) =>
@@ -85,6 +85,8 @@ const EdgeListItem = observer(
             edges: result.edges,
             nodeTables: result.nodeTables,
             edgeTables: result.edgeTables,
+            directed:
+              (result as any).directed ?? database?.graph.directed ?? true,
           });
           toast.success("Edge deleted successfully!");
           onClose();
@@ -109,6 +111,8 @@ const EdgeListItem = observer(
             edges: result.edges,
             nodeTables: result.nodeTables,
             edgeTables: result.edgeTables,
+            directed:
+              (result as any).directed ?? database?.graph.directed ?? true,
           });
           toast.success("Edge attributes updated!");
           onClose();
