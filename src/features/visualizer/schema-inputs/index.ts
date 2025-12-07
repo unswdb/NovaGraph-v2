@@ -9,8 +9,11 @@ const SCHEMA_INPUTS = Object.values(SCHEMA_RAW_INPUTS);
 type AllSchemaInputs =
   (typeof SCHEMA_RAW_INPUTS)[keyof typeof SCHEMA_RAW_INPUTS];
 
-type SchemaInputTypesByContext<Context extends FieldContextKind> =
-  AllSchemaInputs extends SchemaInput<any, infer T, infer C>
+type SchemaInputTypesByContext<
+  Context extends FieldContextKind,
+  S = AllSchemaInputs,
+> =
+  S extends SchemaInput<any, infer T, infer C>
     ? Context extends C[number]
       ? T
       : never
@@ -66,9 +69,18 @@ type InputTypeForSchemaKeyType<T extends SchemaKeyType> =
     ? I
     : never;
 
-type PropsForSchemaKeyType<T extends SchemaKeyType> = PropsForInput<
+type InputPropsForSchemaKeyType<T extends SchemaKeyType> = PropsForInput<
   InputTypeForSchemaKeyType<T>
 >;
+
+type SchemaValueUnion = PrimaryKeyValueType | NonPrimaryKeyValueType;
+
+type PropsForSchemaKeyType<T extends SchemaKeyType> = Omit<
+  InputPropsForSchemaKeyType<T>,
+  "defaultValue"
+> & {
+  defaultValue?: SchemaValueUnion;
+};
 
 export function createSchemaInput<T extends SchemaKeyType>(
   schemaType: T,

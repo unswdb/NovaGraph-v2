@@ -131,10 +131,13 @@ export default class VisualizerStore {
       // If caller没有提供 directed，就沿用当前图的 directed，避免误把无向图重置为有向
       directed: snapshot.directed ?? this.database?.graph.directed ?? true,
     });
-    this.database = {
-      ...this.database,
-      graph,
-    };
+
+    runInAction(() => {
+      this.database = {
+        ...this.database,
+        graph,
+      };
+    });
   };
 
   addAndSetDatabase = (name: string, snapshot: GraphSnapshotState) => {
@@ -145,20 +148,24 @@ export default class VisualizerStore {
       edgeTables: snapshot?.edgeTables ?? [],
       directed: snapshot?.directed ?? true,
     });
-    this.database = {
-      name,
-      graph,
-    };
-    this.addDatabase(name);
+    runInAction(() => {
+      this.database = {
+        name,
+        graph,
+      };
+      this.addDatabase(name);
+    });
   };
 
   addDatabase = (database: string) => {
-    this.databases = this.buildDatabases([...this.databases, database]);
-    this.databaseDrawerStateMap[database] = {
-      code: "",
-      activeAlgorithm: null,
-      activeResponse: null,
-    };
+    runInAction(() => {
+      this.databases = this.buildDatabases([...this.databases, database]);
+      this.databaseDrawerStateMap[database] = {
+        code: "",
+        activeAlgorithm: null,
+        activeResponse: null,
+      };
+    });
   };
 
   switchDatabase = async (name: string) => {
@@ -186,10 +193,12 @@ export default class VisualizerStore {
     this.checkInitialization();
 
     await this.controller.db.deleteDatabase(name);
-    this.databases = this.databases.filter(
-      (databaseName) => databaseName !== name
-    );
-    delete this.databaseDrawerStateMap[name];
+    runInAction(() => {
+      this.databases = this.databases.filter(
+        (databaseName) => databaseName !== name
+      );
+      delete this.databaseDrawerStateMap[name];
+    });
   };
 
   setGravity = (gravity: Gravity) => {

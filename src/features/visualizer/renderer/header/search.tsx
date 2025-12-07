@@ -223,6 +223,7 @@ function MobileSearch({
           size="icon"
           autoFocus
           className="m-4"
+          title="Search for nodes"
         >
           <Search />
         </Button>
@@ -401,6 +402,7 @@ function DesktopSearch({
       autoFocus
       onClick={() => setIsExpanded(true)}
       className="m-4"
+      title="Search for nodes"
     >
       <Search />
     </Button>
@@ -504,7 +506,12 @@ function DesktopSearch({
         </SelectContent>
       </Select>
       {/* Close button */}
-      <Button variant="ghost" size="icon" onClick={() => setIsExpanded(false)}>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setIsExpanded(false)}
+        title="Close search"
+      >
         <X />
       </Button>
     </div>

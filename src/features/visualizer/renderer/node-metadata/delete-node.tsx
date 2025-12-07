@@ -64,7 +64,7 @@ const DeleteNodeButton = observer(
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Are you sure you want to delete this node?
+              Delete node "{String(node._primaryKeyValue)}"?
             </AlertDialogTitle>
             <AlertDialogDescription>
               This will permanently remove the node and all of its connected

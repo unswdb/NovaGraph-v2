@@ -6,7 +6,6 @@ export type UUIDValues = UUID;
 
 export type UUIDInput = BaseInputType<UUIDValues> & {
   type: "uuid";
-  placeholder?: string;
 };
 
 export type ValueForUUID<I> = I extends UUIDInput ? UUIDValues : never;

@@ -56,37 +56,67 @@ export default class KuzuAsyncBaseService extends KuzuBaseService {
     return this._initializationPromise;
   }
 
-  private async _doInitialize(
-    createWorker: () => Worker,
-    initData: Record<string, unknown>
-  ) {
-    // Create Web Worker
-    this.worker = createWorker();
+  private async _doInitialize(createWorker: () => Worker) {
+    try {
+      // Create Web Worker
+      this.worker = createWorker();
 
-    this.worker.onmessage = (e) => {
-      const { id, data, error } = e.data;
-      const request = this.pendingRequests.get(id);
+      this.worker.onmessage = (e) => {
+        const { id, data, error } = e.data;
+        const request = this.pendingRequests.get(id);
 
-      if (request) {
-        error ? request.reject(new Error(error)) : request.resolve(data);
-        this.pendingRequests.delete(id);
-      }
-    };
+        if (request) {
+          error ? request.reject(new Error(error)) : request.resolve(data);
+          this.pendingRequests.delete(id);
+        }
+      };
 
-    this.worker.onerror = (error) => {
-      console.error("Worker error:", error);
-      this.failPendingRequests(
-        `Worker error: ${error.message || "Unknown error"}`
-      );
-    };
+      this.worker.onerror = (error) => {
+        // Extract detailed error information
+        const errorMessage = 
+          error.message || 
+          (error as any).filename || 
+          (error as any).lineno || 
+          (error as any).colno ||
+          "Unknown error";
+        
+        const errorDetails = {
+          message: errorMessage,
+          filename: (error as any).filename,
+          lineno: (error as any).lineno,
+          colno: (error as any).colno,
+          error: error.error || error,
+        };
+        
+        console.error("Worker error:", errorDetails);
+        
+        // Create a more descriptive error message
+        const errorMsg = errorMessage === "Unknown error" 
+          ? `Worker error: ${JSON.stringify(errorDetails)}`
+          : `Worker error: ${errorMessage}${errorDetails.filename ? ` (${errorDetails.filename}:${errorDetails.lineno})` : ''}`;
+        
+        this.pendingRequests.forEach((request) => {
+          request.reject(new Error(errorMsg));
+        });
+        this.pendingRequests.clear();
+      };
 
-    this.worker.onmessageerror = (error) => {
-      console.error("Worker message error:", error);
-      this.failPendingRequests("Worker message channel closed");
-    };
+      this.worker.onmessageerror = (error) => {
+        console.error("Worker message error:", error);
+        const errorMsg = `Worker message channel error: ${error.message || "Failed to deserialize message"}`;
+        this.pendingRequests.forEach((request) => {
+          request.reject(new Error(errorMsg));
+        });
+        this.pendingRequests.clear();
+      };
 
-    // Initialize the worker
-    await this.sendMessage("init", initData);
+      // Initialize the worker
+      await this.sendMessage("init", {});
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("Failed to initialize worker:", errorMessage);
+      throw new Error(`Failed to initialize worker: ${errorMessage}`);
+    }
   }
 
   /**

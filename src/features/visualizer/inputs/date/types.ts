@@ -49,7 +49,6 @@ export type DateParts = {
 
 export type DateInput = BaseInputType<DateValues> & {
   type: "date";
-  placeholder?: string;
   min?: DateParts;
   max?: DateParts;
   step?: number; // in seconds

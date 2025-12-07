@@ -24,14 +24,13 @@ const GraphRendererHeader = observer(
     return (
       <div className="flex justify-between items-start h-fit w-full absolute inset-0">
         {/* Import */}
-        <div className="ml-4 mt-4 flex-1 flex flex-wrap items-center gap-2">
-          <span className="whitespace-nowrap">Database:</span>
+        <div className="ml-4 mt-4.5 max-w-7/12 flex-1 flex flex-wrap items-center gap-2">
           <ImportDropdown
             database={database}
             databases={databases}
             onSelectDatabase={switchDatabase}
             onDeleteDatabase={deleteDatabase}
-            className="flex-1 max-w-[200px]"
+            className="w-56"
           />
           <CreateNode
             nodes={database.graph.nodes}
@@ -39,7 +38,7 @@ const GraphRendererHeader = observer(
             nodeTablesMap={database.graph.nodeTablesMap}
           />
         </div>
-        <div className="flex-1 flex justify-end items-center mr-4 h-18">
+        <div className="lg:w-5/12 flex justify-end items-center mr-4 h-18">
           {/* Search */}
           {nodes.length > 0 && (
             <GraphRendererSearch

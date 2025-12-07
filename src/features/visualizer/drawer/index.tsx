@@ -107,6 +107,7 @@ const CodeOutputDrawer = observer(({ className }: { className?: string }) => {
             variant="ghost"
             size="sm"
             className="h-6 w-6 p-0 text-typography-primary hover:text-typography-secondary"
+            title="Open Code/Output Panel"
           >
             {isExpanded ? (
               <ChevronDown className="h-4 w-4" />

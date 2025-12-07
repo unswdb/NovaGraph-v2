@@ -38,16 +38,18 @@ Please select the Kuzu database mode:
   3. persistent sync  - Persistent database with synchronous operations
   4. persistent async - Persistent database with asynchronous operations (default)
 
-Enter your choice [1-4] (default: 4): 
+Enter your choice [1-4] (default: 4):
 ```
 
 After selecting the mode, you'll be prompted to choose:
+
 - **Service**: `novagraph-dev` (development) or `novagraph-prod` (production)
 - **Action**: `run` (build and run), `build` (build only), or `rebuild` (rebuild without cache)
 
 **Default mode**: `4. persistent async`
 
 **Example usage:**
+
 - Development: Select mode → `novagraph-dev` → `run` (will build, copy WASM files, and start)
 - Production: Select mode → `novagraph-prod` → `run` (will build and start)
 
@@ -107,7 +109,6 @@ You can configure the Kuzu database mode at deployment time:
 - **KUZU_TYPE**: Database type
   - `inmemory`: Data stored in memory, lost on restart
   - `persistent` (default): Data persisted to IndexedDB in the browser
-  
 - **KUZU_MODE**: Execution mode
   - `sync`: Synchronous operations
   - `async` (default): Asynchronous operations using Web Workers

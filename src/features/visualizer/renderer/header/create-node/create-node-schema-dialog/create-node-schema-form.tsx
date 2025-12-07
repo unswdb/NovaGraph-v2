@@ -20,17 +20,7 @@ import {
 import type { NodeSchema } from "~/features/visualizer/types";
 import { useAsyncFn } from "~/hooks/use-async-fn";
 
-type NodeSchemaField =
-  | {
-      name: string;
-      type: NonPrimaryKeyType;
-      isPrimary?: false;
-    }
-  | {
-      name: string;
-      type: PrimaryKeyType;
-      isPrimary: true;
-    };
+type NodeSchemaField = { name: string; type: string; isPrimary?: boolean };
 
 const CreateNodeSchemaForm = observer(
   ({
@@ -151,7 +141,7 @@ const CreateNodeSchemaForm = observer(
             return {
               ...field,
               isPrimary: true,
-              type: PK_SCHEMA_TYPES.includes(field.type)
+              type: (PK_SCHEMA_TYPES as string[]).includes(field.type)
                 ? field.type
                 : PK_SCHEMA_TYPES[0],
             };
@@ -159,7 +149,7 @@ const CreateNodeSchemaForm = observer(
           return {
             ...field,
             isPrimary: false,
-            type: NON_PK_SCHEMA_TYPES.includes(field.type)
+            type: (NON_PK_SCHEMA_TYPES as string[]).includes(field.type)
               ? field.type
               : NON_PK_SCHEMA_TYPES[0],
           };
@@ -174,8 +164,12 @@ const CreateNodeSchemaForm = observer(
         await createNodeSchema(
           tableName.value!,
           primaryKeyField!.name,
-          primaryKeyField!.type,
-          nonPrimaryFields
+          primaryKeyField!.type as PrimaryKeyType,
+          nonPrimaryFields as {
+            name: string;
+            type: NonPrimaryKeyType;
+            isPrimary?: boolean;
+          }[]
         );
       }
     };

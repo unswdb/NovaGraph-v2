@@ -174,6 +174,7 @@ export const ImportCSV: ImportOption = {
 
     const databaseName = name.value as string;
     const directed = Boolean(isDirected?.value ?? true);
+
     const nodesFile = nodes.value as File;
     const edgesFile = edges.value as File;
 

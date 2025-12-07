@@ -47,6 +47,7 @@ export default function GraphRendererFooter({
               variant="ghost"
               size="icon"
               onClick={() => setIsSimulationPaused((prev) => !prev)}
+              title="Play/Pause Simulation"
             >
               {isSimulationPaused ? <Play /> : <Pause />}
             </Button>
@@ -60,6 +61,7 @@ export default function GraphRendererFooter({
               variant="ghost"
               size="icon"
               onClick={() => cosmographRef.current?.create()}
+              title="Restart Simulation"
             >
               <RotateCcw />
             </Button>
@@ -69,7 +71,12 @@ export default function GraphRendererFooter({
         {/* Fit All Nodes */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" onClick={() => fitToScreen()}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => fitToScreen()}
+              title="Fit All Nodes To Screen"
+            >
               <Shrink />
             </Button>
           </TooltipTrigger>
@@ -81,7 +88,12 @@ export default function GraphRendererFooter({
         {/* Zoom Out */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" onClick={() => zoomOut()}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => zoomOut()}
+              title="Zoom Out"
+            >
               <ZoomOut />
             </Button>
           </TooltipTrigger>
@@ -90,7 +102,12 @@ export default function GraphRendererFooter({
         {/* Zoom In */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" onClick={() => zoomIn()}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => zoomIn()}
+              title="Zoom In"
+            >
               <ZoomIn />
             </Button>
           </TooltipTrigger>
@@ -103,6 +120,7 @@ export default function GraphRendererFooter({
               variant="ghost"
               size="icon"
               onClick={() => setShowDynamicLabels((prev) => !prev)}
+              title="Show/Hide Node Labels"
             >
               <Tag
                 className={

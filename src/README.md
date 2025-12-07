@@ -42,9 +42,12 @@ const bfs = await algo.bfs("someNodeId");
 ### Data flow (high-level)
 
 UI/Features -> MainController
+
 MainController -> KuzuController
+
 MainController -> IgraphController
-IgraphController -> WASM (igraph C++)
+
+IgraphController -> igraph WASM
 
 Notes:
 - `db.snapshotGraphState()` feeds `IgraphController` to rebuild WASM graph state as needed.
