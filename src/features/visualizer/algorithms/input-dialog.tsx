@@ -71,17 +71,28 @@ export default function InputDialog({
     startLoading("Running Algorithm...");
 
     setTimeout(async () => {
-      try {
         const args = algorithm.inputs.map(
           (input) => inputResults[input.key].value
         );
-        const algorithmResponse = await algorithm.wasmFunction(
+
+      const startTime = performance.now();
+      let algorithmResponse;
+      try {
+        algorithmResponse = await algorithm.wasmFunction(
           controller.getAlgorithm(),
           args
+        );
+        const endTime = performance.now();
+        console.log(
+          `Time taken for ${algorithm.title}: ${endTime - startTime}ms`
         );
         setActiveAlgorithm(algorithm);
         setActiveResponse(algorithmResponse);
       } catch (err) {
+        const endTime = performance.now();
+        console.log(
+          `Time taken for ${algorithm.title} (failed): ${endTime - startTime}ms`
+        );
         throw new Error(
           String(err) ?? "An unexpected error occurred. Please try again later."
         );

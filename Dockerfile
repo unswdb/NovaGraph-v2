@@ -105,7 +105,7 @@ COPY . .
 COPY --from=wasm-build /src/graph.js ./src/graph.js
 COPY --from=wasm-build /src/graph.wasm ./src/graph.wasm
 COPY --from=wasm-build /src/graph.d.ts ./src/graph.d.ts
-EXPOSE 5173
+EXPOSE 5174
 CMD ["npm", "run", "dev"]
 
 FROM production-deps AS production

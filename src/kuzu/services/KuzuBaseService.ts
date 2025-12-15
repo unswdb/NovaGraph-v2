@@ -643,7 +643,12 @@ export default abstract class KuzuBaseService {
       console.log(
         `[CSV Import] Loading nodes with COPY FROM: ${copyNodesQuery}`
       );
+      const startTimeNodes = performance.now();
       throwOnFailedQuery(await this.executeQuery(copyNodesQuery));
+      const endTimeNodes = performance.now();
+      console.log(
+        `Time taken for COPY nodes: ${endTimeNodes - startTimeNodes}ms`
+      );
 
       // Create edge table schema using CREATE REL TABLE syntax
       const edgeAttributeColumns = edgeColumns.filter(
@@ -715,7 +720,12 @@ export default abstract class KuzuBaseService {
         console.log(
         `[CSV Import] Loading edges with COPY FROM (isDirected=${isDirected}): ${copyEdgesQuery}`
         );
+        const startTimeEdges = performance.now();
         throwOnFailedQuery(await this.executeQuery(copyEdgesQuery));
+        const endTimeEdges = performance.now();
+        console.log(
+          `Time taken for COPY edges: ${endTimeEdges - startTimeEdges}ms`
+        );
 
       const graphState = await this.snapshotGraphState();
 

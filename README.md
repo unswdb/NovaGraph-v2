@@ -67,7 +67,7 @@ docker build -t novagraph-dev --target development .
 docker run --rm -v $(pwd):/host novagraph-dev cp ./src/graph.js ./src/graph.wasm ./src/graph.d.ts /host/src/
 
 # Run with volume mounting
-docker run -it --rm -v $(pwd):/src -w /src -p 5173:5173 -v /src/node_modules \
+docker run -it --rm -v $(pwd):/src -w /src -p 5174:5174 -v /src/node_modules \
   -e NODE_ENV=development \
   -e KUZU_TYPE=persistent \
   -e VITE_KUZU_TYPE=persistent \
@@ -82,7 +82,7 @@ To debug with the image:
 docker run -it --entrypoint /bin/bash novagraph-dev
 ```
 
-Your application will be available at `http://localhost:5173`.
+Your application will be available at `http://localhost:5174`.
 
 > Note: Rebuild the Docker image whenever you update package.json, package-lock.json, or the WASM source code (`wasm/`).
 

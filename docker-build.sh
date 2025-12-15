@@ -109,7 +109,7 @@ fi
 echo ""
 echo "Please select the service:"
 echo ""
-echo "  1. novagraph-dev   - Development server (port 5173)"
+echo "  1. novagraph-dev   - Development server (port 5174)"
 echo -e "  2. novagraph-prod  - Production server (port 3000) ${GREEN}(default)${NC}"
 echo ""
 echo -n "Enter your choice [1-2] (default: 2): "
@@ -184,12 +184,12 @@ if [ "$SERVICE" == "novagraph-dev" ]; then
             
             echo ""
             echo -e "${GREEN}Starting ${SERVICE} container...${NC}"
-            echo -e "${YELLOW}Your application will be available at http://localhost:5173${NC}"
+            echo -e "${YELLOW}Your application will be available at http://localhost:5174${NC}"
             echo ""
             docker run -it --rm \
                 -v $(pwd):/src \
                 -w /src \
-                -p 5173:5173 \
+                -p 5174:5174 \
                 -v /src/node_modules \
                 -e NODE_ENV=development \
                 -e KUZU_TYPE=${KUZU_TYPE} \
@@ -212,12 +212,12 @@ if [ "$SERVICE" == "novagraph-dev" ]; then
             
             echo ""
             echo -e "${GREEN}Starting ${SERVICE} container...${NC}"
-            echo -e "${YELLOW}Your application will be available at http://localhost:5173${NC}"
+            echo -e "${YELLOW}Your application will be available at http://localhost:5174${NC}"
             echo ""
             docker run -it --rm \
                 -v $(pwd):/src \
                 -w /src \
-                -p 5173:5173 \
+                -p 5174:5174 \
                 -v /src/node_modules \
                 -e NODE_ENV=development \
                 -e KUZU_TYPE=${KUZU_TYPE} \
@@ -228,12 +228,12 @@ if [ "$SERVICE" == "novagraph-dev" ]; then
             ;;
         run)
             echo -e "${GREEN}Starting ${SERVICE} container...${NC}"
-            echo -e "${YELLOW}Your application will be available at http://localhost:5173${NC}"
+            echo -e "${YELLOW}Your application will be available at http://localhost:5174${NC}"
             echo ""
             docker run -it --rm \
                 -v $(pwd):/src \
                 -w /src \
-                -p 5173:5173 \
+                -p 5174:5174 \
                 -v /src/node_modules \
                 -e NODE_ENV=development \
                 -e KUZU_TYPE=${KUZU_TYPE} \
