@@ -196,6 +196,7 @@ export const ImportJSON: ImportOption = {
 
       await controller.db.connectToDatabase(databaseName);
 
+      const startTime = performance.now();
       const result = await controller.db.importFromJSON(
         databaseName,
         nodesText,
@@ -204,6 +205,8 @@ export const ImportJSON: ImportOption = {
         edgeTableName,
         directed
       );
+      const endTime = performance.now();
+      console.log(`Time taken for importFromJSON: ${endTime - startTime}ms`);
       await controller.db.saveDatabase();
       return result;
     } catch (err) {
