@@ -191,6 +191,7 @@ export const ImportCSV: ImportOption = {
 
       await controller.db.connectToDatabase(databaseName);
 
+      const startTime = performance.now();
       const result = await controller.db.importFromCSV(
         databaseName,
         nodesText,
@@ -199,6 +200,8 @@ export const ImportCSV: ImportOption = {
         edgeTableName,
         directed
       );
+      const endTime = performance.now();
+      console.log(`Time taken for importFromCSV: ${endTime - startTime}ms`);
       await controller.db.saveDatabase();
       return result;
     } catch (err) {
