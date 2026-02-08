@@ -59,6 +59,7 @@ export function createSchema(s: GraphSchema): GraphSchema {
 
 export type GraphDatabase = {
   name: string;
+  persistent: boolean; // true if stored in kuzu, false if in-memory only
   graph: {
     nodes: GraphNode[];
     edges: GraphEdge[];

@@ -86,7 +86,11 @@ const ImportContent = observer(
       getErrorMessage,
     } = useAsyncFn(option.handler.bind(option), {
       onSuccess: ({ databaseName, ...graphState }) => {
-        store.addAndSetDatabase(databaseName!, graphState!);
+        // Extract persistent flag from handler result if available
+        const persistent = (graphState as any).persistent !== undefined 
+          ? (graphState as any).persistent 
+          : true; // Default to persistent
+        store.addAndSetDatabase(databaseName!, graphState!, persistent);
         toast.success(`Successfully added/imported "${databaseName}"`);
         onClose();
       },

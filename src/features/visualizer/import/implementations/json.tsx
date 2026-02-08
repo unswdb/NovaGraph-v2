@@ -150,6 +150,12 @@ export const ImportJSON: ImportOption = {
       displayName: "Directed Graph",
       defaultValue: true,
     }),
+    createSwitchInput({
+      id: "persistent-graph-json",
+      key: "persistent",
+      displayName: "Store in Database (Persistent)",
+      defaultValue: true,
+    }),
     createFileInput({
       id: "nodes-json",
       key: "nodes",
@@ -175,10 +181,11 @@ export const ImportJSON: ImportOption = {
     values: Record<string, any>;
     controller: VisualizerStore["controller"];
   }) => {
-    const { name, nodes, edges, isDirected } = values;
+    const { name, nodes, edges, isDirected, persistent } = values;
 
     const databaseName = name.value as string;
     const directed = Boolean(isDirected?.value ?? true);
+    const isPersistent = Boolean(persistent?.value ?? true);
 
     const nodesFile = nodes.value as File;
     const edgesFile = edges.value as File;
@@ -191,10 +198,14 @@ export const ImportJSON: ImportOption = {
 
     let databaseCreated = false;
     try {
-      await controller.db.createDatabase(databaseName, { isDirected: directed });
-      databaseCreated = true;
-
-      await controller.db.connectToDatabase(databaseName);
+      if (isPersistent) {
+        await controller.db.createDatabase(databaseName, { isDirected: directed, persistent: true });
+        databaseCreated = true;
+        await controller.db.connectToDatabase(databaseName);
+      } else {
+        await controller.db.createDatabase(databaseName, { isDirected: directed, persistent: false });
+        databaseCreated = true;
+      }
 
       const result = await controller.db.importFromJSON(
         databaseName,
@@ -202,12 +213,20 @@ export const ImportJSON: ImportOption = {
         edgesText,
         nodeTableName,
         edgeTableName,
-        directed
+        directed,
+        isPersistent
       );
-      await controller.db.saveDatabase();
-      return result;
+      
+      if (isPersistent) {
+        await controller.db.saveDatabase();
+      }
+      
+      return {
+        ...result,
+        persistent: isPersistent,
+      };
     } catch (err) {
-      if (databaseCreated) {
+      if (databaseCreated && isPersistent) {
         await controller.db.deleteDatabase(databaseName);
       }
       throw err;

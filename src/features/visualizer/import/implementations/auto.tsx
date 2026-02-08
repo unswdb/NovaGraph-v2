@@ -26,6 +26,12 @@ export const ImportAuto: ImportOption = {
       displayName: "Directed Graph",
       defaultValue: true,
     }),
+    createSwitchInput({
+      id: "persistent-graph-empty",
+      key: "persistent",
+      displayName: "Store in Database (Persistent)",
+      defaultValue: true,
+    }),
   ],
   handler: async ({
     values,
@@ -35,18 +41,24 @@ export const ImportAuto: ImportOption = {
     values: Record<string, any>;
     controller: VisualizerStore["controller"];
   }) => {
-    const { name, isDirected } = values;
+    const { name, isDirected, persistent } = values;
     const databaseName = name.value as string;
     const directed = Boolean(isDirected?.value ?? true);
+    const isPersistent = Boolean(persistent?.value ?? true);
 
-    await controller.db.createDatabase(databaseName, { isDirected: directed });
-    await controller.db.connectToDatabase(databaseName);
+    await controller.db.createDatabase(databaseName, { isDirected: directed, persistent: isPersistent });
+    
+    if (isPersistent) {
+      await controller.db.connectToDatabase(databaseName);
+    }
+    
     const snapshot = await controller.db.snapshotGraphState();
 
     return {
       databaseName,
       ...snapshot,
       directed: snapshot.directed ?? directed,
+      persistent: isPersistent,
     };
   },
 };
