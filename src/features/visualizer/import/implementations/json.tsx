@@ -207,6 +207,7 @@ export const ImportJSON: ImportOption = {
         databaseCreated = true;
       }
 
+      const startTime = performance.now();
       const result = await controller.db.importFromJSON(
         databaseName,
         nodesText,
@@ -216,11 +217,13 @@ export const ImportJSON: ImportOption = {
         directed,
         isPersistent
       );
-      
+      const endTime = performance.now();
+      console.log(`Time taken for importFromJSON: ${endTime - startTime}ms`);
+
       if (isPersistent) {
         await controller.db.saveDatabase();
       }
-      
+
       return {
         ...result,
         persistent: isPersistent,

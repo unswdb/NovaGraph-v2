@@ -202,6 +202,7 @@ export const ImportCSV: ImportOption = {
         databaseCreated = true;
       }
 
+      const startTime = performance.now();
       const result = await controller.db.importFromCSV(
         databaseName,
         nodesText,
@@ -211,11 +212,13 @@ export const ImportCSV: ImportOption = {
         directed,
         isPersistent
       );
-      
+      const endTime = performance.now();
+      console.log(`Time taken for importFromCSV: ${endTime - startTime}ms`);
+
       if (isPersistent) {
         await controller.db.saveDatabase();
       }
-      
+
       return {
         ...result,
         persistent: isPersistent,
