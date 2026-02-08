@@ -1,4 +1,5 @@
 import { action, makeObservable, observable, runInAction } from "mobx";
+import { toast } from "sonner";
 
 import {
   isEdgeSchema,
@@ -70,9 +71,52 @@ export default class VisualizerStore {
     // Initialize Kuzu controller
     await this.controller.initSystem();
 
+    // Set up recovery callback for persistent async mode to auto-refresh database list
+    if (this.controller.db && typeof (this.controller.db as any).setRecoveryCallback === 'function') {
+      (this.controller.db as any).setRecoveryCallback((info: {
+        failedDatabase: string;
+        switchedToDatabase: string;
+        reason: string;
+      }) => {
+        console.log(`[VisualizerStore] Database recovery: ${info.failedDatabase} -> ${info.switchedToDatabase}`);
+        // Show error notification after successfully connecting to the new database
+        toast.error(
+          `数据库错误: 从 "${info.failedDatabase}" 切换到 "${info.switchedToDatabase}"`,
+          {
+            description: info.reason,
+            duration: 7000,
+          }
+        );
+        // Refresh database list and current database when database is switched due to failure
+        this.refreshDatabaseList();
+      });
+    }
+    
+    // Also listen for custom events in case callback is not set
+    if (typeof window !== 'undefined') {
+      window.addEventListener('kuzu-database-switched', ((event: CustomEvent) => {
+        const detail = event.detail as {
+          failedDatabase: string;
+          switchedToDatabase: string;
+          reason: string;
+        };
+        if (detail) {
+          // Show error notification after successfully connecting to the new database
+          toast.error(
+            `数据库错误: 从 "${detail.failedDatabase}" 切换到 "${detail.switchedToDatabase}"`,
+            {
+              description: detail.reason,
+              duration: 7000,
+            }
+          );
+        }
+        this.refreshDatabaseList();
+      }) as EventListener);
+    }
+
     const [rawGraph, rawDatabases, rawCurrentDatabaseName] = await Promise.all([
       this.controller.db.snapshotGraphState(),
-      this.controller.db.listDatabases().catch(() => [] as string[]), // defaults to empty databases if error
+      this.controller.db.listDatabases().catch(() => [] as string[]), // defaults to empty databases if error (now filters problematic databases)
       this.controller.db.getCurrentDatabaseName().catch(() => null), // defaults to null if error
     ]);
 
@@ -107,6 +151,7 @@ export default class VisualizerStore {
       if (currentDatabaseName) {
         this.database = {
           name: currentDatabaseName,
+          persistent: true, // Default to persistent for existing databases
           graph,
         };
       } else {
@@ -140,7 +185,7 @@ export default class VisualizerStore {
     });
   };
 
-  addAndSetDatabase = (name: string, snapshot: GraphSnapshotState) => {
+  addAndSetDatabase = (name: string, snapshot: GraphSnapshotState, persistent: boolean = true) => {
     const graph = this.buildGraphFromSnapshotState({
       nodes: snapshot?.nodes ?? [],
       edges: snapshot?.edges ?? [],
@@ -151,6 +196,7 @@ export default class VisualizerStore {
     runInAction(() => {
       this.database = {
         name,
+        persistent,
         graph,
       };
       this.addDatabase(name);
@@ -181,18 +227,74 @@ export default class VisualizerStore {
       directed: rawGraph?.directed ?? true,
     });
 
+    // Refresh database list to ensure it's up to date (filters out problematic databases)
+    const updatedDatabases = await this.controller.db.listDatabases().catch(() => [] as string[]);
+    const currentDatabaseName = await this.controller.db.getCurrentDatabaseName().catch(() => null);
+
     runInAction(() => {
+      // Update database list
+      this.databases = this.buildDatabases([
+        ...updatedDatabases,
+        currentDatabaseName,
+      ]);
+      
+      // Update current database
       this.database = {
         name,
+        persistent: true, // Assume persistent for existing databases
         graph,
       };
     });
+  };
+
+  refreshDatabaseList = async () => {
+    try {
+      const [updatedDatabases, currentDatabaseName, rawGraph] = await Promise.all([
+        this.controller.db.listDatabases().catch(() => [] as string[]),
+        this.controller.db.getCurrentDatabaseName().catch(() => null),
+        this.controller.db.snapshotGraphState().catch(() => null),
+      ]);
+      
+      const graphSnapshotState: GraphSnapshotState = {
+        nodes: rawGraph?.nodes ?? [],
+        edges: rawGraph?.edges ?? [],
+        nodeTables: rawGraph?.nodeTables ?? [],
+        edgeTables: rawGraph?.edgeTables ?? [],
+        directed: rawGraph?.directed ?? true,
+      };
+      
+      const graph = this.buildGraphFromSnapshotState(graphSnapshotState);
+      
+      runInAction(() => {
+        // Update database list
+        this.databases = this.buildDatabases([
+          ...updatedDatabases,
+          currentDatabaseName,
+        ]);
+        
+        // Update current database if it changed
+        if (currentDatabaseName) {
+          this.database = {
+            name: currentDatabaseName,
+            persistent: true, // Assume persistent for existing databases
+            graph,
+          };
+        } else {
+          this.database = null;
+        }
+      });
+    } catch (error) {
+      console.warn("[VisualizerStore] Failed to refresh database list:", error);
+    }
   };
 
   deleteDatabase = async (name: string) => {
     this.checkInitialization();
 
     await this.controller.db.deleteDatabase(name);
+    
+    // Refresh database list after deletion
+    await this.refreshDatabaseList();
     runInAction(() => {
       this.databases = this.databases.filter(
         (databaseName) => databaseName !== name

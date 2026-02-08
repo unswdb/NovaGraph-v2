@@ -145,6 +145,12 @@ export const ImportCSV: ImportOption = {
       displayName: "Directed Graph",
       defaultValue: true,
     }),
+    createSwitchInput({
+      id: "persistent-graph-csv",
+      key: "persistent",
+      displayName: "Store in Database (Persistent)",
+      defaultValue: true,
+    }),
     createFileInput({
       id: "nodes-csv",
       key: "nodes",
@@ -170,10 +176,11 @@ export const ImportCSV: ImportOption = {
     values: Record<string, any>;
     controller: VisualizerStore["controller"];
   }) => {
-    const { name, nodes, edges, isDirected } = values;
+    const { name, nodes, edges, isDirected, persistent } = values;
 
     const databaseName = name.value as string;
     const directed = Boolean(isDirected?.value ?? true);
+    const isPersistent = Boolean(persistent?.value ?? true);
 
     const nodesFile = nodes.value as File;
     const edgesFile = edges.value as File;
@@ -186,10 +193,14 @@ export const ImportCSV: ImportOption = {
 
     let databaseCreated = false;
     try {
-      await controller.db.createDatabase(databaseName, { isDirected: directed });
-      databaseCreated = true;
-
-      await controller.db.connectToDatabase(databaseName);
+      if (isPersistent) {
+        await controller.db.createDatabase(databaseName, { isDirected: directed, persistent: true });
+        databaseCreated = true;
+        await controller.db.connectToDatabase(databaseName);
+      } else {
+        await controller.db.createDatabase(databaseName, { isDirected: directed, persistent: false });
+        databaseCreated = true;
+      }
 
       const startTime = performance.now();
       const result = await controller.db.importFromCSV(
@@ -198,14 +209,22 @@ export const ImportCSV: ImportOption = {
         edgesText,
         nodeTableName,
         edgeTableName,
-        directed
+        directed,
+        isPersistent
       );
       const endTime = performance.now();
       console.log(`Time taken for importFromCSV: ${endTime - startTime}ms`);
-      await controller.db.saveDatabase();
-      return result;
+
+      if (isPersistent) {
+        await controller.db.saveDatabase();
+      }
+
+      return {
+        ...result,
+        persistent: isPersistent,
+      };
     } catch (err) {
-      if (databaseCreated) {
+      if (databaseCreated && isPersistent) {
         await controller.db.deleteDatabase(databaseName);
       }
       throw err;

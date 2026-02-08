@@ -116,15 +116,7 @@ function ImportListSelector({
   const [alertDialogOpen, setAlertDialogOpen] = useState<string | null>(null);
 
   const { run: selectDatabase, isLoading: isSelecting } = useAsyncFn(
-    onSelectDatabase,
-    {
-      onSuccess: () => {
-        toast.success("Database switched successfully");
-      },
-      onError: () => {
-        toast.error("Failed to switch database. Please try again later");
-      },
-    }
+    onSelectDatabase
   );
 
   const { run: deleteDatabase, isLoading: isDeleting } = useAsyncFn(
@@ -147,8 +139,16 @@ function ImportListSelector({
     }
 
     setSelectingName(name);
-    await selectDatabase(name);
-    setSelectingName(null);
+    // Show notification when starting to connect to a new database
+    toast.info(`Connecting to database "${name}"...`);
+    try {
+      await selectDatabase(name);
+      toast.success(`Successfully connected to database "${name}"`);
+    } catch (error) {
+      toast.error(`Failed to connect to database "${name}". Please try again later`);
+    } finally {
+      setSelectingName(null);
+    }
   };
 
   const handleDelete = async (name: string) => {
