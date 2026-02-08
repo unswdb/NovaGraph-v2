@@ -7,7 +7,6 @@ import {
   getProblematicDatabases,
   markDatabaseAsProblematic,
   unmarkDatabaseAsProblematic,
-  isDatabaseConnectionError,
   shouldTriggerRecovery,
   type DatabaseRecoveryCallback,
 } from "./KuzuDatabaseRecovery";
@@ -402,7 +401,7 @@ export default class KuzuPersistentSync extends KuzuBaseService {
 
       return {
         success: true,
-        message: ` Successfully removed directory: ${dbName}`,
+        message: `Successfully removed directory: ${dbName}`,
       };
     } catch (error: any) {
       return {
@@ -947,7 +946,7 @@ export default class KuzuPersistentSync extends KuzuBaseService {
       this.graphSnapshotStateCache = EMPTY_SNAPSHOT_GRAPH_STATE;
       return {
         success: true,
-        message: "Successfully clear all databases",
+        message: "Successfully cleared all databases",
       };
     } catch (error: any) {
       console.error(
